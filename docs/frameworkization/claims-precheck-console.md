@@ -75,8 +75,9 @@ This lets a future console list runs directly from the JDBC trace table, page/fi
 
 - `actiongraph.console.enabled=true`
 - `actiongraph-console-spring-boot-starter` is on the runtime classpath
-- `actiongraph-persistence-jdbc` is on the runtime classpath
 - a `DataSource` bean is available
+
+The Console starter brings the JDBC read model as an implementation dependency and stays read-only. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
 
 ```yaml
 actiongraph:

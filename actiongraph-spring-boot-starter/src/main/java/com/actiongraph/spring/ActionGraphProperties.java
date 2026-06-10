@@ -6,11 +6,9 @@ import com.actiongraph.runtime.GoapExecutor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 @ConfigurationProperties(prefix = "actiongraph")
@@ -18,7 +16,6 @@ public class ActionGraphProperties {
     private final PlannerProperties planner = new PlannerProperties();
     private final ExecutorProperties executor = new ExecutorProperties();
     private final ActionsProperties actions = new ActionsProperties();
-    private final PersistenceProperties persistence = new PersistenceProperties();
     private final MaskingProperties masking = new MaskingProperties();
     private final HumanReviewProperties humanReview = new HumanReviewProperties();
     private final LimitsProperties limits = new LimitsProperties();
@@ -33,10 +30,6 @@ public class ActionGraphProperties {
 
     public ActionsProperties getActions() {
         return actions;
-    }
-
-    public PersistenceProperties getPersistence() {
-        return persistence;
     }
 
     public MaskingProperties getMasking() {
@@ -93,22 +86,6 @@ public class ActionGraphProperties {
 
         public void setAutoRegisterAnnotated(boolean autoRegisterAnnotated) {
             this.autoRegisterAnnotated = autoRegisterAnnotated;
-        }
-    }
-
-    public static final class PersistenceProperties {
-        private Duration suspendedRunClaimTimeout = Duration.ofMinutes(15);
-
-        public Duration getSuspendedRunClaimTimeout() {
-            return suspendedRunClaimTimeout;
-        }
-
-        public void setSuspendedRunClaimTimeout(Duration suspendedRunClaimTimeout) {
-            Duration value = Objects.requireNonNull(suspendedRunClaimTimeout, "suspendedRunClaimTimeout");
-            if (value.isZero() || value.isNegative()) {
-                throw new IllegalArgumentException("suspendedRunClaimTimeout must be positive");
-            }
-            this.suspendedRunClaimTimeout = value;
         }
     }
 

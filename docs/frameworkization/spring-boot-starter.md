@@ -78,11 +78,11 @@ Set `actiongraph.actions.auto-register-annotated=false` to build an `ActionRegis
 
 ## Optional Ecosystem Components
 
-This starter intentionally does not include HTTP control-plane endpoints. Add `actiongraph-human-review-spring-boot-starter` when an application needs approval callbacks, and add `actiongraph-console-spring-boot-starter` when it needs operational run monitoring. Keeping these separate lets services use ActionGraph runtime integration without exposing review or console endpoints.
+This starter intentionally does not include durable persistence or HTTP control-plane endpoints. Add `actiongraph-jdbc-spring-boot-starter` when a Spring Boot application needs JDBC-backed repositories, add `actiongraph-human-review-spring-boot-starter` when it needs approval callbacks, and add `actiongraph-console-spring-boot-starter` when it needs operational run monitoring. Keeping these separate lets services use ActionGraph runtime integration without pulling in infrastructure or endpoint surfaces they do not need.
 
 ## Current Scope
 
-This starter intentionally keeps persistence and policy defaults in-memory/simple. Production applications should replace `TraceRepository`, `SuspendedRunRepository`, `PermissionPolicy`, and `HumanReviewPolicy` with application-specific beans.
+This starter intentionally keeps persistence and policy defaults in-memory/simple. Production applications should add the optional JDBC starter or replace `TraceRepository`, `SuspendedRunRepository`, `PermissionPolicy`, and `HumanReviewPolicy` with application-specific beans.
 
 For rule-based permissions and tenant checks:
 
@@ -99,7 +99,28 @@ PermissionPolicy permissionPolicy() {
 }
 ```
 
-For JDBC persistence, add `actiongraph-persistence-jdbc` and expose repository beans:
+For Spring Boot JDBC persistence, add `actiongraph-jdbc-spring-boot-starter` and enable it:
+
+```kotlin
+dependencies {
+    implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
+}
+```
+
+```yaml
+actiongraph:
+  persistence:
+    jdbc:
+      enabled: true
+      suspended-run-claim-timeout: 15m
+      blackboard:
+        allowed-packages:
+          - com.example.business
+```
+
+The JDBC starter creates `TraceRepository`, `SuspendedRunRepository`, `HumanReviewRepository`, `MemoryRepository`, and the console read model when a `DataSource` is available. If the application defines any of those beans itself, the auto-configured default backs off.
+
+For non-Spring services or fully manual wiring, add `actiongraph-persistence-jdbc` and expose repository beans:
 
 ```java
 @Bean

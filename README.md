@@ -24,6 +24,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Spring Boot starter with annotation-driven Action registration and runtime defaults
 - Optional human-review Spring Boot starter with approval callback endpoint support
 - Optional console Spring Boot starter with read-only run monitoring UI/endpoints
+- Optional JDBC Spring Boot starter for durable repository auto-configuration
 - DeepSeek-compatible LLM goal interpretation
 - Reference samples for renewal quote, order cancellation, and claims precheck flows
 
@@ -36,6 +37,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-llm-deepseek` | DeepSeek-compatible LLM client and GoalCatalog prompt support |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, human review, and memory |
 | `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning |
+| `actiongraph-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC repositories |
 | `actiongraph-human-review-spring-boot-starter` | Optional approval callback endpoint for external review systems |
 | `actiongraph-console-spring-boot-starter` | Optional read-only Console UI and Spring MVC query endpoints |
 | `actiongraph-samples` | Pure Java sample applications |
@@ -47,8 +49,8 @@ dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
 
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
-    implementation("com.actiongraph:actiongraph-persistence-jdbc")
     // Optional ecosystem/control-plane components:
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
@@ -76,6 +78,13 @@ actiongraph:
     max-steps: 64
   masking:
     enabled: false
+  persistence:
+    jdbc:
+      enabled: true
+      suspended-run-claim-timeout: 15m
+      blackboard:
+        allowed-packages:
+          - com.example.business
   human-review:
     callback-endpoint:
       enabled: true
@@ -91,7 +100,9 @@ actiongraph:
     max-limit: 200
 ```
 
-When `actiongraph-human-review-spring-boot-starter` is on the classpath and the callback endpoint is enabled in a Spring MVC application, approval systems can post decisions directly. The endpoint requires a `HumanReviewRepository` bean; `actiongraph-spring-boot-starter` supplies an in-memory default, and production systems can provide a JDBC-backed bean.
+When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, review-task, memory, and console read-model repositories. Non-Spring services can still use `actiongraph-persistence-jdbc` directly and wire repositories by hand.
+
+When `actiongraph-human-review-spring-boot-starter` is on the classpath and the callback endpoint is enabled in a Spring MVC application, approval systems can post decisions directly. The endpoint requires a `HumanReviewRepository` bean; `actiongraph-spring-boot-starter` supplies an in-memory default, and the JDBC starter supplies a durable production bean when enabled.
 
 ```json
 {

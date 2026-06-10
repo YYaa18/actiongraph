@@ -44,11 +44,24 @@ Add JDBC repositories when traces, suspended runs, review tasks, and memory must
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-persistence-jdbc")
+    implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
 }
 ```
 
-Applications still provide their own database driver and repository beans.
+Spring Boot applications still provide their own database driver and `DataSource`, then enable the repositories with:
+
+```yaml
+actiongraph:
+  persistence:
+    jdbc:
+      enabled: true
+      suspended-run-claim-timeout: 15m
+      blackboard:
+        allowed-packages:
+          - com.example.business
+```
+
+Non-Spring services, or applications that want complete manual control, can depend on `actiongraph-persistence-jdbc` directly and instantiate the repositories themselves.
 
 ## Natural-Language Entry
 
@@ -75,7 +88,7 @@ dependencies {
 }
 ```
 
-The callback starter requires a `HumanReviewRepository` bean. A business runtime service can get the in-memory default from `actiongraph-spring-boot-starter`; a separate receiver normally provides a JDBC-backed repository bean.
+The callback starter requires a `HumanReviewRepository` bean. A business runtime service can get the in-memory default from `actiongraph-spring-boot-starter`; production services normally add `actiongraph-jdbc-spring-boot-starter` so the callback handler writes durable review decisions.
 
 ## Read-Only Monitoring Service
 
@@ -98,7 +111,7 @@ Use this for a single deployment that runs the business workflow, receives appro
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-persistence-jdbc")
+    implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-spring-boot-starter")

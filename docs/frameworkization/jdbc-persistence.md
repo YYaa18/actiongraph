@@ -2,7 +2,46 @@
 
 `actiongraph-persistence-jdbc` provides durable repository implementations for v2 suspend/resume, audit trace, external human review tasks, and v4 structured memory.
 
-## Artifacts
+## Spring Boot Auto-Configuration
+
+Spring Boot applications should prefer the optional starter. It keeps durable persistence out of the base runtime starter while avoiding hand-written repository beans in production services.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
+}
+```
+
+```yaml
+actiongraph:
+  persistence:
+    jdbc:
+      enabled: true
+      suspended-run-claim-timeout: 15m
+      tables:
+        trace-event: actiongraph_trace_event
+        suspended-run: actiongraph_suspended_run
+        human-review: actiongraph_human_review_task
+        memory: actiongraph_memory_record
+      blackboard:
+        allowed-packages:
+          - com.example.business
+```
+
+When enabled and a `DataSource` exists, the starter creates:
+
+- `TraceRepository`
+- `SuspendedRunRepository`
+- `HumanReviewRepository`
+- `MemoryRepository`
+- `JdbcTraceRunRepository`
+- `BlackboardTypeRegistry`
+
+Every bean uses `@ConditionalOnMissingBean`, so applications can override one repository without losing auto-configuration for the others.
+
+## Low-Level Artifact
 
 ```kotlin
 dependencies {
@@ -11,7 +50,7 @@ dependencies {
 }
 ```
 
-The module depends on `actiongraph-core`, Jackson, and standard JDBC APIs. Applications provide the JDBC driver and `DataSource`.
+The low-level module depends on `actiongraph-core`, Jackson, and standard JDBC APIs. Applications provide the JDBC driver and `DataSource`. Use this artifact directly for non-Spring services or when repository construction needs full manual control.
 
 ## Repositories
 
