@@ -72,6 +72,8 @@ actiongraph:
     callback-endpoint:
       enabled: true
       path: /actiongraph/human-review/callbacks
+      token-header: X-ActionGraph-Review-Token
+      shared-secret: ${ACTIONGRAPH_REVIEW_CALLBACK_SECRET}
 ```
 
 把已有业务 Service 暴露为 Action：
@@ -96,6 +98,8 @@ public void voidDraft(CancellationRequestDraft draft) {
     cancellationRequestService.voidDraft(draft.requestId());
 }
 ```
+
+配置 `shared-secret` 后，请求必须携带对应 Header；缺失或错误会返回 `401 UNAUTHORIZED`。生产环境建议通过环境变量或密钥系统注入该值，不要写死在仓库配置文件中。
 
 审批系统回调可直接 POST 到配置的端点：
 
@@ -156,7 +160,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 ## 当前成熟度
 
-- 152 个自动化测试通过。
+- 155 个自动化测试通过。
 - 并发冒烟约 6000 runs/s；重复 resume 只产生一次业务副作用。
 - 5 个 Gradle 模块完成拆分。
 - 3 个参考业务域完整跑通。

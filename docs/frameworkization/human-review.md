@@ -107,6 +107,8 @@ actiongraph:
     callback-endpoint:
       enabled: true
       path: /actiongraph/human-review/callbacks
+      token-header: X-ActionGraph-Review-Token
+      shared-secret: ${ACTIONGRAPH_REVIEW_CALLBACK_SECRET}
 ```
 
 The endpoint accepts one stage decision per request:
@@ -124,8 +126,11 @@ The endpoint accepts one stage decision per request:
 
 It returns the updated `HumanReviewTask` projection, including `currentStageIndex` and `stageDecisionCount`. The endpoint is disabled by default and is only created in Servlet MVC applications.
 
+If `shared-secret` is configured, requests must include the configured token header. The token check runs before mutating the `HumanReviewRepository`, so rejected callbacks do not accidentally decide review tasks.
+
 Callback failures use explicit HTTP semantics:
 
+- `401 UNAUTHORIZED`: callback token is missing or invalid
 - `400 BAD_REQUEST`: malformed callback payload or `PENDING` sent as a final decision
 - `404 NOT_FOUND`: no pending review task exists for `runId + actionId`
 - `409 CONFLICT`: the displayed stage index has already been decided, usually from duplicate callbacks or stale approval pages

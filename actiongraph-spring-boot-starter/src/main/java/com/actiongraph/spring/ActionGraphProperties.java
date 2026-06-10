@@ -153,6 +153,8 @@ public class ActionGraphProperties {
     public static final class CallbackEndpointProperties {
         private boolean enabled = false;
         private String path = "/actiongraph/human-review/callbacks";
+        private String tokenHeader = "X-ActionGraph-Review-Token";
+        private String sharedSecret = "";
 
         public boolean isEnabled() {
             return enabled;
@@ -171,6 +173,32 @@ public class ActionGraphProperties {
                 throw new IllegalArgumentException("callback endpoint path must not be blank");
             }
             this.path = path;
+        }
+
+        public String getTokenHeader() {
+            return tokenHeader;
+        }
+
+        public void setTokenHeader(String tokenHeader) {
+            if (tokenHeader == null || tokenHeader.isBlank()) {
+                throw new IllegalArgumentException("callback endpoint token header must not be blank");
+            }
+            this.tokenHeader = tokenHeader;
+        }
+
+        public String getSharedSecret() {
+            return sharedSecret;
+        }
+
+        public void setSharedSecret(String sharedSecret) {
+            if (sharedSecret != null && sharedSecret.isBlank()) {
+                throw new IllegalArgumentException("callback endpoint shared secret must not be blank");
+            }
+            this.sharedSecret = sharedSecret == null ? "" : sharedSecret;
+        }
+
+        public boolean hasSharedSecret() {
+            return !sharedSecret.isBlank();
         }
     }
 

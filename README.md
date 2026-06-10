@@ -65,6 +65,8 @@ actiongraph:
     callback-endpoint:
       enabled: true
       path: /actiongraph/human-review/callbacks
+      token-header: X-ActionGraph-Review-Token
+      shared-secret: ${ACTIONGRAPH_REVIEW_CALLBACK_SECRET}
 ```
 
 When the callback endpoint is enabled in a Spring MVC application, approval systems can post decisions directly:
@@ -79,6 +81,8 @@ When the callback endpoint is enabled in a Spring MVC application, approval syst
   "comment": "approved"
 }
 ```
+
+If `shared-secret` is configured, the request must include the configured token header with the same value. Missing or invalid callback tokens return `401 UNAUTHORIZED`.
 
 ## Build And Test
 

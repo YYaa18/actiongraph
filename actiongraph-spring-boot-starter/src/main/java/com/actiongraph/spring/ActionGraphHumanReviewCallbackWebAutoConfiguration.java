@@ -34,8 +34,12 @@ public class ActionGraphHumanReviewCallbackWebAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "actionGraphHumanReviewCallbackController")
     public ActionGraphHumanReviewCallbackController actionGraphHumanReviewCallbackController(
-            HumanReviewCallbackHandler humanReviewCallbackHandler
+            HumanReviewCallbackHandler humanReviewCallbackHandler,
+            ActionGraphProperties properties
     ) {
-        return new ActionGraphHumanReviewCallbackController(humanReviewCallbackHandler);
+        return new ActionGraphHumanReviewCallbackController(
+                humanReviewCallbackHandler,
+                properties.getHumanReview().getCallbackEndpoint()
+        );
     }
 }

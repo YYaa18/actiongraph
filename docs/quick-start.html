@@ -450,6 +450,8 @@ AmountExtractor amountExtractor() {
   <tr><td><code>actiongraph.human-review.risk-based-approval-chain</code></td><td>false</td><td>是否启用 HIGH 风险动作两级审批链</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露审批回调 HTTP 端点</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.path</code></td><td><code>/actiongraph/human-review/callbacks</code></td><td>审批回调 HTTP 端点路径</td></tr>
+  <tr><td><code>actiongraph.human-review.callback-endpoint.token-header</code></td><td><code>X-ActionGraph-Review-Token</code></td><td>启用共享密钥后用于传递回调 token 的 Header 名</td></tr>
+  <tr><td><code>actiongraph.human-review.callback-endpoint.shared-secret</code></td><td>空</td><td>审批回调共享密钥；为空时不校验，生产环境建议通过环境变量或密钥系统注入</td></tr>
   <tr><td><code>actiongraph.masking.enabled</code></td><td>false</td><td>是否启用默认金融正则脱敏（Trace 与审批预览）</td></tr>
   <tr><td><code>actiongraph.masking.blocked-keys</code></td><td>空</td><td>命中字段名时整体脱敏为 <code>***</code></td></tr>
   <tr><td><code>actiongraph.limits.rules[].action-id</code></td><td>无</td><td>额度规则匹配的 Action id，支持 <code>*</code> 通配</td></tr>

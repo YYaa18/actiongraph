@@ -183,6 +183,72 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
                 });
     }
 
+    @Test
+    void callbackEndpointRequiresTokenWhenSharedSecretIsConfigured() {
+        contextRunner
+                .withPropertyValues(
+                        "actiongraph.human-review.callback-endpoint.enabled=true",
+                        "actiongraph.human-review.callback-endpoint.shared-secret=review-secret"
+                )
+                .run(context -> {
+                    context.getBean(HumanReviewPolicy.class).review(request());
+
+                    mockMvc(context).perform(post("/actiongraph/human-review/callbacks")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(approvedCallback()))
+                            .andExpect(status().isUnauthorized())
+                            .andExpect(jsonPath("$.error").value("UNAUTHORIZED"));
+
+                    assertThat(context.getBean(HumanReviewRepository.class).find("RUN-1", ACTION_ID))
+                            .get()
+                            .satisfies(task -> assertThat(task.decision()).isEqualTo(HumanReviewDecision.PENDING));
+                });
+    }
+
+    @Test
+    void callbackEndpointRejectsInvalidToken() {
+        contextRunner
+                .withPropertyValues(
+                        "actiongraph.human-review.callback-endpoint.enabled=true",
+                        "actiongraph.human-review.callback-endpoint.shared-secret=review-secret"
+                )
+                .run(context -> {
+                    context.getBean(HumanReviewPolicy.class).review(request());
+
+                    mockMvc(context).perform(post("/actiongraph/human-review/callbacks")
+                                    .header("X-ActionGraph-Review-Token", "wrong-secret")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(approvedCallback()))
+                            .andExpect(status().isUnauthorized())
+                            .andExpect(jsonPath("$.error").value("UNAUTHORIZED"));
+
+                    assertThat(context.getBean(HumanReviewRepository.class).find("RUN-1", ACTION_ID))
+                            .get()
+                            .satisfies(task -> assertThat(task.decision()).isEqualTo(HumanReviewDecision.PENDING));
+                });
+    }
+
+    @Test
+    void callbackEndpointAcceptsCustomTokenHeader() {
+        contextRunner
+                .withPropertyValues(
+                        "actiongraph.human-review.callback-endpoint.enabled=true",
+                        "actiongraph.human-review.callback-endpoint.token-header=X-Claims-Review-Token",
+                        "actiongraph.human-review.callback-endpoint.shared-secret=review-secret"
+                )
+                .run(context -> {
+                    context.getBean(HumanReviewPolicy.class).review(request());
+
+                    mockMvc(context).perform(post("/actiongraph/human-review/callbacks")
+                                    .header("X-Claims-Review-Token", "review-secret")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(approvedCallback()))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.decision").value("APPROVED"))
+                            .andExpect(jsonPath("$.reviewer").value("claims-checker"));
+                });
+    }
+
     private MockMvc mockMvc(org.springframework.web.context.WebApplicationContext context) {
         return MockMvcBuilders.webAppContextSetup(context).build();
     }

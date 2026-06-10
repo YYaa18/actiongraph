@@ -6,27 +6,40 @@ import com.actiongraph.policy.HumanReviewCallbackHandler;
 import com.actiongraph.policy.HumanReviewDecision;
 import com.actiongraph.policy.HumanReviewTask;
 import com.actiongraph.policy.StageAlreadyDecidedException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("${actiongraph.human-review.callback-endpoint.path:/actiongraph/human-review/callbacks}")
 public final class ActionGraphHumanReviewCallbackController {
     private final HumanReviewCallbackHandler handler;
+    private final ActionGraphProperties.CallbackEndpointProperties properties;
 
-    public ActionGraphHumanReviewCallbackController(HumanReviewCallbackHandler handler) {
+    public ActionGraphHumanReviewCallbackController(
+            HumanReviewCallbackHandler handler,
+            ActionGraphProperties.CallbackEndpointProperties properties
+    ) {
         this.handler = Objects.requireNonNull(handler, "handler");
+        this.properties = Objects.requireNonNull(properties, "properties");
     }
 
     @PostMapping
-    public HumanReviewCallbackResponse handle(@RequestBody HumanReviewCallbackRequest request) {
+    public HumanReviewCallbackResponse handle(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody HumanReviewCallbackRequest request
+    ) {
+        verifyToken(headers);
         HumanReviewTask task = handler.handle(new HumanReviewCallback(
                 request.runId(),
                 new ActionId(request.actionId()),
@@ -44,6 +57,30 @@ public final class ActionGraphHumanReviewCallbackController {
                 task.message(),
                 task.stageDecisions().size()
         );
+    }
+
+    private void verifyToken(HttpHeaders headers) {
+        if (!properties.hasSharedSecret()) {
+            return;
+        }
+        String actual = headers.getFirst(properties.getTokenHeader());
+        if (!sameSecret(properties.getSharedSecret(), actual)) {
+            throw new UnauthorizedCallbackException();
+        }
+    }
+
+    private boolean sameSecret(String expected, String actual) {
+        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
+        byte[] actualBytes = actual == null
+                ? new byte[0]
+                : actual.getBytes(StandardCharsets.UTF_8);
+        return MessageDigest.isEqual(expectedBytes, actualBytes);
+    }
+
+    @ExceptionHandler(UnauthorizedCallbackException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public HumanReviewCallbackErrorResponse handleUnauthorized(UnauthorizedCallbackException exception) {
+        return new HumanReviewCallbackErrorResponse("UNAUTHORIZED", exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -89,5 +126,11 @@ public final class ActionGraphHumanReviewCallbackController {
             String error,
             String message
     ) {
+    }
+
+    private static final class UnauthorizedCallbackException extends RuntimeException {
+        private UnauthorizedCallbackException() {
+            super("Human review callback token is missing or invalid");
+        }
     }
 }
