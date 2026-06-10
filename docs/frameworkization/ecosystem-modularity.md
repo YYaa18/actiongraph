@@ -19,7 +19,7 @@ The component catalog exposes a machine-readable `compatibility` label for each 
 | Label | Current Use |
 |---|---|
 | `no-runtime-code` | `actiongraph-bom` |
-| `java8-client` | `actiongraph-control-plane-api`, for Java 8 HTTP/client integration |
+| `java8-client` | `actiongraph-component-catalog` for Java 8 local component discovery; `actiongraph-control-plane-api` for Java 8 HTTP/client integration |
 | `java8-runtime` | Reserved for a future embeddable Java 8 runtime slice |
 | `java21-plus` | Current runtime, framework, infrastructure, governance, provider, and Spring ecosystem modules |
 | `sample-only` | `actiongraph-samples` |
@@ -66,7 +66,7 @@ The Interpretation module provides GoalCatalog metadata, GoalInterpreter contrac
 
 The Runtime API module composes interpretation, Blackboard seeding, `GoapExecutor`, and `ActionRegistry` into stable `interpret`, `start`, and `resume` service methods for gateways, CLIs, or custom controllers. It depends on core and interpretation contracts, but it does not provide an LLM provider, create repositories, or expose HTTP endpoints.
 
-The Component Catalog module publishes static ActionGraph module metadata, capability tags, dependency hints, and composition profiles. It has no runtime dependency and can be used by CLIs, deployment checks, enterprise gateways, or custom consoles. The Component Catalog Spring Boot starter exposes that metadata through read-only HTTP endpoints and remains opt-in through its own property switch.
+The Component Catalog module publishes static ActionGraph module metadata, capability tags, dependency hints, and composition profiles. It is Java 8 compatible, has no runtime dependency, and can be used by CLIs, deployment checks, enterprise gateways, or custom consoles. The Component Catalog Spring Boot starter exposes that metadata through read-only HTTP endpoints and remains opt-in through its own property switch.
 
 The Control-Plane API module standardizes small response contracts such as `ControlPlaneErrorResponse` for endpoint starters and custom gateways. It depends only on the JDK, can be used without Spring, and intentionally does not map exceptions or register HTTP advice.
 
@@ -96,7 +96,7 @@ The Control Plane Spring Boot starter is a convenience aggregate over the Spring
 
 `actiongraph-runtime-api` is an optional public framework component: it maps interpretation and runtime wiring into stable entry service DTOs. It may start or resume runs through a supplied `GoapExecutor`, but it must not call LLM providers, create persistence, register actions, expose HTTP endpoints, or own approval-task/console concerns.
 
-`actiongraph-component-catalog` is an optional ecosystem metadata component: it exposes static module and composition metadata through Java records and a service. It must not depend on runtime, Spring, JDBC, LLM providers, governance, repositories, or endpoints.
+`actiongraph-component-catalog` is an optional ecosystem metadata component: it exposes static module and composition metadata through Java 8 compatible data classes and a service. It must not depend on runtime, Spring, JDBC, LLM providers, governance, repositories, or endpoints.
 
 `actiongraph-control-plane-api` is an optional ecosystem utility: it exposes Java 8 compatible response DTO contracts, a lightweight Runtime API HTTP client, and shared-secret token verification for control-plane adapters and legacy callers. It must not depend on Spring, runtime, persistence, LLM providers, governance, repositories, endpoint modules, or third-party HTTP/JSON libraries.
 

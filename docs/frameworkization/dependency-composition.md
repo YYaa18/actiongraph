@@ -124,7 +124,7 @@ dependencies {
 }
 ```
 
-`actiongraph-component-catalog` has no Spring, JDBC, LLM, or runtime dependency. It provides `ActionGraphComponentCatalogService`, component records, compatibility labels such as `java8-client` / `java21-plus`, and composition profile records that can be reused outside HTTP.
+`actiongraph-component-catalog` is compiled with `--release 8` and has no Spring, JDBC, LLM, or runtime dependency. It provides `ActionGraphComponentCatalogService`, component data classes, compatibility labels such as `java8-client` / `java21-plus`, and composition profile data classes that can be reused outside HTTP.
 
 ## Control-Plane API Contracts
 

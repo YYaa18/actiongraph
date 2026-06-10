@@ -27,7 +27,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
 - Reusable runtime API service for goal interpretation, start, and resume gateways
-- Reusable machine-readable component catalog and composition profiles
+- Java 8 compatible machine-readable component catalog and composition profiles
 - Java 8 compatible control-plane contracts and lightweight runtime HTTP client
 - Machine-readable compatibility labels for distinguishing Java 8 client artifacts from modern runtime modules
 - Reusable control-plane shared-secret token verification component
@@ -61,7 +61,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-memory-spring-boot-starter` | Optional Spring Boot auto-configuration for structured memory and JDBC memory repository |
 | `actiongraph-interpretation` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
 | `actiongraph-runtime-api` | Reusable goal interpretation, start, and resume service |
-| `actiongraph-component-catalog` | Reusable machine-readable component catalog and composition profiles |
+| `actiongraph-component-catalog` | Java 8 compatible machine-readable component catalog and composition profiles |
 | `actiongraph-control-plane-api` | Java 8 compatible control-plane response contracts, lightweight runtime HTTP client, and shared-secret token verification |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
@@ -188,7 +188,7 @@ Runtime API starter: POST /actiongraph/runtime/runs
 Runtime API starter: POST /actiongraph/runtime/runs/{runId}/resume
 ```
 
-Non-Spring services, CLIs, gateways, and deployment checks can use `actiongraph-component-catalog` when they need a structured list of ActionGraph modules, capability tags, dependency hints, compatibility labels, and recommended composition profiles. Spring MVC control-plane services can add `actiongraph-component-catalog-spring-boot-starter` and enable `actiongraph.component-catalog.enabled=true` to expose the same read-only catalog:
+Non-Spring services, CLIs, gateways, deployment checks, and Java 8 estates can use `actiongraph-component-catalog` when they need a structured list of ActionGraph modules, capability tags, dependency hints, compatibility labels, and recommended composition profiles. Spring MVC control-plane services can add `actiongraph-component-catalog-spring-boot-starter` and enable `actiongraph.component-catalog.enabled=true` to expose the same read-only catalog:
 
 ```text
 Catalog starter: GET /actiongraph/components
@@ -200,7 +200,7 @@ Catalog starter: GET /actiongraph/components/profiles/{profile}
 
 Custom gateways, endpoint adapters, or Java 8 legacy systems can use `actiongraph-control-plane-api` when they need ActionGraph's standard `{ "error", "message" }` error response contract, zero-dependency `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`, or shared-secret token verification without depending on Spring Web. Built-in runtime, component catalog, human-review, callback, and Console endpoint starters depend on it transitively. The token helper validates configured header names, skips token lookup when no shared secret is configured, and uses constant-time token comparison; it is not an enterprise IAM or RBAC layer.
 
-The component catalog exposes a `compatibility` label for each module. Today `actiongraph-control-plane-api` is the only `java8-client` artifact; embeddable runtime, Spring, JDBC, governance, LLM, Console, and sample modules are `java21-plus` or `sample-only`.
+The component catalog exposes a `compatibility` label for each module. Today `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` artifacts; embeddable runtime, Spring, JDBC, governance, LLM, Console, and sample modules are `java21-plus` or `sample-only`.
 
 Non-Spring services can use `actiongraph-human-review` directly when they need external approval task storage, callback handling, multi-stage approval chains, or a stable task query/decision service without Spring MVC.
 
@@ -278,6 +278,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Component catalog](docs/frameworkization/component-catalog.md)
 - [Control-plane API contracts](docs/frameworkization/control-plane-api.md)
 - [Java 8 legacy integration](docs/frameworkization/java8-legacy-integration.md)
+- [Java 8 component catalog client example](docs/examples/java8-component-catalog-client)
 - [Java 8 legacy client example](docs/examples/java8-legacy-client)
 - [Pre-Java-8 raw HTTP gateway example](docs/examples/pre-java8-http-gateway)
 - [Control-plane starter](docs/frameworkization/control-plane-starter.md)

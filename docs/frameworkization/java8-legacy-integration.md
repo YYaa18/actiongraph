@@ -6,6 +6,7 @@ Many financial systems still run on Java 8, and some are older. ActionGraph ther
 
 | Level | Supported Runtime | Intended Use |
 |---|---|---|
+| Java 8 component catalog | Java 8+ | Legacy systems, gateways, or deployment checks inspect ActionGraph module metadata through `actiongraph-component-catalog` |
 | Java 8 HTTP client | Java 8+ | Legacy systems call a deployed ActionGraph Runtime API through `actiongraph-control-plane-api` |
 | Java 8 embeddable core | Target, not yet complete | Future narrowed core/annotations/governance packages compiled with `--release 8` |
 | Modern service runtime | Java 21+ build today | ActionGraph runtime service, Spring Boot starters, JDBC persistence, console, samples, and CI |
@@ -76,7 +77,7 @@ Current labels:
 | `java21-plus` | Requires the modern ActionGraph service runtime side |
 | `sample-only` | Demonstration code, not a supported library dependency |
 
-Today, `actiongraph-control-plane-api` is the only `java8-client` module. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts.
+Today, `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` modules. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts.
 
 ## Non-Goals
 

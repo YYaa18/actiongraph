@@ -65,6 +65,14 @@ class ActionGraphComponentCatalogServiceTest {
                     assertThat(component.capabilities())
                             .contains("java8-runtime-client", "shared-secret-token-verification");
                 });
+        assertThat(service.component("actiongraph-component-catalog"))
+                .isPresent()
+                .get()
+                .satisfies(component -> {
+                    assertThat(component.compatibility()).isEqualTo(ComponentCompatibility.JAVA8_CLIENT.label());
+                    assertThat(component.capabilities())
+                            .contains("component-catalog", "composition-profiles");
+                });
         assertThat(service.component("actiongraph-core"))
                 .isPresent()
                 .get()
@@ -82,7 +90,7 @@ class ActionGraphComponentCatalogServiceTest {
                         .isEqualTo(ComponentCompatibility.NO_RUNTIME_CODE.label()));
         assertThat(service.componentsByCompatibility(ComponentCompatibility.JAVA8_CLIENT.label()))
                 .extracting(ActionGraphComponent::module)
-                .containsExactly("actiongraph-control-plane-api");
+                .containsExactly("actiongraph-component-catalog", "actiongraph-control-plane-api");
         assertThat(service.componentsByCompatibility(ComponentCompatibility.JAVA8_RUNTIME.label()))
                 .isEmpty();
         assertThat(service.componentsByCompatibility(null)).isEmpty();
@@ -146,7 +154,7 @@ class ActionGraphComponentCatalogServiceTest {
                 .isPresent()
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())
-                        .containsExactly("actiongraph-control-plane-api"));
+                        .containsExactly("actiongraph-component-catalog", "actiongraph-control-plane-api"));
         assertThat(service.profile("control-plane-shared" + "-auth"))
                 .isEmpty();
         assertThat(service.profile("console-control-plane"))

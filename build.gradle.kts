@@ -11,6 +11,7 @@ version = "0.1.0"
 val platformModuleName = "actiongraph-bom"
 
 val java8CompatibleModules = setOf(
+    "actiongraph-component-catalog",
     "actiongraph-control-plane-api"
 )
 
@@ -21,7 +22,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-memory-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph structured memory and JDBC repository support.",
     "actiongraph-interpretation" to "Optional goal interpretation contracts and GoalCatalog support for ActionGraph.",
     "actiongraph-runtime-api" to "Reusable ActionGraph goal interpretation, start, and resume API service.",
-    "actiongraph-component-catalog" to "Reusable machine-readable ActionGraph component catalog and composition profile service.",
+    "actiongraph-component-catalog" to "Java 8 compatible machine-readable ActionGraph component catalog and composition profile service.",
     "actiongraph-control-plane-api" to "Java 8 compatible control-plane contracts, lightweight HTTP clients, and shared-secret token verification.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, approval chains, and task query APIs for ActionGraph.",
     "actiongraph-llm" to "Provider-neutral LLM goal interpretation support for ActionGraph.",

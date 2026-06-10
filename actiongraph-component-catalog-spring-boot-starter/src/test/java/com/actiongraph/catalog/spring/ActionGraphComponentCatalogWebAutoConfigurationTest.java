@@ -72,7 +72,8 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
 
                     mockMvc.perform(get("/internal/actiongraph/components/compatibility/java8-client"))
                             .andExpect(status().isOk())
-                            .andExpect(jsonPath("$[0].module").value("actiongraph-control-plane-api"))
+                            .andExpect(jsonPath("$[*].module", hasItem("actiongraph-component-catalog")))
+                            .andExpect(jsonPath("$[*].module", hasItem("actiongraph-control-plane-api")))
                             .andExpect(jsonPath("$[0].compatibility").value("java8-client"));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/ecosystem-introspection"))
@@ -87,7 +88,8 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/java8-legacy-client"))
                             .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-api"));
+                            .andExpect(jsonPath("$.modules[0]").value("actiongraph-component-catalog"))
+                            .andExpect(jsonPath("$.modules[1]").value("actiongraph-control-plane-api"));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/control-plane-shared" + "-auth"))
                             .andExpect(status().isNotFound());

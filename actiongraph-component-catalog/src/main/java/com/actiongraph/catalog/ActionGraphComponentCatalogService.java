@@ -1,7 +1,9 @@
 package com.actiongraph.catalog;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class ActionGraphComponentCatalogService {
     private final ActionGraphComponentCatalog catalog;
@@ -31,15 +33,19 @@ public final class ActionGraphComponentCatalogService {
     }
 
     public List<ActionGraphComponent> componentsByCompatibility(String compatibility) {
-        if (compatibility == null || compatibility.isBlank()) {
-            return List.of();
+        if (isBlank(compatibility)) {
+            return Collections.emptyList();
         }
         return catalog.components().stream()
                 .filter(component -> component.compatibility().equals(compatibility))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public Optional<ActionGraphCompositionProfile> profile(String name) {
         return catalog.profile(name);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

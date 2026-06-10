@@ -1,9 +1,12 @@
 package com.actiongraph.catalog;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class ActionGraphComponentCatalog {
     private final List<ActionGraphComponent> components;
@@ -13,8 +16,8 @@ public final class ActionGraphComponentCatalog {
             List<ActionGraphComponent> components,
             List<ActionGraphCompositionProfile> profiles
     ) {
-        this.components = List.copyOf(Objects.requireNonNull(components, "components"));
-        this.profiles = List.copyOf(Objects.requireNonNull(profiles, "profiles"));
+        this.components = copy(components, "components");
+        this.profiles = copy(profiles, "profiles");
         assertUniqueComponents(this.components);
         assertUniqueProfiles(this.profiles);
     }
@@ -36,7 +39,7 @@ public final class ActionGraphComponentCatalog {
     }
 
     public Optional<ActionGraphComponent> component(String module) {
-        if (module == null || module.isBlank()) {
+        if (isBlank(module)) {
             return Optional.empty();
         }
         return components.stream()
@@ -45,7 +48,7 @@ public final class ActionGraphComponentCatalog {
     }
 
     public Optional<ActionGraphCompositionProfile> profile(String name) {
-        if (name == null || name.isBlank()) {
+        if (isBlank(name)) {
             return Optional.empty();
         }
         return profiles.stream()
@@ -59,7 +62,7 @@ public final class ActionGraphComponentCatalog {
                 .sorted()
                 .filter(new DuplicateFilter()::isDuplicate)
                 .distinct()
-                .toList();
+                .collect(Collectors.toList());
         if (!duplicates.isEmpty()) {
             throw new IllegalArgumentException("duplicate components: " + duplicates);
         }
@@ -71,7 +74,7 @@ public final class ActionGraphComponentCatalog {
                 .sorted(Comparator.naturalOrder())
                 .filter(new DuplicateFilter()::isDuplicate)
                 .distinct()
-                .toList();
+                .collect(Collectors.toList());
         if (!duplicates.isEmpty()) {
             throw new IllegalArgumentException("duplicate profiles: " + duplicates);
         }
@@ -85,5 +88,13 @@ public final class ActionGraphComponentCatalog {
             previous = value;
             return duplicate;
         }
+    }
+
+    private static <T> List<T> copy(List<T> values, String name) {
+        return Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(values, name)));
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

@@ -1,6 +1,6 @@
 # Component Catalog
 
-`actiongraph-component-catalog` is a reusable, non-Spring metadata component for ActionGraph's ecosystem modules.
+`actiongraph-component-catalog` is a reusable, Java 8 compatible, non-Spring metadata component for ActionGraph's ecosystem modules.
 
 It turns the module split into a machine-readable API: deployment checks, CLIs, enterprise gateways, custom consoles, or docs generators can query which modules exist, what capability tags they provide, what they require, which compatibility level they target, and which composition profiles are recommended.
 
@@ -27,7 +27,15 @@ catalog.componentsByCompatibility("java8-client")
         .forEach(component -> System.out.println(component.module()));
 ```
 
-The pure Java module has no dependency on Spring, JDBC, LLM providers, runtime repositories, or business samples.
+The pure Java module is compiled with `--release 8` and has no dependency on Spring, JDBC, LLM providers, runtime repositories, or business samples.
+
+A Java 8 client template lives at:
+
+```text
+docs/examples/java8-component-catalog-client/src/main/java/com/company/deployment/ActionGraphComponentCatalogUsage.java
+```
+
+The test suite compiles that exact file with `javac --release 8`, so deployment checks and legacy gateways have a verified copy-paste starting point for local component discovery.
 
 ## Spring MVC Endpoint
 
@@ -87,7 +95,7 @@ Every component includes a `compatibility` value. Current labels are:
 | Label | Meaning |
 |---|---|
 | `no-runtime-code` | No loadable runtime classes, such as the BOM |
-| `java8-client` | Java 8 loadable client/control-plane helper; currently `actiongraph-control-plane-api` |
+| `java8-client` | Java 8 loadable client/control-plane helper; currently `actiongraph-component-catalog` and `actiongraph-control-plane-api` |
 | `java8-runtime` | Reserved for a future embeddable Java 8 runtime slice |
 | `java21-plus` | Current runtime, framework, infrastructure, governance, provider, and Spring modules |
 | `sample-only` | Demonstration code only |
@@ -102,6 +110,7 @@ The catalog is part of the release contract, not only documentation. Tests verif
 - every non-sample library module appears in the BOM constraints
 - every catalog component uses one of the closed compatibility labels
 - every module listed as Java 8 compatible by the build passes the Java 8 bytecode and dependency guard
+- the documented Java 8 component catalog example can be consumed from standalone `javac --release 8` source
 - the documented Java 8 control-plane client example can be consumed from standalone `javac --release 8` source
 - the documented older-than-Java-8 raw HTTP gateway example can be consumed from standalone `javac --release 8` source with an empty classpath and no ActionGraph imports
 
