@@ -135,6 +135,7 @@ public class ActionGraphProperties {
 
     public static final class HumanReviewProperties {
         private boolean riskBasedApprovalChain = false;
+        private final CallbackEndpointProperties callbackEndpoint = new CallbackEndpointProperties();
 
         public boolean isRiskBasedApprovalChain() {
             return riskBasedApprovalChain;
@@ -142,6 +143,34 @@ public class ActionGraphProperties {
 
         public void setRiskBasedApprovalChain(boolean riskBasedApprovalChain) {
             this.riskBasedApprovalChain = riskBasedApprovalChain;
+        }
+
+        public CallbackEndpointProperties getCallbackEndpoint() {
+            return callbackEndpoint;
+        }
+    }
+
+    public static final class CallbackEndpointProperties {
+        private boolean enabled = false;
+        private String path = "/actiongraph/human-review/callbacks";
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            if (path == null || path.isBlank()) {
+                throw new IllegalArgumentException("callback endpoint path must not be blank");
+            }
+            this.path = path;
         }
     }
 

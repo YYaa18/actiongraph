@@ -8,7 +8,10 @@ dependencies {
     api(project(":actiongraph-core"))
     api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
+    compileOnly("org.springframework:spring-web:6.1.14")
+
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+    testImplementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
 }

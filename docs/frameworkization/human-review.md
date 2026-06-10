@@ -39,6 +39,21 @@ reviewRepository.decideStage(
 
 `decide(...)` remains available for simple single-stage integrations. `decideStage(...)` is recommended for approval callbacks because it includes the stage index the approval UI displayed; duplicate callbacks for the same stage fail with `StageAlreadyDecidedException` instead of accidentally advancing the next stage.
 
+External callback consumers can also use the core handler instead of calling the repository directly:
+
+```java
+HumanReviewCallbackHandler handler = new HumanReviewCallbackHandler(reviewRepository);
+
+handler.handle(new HumanReviewCallback(
+        "RUN-1",
+        new ActionId("claim.approval.request"),
+        0,
+        HumanReviewDecision.APPROVED,
+        "claims-checker",
+        "Approved in approval console"
+));
+```
+
 ## JDBC Usage
 
 ```java
@@ -71,8 +86,9 @@ The Spring Boot starter now provides these defaults:
 - `HumanReviewRepository` -> `InMemoryHumanReviewRepository`
 - `HumanReviewPolicy` -> `RepositoryBackedHumanReviewPolicy`
 - `ApprovalChainResolver` -> `SingleStageApprovalChainResolver`
+- `HumanReviewCallbackHandler` when the optional callback endpoint is enabled
 
-Applications can replace either bean. For durable review tasks:
+Applications can replace these beans. For durable review tasks:
 
 ```java
 @Bean
@@ -82,6 +98,37 @@ HumanReviewRepository humanReviewRepository(DataSource dataSource) {
 ```
 
 Set `actiongraph.human-review.risk-based-approval-chain=true` to use `RiskBasedChainResolver`: HIGH risk actions require checker review and authorization; other actions remain single-stage unless request attributes ask for amount escalation. Review attributes are copied onto `HumanReviewTask`, so external approval systems can show why a task was escalated without recomputing business amounts.
+
+Spring MVC applications can expose an approval callback endpoint without writing a controller:
+
+```yaml
+actiongraph:
+  human-review:
+    callback-endpoint:
+      enabled: true
+      path: /actiongraph/human-review/callbacks
+```
+
+The endpoint accepts one stage decision per request:
+
+```json
+{
+  "runId": "RUN-1",
+  "actionId": "claim.approval.request",
+  "expectedStageIndex": 0,
+  "decision": "APPROVED",
+  "reviewer": "claims-checker",
+  "comment": "Approved in approval console"
+}
+```
+
+It returns the updated `HumanReviewTask` projection, including `currentStageIndex` and `stageDecisionCount`. The endpoint is disabled by default and is only created in Servlet MVC applications.
+
+Callback failures use explicit HTTP semantics:
+
+- `400 BAD_REQUEST`: malformed callback payload or `PENDING` sent as a final decision
+- `404 NOT_FOUND`: no pending review task exists for `runId + actionId`
+- `409 CONFLICT`: the displayed stage index has already been decided, usually from duplicate callbacks or stale approval pages
 
 ## Semantics
 

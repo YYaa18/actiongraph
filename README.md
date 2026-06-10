@@ -16,7 +16,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional data masking for trace details/data and human-review previews
 - Tamper-evident TraceEvent hash chains with verification support
 - Single-transaction amount limits with hard denial and review escalation
-- Spring Boot starter with annotation-driven Action registration
+- Spring Boot starter with annotation-driven Action registration and optional human-review callback endpoint
 - DeepSeek-compatible LLM goal interpretation
 - Reference samples for renewal quote and order cancellation flows
 
@@ -61,6 +61,23 @@ actiongraph:
     max-steps: 64
   masking:
     enabled: false
+  human-review:
+    callback-endpoint:
+      enabled: true
+      path: /actiongraph/human-review/callbacks
+```
+
+When the callback endpoint is enabled in a Spring MVC application, approval systems can post decisions directly:
+
+```json
+{
+  "runId": "RUN-1",
+  "actionId": "claim.approval.request",
+  "expectedStageIndex": 0,
+  "decision": "APPROVED",
+  "reviewer": "claims-checker",
+  "comment": "approved"
+}
 ```
 
 ## Build And Test
@@ -82,7 +99,7 @@ Run the sample apps:
 ```
 
 The JDBC batch input path uses standard `DriverManager`; add the target database driver to the sample runtime classpath before running against a real database. See `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql` for the anonymized view contract.
-Batch reports include total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume` and `external-decisions` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations should write decisions through `HumanReviewCallbackHandler`.
+Batch reports include total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume` and `external-decisions` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` or enable the Spring Boot callback endpoint above.
 
 ## Documentation
 
