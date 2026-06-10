@@ -120,7 +120,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 ## 当前成熟度
 
-- 83 个自动化测试通过。
+- 84 个自动化测试通过。
 - 5 个 Gradle 模块完成拆分。
 - 2 个参考业务域完整跑通。
 - 支持模块发布到 Maven Local / 私服。
@@ -130,7 +130,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 ## 文档
 
 - [快速接入指南](docs/quick-start.html)
-- [领导演示文档](docs/actiongraph-pitch.html)
+- [技术汇报演示文档](docs/actiongraph-pitch.html)
 - [框架化笔记](docs/frameworkization/)
 - [原始 PRD](docs/PRD-v0.md)
 

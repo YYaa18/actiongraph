@@ -10,6 +10,8 @@ import com.actiongraph.samples.ordercancellation.domain.CancellationRequestDraft
 import com.actiongraph.samples.ordercancellation.domain.OperationsApprovalRequest;
 import com.actiongraph.samples.ordercancellation.domain.OrderId;
 import com.actiongraph.samples.ordercancellation.domain.OrderRecord;
+import com.actiongraph.planning.Condition;
+import com.actiongraph.planning.Goal;
 import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.policy.AutoApproveHumanReviewPolicy;
 import com.actiongraph.policy.DefaultPolicyGuard;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -130,6 +133,33 @@ class AnnotatedActionFactoryTest {
                 .contains(new OrderRecord(new OrderId("O200"), "PAID", false));
         assertThat(blackboard.getAll(OrderId.class))
                 .containsExactly(new OrderId("O100"), new OrderId("O200"));
+    }
+
+    @Test
+    void chineseAnnotationValuesCanBePlannedAndExecuted() {
+        ChineseAnnotatedOrderCancellationAdapter adapter = new ChineseAnnotatedOrderCancellationAdapter();
+        List<Action> actions = AnnotatedActionFactory.actions(adapter);
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+        blackboard.put(new OrderId("O100"));
+        blackboard.addCondition(Condition.of("订单取消:已有订单编号"));
+
+        var result = new GoapExecutor(
+                new GoapPlanner(),
+                new DefaultPolicyGuard(),
+                new AutoApproveHumanReviewPolicy(),
+                new InMemoryTraceRepository()
+        ).run(new Goal("申请订单取消审批", Set.of(Condition.of("订单取消:已发起运营审批"))),
+                blackboard,
+                actions,
+                registry(actions));
+
+        assertThat(result.status()).isEqualTo(RunStatus.COMPLETED);
+        assertThat(result.executedActions()).extracting(actionId -> actionId.value())
+                .containsExactly("查询订单", "校验取消资格", "创建取消申请草稿", "发起运营审批");
+        assertThat(blackboard.conditions())
+                .contains(Condition.of("订单取消:已发起运营审批"));
+        assertThat(blackboard.get(OperationsApprovalRequest.class))
+                .contains(new OperationsApprovalRequest("OPS-APPROVAL-1", "CANCEL-1"));
     }
 
     private InMemoryBlackboard blackboard() {
@@ -242,6 +272,60 @@ class AnnotatedActionFactoryTest {
         @BlackboardValue("selected")
         OrderRecord lookup(@BlackboardValue("secondary") OrderId orderId) {
             return new OrderRecord(orderId, "PAID", false);
+        }
+    }
+
+    private static final class ChineseAnnotatedOrderCancellationAdapter {
+        @ActionGraphAction(
+                id = "查询订单",
+                preconditions = "订单取消:已有订单编号",
+                effects = "订单取消:已加载订单",
+                riskLevel = ActionRiskLevel.READ_ONLY
+        )
+        OrderRecord 查询订单(OrderId orderId) {
+            return new OrderRecord(orderId, "PAID", false);
+        }
+
+        @ActionGraphAction(
+                id = "校验取消资格",
+                preconditions = "订单取消:已加载订单",
+                effects = "订单取消:已通过取消资格校验"
+        )
+        CancellationEligibility 校验取消资格(OrderRecord order) {
+            return new CancellationEligibility(!order.shipped(), "订单未发货");
+        }
+
+        @ActionGraphAction(
+                id = "创建取消申请草稿",
+                preconditions = {
+                        "订单取消:已加载订单",
+                        "订单取消:已通过取消资格校验"
+                },
+                effects = "订单取消:已创建取消申请草稿",
+                riskLevel = ActionRiskLevel.MEDIUM
+        )
+        CancellationRequestDraft 创建取消申请草稿(OrderRecord order, CancellationEligibility eligibility) {
+            return new CancellationRequestDraft("CANCEL-1", order.orderId());
+        }
+
+        @ActionGraphGuard(actionId = "创建取消申请草稿")
+        boolean 允许创建草稿(CancellationEligibility eligibility) {
+            return eligibility.eligible();
+        }
+
+        @ActionGraphCompensation(actionId = "创建取消申请草稿")
+        void 撤销取消草稿(CancellationRequestDraft draft) {
+        }
+
+        @ActionGraphAction(
+                id = "发起运营审批",
+                preconditions = "订单取消:已创建取消申请草稿",
+                effects = "订单取消:已发起运营审批",
+                riskLevel = ActionRiskLevel.HIGH,
+                requiresHumanReview = true
+        )
+        OperationsApprovalRequest 发起运营审批(CancellationRequestDraft draft) {
+            return new OperationsApprovalRequest("OPS-APPROVAL-1", draft.requestId());
         }
     }
 }

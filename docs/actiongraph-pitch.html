@@ -753,7 +753,7 @@
         <span>审批申请已创建：APPROVAL-1，对应报价：QUOTE-1</span>
       </div>
       <div class="hud">
-        <div class="hud-item"><b>83</b><span>tests passing</span></div>
+        <div class="hud-item"><b>84</b><span>tests passing</span></div>
         <div class="hud-item"><b>5</b><span>modules</span></div>
         <div class="hud-item"><b>2</b><span>reference domains</span></div>
         <div class="hud-item"><b>0</b><span>LLM-generated plans</span></div>
@@ -793,39 +793,39 @@
     <h2>业务系统只暴露<em>可控 Action</em>，框架自动形成可搜索的执行图谱</h2>
     <div class="layout-2">
       <div class="console compact tall">
-        <div class="console-head"><span>OrderCancellationService.java</span><span>ORDINARY SPRING BEAN</span></div>
+        <div class="console-head"><span>OrderCancellationService.java</span><span>中文注解已实测</span></div>
         <div class="console-body">
           <div><span class="log-info">@ActionGraphAction</span>(</div>
-          <div>&nbsp;&nbsp;id = "order.cancellation.request.draft",</div>
+          <div>&nbsp;&nbsp;id = "创建取消申请草稿",</div>
           <div>&nbsp;&nbsp;preconditions = {</div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;"order:ORDER_LOADED",</div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;"order:CANCELLATION_ELIGIBLE"</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"订单取消:已加载订单",</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"订单取消:已通过取消资格校验"</div>
           <div>&nbsp;&nbsp;},</div>
-          <div>&nbsp;&nbsp;effects = "order:CANCELLATION_DRAFT_CREATED",</div>
+          <div>&nbsp;&nbsp;effects = "订单取消:已创建取消申请草稿",</div>
           <div>&nbsp;&nbsp;riskLevel = RiskLevel.HIGH,</div>
           <div>&nbsp;&nbsp;requiresHumanReview = true</div>
           <div>)</div>
-          <div><span class="log-ok">public CancellationRequestDraft createDraft</span>(</div>
+          <div><span class="log-ok">public CancellationRequestDraft 创建取消申请草稿</span>(</div>
           <div>&nbsp;&nbsp;OrderRecord order, CancellationEligibility eligibility) {</div>
           <div>&nbsp;&nbsp;return cancellationService.createDraft(order.id());</div>
           <div>}</div>
           <br>
-          <div><span class="log-warn">@ActionGraphGuard</span>(actionId = "order.cancellation.request.draft")</div>
-          <div>boolean canDraft(CancellationEligibility e) { return e.allowed(); }</div>
+          <div><span class="log-warn">@ActionGraphGuard</span>(actionId = "创建取消申请草稿")</div>
+          <div>boolean 允许创建草稿(CancellationEligibility e) { return e.allowed(); }</div>
           <br>
-          <div><span class="log-warn">@ActionGraphCompensation</span>(actionId = "order.cancellation.request.draft")</div>
-          <div>void voidDraft(CancellationRequestDraft draft) { service.voidDraft(draft.requestId()); }</div>
+          <div><span class="log-warn">@ActionGraphCompensation</span>(actionId = "创建取消申请草稿")</div>
+          <div>void 撤销取消草稿(CancellationRequestDraft draft) { service.voidDraft(draft.requestId()); }</div>
         </div>
       </div>
       <div>
         <div class="pipeline vertical">
           <div class="step"><div class="step-num">01 REGISTER</div><b>Spring 扫描注解</b><span>业务类不实现框架接口，starter 把 Bean 方法适配成 Action。</span></div>
-          <div class="step"><div class="step-num">02 SEARCH</div><b>Planner 只看条件图</b><span>preconditions/effects 决定路径，LLM 不能生成 Plan。</span></div>
+          <div class="step"><div class="step-num">02 SEARCH</div><b>Planner 只看条件图</b><span>中文 preconditions/effects 同样参与确定性规划。</span></div>
           <div class="step"><div class="step-num">03 EXECUTE</div><b>每步执行后重规划</b><span>guard、审批、失败补偿都发生在运行期。</span></div>
         </div>
         <div class="result-list">
-          <div class="result-row"><b>输入</b><span>Cancel order O100</span></div>
-          <div class="result-row"><b>目标条件</b><span>order:OPERATIONS_APPROVAL_REQUESTED</span></div>
+          <div class="result-row"><b>输入</b><span>帮我发起订单 O100 的取消申请</span></div>
+          <div class="result-row"><b>目标条件</b><span>订单取消:已发起运营审批</span></div>
           <div class="result-row"><b>结果对象</b><span>OperationsApprovalRequest("OPS-APPROVAL-1", "CANCEL-1")</span></div>
         </div>
       </div>
@@ -944,40 +944,40 @@
     <h2>接入不是重构系统，而是给已有 Service 方法<em>加一层 ActionGraph 注解</em></h2>
     <div class="layout-2">
       <div class="console compact tall">
-        <div class="console-head"><span>RenewalQuoteService.java</span><span>ANNOTATION SPI</span></div>
+        <div class="console-head"><span>RenewalQuoteService.java</span><span>中文 Action 命名</span></div>
         <div class="console-body">
           <div><span class="log-info">@ActionGraphAction</span>(</div>
-          <div>&nbsp;&nbsp;id = "quote.draft.create",</div>
+          <div>&nbsp;&nbsp;id = "创建续约报价草稿",</div>
           <div>&nbsp;&nbsp;preconditions = {</div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;"renewal:CUSTOMER_PROFILE_LOADED",</div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;"renewal:CONTRACT_LOADED",</div>
-          <div>&nbsp;&nbsp;&nbsp;&nbsp;"renewal:ELIGIBLE"</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"续约报价:已加载客户资料",</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"续约报价:已加载当前合同",</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"续约报价:符合续约条件"</div>
           <div>&nbsp;&nbsp;},</div>
-          <div>&nbsp;&nbsp;effects = "renewal:QUOTE_DRAFT_CREATED"</div>
+          <div>&nbsp;&nbsp;effects = "续约报价:已创建报价草稿"</div>
           <div>)</div>
-          <div><span class="log-ok">public QuoteDraft createDraft</span>(CustomerProfile profile, CurrentContract contract) {</div>
+          <div><span class="log-ok">public QuoteDraft 创建报价草稿</span>(CustomerProfile profile, CurrentContract contract) {</div>
           <div>&nbsp;&nbsp;return quoteService.createDraft(profile.customerId(), contract.contractId());</div>
           <div>}</div>
           <br>
-          <div><span class="log-warn">@ActionGraphGuard</span>(actionId = "quote.draft.create")</div>
-          <div>boolean policyAllows(RenewalEligibility eligibility) {</div>
+          <div><span class="log-warn">@ActionGraphGuard</span>(actionId = "创建续约报价草稿")</div>
+          <div>boolean 策略允许创建报价(RenewalEligibility eligibility) {</div>
           <div>&nbsp;&nbsp;return eligibility.eligible() && !eligibility.requiresExceptionApproval();</div>
           <div>}</div>
           <br>
-          <div><span class="log-warn">@ActionGraphCompensation</span>(actionId = "quote.draft.create")</div>
-          <div>void compensate(QuoteDraft draft) { quoteService.voidDraft(draft.quoteId()); }</div>
+          <div><span class="log-warn">@ActionGraphCompensation</span>(actionId = "创建续约报价草稿")</div>
+          <div>void 作废报价草稿(QuoteDraft draft) { quoteService.voidDraft(draft.quoteId()); }</div>
         </div>
       </div>
       <div>
         <div class="console compact short">
           <div class="console-head"><span>Spring startup</span><span>AUTO REGISTRATION</span></div>
           <div class="console-body">
-            <div><span class="log-ok">registered</span> quote.draft.create</div>
-            <div><span class="log-ok">guard</span> quote.draft.create -> policyAllows</div>
-            <div><span class="log-ok">compensation</span> quote.draft.create -> compensate</div>
+            <div><span class="log-ok">registered</span> 创建续约报价草稿</div>
+            <div><span class="log-ok">guard</span> 创建续约报价草稿 -> 策略允许创建报价</div>
+            <div><span class="log-ok">compensation</span> 创建续约报价草稿 -> 作废报价草稿</div>
             <div><span class="log-info">input types</span> CustomerProfile, CurrentContract</div>
             <div><span class="log-info">output type</span> QuoteDraft</div>
-            <div><span class="log-info">conditions</span> renewal:* namespace accepted</div>
+            <div><span class="log-info">conditions</span> 续约报价:* namespace accepted</div>
           </div>
         </div>
         <div class="result-list">
@@ -1004,12 +1004,12 @@
           <div><span class="log-ok">actiongraph-llm-deepseek:test</span> 8 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-persistence-jdbc:test</span> 10 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-spring-boot-starter:test</span> 8 tests, 0 failures</div>
-          <div><span class="log-ok">actiongraph-samples:test</span> 36 tests, 1 gated smoke skipped</div>
-          <div><span class="log-ok">BUILD SUCCESSFUL</span> 83 tests, 0 failures, 1 skipped</div>
+          <div><span class="log-ok">actiongraph-samples:test</span> 37 tests, 1 gated smoke skipped</div>
+          <div><span class="log-ok">BUILD SUCCESSFUL</span> 84 tests, 0 failures, 1 skipped</div>
         </div>
       </div>
       <div class="layout-3" style="grid-template-columns:1fr;">
-        <div class="panel ok"><div class="metric green">83</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、Spring starter。</p></div>
+        <div class="panel ok"><div class="metric green">84</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、Spring starter、中文注解值。</p></div>
         <div class="panel ok"><div class="metric green">5</div><h3>工程模块</h3><p>core / llm-deepseek / persistence-jdbc / spring-boot-starter / samples，可发内部 Maven。</p></div>
         <div class="panel ok"><div class="metric green">2</div><h3>参考业务域</h3><p>续约报价、订单取消两个不同领域接入，证明核心可复用。</p></div>
       </div>
@@ -1028,30 +1028,30 @@
   </div>
 </section>
 
-<section class="slide" data-title="试点">
+<section class="slide" data-title="落地验证">
   <div class="content">
-    <div class="kicker">下一步建议</div>
-    <h2>三周试点：用一个真实业务场景验证<em>效率、安全、可审计</em></h2>
+    <div class="kicker">真实场景验证清单</div>
+    <h2>进入业务系统前，先用一个真实场景验证<em>效率、安全、可审计</em></h2>
     <div class="timeline">
       <div class="phase">
-        <div class="week">第 1 周 / 接入</div>
-        <h3>选一个低风险高频场景</h3>
-        <p>建议选择草稿生成、申请发起、内部审批类场景。业务团队在框架组陪跑下完成 Action 封装和 Goal 注册。</p>
+        <div class="week">场景准备</div>
+        <h3>低风险高频链路</h3>
+        <p>草稿生成、申请发起、内部审批类场景最适合作为首个验证对象，既能体现效率，也能控制业务风险。</p>
       </div>
       <div class="phase">
-        <div class="week">第 2 周 / 联调</div>
-        <h3>接审批与持久化</h3>
+        <div class="week">工程联调</div>
+        <h3>审批与持久化</h3>
         <p>跑通挂起、审批、恢复、拒绝补偿、失败补偿，安全团队检查审计链与权限策略。</p>
       </div>
       <div class="phase">
-        <div class="week">第 3 周 / 灰度</div>
-        <h3>小范围真实用户验证</h3>
-        <p>采集操作耗时、接入人天、审批拦截率、审计完整率，输出推广决策报告。</p>
+        <div class="week">灰度观测</div>
+        <h3>小范围真实用户</h3>
+        <p>采集操作耗时、接入人天、审批拦截率、审计完整率，为后续推广范围提供数据依据。</p>
       </div>
     </div>
     <div class="layout-2" style="margin-top:24px;">
-      <div class="panel"><h3>试点成功指标</h3><p>单流程耗时下降 50% 以上；接入成本不超过 3 人天；审批拦截率、补偿成功率、审计完整率均达到 100%。</p></div>
-      <div class="panel ok"><h3>请求批准</h3><p>授权 1 个试点业务团队 + 框架组 1 人陪跑，启动三周真实场景试点。</p></div>
+      <div class="panel"><h3>验证指标</h3><p>单流程耗时下降 50% 以上；接入成本不超过 3 人天；审批拦截率、补偿成功率、审计完整率均达到 100%。</p></div>
+      <div class="panel ok"><h3>输出物</h3><p>真实运行日志、Trace 审计样本、补偿演练记录、接入成本统计和风险问题清单。</p></div>
     </div>
   </div>
 </section>
@@ -1062,11 +1062,11 @@
     <h2>ActionGraph 的本质：把 AI 能力从“项目制”升级为<em>公司级基础设施</em></h2>
     <div class="quote">每个系统注册自己的业务能力图谱，全公司共享一个安全、可审计、可恢复的 AI 执行底座。接入的系统越多，能力图谱越大，AI 能替员工完成的事就越多。</div>
     <div class="layout-3" style="margin-top:30px;">
-      <div class="panel"><h3>近期</h3><p>试点落地，完成内部 Maven 发布、中文接入文档、审批系统对接。</p></div>
+      <div class="panel"><h3>近期</h3><p>首个真实场景落地验证，完成内部 Maven 发布、中文接入文档、审批系统对接。</p></div>
       <div class="panel"><h3>中期</h3><p>扩展到 2~3 个业务系统，沉淀公司统一 Action 设计规范和安全策略模板。</p></div>
       <div class="panel"><h3>长期</h3><p>形成内部能力图谱市场：业务能力可发现、可复用、可组合，新流程由图谱自动装配。</p></div>
     </div>
-    <h2 style="margin-top:42px;">建议决策：<em>批准三周试点</em></h2>
+    <h2 style="margin-top:42px;">汇报结论：<em>已具备进入真实场景验证的工程基础</em></h2>
   </div>
 </section>
 
