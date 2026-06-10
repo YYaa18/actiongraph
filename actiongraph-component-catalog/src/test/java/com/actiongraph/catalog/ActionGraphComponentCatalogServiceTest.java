@@ -47,6 +47,11 @@ class ActionGraphComponentCatalogServiceTest {
                 .satisfies(component -> assertThat(component.requires())
                         .contains("actiongraph-control-plane-api",
                                 "actiongraph-control-plane-auth"));
+        assertThat(service.component("actiongraph-control-plane-api"))
+                .isPresent()
+                .get()
+                .satisfies(component -> assertThat(component.capabilities())
+                        .contains("java8-runtime-client"));
     }
 
     @Test

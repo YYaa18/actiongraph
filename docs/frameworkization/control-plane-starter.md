@@ -25,7 +25,7 @@ dependencies {
 
 The aggregate does not include runtime action registration, JDBC repositories, review-task storage, LLM clients, governance policies, or Console JDBC adapters. Add those components separately when the deployment owns them.
 
-All built-in endpoint starters share `actiongraph-control-plane-api` for error response contracts and `actiongraph-control-plane-auth` for shared-secret token checks. The API component keeps the JSON error shape consistent across Runtime API, Component Catalog, Human Review API, callback, Console API, and export endpoints; the auth component keeps header lookup, disabled-secret semantics, and constant-time comparison consistent. These are still lightweight control-plane utilities; enterprise identity, gateway policy, RBAC, tenant checks, and rate limits remain outside this aggregate.
+All built-in endpoint starters share `actiongraph-control-plane-api` for error response contracts and `actiongraph-control-plane-auth` for shared-secret token checks. The API component keeps the JSON error shape consistent across Runtime API, Component Catalog, Human Review API, callback, Console API, and export endpoints, and also provides a Java 8 compatible `ActionGraphRuntimeHttpClient` for legacy callers; the auth component keeps header lookup, disabled-secret semantics, and constant-time comparison consistent. These are still lightweight control-plane utilities; enterprise identity, gateway policy, RBAC, tenant checks, and rate limits remain outside this aggregate.
 
 ## Endpoint Switches
 

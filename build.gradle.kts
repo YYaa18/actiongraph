@@ -7,6 +7,11 @@ version = "0.1.0"
 
 val platformModuleName = "actiongraph-bom"
 
+val java8CompatibleModules = setOf(
+    "actiongraph-control-plane-api",
+    "actiongraph-control-plane-auth"
+)
+
 val libraryModuleDescriptions = mapOf(
     "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, and trace APIs.",
     "actiongraph-annotations" to "Optional pure Java annotation adapter for ActionGraph action registration.",
@@ -15,7 +20,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-interpretation" to "Optional goal interpretation contracts and GoalCatalog support for ActionGraph.",
     "actiongraph-runtime-api" to "Reusable ActionGraph goal interpretation, start, and resume API service.",
     "actiongraph-component-catalog" to "Reusable machine-readable ActionGraph component catalog and composition profile service.",
-    "actiongraph-control-plane-api" to "Reusable control-plane response contracts for endpoint adapters.",
+    "actiongraph-control-plane-api" to "Java 8 compatible control-plane contracts and lightweight HTTP clients.",
     "actiongraph-control-plane-auth" to "Reusable control-plane shared-secret token verification support.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, and approval chains for ActionGraph.",
     "actiongraph-human-review-api" to "Reusable ActionGraph human-review task query and decision API service.",
@@ -122,6 +127,12 @@ subprojects {
 
         tasks.withType<Test> {
             useJUnitPlatform()
+        }
+
+        tasks.named<JavaCompile>("compileJava") {
+            if (project.name in java8CompatibleModules) {
+                options.release.set(8)
+            }
         }
 
         tasks.withType<Javadoc> {

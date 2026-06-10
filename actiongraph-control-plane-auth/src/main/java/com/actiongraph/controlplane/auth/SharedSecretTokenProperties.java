@@ -7,7 +7,7 @@ public interface SharedSecretTokenProperties {
 
     default boolean hasSharedSecret() {
         String secret = getSharedSecret();
-        return secret != null && !secret.isBlank();
+        return secret != null && !secret.trim().isEmpty();
     }
 
     default SharedSecretTokenProtection toTokenProtection() {

@@ -188,7 +188,7 @@
   <tr><td><code>com.actiongraph:actiongraph-interpretation</code></td><td>GoalCatalog / GoalInterpreter / 解释结果 / Blackboard seeder</td><td>需要规则解释器、目标目录或解释参数装配桥时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-runtime-api</code></td><td>目标解释 / 启动运行 / 恢复运行入口服务</td><td>企业网关、CLI 或自研控制器需要稳定入口 DTO 时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-component-catalog</code></td><td>组件目录 / 能力标签 / 组合方案元数据</td><td>CLI、企业网关、部署检查或自研控制台需要结构化读取框架生态时引入</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-control-plane-api</code></td><td>控制层错误响应契约</td><td>自研网关或自定义 endpoint adapter 需要复用 <code>error/message</code> 响应结构时引入；内置 endpoint starter 会传递引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-control-plane-api</code></td><td>Java 8 控制层契约 + Runtime HTTP client</td><td>自研网关、自定义 endpoint adapter 或 Java 8 老系统需要复用 <code>error/message</code> 响应结构，或调用已部署 Runtime API 时引入；内置 endpoint starter 会传递引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-control-plane-auth</code></td><td>控制层共享密钥 token 校验</td><td>自研网关或自定义 endpoint adapter 需要复用 ActionGraph token 语义时引入；内置 endpoint starter 会传递引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review</code></td><td>审批任务仓储 / 审批链 / 回调处理 / repository-backed policy</td><td>非 Spring 服务需要对接外部审批系统时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-api</code></td><td>审批任务查询 / 决策服务</td><td>审批门户、CLI 或企业网关需要稳定任务 DTO 时引入</td></tr>
@@ -220,7 +220,7 @@
   <tr><td><code>com.actiongraph:actiongraph-console-jdbc-spring-boot-starter</code></td><td>Console JDBC 仓储自动装配</td><td>Spring 控制层需要从 DataSource 自动创建 ConsoleRunRepository 时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-spring-boot-starter</code></td><td>Console API + UI 兼容聚合包</td><td>老接入方式保留；新接入推荐按需选择 API / UI starter</td></tr>
 </table>
-<p><code>actiongraph-control-plane-api</code> 只负责控制层响应契约，例如 <code>{"error":"UNAUTHORIZED","message":"..."}</code>；<code>actiongraph-control-plane-auth</code> 只负责共享密钥 Header token 校验：未配置 <code>shared-secret</code> 时跳过校验，配置后使用常量时间比较。内置 Runtime API、Component Catalog、Human Review API、审批回调、Console API 和 Console Export 端点都会复用它们；企业 IAM、RBAC、租户权限和网关策略仍由接入系统负责。</p>
+<p><code>actiongraph-control-plane-api</code> 是 Java 8 兼容的控制层契约包：提供 <code>{"error":"UNAUTHORIZED","message":"..."}</code> 这类统一错误响应 DTO，也提供零外部依赖的 <code>ActionGraphRuntimeHttpClient</code>，用于老系统调用 <code>/interpret</code>、<code>/runs</code> 和 <code>/runs/{runId}/resume</code>。<code>actiongraph-control-plane-auth</code> 只负责共享密钥 Header token 校验：未配置 <code>shared-secret</code> 时跳过校验，配置后使用常量时间比较。内置 Runtime API、Component Catalog、Human Review API、审批回调、Console API 和 Console Export 端点都会复用它们；企业 IAM、RBAC、租户权限和网关策略仍由接入系统负责。</p>
 
 <h2 id="step1"><span class="step-no">1</span>引入依赖</h2>
 <pre><code><span class="c">// build.gradle.kts</span>

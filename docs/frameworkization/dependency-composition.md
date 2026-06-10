@@ -128,7 +128,7 @@ dependencies {
 
 ## Control-Plane API Contracts
 
-Use this when a custom gateway or endpoint adapter wants ActionGraph's standard error response contract without depending on Spring MVC.
+Use this when a custom gateway, endpoint adapter, or Java 8 legacy application wants ActionGraph's standard control-plane contract without depending on Spring MVC.
 
 ```kotlin
 dependencies {
@@ -137,7 +137,7 @@ dependencies {
 }
 ```
 
-`actiongraph-control-plane-api` provides `ControlPlaneErrorResponse` and standard error-code factories such as `unauthorized`, `badRequest`, `notFound`, `conflict`, and `notClaimable`. It has no Spring, JDBC, LLM, runtime, or auth dependency. Built-in Spring MVC endpoint starters bring it transitively.
+`actiongraph-control-plane-api` provides `ControlPlaneErrorResponse`, standard error-code factories such as `unauthorized`, `badRequest`, `notFound`, `conflict`, and `notClaimable`, plus a zero-dependency `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`. It is compiled with `--release 8` and has no Spring, JDBC, LLM, runtime, auth, or JSON-library dependency. Built-in Spring MVC endpoint starters bring it transitively.
 
 ## Control-Plane Shared Auth
 

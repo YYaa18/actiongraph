@@ -23,7 +23,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 - Goal catalogs, rule-based interpreters, and Goal-to-Blackboard seeding add `actiongraph-interpretation`.
 - Stable non-Spring goal interpretation/start/resume entry services add `actiongraph-runtime-api`; Spring MVC runtime entry endpoints add `actiongraph-runtime-api-spring-boot-starter`.
 - Machine-readable module and composition metadata adds `actiongraph-component-catalog`; Spring MVC catalog endpoints add `actiongraph-component-catalog-spring-boot-starter`.
-- Shared control-plane error response contracts add `actiongraph-control-plane-api`; built-in Spring MVC endpoint starters bring it transitively.
+- Shared control-plane contracts and the Java 8 Runtime API HTTP client add `actiongraph-control-plane-api`; built-in Spring MVC endpoint starters bring it transitively.
 - Shared control-plane token verification adds `actiongraph-control-plane-auth`; built-in Spring MVC endpoint starters bring it transitively.
 - Repository-backed external review tasks and callback handling add `actiongraph-human-review`; stable task query/decision projections add `actiongraph-human-review-api`.
 - JDBC review task storage adds `actiongraph-human-review-jdbc`; Spring Boot JDBC review task storage adds `actiongraph-human-review-jdbc-spring-boot-starter`.
@@ -87,7 +87,7 @@ The Control Plane Spring Boot starter is a convenience aggregate over the split 
 
 `actiongraph-component-catalog` is an optional ecosystem metadata component: it exposes static module and composition metadata through Java records and a service. It must not depend on runtime, Spring, JDBC, LLM providers, governance, repositories, or endpoints.
 
-`actiongraph-control-plane-api` is an optional ecosystem utility: it exposes response DTO contracts for control-plane adapters. It must not depend on Spring, runtime, persistence, LLM providers, governance, repositories, auth, or endpoint modules.
+`actiongraph-control-plane-api` is an optional ecosystem utility: it exposes Java 8 compatible response DTO contracts and a lightweight Runtime API HTTP client for control-plane adapters and legacy callers. It must not depend on Spring, runtime, persistence, LLM providers, governance, repositories, auth, endpoint modules, or third-party HTTP/JSON libraries.
 
 `actiongraph-control-plane-auth` is an optional ecosystem utility: it verifies shared-secret tokens for control-plane adapters. It must not depend on Spring, runtime, persistence, LLM providers, governance, repositories, or endpoint modules.
 

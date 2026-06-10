@@ -1,20 +1,37 @@
 package com.actiongraph.controlplane.api;
 
-public record ControlPlaneErrorResponse(
-        String error,
-        String message
-) {
+public final class ControlPlaneErrorResponse {
     public static final String BAD_REQUEST = "BAD_REQUEST";
     public static final String CONFLICT = "CONFLICT";
     public static final String NOT_CLAIMABLE = "NOT_CLAIMABLE";
     public static final String NOT_FOUND = "NOT_FOUND";
     public static final String UNAUTHORIZED = "UNAUTHORIZED";
 
-    public ControlPlaneErrorResponse {
-        if (error == null || error.isBlank()) {
+    private final String error;
+    private final String message;
+
+    public ControlPlaneErrorResponse(String error, String message) {
+        if (isBlank(error)) {
             throw new IllegalArgumentException("error must not be blank");
         }
-        message = message == null ? "" : message;
+        this.error = error;
+        this.message = message == null ? "" : message;
+    }
+
+    public String error() {
+        return error;
+    }
+
+    public String message() {
+        return message;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     public static ControlPlaneErrorResponse badRequest(String message) {
@@ -39,5 +56,9 @@ public record ControlPlaneErrorResponse(
 
     public static ControlPlaneErrorResponse of(String error, String message) {
         return new ControlPlaneErrorResponse(error, message);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

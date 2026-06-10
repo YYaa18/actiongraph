@@ -14,7 +14,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-interpretation` | `com.actiongraph:actiongraph-interpretation:0.1.0` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
 | `actiongraph-runtime-api` | `com.actiongraph:actiongraph-runtime-api:0.1.0` | Reusable goal interpretation, start, and resume service |
 | `actiongraph-component-catalog` | `com.actiongraph:actiongraph-component-catalog:0.1.0` | Reusable component catalog and composition profile metadata |
-| `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Shared response contracts for control-plane adapters |
+| `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible control-plane contracts and lightweight runtime HTTP client |
 | `actiongraph-control-plane-auth` | `com.actiongraph:actiongraph-control-plane-auth:0.1.0` | Shared-secret token verification support for control-plane adapters |
 | `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
 | `actiongraph-human-review-api` | `com.actiongraph:actiongraph-human-review-api:0.1.0` | Reusable human-review task query and decision service |
@@ -137,6 +137,8 @@ Control-plane response contracts add:
 ```kotlin
 implementation("com.actiongraph:actiongraph-control-plane-api")
 ```
+
+This artifact is compiled with `--release 8` and has no runtime dependencies, so legacy Java 8 systems can use `ActionGraphRuntimeHttpClient` to call a deployed Runtime API without importing Spring Boot, JDBC, LLM providers, or JSON libraries.
 
 Control-plane shared-secret token verification adds:
 
