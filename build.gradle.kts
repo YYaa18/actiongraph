@@ -8,9 +8,10 @@ version = "0.1.0"
 val platformModuleName = "actiongraph-bom"
 
 val libraryModuleDescriptions = mapOf(
-    "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, trace, and interpretation APIs.",
+    "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, and trace APIs.",
     "actiongraph-annotations" to "Optional pure Java annotation adapter for ActionGraph action registration.",
     "actiongraph-memory" to "Optional structured memory context support for ActionGraph.",
+    "actiongraph-interpretation" to "Optional goal interpretation contracts and GoalCatalog support for ActionGraph.",
     "actiongraph-llm" to "Provider-neutral LLM goal interpretation support for ActionGraph.",
     "actiongraph-llm-deepseek" to "DeepSeek-compatible LLM client provider for ActionGraph.",
     "actiongraph-persistence-jdbc" to "JDBC persistence repositories for ActionGraph trace, suspended runs, review tasks, and memory.",

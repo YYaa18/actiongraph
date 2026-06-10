@@ -51,6 +51,20 @@ dependencies {
 
 `actiongraph-memory` depends only on `actiongraph-core`. It provides `MemoryScope`, `MemoryRecord`, `MemoryRepository`, `InMemoryMemoryRepository`, `MemoryContext`, and `MemoryContextLoader`.
 
+## Goal Interpretation Contracts
+
+Use this when a service wants GoalCatalog metadata, rule-based goal interpreters, or Goal-to-Blackboard seeding without an LLM provider.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-core")
+    implementation("com.actiongraph:actiongraph-interpretation")
+}
+```
+
+`actiongraph-interpretation` depends only on `actiongraph-core`. It provides `GoalCatalog`, `GoalDefinition`, `GoalInterpreter`, `GoalInterpretation`, `GoalParameters`, `GoalBlackboardSeeder`, and `GoalBlackboardSeederRegistry`.
+
 ## Spring Business Runtime
 
 Use this for a business service that executes ActionGraph runs and registers ordinary Spring bean methods as actions.
@@ -136,7 +150,7 @@ dependencies {
 }
 ```
 
-`actiongraph-llm` depends on `actiongraph-core` and does not call any provider by itself.
+`actiongraph-llm` depends on `actiongraph-core` and `actiongraph-interpretation`; it does not call any provider by itself.
 
 ## DeepSeek Natural-Language Entry
 

@@ -32,6 +32,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional console Spring Boot starter with read-only run monitoring UI/endpoints
 - Optional JDBC Spring Boot starter for durable repository auto-configuration
 - Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing
+- Optional goal interpretation contracts and GoalCatalog metadata
 - DeepSeek-compatible LLM client
 - Reference samples for renewal quote, order cancellation, and claims precheck flows
 
@@ -40,9 +41,10 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | Module | Purpose |
 |---|---|
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | Core action, planning, runtime, policy, trace, and interpretation APIs |
+| `actiongraph-core` | Core action, planning, runtime, policy, and trace APIs |
 | `actiongraph-annotations` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
 | `actiongraph-memory` | Optional structured memory records, repository contract, in-memory implementation, and Blackboard context loader |
+| `actiongraph-interpretation` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
@@ -120,6 +122,8 @@ When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph
 Non-Spring services can use `actiongraph-governance` directly when they want the packaged masking, amount-limit, approval-chain, or rule-based permission policies without Spring auto-configuration.
 
 Non-Spring services can use `actiongraph-memory` directly when they want structured long-term memory without adopting Spring, JDBC, or LLM modules.
+
+Non-Spring services can use `actiongraph-interpretation` directly when they want GoalCatalog metadata, rule-based goal interpreters, or Goal-to-Blackboard seeding without adopting an LLM provider.
 
 When `actiongraph-governance-spring-boot-starter` is on the classpath, masking, amount-limit rules, and risk-based approval-chain properties are activated. Without it, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and single-stage review.
 
