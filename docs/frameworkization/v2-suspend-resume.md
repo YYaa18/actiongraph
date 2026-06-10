@@ -43,6 +43,6 @@ Concurrent resume safety is covered by `PolicyExecutionTest.concurrentResumeOfSa
 ## Current Limits
 
 - `InMemorySuspendedRunRepository` keeps object references, not serialized state.
-- JDBC suspend/resume serializes Blackboard objects by class name, so application package names and persisted payload shapes need migration discipline across deployments. Production repositories should pass a `BlackboardTypeRegistry` allowlist to reject unexpected snapshot classes before restore.
+- JDBC suspend/resume serializes Blackboard objects by class name and stores a `snapshot_version`, so application package names and persisted payload shapes need migration discipline across deployments. Production repositories should pass a `BlackboardTypeRegistry` allowlist to reject unexpected snapshot classes before restore. Unsupported snapshot versions fail before restore and roll claim transactions back.
 - Resuming requires the caller to provide compatible `actions` and `registry`.
 - Pending human review uses `SUSPENDED_PENDING_REVIEW`; there is no separate waiting status.

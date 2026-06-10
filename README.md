@@ -14,6 +14,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Saga-style compensation for failed or denied runs
 - Trace, suspended-run, review-task, and memory repositories, including batched JDBC trace writes
 - Suspended-run Blackboard type allowlists for safer JDBC resume
+- Suspended-run snapshot format version checks for deployment discipline
 - Optional data masking for trace details/data and human-review previews
 - Tamper-evident TraceEvent hash chains with verification support
 - Single-transaction amount limits with hard denial and review escalation

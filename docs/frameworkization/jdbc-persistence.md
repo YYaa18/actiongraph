@@ -65,6 +65,8 @@ new JdbcSuspendedRunRepository(dataSource, Duration.ofMinutes(30));
 new JdbcSuspendedRunRepository(dataSource, "my_suspended_run", Duration.ofMinutes(30));
 ```
 
+Suspended-run snapshots also store a `snapshot_version`. The current `JdbcSuspendedRunRepository.SNAPSHOT_FORMAT_VERSION` is `1`; legacy rows without this column are migrated to version `1` on repository initialization. Unsupported versions raise `UnsupportedSuspendedRunSnapshotVersionException` before Goal/Blackboard JSON is restored. During `claimForResume`, that exception rolls the claim transaction back, so the row does not get stuck in `RESUMING`.
+
 Production applications should also constrain which Blackboard object types can be restored from suspended-run JSON. By default the repository allows all types to preserve backward compatibility. Passing a `BlackboardTypeRegistry` makes restore fail fast before `Class.forName(...)` for any class outside the allowlist:
 
 ```java
@@ -103,6 +105,7 @@ Trace hashes are calculated in core before persistence, after `DataMaskingPolicy
 Suspended run repository:
 
 - run id
+- snapshot format version
 - goal name and target conditions
 - Blackboard conditions
 - Blackboard objects as typed JSON payloads, including Blackboard key id
@@ -149,6 +152,8 @@ Blackboard objects are serialized with Jackson using their concrete runtime clas
 
 If a `BlackboardTypeRegistry` is supplied, every suspended-run object class name must match an allowed exact class or package prefix during restore. A disallowed class raises `DisallowedBlackboardTypeException` and stops resume before any business action executes.
 
+If a row has a future or otherwise unsupported `snapshot_version`, resume raises `UnsupportedSuspendedRunSnapshotVersionException` before any snapshot payload is read. This makes cross-deployment incompatibility explicit and auditable instead of surfacing as a partial restore or late business failure.
+
 `DataMaskingPolicy` masks trace detail/data and human-review previews before they reach JDBC repositories. It does not mask suspended-run snapshots.
 
 For schema or package migrations, introduce an application-level migration step before calling `resume`.
@@ -165,6 +170,7 @@ The module tests cover:
 - suspended run resume claims succeeding only once
 - multiple same-type Blackboard values restored by key
 - suspended run Blackboard type allowlists accepting configured classes/packages and rejecting unlisted class names before restore
+- suspended run snapshot format versions persisted, legacy rows migrated, unsupported versions rejected, and failed claims rolled back
 - a run suspended for human review, resumed by a new executor using JDBC repositories, failing after resume, and compensating an action that completed before suspension
 - a pending review task approved externally through JDBC, then consumed by resume to complete the run
 - multi-stage human review progression, stale stage rejection, and legacy single-stage migration
