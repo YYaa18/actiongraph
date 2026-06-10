@@ -3,25 +3,18 @@ package com.actiongraph.spring;
 import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.action.DefaultActionRegistry;
-import com.actiongraph.memory.InMemoryMemoryRepository;
-import com.actiongraph.memory.MemoryContextLoader;
-import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.planning.Planner;
-import com.actiongraph.policy.ApprovalChainResolver;
 import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.DefaultPermissionPolicy;
 import com.actiongraph.policy.DefaultPolicyGuard;
 import com.actiongraph.policy.ExecutionPolicyGuard;
 import com.actiongraph.policy.HumanReviewPolicy;
-import com.actiongraph.policy.HumanReviewRepository;
-import com.actiongraph.policy.InMemoryHumanReviewRepository;
 import com.actiongraph.policy.NoopMaskingPolicy;
 import com.actiongraph.policy.NoopReviewAttributeContributor;
+import com.actiongraph.policy.PendingHumanReviewPolicy;
 import com.actiongraph.policy.PermissionPolicy;
-import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
 import com.actiongraph.policy.ReviewAttributeContributor;
-import com.actiongraph.policy.SingleStageApprovalChainResolver;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemorySuspendedRunRepository;
@@ -79,35 +72,8 @@ public class ActionGraphAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public HumanReviewRepository actionGraphHumanReviewRepository() {
-        return new InMemoryHumanReviewRepository();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public ApprovalChainResolver actionGraphApprovalChainResolver() {
-        return SingleStageApprovalChainResolver.INSTANCE;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public HumanReviewPolicy actionGraphHumanReviewPolicy(
-            HumanReviewRepository humanReviewRepository,
-            ApprovalChainResolver approvalChainResolver
-    ) {
-        return new RepositoryBackedHumanReviewPolicy(humanReviewRepository, approvalChainResolver);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public MemoryRepository actionGraphMemoryRepository() {
-        return new InMemoryMemoryRepository();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public MemoryContextLoader actionGraphMemoryContextLoader(MemoryRepository memoryRepository) {
-        return new MemoryContextLoader(memoryRepository);
+    public HumanReviewPolicy actionGraphHumanReviewPolicy() {
+        return new PendingHumanReviewPolicy();
     }
 
     @Bean

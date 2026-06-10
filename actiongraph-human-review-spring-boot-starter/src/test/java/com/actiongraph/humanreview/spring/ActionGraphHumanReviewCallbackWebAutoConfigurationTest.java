@@ -63,6 +63,7 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
                     JacksonAutoConfiguration.class,
                     HttpMessageConvertersAutoConfiguration.class,
                     WebMvcAutoConfiguration.class,
+                    ActionGraphHumanReviewAutoConfiguration.class,
                     ActionGraphAutoConfiguration.class,
                     ActionGraphHumanReviewCallbackWebAutoConfiguration.class
             ));

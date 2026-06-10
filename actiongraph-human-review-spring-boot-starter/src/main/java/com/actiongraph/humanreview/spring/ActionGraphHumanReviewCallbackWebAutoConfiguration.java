@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
-@AutoConfiguration(afterName = "com.actiongraph.spring.ActionGraphAutoConfiguration")
+@AutoConfiguration(afterName = "com.actiongraph.humanreview.spring.ActionGraphHumanReviewAutoConfiguration")
 @ConditionalOnClass(name = {
         "org.springframework.web.bind.annotation.RestController",
         "org.springframework.web.servlet.DispatcherServlet"

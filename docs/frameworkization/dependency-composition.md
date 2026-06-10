@@ -76,7 +76,20 @@ dependencies {
 }
 ```
 
-The Spring starter brings `actiongraph-annotations` transitively and scans Spring beans for those annotations. It does not expose HTTP control-plane endpoints.
+The Spring starter brings `actiongraph-annotations` transitively and scans Spring beans for those annotations. It does not bring structured memory, repository-backed review tasks, JDBC repositories, or HTTP control-plane endpoints.
+
+## Spring Structured Memory
+
+Use this when a Spring Boot service wants in-memory structured memory defaults and `MemoryContextLoader`.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")
+}
+```
+
+The memory starter brings `actiongraph-memory` transitively. It backs off if the application or JDBC starter provides a `MemoryRepository`.
 
 ## Repository-Backed Human Review
 
@@ -151,7 +164,7 @@ The governance starter wraps `actiongraph-governance` with Spring Boot auto-conf
 - `actiongraph.limits.*`
 - `actiongraph.human-review.risk-based-approval-chain`
 
-Without this module, the base Spring runtime remains neutral: no masking, default permission allow, no amount escalation, and single-stage review.
+Without this module, the base Spring runtime remains neutral: no masking, default permission allow, no amount escalation, and safe pending human review.
 
 ## Provider-Neutral Natural-Language Entry
 
@@ -180,9 +193,9 @@ dependencies {
 
 `actiongraph-llm-deepseek` brings `actiongraph-llm` transitively and adds only the DeepSeek-compatible HTTP client. The LLM interpreter produces goals and parameters only; it does not generate plans or execute actions.
 
-## Approval Callback Receiver
+## Spring Repository-Backed Human Review And Callback Receiver
 
-Use this in the same business service, or in a separate approval integration service, to receive external review decisions.
+Use this in the same business service, or in a separate approval integration service, to create review tasks and optionally receive external review decisions.
 
 ```kotlin
 dependencies {
@@ -191,7 +204,7 @@ dependencies {
 }
 ```
 
-The callback starter brings `actiongraph-human-review` transitively and requires a `HumanReviewRepository` bean. A business runtime service can get the in-memory default from `actiongraph-spring-boot-starter`; production services normally add `actiongraph-jdbc-spring-boot-starter` so the callback handler writes durable review decisions.
+The human-review starter brings `actiongraph-human-review` transitively. It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`; production services normally add `actiongraph-jdbc-spring-boot-starter` so review tasks and callback decisions are durable. The HTTP callback endpoint is disabled until `actiongraph.human-review.callback-endpoint.enabled=true`.
 
 ## Custom Read-Only Monitoring Service
 
@@ -241,6 +254,7 @@ Use this for a single deployment that runs the business workflow, receives appro
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")

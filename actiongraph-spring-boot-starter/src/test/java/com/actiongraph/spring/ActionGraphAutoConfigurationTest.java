@@ -9,23 +9,16 @@ import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.action.annotation.ActionGraphAction;
 import com.actiongraph.action.annotation.ActionGraphGuard;
-import com.actiongraph.memory.InMemoryMemoryRepository;
-import com.actiongraph.memory.MemoryContextLoader;
-import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
-import com.actiongraph.policy.ApprovalChainResolver;
 import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.DefaultPermissionPolicy;
 import com.actiongraph.policy.HumanReviewPolicy;
-import com.actiongraph.policy.HumanReviewRepository;
-import com.actiongraph.policy.InMemoryHumanReviewRepository;
 import com.actiongraph.policy.NoopMaskingPolicy;
 import com.actiongraph.policy.NoopReviewAttributeContributor;
+import com.actiongraph.policy.PendingHumanReviewPolicy;
 import com.actiongraph.policy.PermissionPolicy;
-import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
 import com.actiongraph.policy.ReviewAttributeContributor;
-import com.actiongraph.policy.SingleStageApprovalChainResolver;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunStatus;
@@ -138,23 +131,20 @@ class ActionGraphAutoConfigurationTest {
     }
 
     @Test
-    void createsRepositoryBackedHumanReviewPolicyByDefault() {
+    void createsSafePendingHumanReviewPolicyByDefaultWithoutReviewStorage() {
         contextRunner.run(context -> {
-            assertThat(context.getBean(HumanReviewRepository.class))
-                    .isInstanceOf(InMemoryHumanReviewRepository.class);
             assertThat(context.getBean(HumanReviewPolicy.class))
-                    .isInstanceOf(RepositoryBackedHumanReviewPolicy.class);
-            assertThat(context.getBean(ApprovalChainResolver.class))
-                    .isInstanceOf(SingleStageApprovalChainResolver.class);
+                    .isInstanceOf(PendingHumanReviewPolicy.class);
+            assertThat(context.containsBean("actionGraphHumanReviewRepository")).isFalse();
+            assertThat(context.containsBean("actionGraphApprovalChainResolver")).isFalse();
         });
     }
 
     @Test
-    void createsMemoryRepositoryAndContextLoaderByDefault() {
+    void doesNotCreateMemoryBeansByDefault() {
         contextRunner.run(context -> {
-            assertThat(context.getBean(MemoryRepository.class))
-                    .isInstanceOf(InMemoryMemoryRepository.class);
-            assertThat(context.getBean(MemoryContextLoader.class)).isNotNull();
+            assertThat(context.containsBean("actionGraphMemoryRepository")).isFalse();
+            assertThat(context.containsBean("actionGraphMemoryContextLoader")).isFalse();
         });
     }
 
@@ -189,13 +179,14 @@ class ActionGraphAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context.getBean(DataMaskingPolicy.class))
                             .isInstanceOf(NoopMaskingPolicy.class);
-                    assertThat(context.getBean(ApprovalChainResolver.class))
-                            .isInstanceOf(SingleStageApprovalChainResolver.class);
                     assertThat(context.getBean(PermissionPolicy.class))
                             .isInstanceOf(DefaultPermissionPolicy.class);
                     assertThat(context.getBean(ReviewAttributeContributor.class))
                             .isInstanceOf(NoopReviewAttributeContributor.class);
+                    assertThat(context.getBean(HumanReviewPolicy.class))
+                            .isInstanceOf(PendingHumanReviewPolicy.class);
                     assertThat(context.containsBean("actionGraphAmountExtractor")).isFalse();
+                    assertThat(context.containsBean("actionGraphApprovalChainResolver")).isFalse();
                 });
     }
 

@@ -1,6 +1,6 @@
 # Human Review Integration
 
-v2 human review now has a repository-backed integration point for external approval systems. The non-Spring API lives in `actiongraph-human-review`; the Spring MVC callback endpoint lives in `actiongraph-human-review-spring-boot-starter`.
+v2 human review now has a repository-backed integration point for external approval systems. The non-Spring API lives in `actiongraph-human-review`; Spring auto-configuration for repository-backed review policy and the optional MVC callback endpoint lives in `actiongraph-human-review-spring-boot-starter`.
 
 ## Dependency
 
@@ -92,7 +92,14 @@ The JDBC repository stores:
 
 ## Spring Boot
 
-The Spring Boot runtime starter provides these defaults:
+The base Spring Boot runtime starter only provides a safe pending `HumanReviewPolicy`; it does not create review task storage. Add the optional human-review starter when a Spring service wants repository-backed review tasks:
+
+```kotlin
+implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+```
+
+The human-review starter provides these defaults:
 
 - `HumanReviewRepository` -> `InMemoryHumanReviewRepository`
 - `HumanReviewPolicy` -> `RepositoryBackedHumanReviewPolicy`
@@ -107,12 +114,11 @@ HumanReviewRepository humanReviewRepository(DataSource dataSource) {
 }
 ```
 
-Set `actiongraph.human-review.risk-based-approval-chain=true` to use `RiskBasedChainResolver`: HIGH risk actions require checker review and authorization; other actions remain single-stage unless request attributes ask for amount escalation. Review attributes are copied onto `HumanReviewTask`, so external approval systems can show why a task was escalated without recomputing business amounts.
+Set `actiongraph.human-review.risk-based-approval-chain=true` from `actiongraph-governance-spring-boot-starter` to use `RiskBasedChainResolver`: HIGH risk actions require checker review and authorization; other actions remain single-stage unless request attributes ask for amount escalation. Review attributes are copied onto `HumanReviewTask`, so external approval systems can show why a task was escalated without recomputing business amounts.
 
-Spring MVC applications can add the optional callback starter to expose an approval callback endpoint without writing a controller:
+Spring MVC applications can enable the optional callback endpoint without writing a controller:
 
 ```kotlin
-implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
 implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
 ```
 

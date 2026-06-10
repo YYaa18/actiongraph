@@ -7,6 +7,7 @@ dependencies {
         api(project(":actiongraph-core"))
         api(project(":actiongraph-annotations"))
         api(project(":actiongraph-memory"))
+        api(project(":actiongraph-memory-spring-boot-starter"))
         api(project(":actiongraph-interpretation"))
         api(project(":actiongraph-human-review"))
         api(project(":actiongraph-llm"))

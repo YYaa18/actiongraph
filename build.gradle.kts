@@ -11,6 +11,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, and trace APIs.",
     "actiongraph-annotations" to "Optional pure Java annotation adapter for ActionGraph action registration.",
     "actiongraph-memory" to "Optional structured memory context support for ActionGraph.",
+    "actiongraph-memory-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph structured memory.",
     "actiongraph-interpretation" to "Optional goal interpretation contracts and GoalCatalog support for ActionGraph.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, and approval chains for ActionGraph.",
     "actiongraph-llm" to "Provider-neutral LLM goal interpretation support for ActionGraph.",
@@ -22,7 +23,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-governance-spring-boot-starter" to "Optional Spring Boot governance policies for masking, approval routing, and amount limits.",
     "actiongraph-console-core" to "Reusable ActionGraph console query service and response model.",
     "actiongraph-console-jdbc" to "JDBC adapter for the ActionGraph console query port.",
-    "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot human-review callback endpoint support for ActionGraph.",
+    "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot repository-backed human-review policy and callback endpoint support for ActionGraph.",
     "actiongraph-console-spring-boot-starter" to "Optional Spring Boot read-only console UI and query endpoints for ActionGraph JDBC trace runs."
 )
 
