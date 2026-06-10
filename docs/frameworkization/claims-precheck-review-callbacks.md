@@ -7,7 +7,7 @@ F1 includes a JSONL callback replay fixture for testing how an external approval
 - `actiongraph-samples/src/main/resources/claims-precheck-review-callbacks.jsonl`
 - `actiongraph-samples/src/main/java/com/actiongraph/samples/claimsprecheck/batch/ClaimsPrecheckReviewCallbackReplayer.java`
 
-The replayer uses the core `HumanReviewCallbackHandler`; it does not bypass the repository or resume logic.
+The replayer uses `HumanReviewCallbackHandler` from `actiongraph-human-review`; it does not bypass the repository or resume logic.
 
 ## Message Shape
 

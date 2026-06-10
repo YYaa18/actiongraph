@@ -8,7 +8,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 |---|---|---|
 | Version platform | `actiongraph-bom` | Aligns all ActionGraph module versions for mix-and-match adoption |
 | Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace |
-| Optional adapters | `actiongraph-annotations`, `actiongraph-memory`, `actiongraph-interpretation`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, structured memory context, goal interpretation contracts, Spring runtime wiring, reusable governance policies, Spring governance wiring, Spring JDBC repository wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
+| Optional adapters | `actiongraph-annotations`, `actiongraph-memory`, `actiongraph-interpretation`, `actiongraph-human-review`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, structured memory context, goal interpretation contracts, repository-backed human review, Spring runtime wiring, reusable governance policies, Spring governance wiring, Spring JDBC repository wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
 | Control-plane ecosystem | `actiongraph-human-review-spring-boot-starter`, `actiongraph-console-core`, `actiongraph-console-jdbc`, `actiongraph-console-spring-boot-starter` | Approval callback endpoints, read-only Console query service, JDBC Console adapter, operational Console UI and query endpoints |
 | Samples | `actiongraph-samples` | Reference domains and batch demos; not published as a library |
 
@@ -19,6 +19,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 - Pure Java annotation-based registration adds `actiongraph-annotations`.
 - Structured long-term memory adds `actiongraph-memory`.
 - Goal catalogs, rule-based interpreters, and Goal-to-Blackboard seeding add `actiongraph-interpretation`.
+- Repository-backed external review tasks and callback handling add `actiongraph-human-review`.
 - A Spring Boot business service can depend on `actiongraph-spring-boot-starter` without exposing any HTTP control-plane endpoint.
 - Non-Spring masking, amount-limit, approval routing, and rule-based permission policies add `actiongraph-governance`.
 - Spring Boot masking, amount-limit, and risk-based approval governance add `actiongraph-governance-spring-boot-starter`.
@@ -36,9 +37,11 @@ The Memory module provides structured memory records, the repository contract, t
 
 The Interpretation module provides GoalCatalog metadata, GoalInterpreter contracts, interpretation results, missing-field clarification types, and Blackboard seeders. It depends only on core planning/runtime types and can be used without LLM providers.
 
+The Human Review module provides pending review tasks, approval chains, in-memory review storage, repository-backed review policy, and callback handling. It depends only on core policy/action/planning types and can be used without Spring MVC, JDBC, governance, or console modules.
+
 The Governance Spring Boot starter depends on core policy contracts and Spring auto-configuration. It activates optional policy beans from configuration, but it does not register actions, persist state, or expose endpoints.
 
-The Human Review starter depends on the core review repository contract instead of the runtime starter. This makes it usable both inside a business service and inside a separate approval callback receiver, as long as the application provides a `HumanReviewRepository`.
+The Human Review starter depends on `actiongraph-human-review` instead of the runtime starter. This makes it usable both inside a business service and inside a separate approval callback receiver, as long as the application provides a `HumanReviewRepository`.
 
 The Console core defines the read-only monitoring service, response models, paging validation, and `ConsoleRunRepository` port. It depends only on core trace types, not JDBC or Spring Web. The Console JDBC adapter maps the JDBC trace read model into that port. The Spring Boot Console starter combines the core service, JDBC adapter, and a thin HTTP/UI layer.
 
@@ -52,6 +55,8 @@ The Console core defines the read-only monitoring service, response models, pagi
 
 `actiongraph-interpretation` is an optional public framework component: it maps natural-language or rule-based entry results into typed Goals and Blackboard seed data. It must depend only on core contracts and must not call LLM providers, register actions, persist state, or expose endpoints.
 
+`actiongraph-human-review` is an optional public framework component: it maps high-risk runtime decisions into review tasks and external callbacks. It must depend only on core contracts and must not expose HTTP endpoints or own durable persistence.
+
 `actiongraph-spring-boot-starter` is part of the public framework integration surface: it registers actions, runtime defaults, policies, and repositories.
 
 `actiongraph-governance` is an optional policy library: it provides reusable non-Spring masking, amount-limit, approval routing, and rule-based permission implementations. It must depend only on core contracts and must not register actions, persist state, or expose endpoints.
@@ -62,7 +67,7 @@ The Console core defines the read-only monitoring service, response models, pagi
 
 `actiongraph-persistence-jdbc` is a low-level persistence library. It is usable without Spring and is the dependency that specialized services can wire manually.
 
-`actiongraph-human-review-spring-boot-starter` is an ecosystem component: it receives external approval decisions and writes them through `HumanReviewCallbackHandler`. It must not execute, resume, or compensate runs.
+`actiongraph-human-review-spring-boot-starter` is an ecosystem component: it receives external approval decisions and writes them through `HumanReviewCallbackHandler` from `actiongraph-human-review`. It must not execute, resume, or compensate runs.
 
 `actiongraph-console-core` is an ecosystem component: it maps any `ConsoleRunRepository` implementation into stable read-only Console responses and validates paging. It must not depend on Spring Web, JDBC, or mutate runtime state.
 

@@ -8,6 +8,7 @@ dependencies {
         api(project(":actiongraph-annotations"))
         api(project(":actiongraph-memory"))
         api(project(":actiongraph-interpretation"))
+        api(project(":actiongraph-human-review"))
         api(project(":actiongraph-llm"))
         api(project(":actiongraph-llm-deepseek"))
         api(project(":actiongraph-persistence-jdbc"))

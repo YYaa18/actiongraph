@@ -6,6 +6,7 @@ dependencies {
     implementation(project(":actiongraph-core"))
     implementation(project(":actiongraph-memory"))
     implementation(project(":actiongraph-interpretation"))
+    implementation(project(":actiongraph-human-review"))
     implementation(project(":actiongraph-governance"))
     implementation(project(":actiongraph-llm-deepseek"))
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")

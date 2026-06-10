@@ -11,6 +11,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-annotations` | `com.actiongraph:actiongraph-annotations:0.1.0` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
 | `actiongraph-memory` | `com.actiongraph:actiongraph-memory:0.1.0` | Optional structured memory records, repository contract, in-memory implementation, and Blackboard context loader |
 | `actiongraph-interpretation` | `com.actiongraph:actiongraph-interpretation:0.1.0` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
+| `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm` | `com.actiongraph:actiongraph-llm:0.1.0` | Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional DeepSeek-compatible LLM client |
@@ -88,6 +89,12 @@ Goal interpretation contracts add:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-interpretation")
+```
+
+Repository-backed human review adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-human-review")
 ```
 
 Provider-neutral LLM-backed goal interpretation adds:

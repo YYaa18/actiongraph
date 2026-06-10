@@ -181,10 +181,11 @@
   <tr><th>Maven 坐标（version 0.1.0）</th><th>内容</th><th>什么时候需要</th></tr>
   <tr><td><code>com.actiongraph:actiongraph-bom</code></td><td>版本对齐 BOM</td><td><b>推荐先引入</b>，之后各组件无需重复写版本号</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-spring-boot-starter</code></td><td>自动装配 + 注解 Bean 扫描</td><td><b>业务执行型 Spring Boot 应用常用</b>，自带 core 与 annotations</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、审批、Trace</td><td>非 Spring 应用需要最小运行内核时直接依赖它</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、审批契约、Trace</td><td>非 Spring 应用需要最小运行内核时直接依赖它</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-annotations</code></td><td>纯 Java 注解 + AnnotatedActionFactory</td><td>非 Spring 服务希望用注解注册普通方法时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-memory</code></td><td>结构化记忆记录 / 仓储 / 上下文加载器</td><td>需要把长期业务记忆加载进 Blackboard 时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-interpretation</code></td><td>GoalCatalog / GoalInterpreter / 解释结果 / Blackboard seeder</td><td>需要规则解释器、目标目录或解释参数装配桥时引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-human-review</code></td><td>审批任务仓储 / 审批链 / 回调处理 / repository-backed policy</td><td>非 Spring 服务需要对接外部审批系统时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-llm</code></td><td>通用 LLM 解释器 + GoalCatalog prompt 渲染 + 结构化输出解析</td><td>接入非 DeepSeek 模型或自定义 LLM provider 时</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>DeepSeek 兼容客户端</td><td>使用 DeepSeek 兼容接口时，会传递引入 actiongraph-llm</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-governance</code></td><td>脱敏 / 额度 / 多级审批路由 / 规则权限策略库</td><td>非 Spring 服务需要复用框架治理策略时引入</td></tr>
@@ -359,7 +360,7 @@ GoalInterpreter goalInterpreter(GoalCatalog catalog) {
 </table>
 
 <h2 id="review">人工审批与挂起恢复</h2>
-<p>默认装配的 <code>RepositoryBackedHumanReviewPolicy</code> 把审批做成了「任务表」模型，可直接对接公司现有审批系统。默认是单级审批；引入 <code>actiongraph-governance-spring-boot-starter</code> 后，金融场景可开启按风险等级路由的多级审批链。</p>
+<p><code>actiongraph-human-review</code> 提供的 <code>RepositoryBackedHumanReviewPolicy</code> 把审批做成了「任务表」模型，可直接对接公司现有审批系统。Spring Boot starter 会默认装配这套实现；非 Spring 服务可直接依赖该模块手工接线。默认是单级审批；引入 <code>actiongraph-governance-spring-boot-starter</code> 后，金融场景可开启按风险等级路由的多级审批链。</p>
 <div class="flow">
   <div class="node">高风险 Action 触发</div><div class="arr">→</div>
   <div class="node hl">挂起 SUSPENDED_PENDING_REVIEW<br>审批任务入库</div><div class="arr">→</div>

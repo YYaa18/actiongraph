@@ -1,6 +1,15 @@
 # Human Review Integration
 
-v2 human review now has a repository-backed integration point for external approval systems.
+v2 human review now has a repository-backed integration point for external approval systems. The non-Spring API lives in `actiongraph-human-review`; the Spring MVC callback endpoint lives in `actiongraph-human-review-spring-boot-starter`.
+
+## Dependency
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-human-review")
+}
+```
 
 ## Core Flow
 
@@ -39,7 +48,7 @@ reviewRepository.decideStage(
 
 `decide(...)` remains available for simple single-stage integrations. `decideStage(...)` is recommended for approval callbacks because it includes the stage index the approval UI displayed; duplicate callbacks for the same stage fail with `StageAlreadyDecidedException` instead of accidentally advancing the next stage.
 
-External callback consumers can also use the core handler instead of calling the repository directly:
+External callback consumers can also use the handler from `actiongraph-human-review` instead of calling the repository directly:
 
 ```java
 HumanReviewCallbackHandler handler = new HumanReviewCallbackHandler(reviewRepository);

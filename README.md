@@ -12,7 +12,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 
 - Deterministic GOAP planning over Action preconditions and effects
 - Runtime guards for value-dependent business checks
-- Multi-stage human review with atomic suspend/resume claiming
+- Optional repository-backed multi-stage human review with atomic suspend/resume claiming
 - Saga-style compensation for failed or denied runs
 - Trace, suspended-run, review-task, and optional memory repositories, including batched JDBC trace writes
 - JDBC read model for paged and filtered run summaries, trace details, and trace-chain verification in read-only consoles
@@ -24,6 +24,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Reusable non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
+- Optional non-Spring human review tasks, callback handling, and approval chains
 - Spring Boot starter with annotation-driven Action registration and runtime defaults
 - Optional governance Spring Boot starter for masking, amount limits, and approval routing
 - Optional human-review Spring Boot starter with approval callback endpoint support
@@ -45,6 +46,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-annotations` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
 | `actiongraph-memory` | Optional structured memory records, repository contract, in-memory implementation, and Blackboard context loader |
 | `actiongraph-interpretation` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
+| `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
@@ -125,6 +127,8 @@ Non-Spring services can use `actiongraph-memory` directly when they want structu
 
 Non-Spring services can use `actiongraph-interpretation` directly when they want GoalCatalog metadata, rule-based goal interpreters, or Goal-to-Blackboard seeding without adopting an LLM provider.
 
+Non-Spring services can use `actiongraph-human-review` directly when they need external approval task storage, callback handling, or multi-stage approval chains without Spring MVC.
+
 When `actiongraph-governance-spring-boot-starter` is on the classpath, masking, amount-limit rules, and risk-based approval-chain properties are activated. Without it, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and single-stage review.
 
 When `actiongraph-human-review-spring-boot-starter` is on the classpath and the callback endpoint is enabled in a Spring MVC application, approval systems can post decisions directly. The endpoint requires a `HumanReviewRepository` bean; `actiongraph-spring-boot-starter` supplies an in-memory default, and the JDBC starter supplies a durable production bean when enabled.
@@ -174,7 +178,7 @@ Run the sample apps:
 
 The JDBC batch input path uses standard `DriverManager`; add the target database driver to the sample runtime classpath before running against a real database. See `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql` for the anonymized view contract.
 For PostgreSQL staging connections, see the dialect mapping in `actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql` and [Claims Precheck PostgreSQL Mapping](docs/frameworkization/claims-precheck-postgresql.md).
-Batch reports include Markdown, CSV, and a read-only HTML console with total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` or enable the optional Spring Boot callback endpoint above.
+Batch reports include Markdown, CSV, and a read-only HTML console with total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` from `actiongraph-human-review` or enable the optional Spring Boot callback endpoint above.
 The `external-callbacks` mode replays JSONL approval callback deliveries through `HumanReviewCallbackHandler`, including shared-secret checks and duplicate-delivery idempotency.
 
 ## Documentation

@@ -78,6 +78,20 @@ dependencies {
 
 The Spring starter brings `actiongraph-annotations` transitively and scans Spring beans for those annotations. It does not expose HTTP control-plane endpoints.
 
+## Repository-Backed Human Review
+
+Use this when a non-Spring service, batch process, or approval integration service needs pending review tasks, multi-stage approval chains, or callback handling without exposing Spring MVC endpoints.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-core")
+    implementation("com.actiongraph:actiongraph-human-review")
+}
+```
+
+`actiongraph-human-review` depends only on `actiongraph-core`. It provides `HumanReviewRepository`, `HumanReviewTask`, `InMemoryHumanReviewRepository`, `RepositoryBackedHumanReviewPolicy`, `HumanReviewCallbackHandler`, and approval-chain support.
+
 ## Durable Production Runtime
 
 Add JDBC repositories when traces, suspended runs, review tasks, and memory must survive process restarts.
@@ -117,7 +131,7 @@ dependencies {
 }
 ```
 
-`actiongraph-governance` depends only on `actiongraph-core`. It provides reusable policy implementations such as `RegexMaskingPolicy`, `AmountLimitPolicy`, `RiskBasedChainResolver`, and `RuleBasedPermissionPolicy`, but it does not register actions, persist state, or expose endpoints.
+`actiongraph-governance` depends on `actiongraph-core` and `actiongraph-human-review`. It provides reusable policy implementations such as `RegexMaskingPolicy`, `AmountLimitPolicy`, `RiskBasedChainResolver`, and `RuleBasedPermissionPolicy`, but it does not register actions, persist state, or expose endpoints.
 
 ## Spring Boot Governance Policies
 
@@ -177,7 +191,7 @@ dependencies {
 }
 ```
 
-The callback starter requires a `HumanReviewRepository` bean. A business runtime service can get the in-memory default from `actiongraph-spring-boot-starter`; production services normally add `actiongraph-jdbc-spring-boot-starter` so the callback handler writes durable review decisions.
+The callback starter brings `actiongraph-human-review` transitively and requires a `HumanReviewRepository` bean. A business runtime service can get the in-memory default from `actiongraph-spring-boot-starter`; production services normally add `actiongraph-jdbc-spring-boot-starter` so the callback handler writes durable review decisions.
 
 ## Custom Read-Only Monitoring Service
 
