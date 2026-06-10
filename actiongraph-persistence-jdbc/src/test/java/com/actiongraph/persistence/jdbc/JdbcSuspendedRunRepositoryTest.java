@@ -76,6 +76,27 @@ class JdbcSuspendedRunRepositoryTest {
                 .containsExactly(new PersistedInput("C001"), new PersistedInput("C002"));
     }
 
+    @Test
+    void claimForResumeOnlySucceedsOnce() {
+        JdbcSuspendedRunRepository repository = new JdbcSuspendedRunRepository(JdbcTestDataSources.h2());
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+        blackboard.put(new PersistedInput("C001"));
+        blackboard.addCondition(INPUT_PRESENT);
+
+        repository.save(new SuspendedRun(
+                "RUN-CLAIM",
+                new Goal("persistedGoal", Set.of(DRAFTED)),
+                blackboard,
+                List.of(new ActionId("action.one")),
+                List.of(new ActionId("action.one")),
+                new ActionId("action.two"),
+                "waiting"
+        ));
+
+        assertThat(repository.claimForResume("RUN-CLAIM")).isPresent();
+        assertThat(repository.claimForResume("RUN-CLAIM")).isEmpty();
+    }
+
     public record PersistedInput(String value) {
     }
 }

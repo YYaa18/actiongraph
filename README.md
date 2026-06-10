@@ -10,9 +10,9 @@ It lets application teams expose ordinary business methods as typed Actions, the
 
 - Deterministic GOAP planning over Action preconditions and effects
 - Runtime guards for value-dependent business checks
-- Human review with suspend/resume support
+- Human review with atomic suspend/resume claiming
 - Saga-style compensation for failed or denied runs
-- Trace, suspended-run, review-task, and memory repositories
+- Trace, suspended-run, review-task, and memory repositories, including batched JDBC trace writes
 - Spring Boot starter with annotation-driven Action registration
 - DeepSeek-compatible LLM goal interpretation
 - Reference samples for renewal quote and order cancellation flows

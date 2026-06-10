@@ -1,6 +1,7 @@
 package com.actiongraph.trace;
 
 import java.util.Comparator;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -10,6 +11,11 @@ public final class InMemoryTraceRepository implements TraceRepository {
     @Override
     public void append(TraceEvent event) {
         events.add(event);
+    }
+
+    @Override
+    public void appendAll(Collection<TraceEvent> events) {
+        this.events.addAll(events);
     }
 
     @Override

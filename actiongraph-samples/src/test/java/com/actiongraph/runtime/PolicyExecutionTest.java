@@ -24,7 +24,10 @@ import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceEventType;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CyclicBarrier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -181,6 +184,56 @@ class PolicyExecutionTest {
         assertThat(suspendedRuns.findByRunId(suspended.runId())).isEmpty();
     }
 
+    @Test
+    void concurrentResumeOfSameRunClaimsSuspendedSnapshotOnlyOnce() throws InterruptedException {
+        Fixture fixture = fixture(new DefaultPolicyGuard(), null);
+        InMemorySuspendedRunRepository suspendedRuns = new InMemorySuspendedRunRepository();
+        GoapExecutor suspendingExecutor = new GoapExecutor(
+                new GoapPlanner(),
+                new DefaultPolicyGuard(),
+                new PendingHumanReviewPolicy(),
+                fixture.traceRepository(),
+                suspendedRuns
+        );
+
+        RunResult suspended = suspendingExecutor.run(RenewalGoals.prepareRenewalQuote(),
+                fixture.blackboard(), fixture.actions(), fixture.registry());
+
+        CyclicBarrier start = new CyclicBarrier(2);
+        List<RunResult> results = Collections.synchronizedList(new ArrayList<>());
+        List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
+        Runnable resume = () -> {
+            try {
+                start.await();
+                GoapExecutor executor = new GoapExecutor(
+                        new GoapPlanner(),
+                        new DefaultPolicyGuard(),
+                        new AutoApproveHumanReviewPolicy(),
+                        fixture.traceRepository(),
+                        suspendedRuns
+                );
+                results.add(executor.resume(suspended.runId(), fixture.actions(), fixture.registry()));
+            } catch (Throwable ex) {
+                errors.add(ex);
+            }
+        };
+
+        Thread first = Thread.startVirtualThread(resume);
+        Thread second = Thread.startVirtualThread(resume);
+        first.join();
+        second.join();
+
+        assertThat(results).singleElement()
+                .satisfies(result -> assertThat(result.status()).isEqualTo(RunStatus.COMPLETED));
+        assertThat(errors).singleElement()
+                .satisfies(error -> assertThat(error)
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessageContaining("No resumable suspended run found"));
+        assertThat(fixture.approvalService().requests())
+                .containsExactly(new ApprovalRequest("APPROVAL-1", "QUOTE-1"));
+        assertThat(events(fixture, suspended, TraceEventType.RUN_RESUMED)).hasSize(1);
+    }
+
     private Fixture fixture(DefaultPolicyGuard policyGuard, InMemoryTraceRepository traceRepository) {
         return fixture(policyGuard, traceRepository, false);
     }
@@ -195,12 +248,13 @@ class PolicyExecutionTest {
         blackboard.addCondition(RenewalConditions.CUSTOMER_ID_PRESENT);
 
         InMemoryQuoteService quoteService = new InMemoryQuoteService();
+        InMemoryApprovalService approvalService = new InMemoryApprovalService(approvalFails);
         List<Action> actions = RenewalActionFactory.actions(
                 new InMemoryCustomerService(),
                 new InMemoryContractService(),
                 new InMemoryRenewalPolicyService(),
                 quoteService,
-                new InMemoryApprovalService(approvalFails)
+                approvalService
         );
         DefaultActionRegistry registry = RenewalActionFactory.registry(actions);
         return new Fixture(
@@ -208,6 +262,7 @@ class PolicyExecutionTest {
                 actions,
                 registry,
                 quoteService,
+                approvalService,
                 traceRepository == null ? new InMemoryTraceRepository() : traceRepository,
                 policyGuard
         );
@@ -224,6 +279,7 @@ class PolicyExecutionTest {
             List<Action> actions,
             DefaultActionRegistry registry,
             InMemoryQuoteService quoteService,
+            InMemoryApprovalService approvalService,
             InMemoryTraceRepository traceRepository,
             DefaultPolicyGuard policyGuard
     ) {

@@ -10,12 +10,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.DatabaseMetaData;
+import java.sql.Types;
 import java.time.Instant;
+import java.time.Duration;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
 public final class JdbcSuspendedRunRepository implements SuspendedRunRepository {
     public static final String DEFAULT_TABLE = "actiongraph_suspended_run";
+    private static final String STATUS_SUSPENDED = "SUSPENDED";
+    private static final String STATUS_RESUMING = "RESUMING";
+    private static final Duration CLAIM_TIMEOUT = Duration.ofMinutes(15);
 
     private final DataSource dataSource;
     private final PersistenceJsonCodec codec;
@@ -45,11 +52,19 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                 + "compensation_stack_json clob not null,"
                 + "pending_action_id varchar(256) not null,"
                 + "message clob not null,"
+                + "status varchar(32) not null,"
+                + "claimed_at varchar(64),"
                 + "updated_at varchar(64) not null"
                 + ")";
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
             statement.execute(sql);
+            ensureColumn(connection, "status", "varchar(32)");
+            ensureColumn(connection, "claimed_at", "varchar(64)");
+            try (Statement update = connection.createStatement()) {
+                update.executeUpdate("update " + table + " set status = '" + STATUS_SUSPENDED
+                        + "' where status is null");
+            }
         } catch (SQLException ex) {
             throw new IllegalStateException("Cannot initialize suspended run repository schema", ex);
         }
@@ -79,10 +94,54 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
     @Override
     public Optional<SuspendedRun> findByRunId(String runId) {
         Objects.requireNonNull(runId, "runId");
+        try (Connection connection = dataSource.getConnection()) {
+            return findByRunId(connection, runId);
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Cannot find suspended run: " + runId, ex);
+        }
+    }
+
+    @Override
+    public Optional<SuspendedRun> claimForResume(String runId) {
+        Objects.requireNonNull(runId, "runId");
+        Instant now = Instant.now();
+        Instant staleBefore = now.minus(CLAIM_TIMEOUT);
+        String sql = "update " + table + " set status = ?, claimed_at = ?, updated_at = ? "
+                + "where run_id = ? and (status is null or status = ? or (status = ? and claimed_at < ?))";
+        try (Connection connection = dataSource.getConnection()) {
+            boolean autoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, STATUS_RESUMING);
+                statement.setString(2, now.toString());
+                statement.setString(3, now.toString());
+                statement.setString(4, runId);
+                statement.setString(5, STATUS_SUSPENDED);
+                statement.setString(6, STATUS_RESUMING);
+                statement.setString(7, staleBefore.toString());
+                int claimed = statement.executeUpdate();
+                if (claimed == 0) {
+                    connection.commit();
+                    return Optional.empty();
+                }
+                Optional<SuspendedRun> run = findByRunId(connection, runId);
+                connection.commit();
+                return run;
+            } catch (SQLException | RuntimeException ex) {
+                connection.rollback();
+                throw ex;
+            } finally {
+                connection.setAutoCommit(autoCommit);
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Cannot claim suspended run for resume: " + runId, ex);
+        }
+    }
+
+    private Optional<SuspendedRun> findByRunId(Connection connection, String runId) throws SQLException {
         String sql = "select run_id, goal_json, blackboard_json, executed_actions_json, "
                 + "compensation_stack_json, pending_action_id, message from " + table + " where run_id = ?";
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, runId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) {
@@ -98,8 +157,6 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                         resultSet.getString("message")
                 ));
             }
-        } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot find suspended run: " + runId, ex);
         }
     }
 
@@ -123,7 +180,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
     private void insert(Connection connection, SuspendedRun run) throws SQLException {
         String sql = "insert into " + table
                 + " (run_id, goal_json, blackboard_json, executed_actions_json, compensation_stack_json, "
-                + "pending_action_id, message, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?)";
+                + "pending_action_id, message, status, claimed_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, run.runId());
             statement.setString(2, codec.writeGoal(run.goal()));
@@ -132,8 +189,39 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
             statement.setString(5, codec.writeActionIds(run.compensationStack()));
             statement.setString(6, run.pendingActionId().value());
             statement.setString(7, run.message());
-            statement.setString(8, Instant.now().toString());
+            statement.setString(8, STATUS_SUSPENDED);
+            statement.setNull(9, Types.VARCHAR);
+            statement.setString(10, Instant.now().toString());
             statement.executeUpdate();
         }
+    }
+
+    private void ensureColumn(Connection connection, String column, String definition) throws SQLException {
+        if (columnExists(connection, column)) {
+            return;
+        }
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("alter table " + table + " add column " + column + " " + definition);
+        }
+    }
+
+    private boolean columnExists(Connection connection, String column) throws SQLException {
+        DatabaseMetaData metaData = connection.getMetaData();
+        String requested = column.toLowerCase(Locale.ROOT);
+        try (ResultSet resultSet = metaData.getColumns(null, null, table, null)) {
+            while (resultSet.next()) {
+                if (requested.equals(resultSet.getString("COLUMN_NAME").toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        try (ResultSet resultSet = metaData.getColumns(null, null, table.toUpperCase(Locale.ROOT), null)) {
+            while (resultSet.next()) {
+                if (requested.equals(resultSet.getString("COLUMN_NAME").toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

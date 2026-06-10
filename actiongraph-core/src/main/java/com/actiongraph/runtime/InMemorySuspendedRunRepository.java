@@ -17,6 +17,11 @@ public final class InMemorySuspendedRunRepository implements SuspendedRunReposit
     }
 
     @Override
+    public Optional<SuspendedRun> claimForResume(String runId) {
+        return Optional.ofNullable(runs.remove(runId));
+    }
+
+    @Override
     public void delete(String runId) {
         runs.remove(runId);
     }

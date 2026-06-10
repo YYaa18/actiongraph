@@ -7,5 +7,7 @@ public interface SuspendedRunRepository {
 
     Optional<SuspendedRun> findByRunId(String runId);
 
+    Optional<SuspendedRun> claimForResume(String runId);
+
     void delete(String runId);
 }

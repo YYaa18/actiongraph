@@ -147,8 +147,8 @@ public final class GoapExecutor implements Executor {
         Objects.requireNonNull(actions, "actions");
         Objects.requireNonNull(registry, "registry");
 
-        SuspendedRun suspendedRun = suspendedRunRepository.findByRunId(runId)
-                .orElseThrow(() -> new IllegalStateException("No suspended run found for runId: " + runId));
+        SuspendedRun suspendedRun = suspendedRunRepository.claimForResume(runId)
+                .orElseThrow(() -> new IllegalStateException("No resumable suspended run found for runId: " + runId));
         RunTrace trace = new RunTrace(traceRepository, runId);
         trace.append(TraceEventType.RUN_RESUMED, suspendedRun.pendingActionId(), "Run resumed", Map.of(
                 "pendingActionId", suspendedRun.pendingActionId().value()
@@ -190,6 +190,7 @@ public final class GoapExecutor implements Executor {
             Selection selection = selectNextAction(runId, goal, state, blackboard, allActions, registry, trace);
             if (selection.halted()) {
                 if (selection.status() == RunStatus.SUSPENDED_PENDING_REVIEW) {
+                    trace.flush();
                     saveSuspendedRun(runId, goal, blackboard, executedActionIds,
                             compensationStack, selection.pendingActionId(), selection.message());
                     return finish(trace, runId, selection.status(), blackboard, executedActionIds, selection.message());
@@ -306,6 +307,7 @@ public final class GoapExecutor implements Executor {
                                         .map(step -> step.actionId().value())
                                         .collect(Collectors.joining(","))
                         ));
+                trace.flush();
                 HumanReviewResult review = humanReviewPolicy.review(new HumanReviewRequest(
                         runId,
                         action.id(),
@@ -345,6 +347,7 @@ public final class GoapExecutor implements Executor {
     }
 
     private boolean compensateAll(Deque<Action> compensationStack, ExecutionContext context, RunTrace trace) {
+        trace.flush();
         boolean allOk = true;
         while (!compensationStack.isEmpty()) {
             Action action = compensationStack.pop();
@@ -357,11 +360,13 @@ public final class GoapExecutor implements Executor {
                 if (!result.success() && !result.noOp()) {
                     allOk = false;
                 }
+                trace.flush();
             } catch (Exception ex) {
                 allOk = false;
                 trace.append(TraceEventType.COMPENSATION_ERROR, action.id(), ex.getMessage(), Map.of(
                         "exceptionType", ex.getClass().getName()
                 ));
+                trace.flush();
             }
         }
         return allOk;
@@ -432,6 +437,7 @@ public final class GoapExecutor implements Executor {
             suspendedRunRepository.delete(runId);
             trace.append(TraceEventType.RUN_ENDED, null, message, Map.of("status", status.name()));
         }
+        trace.flush();
         return new RunResult(runId, status, blackboard.conditions(), executedActions, message);
     }
 
@@ -487,6 +493,7 @@ public final class GoapExecutor implements Executor {
     private static final class RunTrace {
         private final TraceRepository repository;
         private final String runId;
+        private final List<TraceEvent> buffer = new ArrayList<>();
         private long seq;
 
         private RunTrace(TraceRepository repository, String runId) {
@@ -499,7 +506,7 @@ public final class GoapExecutor implements Executor {
         }
 
         void append(TraceEventType type, ActionId actionId, String detail, Map<String, String> data) {
-            repository.append(new TraceEvent(
+            buffer.add(new TraceEvent(
                     runId,
                     ++seq,
                     Instant.now(),
@@ -508,6 +515,14 @@ public final class GoapExecutor implements Executor {
                     detail,
                     data
             ));
+        }
+
+        void flush() {
+            if (buffer.isEmpty()) {
+                return;
+            }
+            repository.appendAll(List.copyOf(buffer));
+            buffer.clear();
         }
     }
 }

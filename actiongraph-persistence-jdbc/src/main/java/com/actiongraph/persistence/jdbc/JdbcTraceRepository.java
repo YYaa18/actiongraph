@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -59,20 +60,32 @@ public final class JdbcTraceRepository implements TraceRepository {
     @Override
     public void append(TraceEvent event) {
         Objects.requireNonNull(event, "event");
+        appendAll(List.of(event));
+    }
+
+    @Override
+    public void appendAll(Collection<TraceEvent> events) {
+        Objects.requireNonNull(events, "events");
+        if (events.isEmpty()) {
+            return;
+        }
         String sql = "insert into " + table
                 + " (run_id, seq, at, type, action_id, detail, data_json) values (?, ?, ?, ?, ?, ?, ?)";
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, event.runId());
-            statement.setLong(2, event.seq());
-            statement.setString(3, event.at().toString());
-            statement.setString(4, event.type().name());
-            statement.setString(5, event.actionId());
-            statement.setString(6, event.detail());
-            statement.setString(7, codec.writeTraceData(event.data()));
-            statement.executeUpdate();
+            for (TraceEvent event : events) {
+                statement.setString(1, event.runId());
+                statement.setLong(2, event.seq());
+                statement.setString(3, event.at().toString());
+                statement.setString(4, event.type().name());
+                statement.setString(5, event.actionId());
+                statement.setString(6, event.detail());
+                statement.setString(7, codec.writeTraceData(event.data()));
+                statement.addBatch();
+            }
+            statement.executeBatch();
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot append trace event", ex);
+            throw new IllegalStateException("Cannot append trace events", ex);
         }
     }
 

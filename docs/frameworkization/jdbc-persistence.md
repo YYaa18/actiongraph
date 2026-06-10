@@ -38,7 +38,7 @@ GoapExecutor executor = new GoapExecutor(
 );
 ```
 
-Both repositories create their tables on construction if they do not exist.
+The JDBC repositories create their tables on construction if they do not exist.
 
 Default tables:
 
@@ -70,6 +70,8 @@ Trace repository:
 - detail
 - event data JSON
 
+`JdbcTraceRepository.appendAll(...)` writes trace events with JDBC batch execution. The executor buffers normal run events and flushes at terminal states; it also flushes before external human review, before suspension is saved, and before compensation begins so audit-critical boundaries are durable.
+
 Suspended run repository:
 
 - run id
@@ -80,6 +82,7 @@ Suspended run repository:
 - compensation stack action ids
 - pending action id
 - suspension message
+- resume status and claim timestamp
 
 Human review repository:
 
@@ -104,7 +107,7 @@ Memory repository:
 - structured attributes JSON
 - created/updated timestamps
 
-On resume, the executor loads the suspended run, restores the Blackboard, rehydrates the compensation stack from the supplied `ActionRegistry`, continues the same trace sequence, and deletes the suspended run when the resumed run reaches a terminal non-suspended state.
+On resume, the executor atomically claims the suspended run before restoring the Blackboard. JDBC uses a status transition from `SUSPENDED` to `RESUMING`; duplicate resume attempts for the same `runId` receive no snapshot and stop before business side effects. After a successful claim, the executor rehydrates the compensation stack from the supplied `ActionRegistry`, continues the same trace sequence, and deletes the suspended run when the resumed run reaches a terminal non-suspended state.
 
 ## Serialization Boundary
 
@@ -117,7 +120,9 @@ For schema or package migrations, introduce an application-level migration step 
 The module tests cover:
 
 - trace events persisted and read back in sequence order
+- trace events persisted through batch append
 - suspended run snapshots restored with Goal, Blackboard, executed actions, and compensation stack
+- suspended run resume claims succeeding only once
 - multiple same-type Blackboard values restored by key
 - a run suspended for human review, resumed by a new executor using JDBC repositories, failing after resume, and compensating an action that completed before suspension
 - a pending review task approved externally through JDBC, then consumed by resume to complete the run

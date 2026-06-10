@@ -353,11 +353,11 @@ List&lt;HumanReviewTask&gt; pending = humanReviewRepository.findPending();
 humanReviewRepository.decide(runId, actionId,
         HumanReviewDecision.APPROVED, <span class="s">"ops-lead"</span>, <span class="s">"审批通过"</span>);
 
-<span class="c">// 恢复运行：沿用原 runId，trace 连续，挂起前动作的补偿链完整保留</span>
+<span class="c">// 恢复运行：原子认领 runId，trace 连续，挂起前动作的补偿链完整保留</span>
 RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pre>
 <div class="card callout">
   <div class="title">挂起恢复的语义保证</div>
-  resume 后若执行失败，<b>挂起之前已成功的动作同样会被逆序补偿</b> —— 补偿链跨挂起边界完整。审批拒绝（DENIED）同样触发补偿，不会留下孤儿草稿。
+  resume 会先从 <code>SuspendedRunRepository</code> 原子认领挂起快照；同一个 <code>runId</code> 被重复回调或多实例并发消费时，只有一个恢复流程能继续执行业务动作。resume 后若执行失败，<b>挂起之前已成功的动作同样会被逆序补偿</b> —— 补偿链跨挂起边界完整。审批拒绝（DENIED）同样触发补偿，不会留下孤儿草稿。
 </div>
 
 <h2 id="persistence">持久化（生产必读）</h2>

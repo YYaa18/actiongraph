@@ -5,6 +5,7 @@ import com.actiongraph.trace.TraceEventType;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,5 +50,35 @@ class JdbcTraceRepositoryTest {
         assertThatThrownBy(() -> new JdbcTraceRepository(JdbcTestDataSources.h2(), "trace;drop table x"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("SQL identifier");
+    }
+
+    @Test
+    void appendsTraceEventsInBatch() {
+        JdbcTraceRepository repository = new JdbcTraceRepository(JdbcTestDataSources.h2());
+
+        repository.appendAll(List.of(
+                new TraceEvent(
+                        "RUN-BATCH",
+                        1,
+                        Instant.parse("2026-01-01T00:00:01Z"),
+                        TraceEventType.RUN_STARTED,
+                        null,
+                        "first",
+                        Map.of()
+                ),
+                new TraceEvent(
+                        "RUN-BATCH",
+                        2,
+                        Instant.parse("2026-01-01T00:00:02Z"),
+                        TraceEventType.RUN_ENDED,
+                        null,
+                        "done",
+                        Map.of("status", "COMPLETED")
+                )
+        ));
+
+        assertThat(repository.findByRun("RUN-BATCH"))
+                .extracting(TraceEvent::type)
+                .containsExactly(TraceEventType.RUN_STARTED, TraceEventType.RUN_ENDED);
     }
 }

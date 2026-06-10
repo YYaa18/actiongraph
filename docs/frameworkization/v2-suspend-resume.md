@@ -28,6 +28,8 @@ Resume through:
 executor.resume(runId, actions, registry)
 ```
 
+Resume first atomically claims the suspended snapshot from `SuspendedRunRepository`. If the same `runId` is resumed concurrently by duplicate callbacks, retrying consumers, or multiple application instances, only one caller receives the snapshot and continues business execution. Other callers fail before side effects.
+
 Resume uses the same `runId` and continues trace sequence numbering for the same run. The planner starts from the suspended Blackboard conditions, so it naturally skips already-satisfied steps.
 
 ## Compensation After Resume
@@ -35,6 +37,8 @@ Resume uses the same `runId` and continues trace sequence numbering for the same
 The compensation stack is restored from the suspended snapshot. If a resumed action fails, actions that succeeded before suspension are still compensated.
 
 This is covered by `PolicyExecutionTest.resumedRunFailureCompensatesActionsFromBeforeSuspension`.
+
+Concurrent resume safety is covered by `PolicyExecutionTest.concurrentResumeOfSameRunClaimsSuspendedSnapshotOnlyOnce`.
 
 ## Current Limits
 
