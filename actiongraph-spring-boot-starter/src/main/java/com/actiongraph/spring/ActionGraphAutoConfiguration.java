@@ -8,6 +8,7 @@ import com.actiongraph.memory.MemoryContextLoader;
 import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.planning.Planner;
+import com.actiongraph.policy.ApprovalChainResolver;
 import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.DefaultPermissionPolicy;
 import com.actiongraph.policy.DefaultPolicyGuard;
@@ -19,6 +20,8 @@ import com.actiongraph.policy.NoopMaskingPolicy;
 import com.actiongraph.policy.PermissionPolicy;
 import com.actiongraph.policy.RegexMaskingPolicy;
 import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
+import com.actiongraph.policy.RiskBasedChainResolver;
+import com.actiongraph.policy.SingleStageApprovalChainResolver;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemorySuspendedRunRepository;
@@ -76,8 +79,19 @@ public class ActionGraphAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public HumanReviewPolicy actionGraphHumanReviewPolicy(HumanReviewRepository humanReviewRepository) {
-        return new RepositoryBackedHumanReviewPolicy(humanReviewRepository);
+    public ApprovalChainResolver actionGraphApprovalChainResolver(ActionGraphProperties properties) {
+        return properties.getHumanReview().isRiskBasedApprovalChain()
+                ? new RiskBasedChainResolver()
+                : SingleStageApprovalChainResolver.INSTANCE;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public HumanReviewPolicy actionGraphHumanReviewPolicy(
+            HumanReviewRepository humanReviewRepository,
+            ApprovalChainResolver approvalChainResolver
+    ) {
+        return new RepositoryBackedHumanReviewPolicy(humanReviewRepository, approvalChainResolver);
     }
 
     @Bean

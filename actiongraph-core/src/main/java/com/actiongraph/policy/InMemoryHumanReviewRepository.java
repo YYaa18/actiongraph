@@ -54,9 +54,32 @@ public final class InMemoryHumanReviewRepository implements HumanReviewRepositor
             throw new IllegalArgumentException("Human review task decision must be APPROVED or DENIED");
         }
         Key key = new Key(runId, actionId);
+        HumanReviewTask existing = tasks.get(key);
+        if (existing == null) {
+            throw new IllegalStateException("No human review task found for " + runId + "/" + actionId.value());
+        }
+        decideStage(runId, actionId, existing.currentStageIndex(), decision, reviewer, message);
+    }
+
+    @Override
+    public void decideStage(
+            String runId,
+            ActionId actionId,
+            int expectedStageIndex,
+            HumanReviewDecision decision,
+            String reviewer,
+            String message
+    ) {
+        if (decision == HumanReviewDecision.PENDING) {
+            throw new IllegalArgumentException("Human review task decision must be APPROVED or DENIED");
+        }
+        Key key = new Key(runId, actionId);
         tasks.compute(key, (ignored, existing) -> {
             if (existing == null) {
                 throw new IllegalStateException("No human review task found for " + runId + "/" + actionId.value());
+            }
+            if (existing.currentStageIndex() != expectedStageIndex) {
+                throw new StageAlreadyDecidedException(runId, actionId, expectedStageIndex);
             }
             return existing.withDecision(decision, reviewer, message, Instant.now());
         });

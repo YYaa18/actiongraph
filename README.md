@@ -10,7 +10,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 
 - Deterministic GOAP planning over Action preconditions and effects
 - Runtime guards for value-dependent business checks
-- Human review with atomic suspend/resume claiming
+- Multi-stage human review with atomic suspend/resume claiming
 - Saga-style compensation for failed or denied runs
 - Trace, suspended-run, review-task, and memory repositories, including batched JDBC trace writes
 - Optional data masking for trace details/data and human-review previews

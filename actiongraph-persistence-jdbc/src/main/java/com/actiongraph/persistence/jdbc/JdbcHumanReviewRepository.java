@@ -2,12 +2,17 @@ package com.actiongraph.persistence.jdbc;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRiskLevel;
+import com.actiongraph.policy.ApprovalChain;
+import com.actiongraph.policy.ApprovalStage;
 import com.actiongraph.policy.HumanReviewDecision;
 import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.policy.HumanReviewTask;
+import com.actiongraph.policy.StageAlreadyDecidedException;
+import com.actiongraph.policy.StageDecision;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,6 +20,7 @@ import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -54,11 +60,17 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
                 + "message clob not null,"
                 + "created_at varchar(64) not null,"
                 + "updated_at varchar(64) not null,"
+                + "stages_json clob,"
+                + "current_stage_index int,"
+                + "stage_decisions_json clob,"
                 + "primary key (run_id, action_id)"
                 + ")";
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
             statement.execute(sql);
+            ensureColumn(connection, "stages_json", "clob");
+            ensureColumn(connection, "current_stage_index", "int");
+            ensureColumn(connection, "stage_decisions_json", "clob");
         } catch (SQLException ex) {
             throw new IllegalStateException("Cannot initialize human review repository schema", ex);
         }
@@ -75,8 +87,9 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
         }
         String sql = "insert into " + table
                 + " (run_id, action_id, risk_level, required_by_action, plan_preview_json, current_state_json, "
-                + "blackboard_preview_json, decision, reviewer, message, created_at, updated_at) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "blackboard_preview_json, decision, reviewer, message, created_at, updated_at, "
+                + "stages_json, current_stage_index, stage_decisions_json) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             bindTask(statement, task);
@@ -139,6 +152,25 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             String reviewer,
             String message
     ) {
+        Objects.requireNonNull(decision, "decision");
+        if (decision == HumanReviewDecision.PENDING) {
+            throw new IllegalArgumentException("Human review task decision must be APPROVED or DENIED");
+        }
+        HumanReviewTask existing = find(runId, actionId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No human review task found for " + runId + "/" + actionId.value()));
+        decideStage(runId, actionId, existing.currentStageIndex(), decision, reviewer, message);
+    }
+
+    @Override
+    public void decideStage(
+            String runId,
+            ActionId actionId,
+            int expectedStageIndex,
+            HumanReviewDecision decision,
+            String reviewer,
+            String message
+    ) {
         Objects.requireNonNull(runId, "runId");
         Objects.requireNonNull(actionId, "actionId");
         Objects.requireNonNull(decision, "decision");
@@ -150,16 +182,25 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
                         "No human review task found for " + runId + "/" + actionId.value()));
         HumanReviewTask decided = existing.withDecision(decision, reviewer, message, Instant.now());
         String sql = "update " + table
-                + " set decision = ?, reviewer = ?, message = ?, updated_at = ? where run_id = ? and action_id = ?";
+                + " set decision = ?, reviewer = ?, message = ?, updated_at = ?, "
+                + "current_stage_index = ?, stage_decisions_json = ? "
+                + "where run_id = ? and action_id = ? and current_stage_index = ? and decision = ?";
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, decided.decision().name());
             statement.setString(2, decided.reviewer());
             statement.setString(3, decided.message());
             statement.setString(4, decided.updatedAt().toString());
-            statement.setString(5, runId);
-            statement.setString(6, actionId.value());
-            statement.executeUpdate();
+            statement.setInt(5, decided.currentStageIndex());
+            statement.setString(6, codec.writeStageDecisions(decided.stageDecisions()));
+            statement.setString(7, runId);
+            statement.setString(8, actionId.value());
+            statement.setInt(9, expectedStageIndex);
+            statement.setString(10, HumanReviewDecision.PENDING.name());
+            int updated = statement.executeUpdate();
+            if (updated == 0) {
+                throw new StageAlreadyDecidedException(runId, actionId, expectedStageIndex);
+            }
         } catch (SQLException ex) {
             throw new IllegalStateException("Cannot decide human review task: " + runId + "/" + actionId.value(), ex);
         }
@@ -167,7 +208,8 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
 
     private String selectSql() {
         return "select run_id, action_id, risk_level, required_by_action, plan_preview_json, current_state_json, "
-                + "blackboard_preview_json, decision, reviewer, message, created_at, updated_at from " + table;
+                + "blackboard_preview_json, decision, reviewer, message, created_at, updated_at, "
+                + "stages_json, current_stage_index, stage_decisions_json from " + table;
     }
 
     private List<HumanReviewTask> readTasks(PreparedStatement statement) throws SQLException {
@@ -181,6 +223,9 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
     }
 
     private HumanReviewTask readTask(ResultSet resultSet) throws SQLException {
+        HumanReviewDecision decision = HumanReviewDecision.valueOf(resultSet.getString("decision"));
+        List<ApprovalStage> stages = readStages(resultSet.getString("stages_json"));
+        int currentStageIndex = readCurrentStageIndex(resultSet, decision, stages);
         return new HumanReviewTask(
                 resultSet.getString("run_id"),
                 new ActionId(resultSet.getString("action_id")),
@@ -189,11 +234,14 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
                 codec.readActionIds(resultSet.getString("plan_preview_json")),
                 codec.readConditions(resultSet.getString("current_state_json")),
                 codec.readTraceData(resultSet.getString("blackboard_preview_json")),
-                HumanReviewDecision.valueOf(resultSet.getString("decision")),
+                decision,
                 resultSet.getString("reviewer"),
                 resultSet.getString("message"),
                 Instant.parse(resultSet.getString("created_at")),
-                Instant.parse(resultSet.getString("updated_at"))
+                Instant.parse(resultSet.getString("updated_at")),
+                stages,
+                currentStageIndex,
+                readStageDecisions(resultSet.getString("stage_decisions_json"))
         );
     }
 
@@ -210,5 +258,63 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
         statement.setString(10, task.message());
         statement.setString(11, task.createdAt().toString());
         statement.setString(12, task.updatedAt().toString());
+        statement.setString(13, codec.writeApprovalStages(task.stages()));
+        statement.setInt(14, task.currentStageIndex());
+        statement.setString(15, codec.writeStageDecisions(task.stageDecisions()));
+    }
+
+    private List<ApprovalStage> readStages(String json) {
+        if (json == null || json.isBlank()) {
+            return ApprovalChain.single().stages();
+        }
+        return codec.readApprovalStages(json);
+    }
+
+    private List<StageDecision> readStageDecisions(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        return codec.readStageDecisions(json);
+    }
+
+    private int readCurrentStageIndex(
+            ResultSet resultSet,
+            HumanReviewDecision decision,
+            List<ApprovalStage> stages
+    ) throws SQLException {
+        Object value = resultSet.getObject("current_stage_index");
+        if (value == null) {
+            return decision == HumanReviewDecision.APPROVED ? stages.size() : 0;
+        }
+        return resultSet.getInt("current_stage_index");
+    }
+
+    private void ensureColumn(Connection connection, String column, String definition) throws SQLException {
+        if (columnExists(connection, column)) {
+            return;
+        }
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("alter table " + table + " add column " + column + " " + definition);
+        }
+    }
+
+    private boolean columnExists(Connection connection, String column) throws SQLException {
+        DatabaseMetaData metaData = connection.getMetaData();
+        String requested = column.toLowerCase(Locale.ROOT);
+        try (ResultSet resultSet = metaData.getColumns(null, null, table, null)) {
+            while (resultSet.next()) {
+                if (requested.equals(resultSet.getString("COLUMN_NAME").toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        try (ResultSet resultSet = metaData.getColumns(null, null, table.toUpperCase(Locale.ROOT), null)) {
+            while (resultSet.next()) {
+                if (requested.equals(resultSet.getString("COLUMN_NAME").toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

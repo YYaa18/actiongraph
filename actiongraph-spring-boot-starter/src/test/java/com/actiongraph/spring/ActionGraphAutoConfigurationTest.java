@@ -14,12 +14,15 @@ import com.actiongraph.memory.MemoryContextLoader;
 import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
+import com.actiongraph.policy.ApprovalChainResolver;
 import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.policy.InMemoryHumanReviewRepository;
 import com.actiongraph.policy.NoopMaskingPolicy;
 import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
+import com.actiongraph.policy.RiskBasedChainResolver;
+import com.actiongraph.policy.SingleStageApprovalChainResolver;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunStatus;
@@ -140,6 +143,8 @@ class ActionGraphAutoConfigurationTest {
                     .isInstanceOf(InMemoryHumanReviewRepository.class);
             assertThat(context.getBean(HumanReviewPolicy.class))
                     .isInstanceOf(RepositoryBackedHumanReviewPolicy.class);
+            assertThat(context.getBean(ApprovalChainResolver.class))
+                    .isInstanceOf(SingleStageApprovalChainResolver.class);
         });
     }
 
@@ -181,6 +186,14 @@ class ActionGraphAutoConfigurationTest {
                     assertThat(policy.maskData(Map.of("customerName", "张三")))
                             .containsEntry("customerName", "***");
                 });
+    }
+
+    @Test
+    void canEnableRiskBasedApprovalChainResolver() {
+        contextRunner
+                .withPropertyValues("actiongraph.human-review.risk-based-approval-chain=true")
+                .run(context -> assertThat(context.getBean(ApprovalChainResolver.class))
+                        .isInstanceOf(RiskBasedChainResolver.class));
     }
 
     static final class AnnotatedWorkflow {

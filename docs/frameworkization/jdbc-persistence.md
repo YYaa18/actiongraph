@@ -105,6 +105,9 @@ Human review repository:
 - plan preview action ids
 - current condition state
 - blackboard preview
+- approval stages
+- current stage index
+- stage decisions
 - pending/approved/denied decision
 - reviewer
 - message
@@ -143,4 +146,5 @@ The module tests cover:
 - multiple same-type Blackboard values restored by key
 - a run suspended for human review, resumed by a new executor using JDBC repositories, failing after resume, and compensating an action that completed before suspension
 - a pending review task approved externally through JDBC, then consumed by resume to complete the run
+- multi-stage human review progression, stale stage rejection, and legacy single-stage migration
 - structured memory records saved, queried by scope/type, updated, deleted, and loaded into Blackboard

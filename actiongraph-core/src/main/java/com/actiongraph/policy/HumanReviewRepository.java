@@ -21,4 +21,15 @@ public interface HumanReviewRepository {
             String reviewer,
             String message
     );
+
+    default void decideStage(
+            String runId,
+            ActionId actionId,
+            int expectedStageIndex,
+            HumanReviewDecision decision,
+            String reviewer,
+            String message
+    ) {
+        decide(runId, actionId, decision, reviewer, message);
+    }
 }

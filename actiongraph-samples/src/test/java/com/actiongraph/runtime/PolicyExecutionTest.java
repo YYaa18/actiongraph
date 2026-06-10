@@ -1,6 +1,7 @@
 package com.actiongraph.runtime;
 
 import com.actiongraph.action.Action;
+import com.actiongraph.action.ActionId;
 import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.samples.renewal.RenewalActionFactory;
 import com.actiongraph.samples.renewal.RenewalConditions;
@@ -17,8 +18,12 @@ import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.policy.AutoApproveHumanReviewPolicy;
 import com.actiongraph.policy.DefaultPolicyGuard;
 import com.actiongraph.policy.DenyingHumanReviewPolicy;
+import com.actiongraph.policy.HumanReviewDecision;
+import com.actiongraph.policy.InMemoryHumanReviewRepository;
 import com.actiongraph.policy.PendingHumanReviewPolicy;
 import com.actiongraph.policy.PermissionPolicy;
+import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
+import com.actiongraph.policy.RiskBasedChainResolver;
 import com.actiongraph.trace.InMemoryTraceRepository;
 import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceEventType;
@@ -32,6 +37,8 @@ import java.util.concurrent.CyclicBarrier;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PolicyExecutionTest {
+    private static final ActionId SALES_APPROVAL_REQUEST = new ActionId("sales.approval.request");
+
     @Test
     void defaultHumanReviewPolicyStopsBeforeHighRiskAction() {
         Fixture fixture = fixture(new DefaultPolicyGuard(), null);
@@ -152,6 +159,83 @@ class PolicyExecutionTest {
         assertThat(fixture.blackboard().get(ApprovalRequest.class)).isPresent();
         assertThat(suspendedRuns.findByRunId(suspended.runId())).isEmpty();
         assertThat(events(fixture, resumed, TraceEventType.RUN_RESUMED)).hasSize(1);
+    }
+
+    @Test
+    void riskBasedMultiStageReviewSuspendsAgainUntilFinalStageApproves() {
+        Fixture fixture = fixture(new DefaultPolicyGuard(), null);
+        InMemorySuspendedRunRepository suspendedRuns = new InMemorySuspendedRunRepository();
+        InMemoryHumanReviewRepository reviewRepository = new InMemoryHumanReviewRepository();
+        RepositoryBackedHumanReviewPolicy reviewPolicy = new RepositoryBackedHumanReviewPolicy(
+                reviewRepository,
+                new RiskBasedChainResolver()
+        );
+        GoapExecutor executor = new GoapExecutor(
+                new GoapPlanner(),
+                new DefaultPolicyGuard(),
+                reviewPolicy,
+                fixture.traceRepository(),
+                suspendedRuns
+        );
+
+        RunResult firstSuspension = executor.run(RenewalGoals.prepareRenewalQuote(),
+                fixture.blackboard(), fixture.actions(), fixture.registry());
+
+        assertThat(firstSuspension.status()).isEqualTo(RunStatus.SUSPENDED_PENDING_REVIEW);
+        assertThat(reviewRepository.findPending()).singleElement().satisfies(task -> {
+            assertThat(task.stages()).extracting(stage -> stage.name())
+                    .containsExactly("checker-review", "authorization");
+            assertThat(task.currentStageIndex()).isZero();
+        });
+
+        reviewRepository.decideStage(firstSuspension.runId(), SALES_APPROVAL_REQUEST,
+                0, HumanReviewDecision.APPROVED, "checker-1", "checker approved");
+        RunResult secondSuspension = executor.resume(firstSuspension.runId(), fixture.actions(), fixture.registry());
+
+        assertThat(secondSuspension.status()).isEqualTo(RunStatus.SUSPENDED_PENDING_REVIEW);
+        assertThat(secondSuspension.runId()).isEqualTo(firstSuspension.runId());
+        assertThat(fixture.blackboard().get(ApprovalRequest.class)).isEmpty();
+        assertThat(reviewRepository.findPending()).singleElement()
+                .satisfies(task -> assertThat(task.currentStageIndex()).isEqualTo(1));
+
+        reviewRepository.decideStage(firstSuspension.runId(), SALES_APPROVAL_REQUEST,
+                1, HumanReviewDecision.APPROVED, "authorizer-1", "authorized");
+        RunResult completed = executor.resume(firstSuspension.runId(), fixture.actions(), fixture.registry());
+
+        assertThat(completed.status()).isEqualTo(RunStatus.COMPLETED);
+        assertThat(fixture.approvalService().requests())
+                .containsExactly(new ApprovalRequest("APPROVAL-1", "QUOTE-1"));
+        assertThat(suspendedRuns.findByRunId(firstSuspension.runId())).isEmpty();
+    }
+
+    @Test
+    void riskBasedMultiStageReviewDenialCompensatesDraft() {
+        Fixture fixture = fixture(new DefaultPolicyGuard(), null);
+        InMemorySuspendedRunRepository suspendedRuns = new InMemorySuspendedRunRepository();
+        InMemoryHumanReviewRepository reviewRepository = new InMemoryHumanReviewRepository();
+        RepositoryBackedHumanReviewPolicy reviewPolicy = new RepositoryBackedHumanReviewPolicy(
+                reviewRepository,
+                new RiskBasedChainResolver()
+        );
+        GoapExecutor executor = new GoapExecutor(
+                new GoapPlanner(),
+                new DefaultPolicyGuard(),
+                reviewPolicy,
+                fixture.traceRepository(),
+                suspendedRuns
+        );
+
+        RunResult firstSuspension = executor.run(RenewalGoals.prepareRenewalQuote(),
+                fixture.blackboard(), fixture.actions(), fixture.registry());
+
+        reviewRepository.decideStage(firstSuspension.runId(), SALES_APPROVAL_REQUEST,
+                0, HumanReviewDecision.DENIED, "checker-1", "blocked");
+        RunResult denied = executor.resume(firstSuspension.runId(), fixture.actions(), fixture.registry());
+
+        assertThat(denied.status()).isEqualTo(RunStatus.DENIED_BY_POLICY);
+        assertThat(fixture.blackboard().get(ApprovalRequest.class)).isEmpty();
+        assertThat(fixture.quoteService().voidedQuoteIds()).containsExactly("QUOTE-1");
+        assertThat(suspendedRuns.findByRunId(firstSuspension.runId())).isEmpty();
     }
 
     @Test

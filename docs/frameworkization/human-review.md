@@ -10,9 +10,9 @@ When a high-risk action requires review:
 2. `RepositoryBackedHumanReviewPolicy` looks for an existing `HumanReviewTask`.
 3. If no task exists, it stores a pending task and returns `PENDING`.
 4. The executor saves a suspended run and returns `SUSPENDED_PENDING_REVIEW`.
-5. An external approval system reads pending tasks and records `APPROVED` or `DENIED`.
+5. An external approval system reads pending tasks and records `APPROVED` or `DENIED` for the current stage.
 6. Calling `resume(runId, actions, registry)` asks the same policy again.
-7. The recorded decision either lets execution continue or denies the action and triggers compensation.
+7. The recorded decision either advances to the next approval stage, lets execution continue after the final stage, or denies the action and triggers compensation.
 
 ## In-Memory Usage
 
@@ -25,15 +25,19 @@ External approval code can inspect and decide tasks:
 
 ```java
 List<HumanReviewTask> pending = reviewRepository.findPending();
+HumanReviewTask task = pending.getFirst();
 
-reviewRepository.decide(
-        runId,
-        actionId,
+reviewRepository.decideStage(
+        task.runId(),
+        task.actionId(),
+        task.currentStageIndex(),
         HumanReviewDecision.APPROVED,
         "ops-lead",
         "Approved in approval console"
 );
 ```
+
+`decide(...)` remains available for simple single-stage integrations. `decideStage(...)` is recommended for approval callbacks because it includes the stage index the approval UI displayed; duplicate callbacks for the same stage fail with `StageAlreadyDecidedException` instead of accidentally advancing the next stage.
 
 ## JDBC Usage
 
@@ -52,6 +56,9 @@ The JDBC repository stores:
 - plan preview
 - current condition state
 - blackboard preview
+- approval stages
+- current stage index
+- stage decisions
 - decision
 - reviewer
 - message
@@ -63,6 +70,7 @@ The Spring Boot starter now provides these defaults:
 
 - `HumanReviewRepository` -> `InMemoryHumanReviewRepository`
 - `HumanReviewPolicy` -> `RepositoryBackedHumanReviewPolicy`
+- `ApprovalChainResolver` -> `SingleStageApprovalChainResolver`
 
 Applications can replace either bean. For durable review tasks:
 
@@ -73,9 +81,11 @@ HumanReviewRepository humanReviewRepository(DataSource dataSource) {
 }
 ```
 
+Set `actiongraph.human-review.risk-based-approval-chain=true` to use `RiskBasedChainResolver`: HIGH risk actions require checker review and authorization; other actions remain single-stage unless request attributes ask for amount escalation.
+
 ## Semantics
 
 - `PENDING` suspends without compensation.
-- `APPROVED` allows the pending action to execute on resume.
+- `APPROVED` advances the current stage; only approval of the final stage allows the pending action to execute on resume.
 - `DENIED` is terminal and triggers compensation for actions already executed in the run.
 - Review decisions are keyed by `runId + actionId`.

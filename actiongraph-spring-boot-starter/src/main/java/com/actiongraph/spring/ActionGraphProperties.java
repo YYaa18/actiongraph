@@ -16,6 +16,7 @@ public class ActionGraphProperties {
     private final ActionsProperties actions = new ActionsProperties();
     private final PersistenceProperties persistence = new PersistenceProperties();
     private final MaskingProperties masking = new MaskingProperties();
+    private final HumanReviewProperties humanReview = new HumanReviewProperties();
 
     public PlannerProperties getPlanner() {
         return planner;
@@ -35,6 +36,10 @@ public class ActionGraphProperties {
 
     public MaskingProperties getMasking() {
         return masking;
+    }
+
+    public HumanReviewProperties getHumanReview() {
+        return humanReview;
     }
 
     public static final class PlannerProperties {
@@ -116,6 +121,18 @@ public class ActionGraphProperties {
 
         public void setBlockedKeys(Set<String> blockedKeys) {
             this.blockedKeys = blockedKeys == null ? new LinkedHashSet<>() : new LinkedHashSet<>(blockedKeys);
+        }
+    }
+
+    public static final class HumanReviewProperties {
+        private boolean riskBasedApprovalChain = false;
+
+        public boolean isRiskBasedApprovalChain() {
+            return riskBasedApprovalChain;
+        }
+
+        public void setRiskBasedApprovalChain(boolean riskBasedApprovalChain) {
+            this.riskBasedApprovalChain = riskBasedApprovalChain;
         }
     }
 }

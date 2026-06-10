@@ -1,6 +1,8 @@
 package com.actiongraph.persistence.jdbc;
 
 import com.actiongraph.action.ActionId;
+import com.actiongraph.policy.ApprovalStage;
+import com.actiongraph.policy.StageDecision;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.runtime.Blackboard;
@@ -111,6 +113,26 @@ final class PersistenceJsonCodec {
         return read(json, STRING_LIST).stream()
                 .map(ActionId::new)
                 .toList();
+    }
+
+    String writeApprovalStages(List<ApprovalStage> stages) {
+        Objects.requireNonNull(stages, "stages");
+        return write(stages);
+    }
+
+    List<ApprovalStage> readApprovalStages(String json) {
+        return read(json, new TypeReference<List<ApprovalStage>>() {
+        });
+    }
+
+    String writeStageDecisions(List<StageDecision> decisions) {
+        Objects.requireNonNull(decisions, "decisions");
+        return write(decisions);
+    }
+
+    List<StageDecision> readStageDecisions(String json) {
+        return read(json, new TypeReference<List<StageDecision>>() {
+        });
     }
 
     String writeConditions(Set<Condition> conditions) {

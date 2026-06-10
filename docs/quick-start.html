@@ -340,27 +340,31 @@ GoalInterpreter goalInterpreter(GoalCatalog catalog) {
 </table>
 
 <h2 id="review">人工审批与挂起恢复</h2>
-<p>默认装配的 <code>RepositoryBackedHumanReviewPolicy</code> 把审批做成了「任务表」模型，可直接对接公司现有审批系统：</p>
+<p>默认装配的 <code>RepositoryBackedHumanReviewPolicy</code> 把审批做成了「任务表」模型，可直接对接公司现有审批系统。默认是单级审批；金融场景可开启按风险等级路由的多级审批链。</p>
 <div class="flow">
   <div class="node">高风险 Action 触发</div><div class="arr">→</div>
   <div class="node hl">挂起 SUSPENDED_PENDING_REVIEW<br>审批任务入库</div><div class="arr">→</div>
   <div class="node">审批系统读取 findPending()</div><div class="arr">→</div>
-  <div class="node">审批人 decide(...)</div><div class="arr">→</div>
+  <div class="node">审批人 decideStage(...)</div><div class="arr">→</div>
   <div class="node hl">resume(runId)<br>读决定继续或拒绝补偿</div>
 </div>
 <pre><code><span class="c">// 审批侧：展示待审任务（含计划预览、当前状态、Blackboard 预览）</span>
 List&lt;HumanReviewTask&gt; pending = humanReviewRepository.findPending();
 
-<span class="c">// 审批人做出决定（审批人与意见会进入审计 Trace）</span>
-humanReviewRepository.decide(runId, actionId,
+<span class="c">// 审批人做出决定。expectedStageIndex 来自 task.currentStageIndex()</span>
+HumanReviewTask task = pending.getFirst();
+humanReviewRepository.decideStage(task.runId(), task.actionId(), task.currentStageIndex(),
         HumanReviewDecision.APPROVED, <span class="s">"ops-lead"</span>, <span class="s">"审批通过"</span>);
 
 <span class="c">// 恢复运行：原子认领 runId，trace 连续，挂起前动作的补偿链完整保留</span>
 RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pre>
 <div class="card callout">
   <div class="title">挂起恢复的语义保证</div>
-  resume 会先从 <code>SuspendedRunRepository</code> 原子认领挂起快照；同一个 <code>runId</code> 被重复回调或多实例并发消费时，只有一个恢复流程能继续执行业务动作。resume 后若执行失败，<b>挂起之前已成功的动作同样会被逆序补偿</b> —— 补偿链跨挂起边界完整。审批拒绝（DENIED）同样触发补偿，不会留下孤儿草稿。
+  resume 会先从 <code>SuspendedRunRepository</code> 原子认领挂起快照；同一个 <code>runId</code> 被重复回调或多实例并发消费时，只有一个恢复流程能继续执行业务动作。多级审批未走完时，resume 会重新挂起并保留同一条补偿栈；审批拒绝（DENIED）同样触发补偿，不会留下孤儿草稿。
 </div>
+<pre><code>actiongraph:
+  human-review:
+    risk-based-approval-chain: true   <span class="c"># HIGH 两级；默认 false 保持单级</span></code></pre>
 
 <h2 id="masking">敏感数据脱敏</h2>
 <p>金融场景建议开启默认正则脱敏。它只作用于两个人类可读面：<code>TraceEvent.detail/data</code> 与 <code>HumanReviewRequest.blackboardPreview</code>；<code>SuspendedRun</code> 的 Blackboard 快照不会脱敏，确保 resume 可无损恢复。</p>
@@ -419,6 +423,7 @@ if (!verification.valid()) {
   <tr><td><code>actiongraph.planner.max-expansions</code></td><td>10000</td><td>规划搜索最大展开数（防爆）</td></tr>
   <tr><td><code>actiongraph.executor.max-steps</code></td><td>64</td><td>单次运行最大执行步数</td></tr>
   <tr><td><code>actiongraph.actions.auto-register-annotated</code></td><td>true</td><td>是否自动扫描注解 Bean 注册 Action</td></tr>
+  <tr><td><code>actiongraph.human-review.risk-based-approval-chain</code></td><td>false</td><td>是否启用 HIGH 风险动作两级审批链</td></tr>
   <tr><td><code>actiongraph.masking.enabled</code></td><td>false</td><td>是否启用默认金融正则脱敏（Trace 与审批预览）</td></tr>
   <tr><td><code>actiongraph.masking.blocked-keys</code></td><td>空</td><td>命中字段名时整体脱敏为 <code>***</code></td></tr>
   <tr><td><code>actiongraph.persistence.suspended-run-claim-timeout</code></td><td>15m</td><td>JDBC resume 认领后进程崩溃时，RESUMING 快照多久后可被重新认领</td></tr>
@@ -465,7 +470,7 @@ if (!verification.valid()) {
     <li>☐ condition 全部带本域命名空间，并抽成常量类</li>
     <li>☐ 四个仓储已替换为 JDBC 实现，挂起表写权限已收紧</li>
     <li>☐ <code>FAILED_COMPENSATION_INCOMPLETE</code> 已接入告警</li>
-    <li>☐ 审批系统已对接 <code>findPending()</code> / <code>decide()</code> / <code>resume()</code> 三件套</li>
+    <li>☐ 审批系统已对接 <code>findPending()</code> / <code>decideStage(... currentStageIndex ...)</code> / <code>resume()</code> 三件套</li>
     <li>☐ 带真实 DEEPSEEK_API_KEY 跑通一次不含 ID 模式的自然语言输入（验证 LLM 路径真实生效）</li>
     <li>☐ 发布纪律：存在未决挂起运行时，不删除或改名已注册的 Action id</li>
   </ul>
