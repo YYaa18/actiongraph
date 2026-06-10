@@ -26,12 +26,14 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
+- Reusable runtime API service for goal interpretation, start, and resume gateways
 - Optional non-Spring human review tasks, callback handling, and approval chains
 - Reusable human-review task API service for approval inboxes and gateways
 - Spring Boot starter with annotation-driven Action registration and runtime defaults
 - Optional governance Spring Boot starter for masking, amount limits, and rule-based permissions
 - Optional human-review governance Spring Boot starter for review attributes and approval-chain routing
 - Optional human-review Spring Boot starter with repository-backed review policy support
+- Optional runtime API Spring Boot starter with goal interpretation, start, and resume endpoints
 - Optional human-review API Spring Boot starter with task query and decision endpoints
 - Optional human-review callback Spring Boot starter with approval callback endpoint support
 - Reusable console core service for read-only run monitoring
@@ -55,6 +57,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-memory` | Optional structured memory records, repository contract, in-memory implementation, and Blackboard context loader |
 | `actiongraph-memory-spring-boot-starter` | Optional Spring Boot auto-configuration for structured memory |
 | `actiongraph-interpretation` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
+| `actiongraph-runtime-api` | Reusable goal interpretation, start, and resume service |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
 | `actiongraph-human-review-api` | Reusable human-review task query and decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
@@ -70,6 +73,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for core JDBC repositories |
 | `actiongraph-memory-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC memory repository |
 | `actiongraph-human-review-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC human-review repository |
+| `actiongraph-runtime-api-spring-boot-starter` | Optional Spring MVC runtime start and resume endpoints |
 | `actiongraph-human-review-spring-boot-starter` | Optional repository-backed review policy auto-configuration |
 | `actiongraph-human-review-api-spring-boot-starter` | Optional Spring MVC human-review task API endpoints |
 | `actiongraph-human-review-callback-spring-boot-starter` | Optional Spring MVC approval callback endpoint for external review systems |
@@ -100,6 +104,7 @@ dependencies {
     implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-governance-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
@@ -128,6 +133,12 @@ actiongraph:
     max-depth: 32
   executor:
     max-steps: 64
+  runtime:
+    api:
+      enabled: true
+      path: /actiongraph/runtime
+      token-header: X-ActionGraph-Runtime-Token
+      shared-secret: ${ACTIONGRAPH_RUNTIME_API_SECRET}
   masking:
     enabled: false
   persistence:
@@ -166,6 +177,14 @@ Non-Spring services can use `actiongraph-memory` directly when they want structu
 Spring services can add `actiongraph-memory-spring-boot-starter` when they want in-memory structured memory defaults and `MemoryContextLoader`. If `actiongraph-memory-jdbc-spring-boot-starter` is also enabled, the memory starter backs off to the JDBC `MemoryRepository`.
 
 Non-Spring services can use `actiongraph-interpretation` directly when they want GoalCatalog metadata, rule-based goal interpreters, or Goal-to-Blackboard seeding without adopting an LLM provider.
+
+Non-Spring services can use `actiongraph-runtime-api` when an application gateway, CLI, or custom controller wants a stable service for `interpret`, `start`, and `resume` without adopting Spring MVC. It composes a `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry`, but it does not provide an LLM provider, persistence, or HTTP endpoints by itself. Spring MVC applications can add `actiongraph-runtime-api-spring-boot-starter` and enable `actiongraph.runtime.api.enabled=true` to expose the same entry surface:
+
+```text
+Runtime API starter: POST /actiongraph/runtime/interpret
+Runtime API starter: POST /actiongraph/runtime/runs
+Runtime API starter: POST /actiongraph/runtime/runs/{runId}/resume
+```
 
 Non-Spring services can use `actiongraph-human-review` directly when they need external approval task storage, callback handling, or multi-stage approval chains without Spring MVC.
 
@@ -237,6 +256,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Quick start guide](docs/quick-start.html)
 - [Real LLM smoke test](docs/frameworkization/llm-smoke.md)
 - [Human review integration](docs/frameworkization/human-review.md)
+- [Runtime API](docs/frameworkization/runtime-api.md)
 - [Governance Spring Boot starter](docs/frameworkization/governance-spring-boot-starter.md)
 - [Claims precheck PostgreSQL mapping](docs/frameworkization/claims-precheck-postgresql.md)
 - [Claims precheck review callbacks](docs/frameworkization/claims-precheck-review-callbacks.md)

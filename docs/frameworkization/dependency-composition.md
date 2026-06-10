@@ -65,6 +65,19 @@ dependencies {
 
 `actiongraph-interpretation` depends only on `actiongraph-core`. It provides `GoalCatalog`, `GoalDefinition`, `GoalInterpreter`, `GoalInterpretation`, `GoalParameters`, `GoalBlackboardSeeder`, and `GoalBlackboardSeederRegistry`.
 
+## Custom Runtime Entry API
+
+Use this when a gateway, CLI, or custom controller wants a stable service for goal interpretation, run start, and suspended-run resume without adopting Spring MVC endpoints.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-runtime-api")
+}
+```
+
+`actiongraph-runtime-api` wraps `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` with `ActionGraphRuntimeApiService` plus stable response DTOs. It does not provide an LLM provider, create repositories, register actions, or expose HTTP endpoints.
+
 ## Spring Business Runtime
 
 Use this for a business service that executes ActionGraph runs and registers ordinary Spring bean methods as actions.
@@ -77,6 +90,28 @@ dependencies {
 ```
 
 The Spring starter brings `actiongraph-annotations` transitively and scans Spring beans for those annotations. It does not bring structured memory, repository-backed review tasks, JDBC repositories, or HTTP control-plane endpoints.
+
+## Spring MVC Runtime Entry API
+
+Use this when a Spring MVC service wants only goal interpretation, run start, and suspended-run resume endpoints. Business actions, `GoalInterpreter`, and `GoalBlackboardSeederRegistry` remain application-provided components.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
+}
+```
+
+The Runtime API starter exposes only:
+
+```text
+POST /actiongraph/runtime/interpret
+POST /actiongraph/runtime/runs
+POST /actiongraph/runtime/runs/{runId}/resume
+```
+
+It requires `actiongraph.runtime.api.enabled=true`, a servlet web application, `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. It does not create LLM clients, expose human-review task/callback endpoints, or expose Console endpoints.
 
 ## Spring Structured Memory
 
@@ -440,6 +475,7 @@ dependencies {
     implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")

@@ -186,6 +186,7 @@
   <tr><td><code>com.actiongraph:actiongraph-memory</code></td><td>结构化记忆记录 / 仓储 / 上下文加载器</td><td>需要把长期业务记忆加载进 Blackboard 时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-memory-spring-boot-starter</code></td><td>结构化记忆 Spring 自动装配</td><td>Spring 服务需要内存 Memory 默认实现和上下文加载器时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-interpretation</code></td><td>GoalCatalog / GoalInterpreter / 解释结果 / Blackboard seeder</td><td>需要规则解释器、目标目录或解释参数装配桥时引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-runtime-api</code></td><td>目标解释 / 启动运行 / 恢复运行入口服务</td><td>企业网关、CLI 或自研控制器需要稳定入口 DTO 时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review</code></td><td>审批任务仓储 / 审批链 / 回调处理 / repository-backed policy</td><td>非 Spring 服务需要对接外部审批系统时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-api</code></td><td>审批任务查询 / 决策服务</td><td>审批门户、CLI 或企业网关需要稳定任务 DTO 时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-llm</code></td><td>通用 LLM 解释器 + GoalCatalog prompt 渲染 + 结构化输出解析</td><td>接入非 DeepSeek 模型或自定义 LLM provider 时</td></tr>
@@ -201,6 +202,7 @@
   <tr><td><code>com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter</code></td><td>结构化记忆 JDBC 自动装配</td><td>Spring 服务需要持久化 Memory 时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter</code></td><td>审批任务 JDBC 自动装配</td><td>Spring 服务需要持久化审批任务时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-spring-boot-starter</code></td><td>仓储型审批策略自动装配</td><td>Spring 服务需要审批任务仓储和 repository-backed policy 时引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-runtime-api-spring-boot-starter</code></td><td>运行入口 HTTP 端点</td><td>Spring MVC 控制层需要解释目标、启动运行和恢复挂起运行时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-api-spring-boot-starter</code></td><td>审批任务查询与决策 HTTP 端点</td><td>Spring MVC 控制层需要审批任务 API 时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-callback-spring-boot-starter</code></td><td>审批回调 HTTP 端点</td><td>Spring MVC 服务需要接收外部审批系统回写决策时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-core</code></td><td>只读 Console 查询服务 + 响应模型</td><td>自研控制台、CLI 或网关适配时使用，不引入 Spring MVC endpoint</td></tr>
@@ -228,6 +230,7 @@ dependencies {
     implementation(<span class="s">"com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选 Memory 持久化</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选审批持久化</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-boot-starter"</span>)  <span class="c">// 可选仓储型审批</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-runtime-api-spring-boot-starter"</span>)  <span class="c">// 可选运行入口 API</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-api-spring-boot-starter"</span>)  <span class="c">// 可选审批任务 API</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-callback-spring-boot-starter"</span>)  <span class="c">// 可选审批回调入口</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-console-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选控制层 JDBC 读模型</span>
@@ -502,6 +505,10 @@ MemoryRepository memoryRepository =
   <tr><td><code>actiongraph.planner.max-expansions</code></td><td>10000</td><td>规划搜索最大展开数（防爆）</td></tr>
   <tr><td><code>actiongraph.executor.max-steps</code></td><td>64</td><td>单次运行最大执行步数</td></tr>
   <tr><td><code>actiongraph.actions.auto-register-annotated</code></td><td>true</td><td>是否自动扫描注解 Bean 注册 Action</td></tr>
+  <tr><td><code>actiongraph.runtime.api.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露解释目标、启动运行与恢复运行端点；需要 <code>actiongraph-runtime-api-spring-boot-starter</code>、<code>GoalInterpreter</code>、<code>GoalBlackboardSeederRegistry</code> 和运行时 Bean</td></tr>
+  <tr><td><code>actiongraph.runtime.api.path</code></td><td><code>/actiongraph/runtime</code></td><td>运行入口 API 前缀；提供 <code>POST /interpret</code>、<code>POST /runs</code>、<code>POST /runs/{runId}/resume</code></td></tr>
+  <tr><td><code>actiongraph.runtime.api.token-header</code></td><td><code>X-ActionGraph-Runtime-Token</code></td><td>启用共享密钥后用于传递运行入口 API token 的 Header 名</td></tr>
+  <tr><td><code>actiongraph.runtime.api.shared-secret</code></td><td>空</td><td>运行入口 API 共享密钥；为空时不校验，生产环境建议通过企业网关、环境变量或密钥系统注入</td></tr>
   <tr><td><code>actiongraph.human-review.risk-based-approval-chain</code></td><td>false</td><td>是否启用 HIGH 风险动作两级审批链；需要 <code>actiongraph-governance-human-review-spring-boot-starter</code></td></tr>
   <tr><td><code>actiongraph.human-review.api.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露审批任务查询与决策端点；需要 <code>actiongraph-human-review-api-spring-boot-starter</code> 和一个 <code>HumanReviewRepository</code> Bean</td></tr>
   <tr><td><code>actiongraph.human-review.api.path</code></td><td><code>/actiongraph/human-review/tasks</code></td><td>审批任务 API 前缀；提供 <code>GET /pending</code>、<code>GET /runs/{runId}</code>、<code>GET /runs/{runId}/actions/{actionId}</code>、<code>POST /runs/{runId}/actions/{actionId}/decision</code></td></tr>
