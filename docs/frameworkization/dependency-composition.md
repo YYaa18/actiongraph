@@ -299,9 +299,35 @@ dependencies {
 
 `actiongraph-console-jdbc` implements the `ConsoleRunRepository` port by adapting `JdbcTraceRunRepository`. It remains read-only and does not expose HTTP endpoints.
 
-## Spring MVC Read-Only Monitoring Service
+## Spring MVC Read-Only Monitoring API
 
-Use this for a separate control-plane application that exposes read-only HTTP/UI endpoints over any `ConsoleRunRepository`.
+Use this for a separate control-plane application that exposes read-only JSON endpoints over any `ConsoleRunRepository` without serving the bundled page.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
+}
+```
+
+The Console API starter wraps `actiongraph-console-core` with Spring MVC JSON endpoints, token-header check, and shared service auto-configuration. It requires an `ActionGraphConsoleService` or `ConsoleRunRepository` bean and must remain read-only: it does not execute, resume, approve, deny, compensate runs, or serve the bundled page.
+
+## Spring MVC Read-Only Monitoring UI
+
+Use this when a control-plane application wants only the bundled HTML page, for example when JSON requests are routed through an enterprise gateway or a custom API service.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
+}
+```
+
+The Console UI starter serves only `GET /actiongraph/console` and injects the configured token header and paging limits into the page. It does not create repositories or expose `/runs` JSON endpoints.
+
+## Spring MVC Read-Only Monitoring Aggregate
+
+Use this compatibility coordinate when an application wants the built-in page and JSON API together through the previous single dependency.
 
 ```kotlin
 dependencies {
@@ -310,7 +336,7 @@ dependencies {
 }
 ```
 
-The Console Web starter wraps `actiongraph-console-core` with a Spring MVC controller, built-in static page, token-header check, and auto-configuration. It requires an `ActionGraphConsoleService` or `ConsoleRunRepository` bean and must remain read-only: it does not execute, resume, approve, deny, or compensate runs.
+The aggregate starter brings `actiongraph-console-api-spring-boot-starter` and `actiongraph-console-ui-spring-boot-starter` transitively. New applications should prefer the split dependencies when endpoint exposure needs to be explicit.
 
 ## Spring MVC JDBC Read-Only Monitoring Adapter
 
@@ -320,7 +346,8 @@ Use this when the Spring MVC control-plane should read ActionGraph JDBC trace ta
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
 }
 ```
 
@@ -344,7 +371,8 @@ dependencies {
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
 }
 ```
 

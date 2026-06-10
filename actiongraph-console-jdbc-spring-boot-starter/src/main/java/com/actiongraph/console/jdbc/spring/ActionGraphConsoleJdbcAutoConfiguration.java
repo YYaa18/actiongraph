@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 import javax.sql.DataSource;
 
 @AutoConfiguration(
-        beforeName = "com.actiongraph.console.spring.ActionGraphConsoleWebAutoConfiguration",
+        beforeName = "com.actiongraph.console.spring.ActionGraphConsoleServiceAutoConfiguration",
         afterName = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
 )
 @ConditionalOnClass(JdbcConsoleRunRepository.class)

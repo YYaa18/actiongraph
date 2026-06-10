@@ -203,8 +203,11 @@
   <tr><td><code>com.actiongraph:actiongraph-human-review-callback-spring-boot-starter</code></td><td>审批回调 HTTP 端点</td><td>Spring MVC 服务需要接收外部审批系统回写决策时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-core</code></td><td>只读 Console 查询服务 + 响应模型</td><td>自研控制台、CLI 或网关适配时使用，不引入 Spring MVC endpoint</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-jdbc</code></td><td>ConsoleRunRepository 的 JDBC read model 适配器</td><td>非 Spring 控制层需要直接读取 ActionGraph trace 表时使用</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-console-spring-boot-autoconfigure</code></td><td>Console Spring 公共自动装配</td><td>为 Console API / UI starter 提供共享配置和 service Bean</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-console-api-spring-boot-starter</code></td><td>只读 Console JSON 查询端点</td><td>Spring MVC 控制层只需要 API 时引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-console-ui-spring-boot-starter</code></td><td>内置 Console 页面</td><td>Spring MVC 控制层需要内置页面时引入，可搭配内置 API 或自研 API</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-jdbc-spring-boot-starter</code></td><td>Console JDBC 仓储自动装配</td><td>Spring 控制层需要从 DataSource 自动创建 ConsoleRunRepository 时引入</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-console-spring-boot-starter</code></td><td>只读 Console 页面 + 查询端点</td><td>需要控制层/监管台时按需引入，不强绑 JDBC</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-console-spring-boot-starter</code></td><td>Console API + UI 兼容聚合包</td><td>老接入方式保留；新接入推荐按需选择 API / UI starter</td></tr>
 </table>
 
 <h2 id="step1"><span class="step-no">1</span>引入依赖</h2>
@@ -223,7 +226,8 @@ dependencies {
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-boot-starter"</span>)  <span class="c">// 可选仓储型审批</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-callback-spring-boot-starter"</span>)  <span class="c">// 可选审批回调入口</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-console-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选控制层 JDBC 读模型</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-console-spring-boot-starter"</span>)  <span class="c">// 可选控制层 Web</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-console-api-spring-boot-starter"</span>)  <span class="c">// 可选控制层 JSON API</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-console-ui-spring-boot-starter"</span>)  <span class="c">// 可选控制层内置页面</span>
 }</code></pre>
 <p>基础 starter 引入后无需任何注解开关，自动装配以下 Bean（全部 <code>@ConditionalOnMissingBean</code>，你随时可以用自己的 <code>@Bean</code> 覆盖）：<code>Planner</code>、<code>GoapExecutor</code>、<code>ActionRegistry</code>、<code>ExecutionPolicyGuard</code>、<code>HumanReviewPolicy</code>、<code>TraceRepository</code>、<code>SuspendedRunRepository</code> 等。<code>MemoryContextLoader</code>、仓储型审批、JDBC 仓储和控制台端点都由对应可选 starter 显式提供。</p>
 
@@ -497,8 +501,8 @@ MemoryRepository memoryRepository =
   <tr><td><code>actiongraph.human-review.callback-endpoint.path</code></td><td><code>/actiongraph/human-review/callbacks</code></td><td>审批回调 HTTP 端点路径</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.token-header</code></td><td><code>X-ActionGraph-Review-Token</code></td><td>启用共享密钥后用于传递回调 token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.shared-secret</code></td><td>空</td><td>审批回调共享密钥；为空时不校验，生产环境建议通过环境变量或密钥系统注入</td></tr>
-  <tr><td><code>actiongraph.console.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露只读运行监控 HTTP 端点；需要 <code>actiongraph-console-spring-boot-starter</code> 和一个 <code>ConsoleRunRepository</code> Bean；使用 JDBC 时再叠加 <code>actiongraph-console-jdbc-spring-boot-starter</code> 和 <code>DataSource</code></td></tr>
-  <tr><td><code>actiongraph.console.path</code></td><td><code>/actiongraph/console</code></td><td>只读 Console 页面与 HTTP 端点前缀，提供内置页面、<code>GET /runs</code>、<code>GET /runs/{runId}</code> 与 <code>GET /runs/{runId}/trace</code>；列表支持 <code>limit</code>、<code>offset</code>、<code>status</code>、<code>auditComplete</code></td></tr>
+  <tr><td><code>actiongraph.console.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中启用只读 Console 控制面；API 需要 <code>actiongraph-console-api-spring-boot-starter</code> 和一个 <code>ConsoleRunRepository</code> Bean，页面需要 <code>actiongraph-console-ui-spring-boot-starter</code>；使用 JDBC 时再叠加 <code>actiongraph-console-jdbc-spring-boot-starter</code> 和 <code>DataSource</code></td></tr>
+  <tr><td><code>actiongraph.console.path</code></td><td><code>/actiongraph/console</code></td><td>只读 Console 页面与 HTTP 端点前缀；UI starter 提供内置页面，API starter 提供 <code>GET /runs</code>、<code>GET /runs/{runId}</code> 与 <code>GET /runs/{runId}/trace</code>；列表支持 <code>limit</code>、<code>offset</code>、<code>status</code>、<code>auditComplete</code></td></tr>
   <tr><td><code>actiongraph.console.token-header</code></td><td><code>X-ActionGraph-Console-Token</code></td><td>启用共享密钥后用于传递 Console token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.console.shared-secret</code></td><td>空</td><td>Console 共享密钥；为空时不校验，生产环境建议接入企业网关或密钥系统</td></tr>
   <tr><td><code>actiongraph.console.default-limit</code></td><td>50</td><td>查询最近运行列表时未传 <code>limit</code> 的默认条数</td></tr>

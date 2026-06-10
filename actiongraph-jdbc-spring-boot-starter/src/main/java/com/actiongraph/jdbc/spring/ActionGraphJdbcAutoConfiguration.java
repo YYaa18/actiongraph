@@ -19,7 +19,7 @@ import javax.sql.DataSource;
 @AutoConfiguration(
         beforeName = {
                 "com.actiongraph.spring.ActionGraphAutoConfiguration",
-                "com.actiongraph.console.spring.ActionGraphConsoleWebAutoConfiguration"
+                "com.actiongraph.console.jdbc.spring.ActionGraphConsoleJdbcAutoConfiguration"
         },
         afterName = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
 )

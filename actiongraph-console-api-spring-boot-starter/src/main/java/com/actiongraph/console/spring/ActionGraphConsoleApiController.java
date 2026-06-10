@@ -8,7 +8,6 @@ import com.actiongraph.console.ConsoleRunsResponse;
 import com.actiongraph.console.ConsoleTraceResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,33 +17,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("${actiongraph.console.path:/actiongraph/console}")
-public final class ActionGraphConsoleController {
-    private static final String CONSOLE_PAGE_RESOURCE = "/actiongraph/console/index.html";
-
+public final class ActionGraphConsoleApiController {
     private final ActionGraphConsoleService consoleService;
     private final ActionGraphConsoleProperties properties;
-    private final String consolePage;
 
-    public ActionGraphConsoleController(
+    public ActionGraphConsoleApiController(
             ActionGraphConsoleService consoleService,
             ActionGraphConsoleProperties properties
     ) {
         this.consoleService = Objects.requireNonNull(consoleService, "consoleService");
         this.properties = Objects.requireNonNull(properties, "properties");
-        this.consolePage = consoleService.renderPage(loadConsolePage());
-    }
-
-    @GetMapping(value = {"", "/"}, produces = MediaType.TEXT_HTML_VALUE)
-    public String page() {
-        return consolePage;
     }
 
     @GetMapping("/runs")
@@ -93,17 +81,6 @@ public final class ActionGraphConsoleController {
                 ? new byte[0]
                 : actual.getBytes(StandardCharsets.UTF_8);
         return MessageDigest.isEqual(expectedBytes, actualBytes);
-    }
-
-    private String loadConsolePage() {
-        try (InputStream input = ActionGraphConsoleController.class.getResourceAsStream(CONSOLE_PAGE_RESOURCE)) {
-            if (input == null) {
-                throw new IllegalStateException("Console page resource not found: " + CONSOLE_PAGE_RESOURCE);
-            }
-            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException ex) {
-            throw new IllegalStateException("Cannot read console page resource", ex);
-        }
     }
 
     @ExceptionHandler(UnauthorizedConsoleException.class)

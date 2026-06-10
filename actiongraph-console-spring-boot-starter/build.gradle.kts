@@ -5,10 +5,8 @@ plugins {
 val springBootVersion = "3.3.5"
 
 dependencies {
-    api(project(":actiongraph-console-core"))
-    api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
-
-    compileOnly("org.springframework:spring-web:6.1.14")
+    api(project(":actiongraph-console-api-spring-boot-starter"))
+    api(project(":actiongraph-console-ui-spring-boot-starter"))
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
 

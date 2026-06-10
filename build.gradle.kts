@@ -30,9 +30,12 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-governance-human-review-spring-boot-starter" to "Optional Spring Boot governance policies for human-review routing and review attributes.",
     "actiongraph-console-core" to "Reusable ActionGraph console query service and response model.",
     "actiongraph-console-jdbc" to "JDBC adapter for the ActionGraph console query port.",
+    "actiongraph-console-spring-boot-autoconfigure" to "Optional Spring Boot service auto-configuration for ActionGraph console components.",
+    "actiongraph-console-api-spring-boot-starter" to "Optional Spring MVC JSON API endpoints for the ActionGraph console.",
+    "actiongraph-console-ui-spring-boot-starter" to "Optional Spring MVC HTML page for the ActionGraph console.",
     "actiongraph-console-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC console read model.",
     "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot repository-backed human-review policy support for ActionGraph.",
-    "actiongraph-console-spring-boot-starter" to "Optional Spring Boot read-only console UI and query endpoints for ActionGraph."
+    "actiongraph-console-spring-boot-starter" to "Compatibility aggregate starter for the ActionGraph console API and UI."
 )
 
 val publishableModuleDescriptions = mapOf(

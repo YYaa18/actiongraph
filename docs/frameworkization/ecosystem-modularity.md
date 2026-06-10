@@ -9,7 +9,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 | Version platform | `actiongraph-bom` | Aligns all ActionGraph module versions for mix-and-match adoption |
 | Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace |
 | Optional adapters | `actiongraph-annotations`, `actiongraph-memory`, `actiongraph-memory-spring-boot-starter`, `actiongraph-memory-jdbc`, `actiongraph-memory-jdbc-spring-boot-starter`, `actiongraph-interpretation`, `actiongraph-human-review`, `actiongraph-human-review-jdbc`, `actiongraph-human-review-jdbc-spring-boot-starter`, `actiongraph-human-review-spring-boot-starter`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-human-review`, `actiongraph-governance-spring-boot-starter`, `actiongraph-governance-human-review-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, structured memory context, Spring memory wiring, JDBC memory storage, goal interpretation contracts, repository-backed human review, JDBC review storage, Spring review-policy wiring, Spring runtime wiring, reusable governance policies, human-review governance extensions, Spring governance wiring, Spring core JDBC wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
-| Control-plane ecosystem | `actiongraph-human-review-callback-spring-boot-starter`, `actiongraph-console-core`, `actiongraph-console-jdbc`, `actiongraph-console-jdbc-spring-boot-starter`, `actiongraph-console-spring-boot-starter` | Approval callback HTTP endpoint, read-only Console query service, JDBC Console adapter, Spring JDBC Console repository auto-configuration, operational Console UI and query endpoints |
+| Control-plane ecosystem | `actiongraph-human-review-callback-spring-boot-starter`, `actiongraph-console-core`, `actiongraph-console-jdbc`, `actiongraph-console-spring-boot-autoconfigure`, `actiongraph-console-api-spring-boot-starter`, `actiongraph-console-ui-spring-boot-starter`, `actiongraph-console-jdbc-spring-boot-starter`, `actiongraph-console-spring-boot-starter` | Approval callback HTTP endpoint, read-only Console query service, JDBC Console adapter, shared Spring Console service auto-configuration, optional JSON API, optional HTML UI, Spring JDBC Console repository auto-configuration, compatibility aggregate starter |
 | Samples | `actiongraph-samples` | Reference domains and batch demos; not published as a library |
 
 ## Composition Rules
@@ -30,7 +30,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 - Provider-neutral natural-language goal interpretation adds `actiongraph-llm`.
 - DeepSeek-compatible model access adds `actiongraph-llm-deepseek`.
 - Spring Boot repository-backed approval tasks add `actiongraph-human-review-spring-boot-starter`; Spring MVC external approval callbacks add `actiongraph-human-review-callback-spring-boot-starter`.
-- Custom operational monitoring adds `actiongraph-console-core`; JDBC-backed custom monitoring also adds `actiongraph-console-jdbc`; Spring MVC operational monitoring adds `actiongraph-console-spring-boot-starter`; Spring MVC JDBC-backed monitoring also adds `actiongraph-console-jdbc-spring-boot-starter`.
+- Custom operational monitoring adds `actiongraph-console-core`; JDBC-backed custom monitoring also adds `actiongraph-console-jdbc`; Spring MVC API-only monitoring adds `actiongraph-console-api-spring-boot-starter`; Spring MVC page-only monitoring adds `actiongraph-console-ui-spring-boot-starter`; old-style full Spring MVC monitoring adds the compatibility `actiongraph-console-spring-boot-starter`; Spring MVC JDBC-backed monitoring also adds `actiongraph-console-jdbc-spring-boot-starter`.
 
 The JDBC Spring Boot starter depends on the low-level core JDBC repositories and the Spring `DataSource` contract. It creates durable trace/suspended-run repository beans only when `actiongraph.persistence.jdbc.enabled=true`, and it does not register actions, execute runs, expose HTTP endpoints, configure Memory/Human Review storage, or start any control-plane surface.
 
@@ -54,7 +54,7 @@ The Human Review starter depends on `actiongraph-human-review` instead of the ru
 
 The Human Review JDBC modules provide durable review-task storage without forcing core JDBC users to depend on human-review contracts.
 
-The Console core defines the read-only monitoring service, response models, paging validation, and `ConsoleRunRepository` port. It depends only on core trace types, not JDBC or Spring Web. The Console JDBC adapter maps the JDBC trace read model into that port. The Console JDBC Spring Boot starter auto-configures that adapter from a `DataSource`. The Spring Boot Console Web starter exposes a thin HTTP/UI layer over any `ConsoleRunRepository`.
+The Console core defines the read-only monitoring service, response models, paging validation, and `ConsoleRunRepository` port. It depends only on core trace types, not JDBC or Spring Web. The Console JDBC adapter maps the JDBC trace read model into that port. The Console shared Spring Boot auto-configuration creates the `ActionGraphConsoleService` from any repository without exposing endpoints. The Console API starter exposes only JSON query endpoints. The Console UI starter exposes only the built-in page. The Console JDBC Spring Boot starter auto-configures the read-model repository from a `DataSource`. The legacy Console Spring Boot starter is a compatibility aggregate over API and UI.
 
 ## Boundary
 
@@ -96,6 +96,12 @@ The Console core defines the read-only monitoring service, response models, pagi
 
 `actiongraph-console-jdbc` is an ecosystem adapter: it implements the Console repository port through the JDBC trace read model. It must remain read-only and must not configure HTTP endpoints.
 
+`actiongraph-console-spring-boot-autoconfigure` is a shared Spring adapter: it creates `ActionGraphConsoleService` and binds `actiongraph.console.*` properties. It must not expose HTTP endpoints, serve pages, create JDBC repositories, or mutate runtime state.
+
+`actiongraph-console-api-spring-boot-starter` is an ecosystem component: it exposes only read-only JSON query endpoints over `ActionGraphConsoleService`. It must not render the bundled page, execute, resume, approve, deny, or compensate runs.
+
+`actiongraph-console-ui-spring-boot-starter` is an ecosystem component: it exposes only the built-in HTML Console page. It must not expose JSON query endpoints, create repositories, execute, resume, approve, deny, or compensate runs.
+
 `actiongraph-console-jdbc-spring-boot-starter` is an ecosystem adapter: it creates a JDBC-backed `ConsoleRunRepository` when enabled. It must not expose HTTP endpoints.
 
-`actiongraph-console-spring-boot-starter` is an ecosystem component: it renders a page and exposes read-only query endpoints by delegating to `actiongraph-console-core` and whatever `ConsoleRunRepository` the application provides. It must not execute, resume, approve, deny, or compensate runs.
+`actiongraph-console-spring-boot-starter` is a compatibility aggregate: it brings the Console API and UI starters together for existing users. New services should prefer the split API/UI starters when they need finer endpoint control.

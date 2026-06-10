@@ -15,7 +15,6 @@ import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConf
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -31,62 +30,47 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class ActionGraphConsoleWebAutoConfigurationTest {
+class ActionGraphConsoleApiAutoConfigurationTest {
     private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
                     JacksonAutoConfiguration.class,
                     HttpMessageConvertersAutoConfiguration.class,
                     WebMvcAutoConfiguration.class,
-                    ActionGraphConsoleWebAutoConfiguration.class
+                    ActionGraphConsoleServiceAutoConfiguration.class,
+                    ActionGraphConsoleApiAutoConfiguration.class
             ));
 
     @Test
-    void consoleEndpointIsDisabledByDefault() {
+    void consoleApiEndpointIsDisabledByDefault() {
         contextRunner
                 .withBean(ConsoleRunRepository.class, InMemoryConsoleRunRepository::new)
-                .run(context -> assertThat(context).doesNotHaveBean(ActionGraphConsoleController.class));
+                .run(context -> assertThat(context).doesNotHaveBean(ActionGraphConsoleApiController.class));
     }
 
     @Test
-    void consoleEndpointIsNotCreatedWithoutRunRepositoryOrService() {
+    void consoleApiEndpointIsNotCreatedWithoutRunRepositoryOrService() {
         contextRunner
                 .withPropertyValues("actiongraph.console.enabled=true")
                 .run(context -> {
                     assertThat(context).doesNotHaveBean(ActionGraphConsoleService.class);
-                    assertThat(context).doesNotHaveBean(ActionGraphConsoleController.class);
+                    assertThat(context).doesNotHaveBean(ActionGraphConsoleApiController.class);
                 });
     }
 
     @Test
-    void consoleServesReadOnlyPageWithInjectedConfiguration() {
+    void consoleApiDoesNotServeHtmlPage() {
         contextRunner
                 .withBean(ConsoleRunRepository.class, InMemoryConsoleRunRepository::new)
-                .withPropertyValues(
-                        "actiongraph.console.enabled=true",
-                        "actiongraph.console.path=/internal/actiongraph-console",
-                        "actiongraph.console.token-header=X-Internal-Console-Token",
-                        "actiongraph.console.default-limit=25",
-                        "actiongraph.console.max-limit=75"
-                )
+                .withPropertyValues("actiongraph.console.enabled=true")
                 .run(context -> {
-                    assertThat(context).hasSingleBean(ActionGraphConsoleService.class);
-                    assertThat(context).hasSingleBean(ConsoleRunRepository.class);
-                    mockMvc(context).perform(get("/internal/actiongraph-console")
+                    assertThat(context).hasSingleBean(ActionGraphConsoleApiController.class);
+                    mockMvc(context).perform(get("/actiongraph/console")
                                     .accept(MediaType.TEXT_HTML))
-                            .andExpect(status().isOk())
-                            .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                            .andExpect(content().string(containsString("ActionGraph Console")))
-                            .andExpect(content().string(containsString("Run monitoring and trace audit")))
-                            .andExpect(content().string(containsString("tokenHeader: 'X-Internal-Console-Token'")))
-                            .andExpect(content().string(containsString("defaultLimit: 25")))
-                            .andExpect(content().string(containsString("maxLimit: 75")))
-                            .andExpect(content().string(containsString("\"/trace\"")));
+                            .andExpect(status().isNotFound());
                 });
     }
 
@@ -100,18 +84,17 @@ class ActionGraphConsoleWebAutoConfigurationTest {
                 .withPropertyValues("actiongraph.console.enabled=true")
                 .run(context -> {
                     assertThat(context).hasSingleBean(ActionGraphConsoleService.class);
-                    assertThat(context).hasSingleBean(ActionGraphConsoleController.class);
-                    mockMvc(context).perform(get("/actiongraph/console")
-                                    .accept(MediaType.TEXT_HTML))
+                    assertThat(context).hasSingleBean(ActionGraphConsoleApiController.class);
+                    mockMvc(context).perform(get("/actiongraph/console/runs")
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isOk())
-                            .andExpect(content().string(containsString("tokenHeader: 'X-Custom-Console-Token'")))
-                            .andExpect(content().string(containsString("defaultLimit: 3")))
-                            .andExpect(content().string(containsString("maxLimit: 9")));
+                            .andExpect(jsonPath("$.limit").value(3))
+                            .andExpect(jsonPath("$.count").value(0));
                 });
     }
 
     @Test
-    void consoleListsRecentRunsAndRequiresConfiguredToken() {
+    void consoleApiListsRecentRunsAndRequiresConfiguredToken() {
         contextRunner
                 .withBean(ConsoleRunRepository.class, InMemoryConsoleRunRepository::new)
                 .withPropertyValues(
@@ -151,7 +134,7 @@ class ActionGraphConsoleWebAutoConfigurationTest {
     }
 
     @Test
-    void consoleFiltersRunsAndReturnsTraceEvents() {
+    void consoleApiFiltersRunsAndReturnsTraceEvents() {
         contextRunner
                 .withBean(ConsoleRunRepository.class, InMemoryConsoleRunRepository::new)
                 .withPropertyValues("actiongraph.console.enabled=true")
@@ -209,7 +192,7 @@ class ActionGraphConsoleWebAutoConfigurationTest {
     }
 
     @Test
-    void consoleReturnsRunDetailsAndNotFoundErrors() {
+    void consoleApiReturnsRunDetailsAndNotFoundErrors() {
         contextRunner
                 .withBean(ConsoleRunRepository.class, InMemoryConsoleRunRepository::new)
                 .withPropertyValues("actiongraph.console.enabled=true")
@@ -236,7 +219,7 @@ class ActionGraphConsoleWebAutoConfigurationTest {
     }
 
     @Test
-    void consoleSupportsCustomPathHeaderAndLimitGuard() {
+    void consoleApiSupportsCustomPathHeaderAndLimitGuard() {
         contextRunner
                 .withBean(ConsoleRunRepository.class, InMemoryConsoleRunRepository::new)
                 .withPropertyValues(

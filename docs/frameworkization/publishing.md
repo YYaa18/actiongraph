@@ -30,8 +30,11 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-human-review-callback-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-callback-spring-boot-starter:0.1.0` | Optional Spring MVC approval callback endpoint |
 | `actiongraph-console-core` | `com.actiongraph:actiongraph-console-core:0.1.0` | Reusable read-only Console query service and response model |
 | `actiongraph-console-jdbc` | `com.actiongraph:actiongraph-console-jdbc:0.1.0` | JDBC adapter for the Console query port |
+| `actiongraph-console-spring-boot-autoconfigure` | `com.actiongraph:actiongraph-console-spring-boot-autoconfigure:0.1.0` | Shared Spring Boot Console service auto-configuration |
+| `actiongraph-console-api-spring-boot-starter` | `com.actiongraph:actiongraph-console-api-spring-boot-starter:0.1.0` | Optional Spring MVC Console JSON API endpoints |
+| `actiongraph-console-ui-spring-boot-starter` | `com.actiongraph:actiongraph-console-ui-spring-boot-starter:0.1.0` | Optional Spring MVC built-in Console page |
 | `actiongraph-console-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-console-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC Console repository auto-configuration |
-| `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Optional read-only Console UI and Spring MVC query endpoints |
+| `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Compatibility aggregate for the Console API and UI starters |
 
 `actiongraph-samples` remains an application/sample module and is intentionally not published.
 
@@ -209,7 +212,19 @@ Spring Boot JDBC-backed operational monitoring adds:
 implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
 ```
 
-Spring MVC read-only operational monitoring adds:
+Spring MVC read-only operational monitoring API adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
+```
+
+Spring MVC built-in operational monitoring page adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
+```
+
+Existing applications can keep using the compatibility aggregate when they want both:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-console-spring-boot-starter")

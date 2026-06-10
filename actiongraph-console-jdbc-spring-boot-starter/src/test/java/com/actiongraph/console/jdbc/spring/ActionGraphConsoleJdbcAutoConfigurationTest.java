@@ -2,8 +2,9 @@ package com.actiongraph.console.jdbc.spring;
 
 import com.actiongraph.console.ConsoleRunRepository;
 import com.actiongraph.console.jdbc.JdbcConsoleRunRepository;
-import com.actiongraph.console.spring.ActionGraphConsoleController;
-import com.actiongraph.console.spring.ActionGraphConsoleWebAutoConfiguration;
+import com.actiongraph.console.spring.ActionGraphConsoleApiAutoConfiguration;
+import com.actiongraph.console.spring.ActionGraphConsoleApiController;
+import com.actiongraph.console.spring.ActionGraphConsoleServiceAutoConfiguration;
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
 import com.actiongraph.trace.TraceEvent;
@@ -92,20 +93,21 @@ class ActionGraphConsoleJdbcAutoConfigurationTest {
     }
 
     @Test
-    void composesWithConsoleWebStarter() {
+    void composesWithConsoleApiStarter() {
         new WebApplicationContextRunner()
                 .withConfiguration(AutoConfigurations.of(
                         JacksonAutoConfiguration.class,
                         HttpMessageConvertersAutoConfiguration.class,
                         WebMvcAutoConfiguration.class,
                         ActionGraphConsoleJdbcAutoConfiguration.class,
-                        ActionGraphConsoleWebAutoConfiguration.class
+                        ActionGraphConsoleServiceAutoConfiguration.class,
+                        ActionGraphConsoleApiAutoConfiguration.class
                 ))
                 .withBean(DataSource.class, ActionGraphConsoleJdbcAutoConfigurationTest::h2)
                 .withPropertyValues("actiongraph.console.enabled=true")
                 .run(context -> {
                     assertThat(context).hasSingleBean(ConsoleRunRepository.class);
-                    assertThat(context).hasSingleBean(ActionGraphConsoleController.class);
+                    assertThat(context).hasSingleBean(ActionGraphConsoleApiController.class);
                     seed(context.getBean(DataSource.class), "RUN-COMPLETED", "2026-06-10T10:00:00Z",
                             TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
 

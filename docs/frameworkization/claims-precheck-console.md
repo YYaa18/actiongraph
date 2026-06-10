@@ -95,15 +95,15 @@ ActionGraphConsoleService service =
 
 This keeps the control-plane service independently reusable while still giving JDBC deployments an off-the-shelf adapter.
 
-## Spring Boot Read-Only Endpoint
+## Spring Boot Read-Only Control Plane
 
-`actiongraph-console-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
+`actiongraph-console-api-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
 
 - `actiongraph.console.enabled=true`
-- `actiongraph-console-spring-boot-starter` is on the runtime classpath
+- `actiongraph-console-api-spring-boot-starter` is on the runtime classpath
 - an `ActionGraphConsoleService` or `ConsoleRunRepository` bean is available
 
-The Console Web starter wraps `actiongraph-console-core`, exposes the page/query endpoints, and stays read-only. Add `actiongraph-console-jdbc-spring-boot-starter` when a `DataSource` should be adapted into the default JDBC `ConsoleRunRepository`. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
+The Console API starter wraps `actiongraph-console-core`, exposes only JSON query endpoints, and stays read-only. Add `actiongraph-console-ui-spring-boot-starter` when the same service should also serve the bundled page, or use the compatibility `actiongraph-console-spring-boot-starter` to bring API and UI together. Add `actiongraph-console-jdbc-spring-boot-starter` when a `DataSource` should be adapted into the default JDBC `ConsoleRunRepository`. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
 
 ```yaml
 actiongraph:
