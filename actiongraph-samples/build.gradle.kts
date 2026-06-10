@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation(project(":actiongraph-core"))
     implementation(project(":actiongraph-llm-deepseek"))
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
     implementation("org.apache.commons:commons-csv:1.14.1")
 
     testImplementation("com.h2database:h2:2.2.224")

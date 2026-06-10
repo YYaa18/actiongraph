@@ -43,7 +43,7 @@ public final class ClaimsPrecheckBatchReportWriter {
         builder.append("- Sample Source: ").append(metadata.sampleSource()).append("\n");
         builder.append("- Review Mode: ").append(metadata.reviewMode()).append("\n");
         builder.append("- Simulated Review Wait Ms: ").append(metadata.simulatedReviewWaitMillis()).append("\n");
-        builder.append("- External Review Decisions: ").append(metadata.externalReviewDecisionCount()).append("\n");
+        builder.append("- External Review Inputs: ").append(metadata.externalReviewInputCount()).append("\n");
         builder.append("- Total Runs: ").append(metrics.totalRuns()).append("\n");
         builder.append("- Completed: ").append(metrics.completedRuns()).append("\n");
         builder.append("- Intercepted: ").append(metrics.interceptedRuns()).append("\n");

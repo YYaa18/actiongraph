@@ -27,7 +27,7 @@ public final class ClaimsPrecheckBatchMetricsApp {
                 runner.limitRules(),
                 runner.reviewOptions().modeName(),
                 runner.reviewOptions().simulatedReviewWaitMillis(),
-                runner.reviewOptions().externalDecisions().size()
+                runner.reviewOptions().externalReviewInputCount()
         );
         new ClaimsPrecheckBatchReportWriter().write(appArgs.reportDir(), metrics, metadata);
         System.out.println("claimsPrecheckBatch totalRuns=" + metrics.totalRuns()
@@ -59,7 +59,7 @@ public final class ClaimsPrecheckBatchMetricsApp {
                 + ", sampleSource=" + metadata.sampleSource()
                 + ", reviewMode=" + metadata.reviewMode()
                 + ", simulatedReviewWaitMs=" + metadata.simulatedReviewWaitMillis()
-                + ", externalReviewDecisions=" + metadata.externalReviewDecisionCount());
+                + ", externalReviewInputs=" + metadata.externalReviewInputCount());
         System.out.println("reportDir=" + appArgs.reportDir().toAbsolutePath());
     }
 
@@ -102,6 +102,8 @@ public final class ClaimsPrecheckBatchMetricsApp {
             String jdbcPassword = "";
             String jdbcQuery = null;
             Path reviewDecisions = null;
+            Path reviewCallbacks = null;
+            String reviewCallbackSecret = System.getenv().getOrDefault("ACTIONGRAPH_REVIEW_CALLBACK_SECRET", "");
             Path reportDir = DEFAULT_REPORT_DIR;
             String batchId = "claims-precheck-" + Instant.now().toEpochMilli();
             String environment = System.getenv().getOrDefault("ACTIONGRAPH_ENV", "local");
@@ -133,6 +135,10 @@ public final class ClaimsPrecheckBatchMetricsApp {
                             nextValue(tokens, ++i, "--simulate-review-wait-ms"));
                 } else if ("--review-decisions".equals(token)) {
                     reviewDecisions = Path.of(nextValue(tokens, ++i, "--review-decisions"));
+                } else if ("--review-callbacks".equals(token)) {
+                    reviewCallbacks = Path.of(nextValue(tokens, ++i, "--review-callbacks"));
+                } else if ("--review-callback-secret".equals(token)) {
+                    reviewCallbackSecret = nextValue(tokens, ++i, "--review-callback-secret");
                 } else {
                     throw new IllegalArgumentException("Unknown argument: " + token);
                 }
@@ -143,13 +149,18 @@ public final class ClaimsPrecheckBatchMetricsApp {
             if (jdbcUrl == null && (!jdbcUser.isBlank() || !jdbcPassword.isBlank() || jdbcQuery != null)) {
                 throw new IllegalArgumentException("--jdbc-url is required when JDBC options are provided");
             }
+            if (reviewDecisions != null && reviewCallbacks != null) {
+                throw new IllegalArgumentException("--review-decisions and --review-callbacks are mutually exclusive");
+            }
             ClaimsPrecheckBatchJdbcInput jdbcInput = jdbcUrl == null
                     ? null
                     : new ClaimsPrecheckBatchJdbcInput(jdbcUrl, jdbcUser, jdbcPassword, jdbcQuery);
             ClaimsPrecheckBatchReviewOptions reviewOptions = reviewOptions(
                     reviewMode,
                     simulatedReviewWaitMillis,
-                    reviewDecisions
+                    reviewDecisions,
+                    reviewCallbacks,
+                    reviewCallbackSecret
             );
             return new AppArgs(input, jdbcInput, reportDir, batchId, environment, reviewOptions);
         }
@@ -157,11 +168,19 @@ public final class ClaimsPrecheckBatchMetricsApp {
         private static ClaimsPrecheckBatchReviewOptions reviewOptions(
                 String reviewMode,
                 long simulatedReviewWaitMillis,
-                Path reviewDecisions
+                Path reviewDecisions,
+                Path reviewCallbacks,
+                String reviewCallbackSecret
         ) {
             if (reviewDecisions != null) {
                 return ClaimsPrecheckBatchReviewOptions.externalDecisions(
                         ClaimsPrecheckBatchReviewDecisionCsv.read(reviewDecisions)
+                );
+            }
+            if (reviewCallbacks != null) {
+                return ClaimsPrecheckBatchReviewOptions.externalCallbacks(
+                        ClaimsPrecheckBatchReviewCallbackJsonl.read(reviewCallbacks),
+                        reviewCallbackSecret
                 );
             }
             if ("auto-approve".equals(reviewMode)) {

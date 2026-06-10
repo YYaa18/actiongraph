@@ -364,6 +364,7 @@ RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pr
   <div class="title">挂起恢复的语义保证</div>
   resume 会先从 <code>SuspendedRunRepository</code> 原子认领挂起快照；同一个 <code>runId</code> 被重复回调或多实例并发消费时，只有一个恢复流程能继续执行业务动作。多级审批未走完时，resume 会重新挂起并保留同一条补偿栈；审批拒绝（DENIED）同样触发补偿，不会留下孤儿草稿。
 </div>
+<p>Spring starter 的审批回调端点通过 Header 接收共享密钥；理赔预审样板域另提供 <code>claims-precheck-review-callbacks.jsonl</code> 重放文件，用于本地验证审批系统消息格式、token 校验、重复投递幂等和 resume 连续性。</p>
 <pre><code>actiongraph:
   human-review:
     risk-based-approval-chain: true   <span class="c"># HIGH 两级；默认 false 保持单级</span></code></pre>

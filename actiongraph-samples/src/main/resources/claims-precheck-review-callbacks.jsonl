@@ -1,0 +1,6 @@
+# JSONL fixture that mimics approval-system callback deliveries.
+# Duplicate delivery cb-100-retry is intentional; the sample treats the same
+# already-applied stage decision as an idempotent retry.
+{"deliveryId":"cb-100","claimId":"CLM100","runId":"$RUN_ID","actionId":"claim.approval.request","expectedStageIndex":0,"decision":"APPROVED","reviewer":"claims-checker","comment":"资料完整，同意提交审批","decisionDelayMs":5,"token":"review-secret"}
+{"deliveryId":"cb-100-retry","claimId":"CLM100","runId":"$RUN_ID","actionId":"claim.approval.request","expectedStageIndex":0,"decision":"APPROVED","reviewer":"claims-checker","comment":"资料完整，同意提交审批","decisionDelayMs":0,"token":"review-secret"}
+{"deliveryId":"cb-104","claimId":"CLM104","runId":"$RUN_ID","actionId":"claim.approval.request","expectedStageIndex":0,"decision":"APPROVED","reviewer":"claims-checker","comment":"资料完整，同意提交审批","decisionDelayMs":5,"token":"review-secret"}

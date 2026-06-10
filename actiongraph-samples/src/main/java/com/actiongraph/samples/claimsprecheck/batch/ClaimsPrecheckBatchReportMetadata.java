@@ -12,7 +12,7 @@ public record ClaimsPrecheckBatchReportMetadata(
         List<AmountLimitRule> limitRules,
         String reviewMode,
         long simulatedReviewWaitMillis,
-        int externalReviewDecisionCount
+        int externalReviewInputCount
 ) {
     public ClaimsPrecheckBatchReportMetadata(
             String batchId,
@@ -50,8 +50,8 @@ public record ClaimsPrecheckBatchReportMetadata(
         if (simulatedReviewWaitMillis < 0) {
             throw new IllegalArgumentException("simulatedReviewWaitMillis must not be negative");
         }
-        if (externalReviewDecisionCount < 0) {
-            throw new IllegalArgumentException("externalReviewDecisionCount must not be negative");
+        if (externalReviewInputCount < 0) {
+            throw new IllegalArgumentException("externalReviewInputCount must not be negative");
         }
         limitRules = List.copyOf(Objects.requireNonNull(limitRules, "limitRules"));
     }

@@ -74,6 +74,9 @@ traceEvents=21
   --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --review-decisions actiongraph-samples/src/main/resources/claims-precheck-review-decisions.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-EXTERNAL-REVIEWS --environment local"
 
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
+  --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --review-callbacks actiongraph-samples/src/main/resources/claims-precheck-review-callbacks.jsonl --review-callback-secret review-secret --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-CALLBACKS --environment local"
+
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
   --args='--jdbc-url jdbc:postgresql://db.example/claims --jdbc-user actiongraph_reader --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-JDBC-001 --environment staging'
 ```
 
@@ -90,7 +93,9 @@ JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_
 
 `--review-decisions` 读取审批决策 CSV，字段为 `claimId`、`actionId`、`stageIndex`、`decision`、`reviewer`、`comment`、`decisionDelayMs`。运行时按 `claimId + actionId + stageIndex` 匹配 pending task，找不到匹配项会 fail-fast，避免审批样本静默漏配。
 
-正式接审批系统时，CSV 只是演示输入源；审批回调入口可构造成 `HumanReviewCallback` 并交给 `HumanReviewCallbackHandler` 写入 `HumanReviewRepository`。Spring MVC 应用也可以启用 `actiongraph.human-review.callback-endpoint.enabled=true`，直接用 starter 暴露的 HTTP 回调端点接收 `runId`、`actionId`、`expectedStageIndex` 和审批决策。建议同时配置 `actiongraph.human-review.callback-endpoint.shared-secret`，通过共享密钥 Header 校验审批系统来源。handler 会校验 runId/actionId/stageIndex，并复用 repository 的重复审批防护。
+`--review-callbacks` 读取审批回调 JSONL，字段为 `deliveryId`、`claimId`、`runId`、`actionId`、`expectedStageIndex`、`decision`、`reviewer`、`comment`、`decisionDelayMs`、`token`。运行时把消息构造成 `HumanReviewCallback` 并交给 `HumanReviewCallbackHandler`；`--review-callback-secret` 或 `ACTIONGRAPH_REVIEW_CALLBACK_SECRET` 用于共享密钥校验。样例 fixture 包含一次重复投递，测试会验证同一 stage decision 的重复消息被当作幂等重试处理，错误 token 会在 resume 前 fail-fast。
+
+正式接审批系统时，CSV 只是演示输入源；JSONL callback replay 更接近消息总线/审批回调联调。Spring MVC 应用也可以启用 `actiongraph.human-review.callback-endpoint.enabled=true`，直接用 starter 暴露的 HTTP 回调端点接收 `runId`、`actionId`、`expectedStageIndex` 和审批决策。建议同时配置 `actiongraph.human-review.callback-endpoint.shared-secret`，通过共享密钥 Header 校验审批系统来源。handler 会校验 runId/actionId/stageIndex，并复用 repository 的重复审批防护。
 
 实跑结果摘要：
 
@@ -108,7 +113,7 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 - `claims-precheck-report.md`：业务可读指标摘要与明细表
 - `claims-precheck-results.csv`：每个样本的状态、是否拦截、审计完整性、trace 事件数、运行耗时与耗时拆分
-- 报告头包含 batch id、environment、sample source、review mode、模拟审批等待、外部审批决策数量和当前限额参数；sample source 可以来自 CSV 路径或 JDBC URL
+- 报告头包含 batch id、environment、sample source、review mode、模拟审批等待、外部审批输入数量和当前限额参数；sample source 可以来自 CSV 路径或 JDBC URL
 
 当前指标口径：
 
@@ -124,4 +129,4 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 下一刀应继续把样板域推进到真实试点资产：
 
 - 基于 PostgreSQL 方言契约连接真实/准真实保险库，记录字段映射差异和数据库权限验收结果
-- 将真实审批系统的回调消息接入 `HumanReviewCallbackHandler` 或 Spring Boot 回调端点，并补充联调环境的鉴权、幂等、重试验收用例
+- 将 JSONL 审批回调样板替换为真实/准真实审批系统回调源，记录联调环境的 Header 鉴权、重复投递、乱序/过期 stage 和消息重试验收结果

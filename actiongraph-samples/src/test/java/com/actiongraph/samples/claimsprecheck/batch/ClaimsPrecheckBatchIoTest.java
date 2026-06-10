@@ -111,7 +111,7 @@ class ClaimsPrecheckBatchIoTest {
                 runner.limitRules(),
                 runner.reviewOptions().modeName(),
                 runner.reviewOptions().simulatedReviewWaitMillis(),
-                runner.reviewOptions().externalDecisions().size()
+                runner.reviewOptions().externalReviewInputCount()
         );
 
         new ClaimsPrecheckBatchReportWriter().write(tempDir, metrics, metadata);
@@ -127,10 +127,72 @@ class ClaimsPrecheckBatchIoTest {
         String report = Files.readString(tempDir.resolve(ClaimsPrecheckBatchReportWriter.MARKDOWN_REPORT));
         assertThat(report)
                 .contains("Review Mode: external-decisions")
-                .contains("External Review Decisions: 2")
+                .contains("External Review Inputs: 2")
                 .contains("Average Review Wait Ms")
                 .contains("CLM100")
                 .contains("CLM104");
+    }
+
+    @Test
+    void externalReviewCallbacksDriveSuspendResumeApprovalsAndAcceptDuplicateRetry() throws Exception {
+        Path input = bundledCsv();
+        Path reviewCallbacks = bundledReviewCallbacksJsonl();
+        ClaimsPrecheckBatchRunner runner = new ClaimsPrecheckBatchRunner(
+                ClaimsPrecheckBatchRunner.defaultLimitRules(),
+                ClaimsPrecheckBatchReviewOptions.externalCallbacks(
+                        ClaimsPrecheckBatchReviewCallbackJsonl.read(reviewCallbacks),
+                        "review-secret"
+                )
+        );
+        ClaimsPrecheckBatchMetrics metrics = runner.run(ClaimsPrecheckBatchCsv.readCases(input));
+        ClaimsPrecheckBatchReportMetadata metadata = new ClaimsPrecheckBatchReportMetadata(
+                "BATCH-EXTERNAL-CALLBACKS",
+                input.toString(),
+                "test",
+                runner.limitRules(),
+                runner.reviewOptions().modeName(),
+                runner.reviewOptions().simulatedReviewWaitMillis(),
+                runner.reviewOptions().externalReviewInputCount()
+        );
+
+        new ClaimsPrecheckBatchReportWriter().write(tempDir, metrics, metadata);
+
+        assertThat(metrics.totalRuns()).isEqualTo(5);
+        assertThat(metrics.completedRuns()).isEqualTo(1);
+        assertThat(metrics.failedRuns()).isEqualTo(1);
+        assertThat(metrics.averageReviewWaitMillis()).isGreaterThan(1.0);
+        assertThat(runner.reviewOptions().externalCallbacks())
+                .extracting(ClaimsPrecheckBatchReviewCallback::deliveryId)
+                .containsExactly("cb-100", "cb-100-retry", "cb-104");
+
+        String report = Files.readString(tempDir.resolve(ClaimsPrecheckBatchReportWriter.MARKDOWN_REPORT));
+        assertThat(report)
+                .contains("Review Mode: external-callbacks")
+                .contains("External Review Inputs: 3")
+                .contains("Average Review Wait Ms")
+                .contains("CLM100")
+                .contains("CLM104");
+    }
+
+    @Test
+    void externalReviewCallbacksRejectInvalidTokenBeforeResume() throws Exception {
+        Path callbacks = tempDir.resolve("bad-callbacks.jsonl");
+        Files.writeString(callbacks, """
+                {"deliveryId":"bad-token","claimId":"CLM100","runId":"$RUN_ID","actionId":"claim.approval.request","expectedStageIndex":0,"decision":"APPROVED","reviewer":"claims-checker","comment":"approved","decisionDelayMs":0,"token":"wrong-secret"}
+                """);
+        ClaimsPrecheckBatchRunner runner = new ClaimsPrecheckBatchRunner(
+                ClaimsPrecheckBatchRunner.defaultLimitRules(),
+                ClaimsPrecheckBatchReviewOptions.externalCallbacks(
+                        ClaimsPrecheckBatchReviewCallbackJsonl.read(callbacks),
+                        "review-secret"
+                )
+        );
+
+        assertThatThrownBy(() -> runner.run(List.of(
+                ClaimsPrecheckBatchCase.normal("CLM100", "260000")
+        )))
+                .isInstanceOf(SecurityException.class)
+                .hasMessageContaining("Invalid review callback token");
     }
 
     @Test
@@ -163,6 +225,12 @@ class ClaimsPrecheckBatchIoTest {
     private Path bundledReviewDecisionsCsv() throws URISyntaxException {
         return Path.of(Objects.requireNonNull(
                 getClass().getResource("/claims-precheck-review-decisions.csv")
+        ).toURI());
+    }
+
+    private Path bundledReviewCallbacksJsonl() throws URISyntaxException {
+        return Path.of(Objects.requireNonNull(
+                getClass().getResource("/claims-precheck-review-callbacks.jsonl")
         ).toURI());
     }
 }

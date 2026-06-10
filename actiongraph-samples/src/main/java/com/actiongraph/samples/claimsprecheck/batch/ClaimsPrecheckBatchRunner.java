@@ -126,6 +126,12 @@ public final class ClaimsPrecheckBatchRunner {
         InMemorySuspendedRunRepository suspendedRuns = new InMemorySuspendedRunRepository();
         InMemoryHumanReviewRepository reviewRepository = new InMemoryHumanReviewRepository();
         HumanReviewCallbackHandler callbackHandler = new HumanReviewCallbackHandler(reviewRepository);
+        ClaimsPrecheckReviewCallbackReplayer callbackReplayer = new ClaimsPrecheckReviewCallbackReplayer(
+                reviewRepository,
+                callbackHandler,
+                reviewOptions.externalCallbacks(),
+                reviewOptions.callbackSharedSecret()
+        );
         GoapExecutor executor = GoapExecutor.builder()
                 .policyGuard(new DefaultPolicyGuard(new AmountLimitPolicy(amountExtractor, limitRules)))
                 .humanReviewPolicy(timing.wrapHumanReviewPolicy(
@@ -148,6 +154,7 @@ public final class ClaimsPrecheckBatchRunner {
                 registry,
                 reviewRepository,
                 callbackHandler,
+                callbackReplayer,
                 timing
         );
         long elapsed = System.nanoTime() - start;
@@ -199,6 +206,7 @@ public final class ClaimsPrecheckBatchRunner {
             DefaultActionRegistry registry,
             InMemoryHumanReviewRepository reviewRepository,
             HumanReviewCallbackHandler callbackHandler,
+            ClaimsPrecheckReviewCallbackReplayer callbackReplayer,
             TimingRecorder timing
     ) {
         RunResult current = result;
@@ -209,16 +217,21 @@ public final class ClaimsPrecheckBatchRunner {
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException(
                             "No pending review task found for suspended run " + runId));
-            ClaimsPrecheckBatchReviewDecision reviewDecision = reviewDecision(claimId, task);
-            waitForExternalReview(reviewDecision.decisionDelayMillis());
-            HumanReviewTask decidedTask = callbackHandler.handle(new HumanReviewCallback(
-                    runId,
-                    task.actionId(),
-                    task.currentStageIndex(),
-                    reviewDecision.decision(),
-                    reviewDecision.reviewer(),
-                    reviewDecision.comment()
-            ));
+            HumanReviewTask decidedTask;
+            if (reviewOptions.hasExternalCallbacks()) {
+                decidedTask = callbackReplayer.apply(claimId, task);
+            } else {
+                ClaimsPrecheckBatchReviewDecision reviewDecision = reviewDecision(claimId, task);
+                waitForExternalReview(reviewDecision.decisionDelayMillis());
+                decidedTask = callbackHandler.handle(new HumanReviewCallback(
+                        runId,
+                        task.actionId(),
+                        task.currentStageIndex(),
+                        reviewDecision.decision(),
+                        reviewDecision.reviewer(),
+                        reviewDecision.comment()
+                ));
+            }
             timing.recordReviewTaskWait(task, decidedTask);
             current = executor.resume(current.runId(), actions, registry);
         }
@@ -228,7 +241,7 @@ public final class ClaimsPrecheckBatchRunner {
     private ClaimsPrecheckBatchReviewDecision reviewDecision(String claimId, HumanReviewTask task) {
         return reviewOptions.decisionFor(claimId, task.actionId(), task.currentStageIndex())
                 .orElseGet(() -> {
-                    if (reviewOptions.hasExternalDecisions()) {
+                    if (reviewOptions.hasExternalReviewInput()) {
                         throw new IllegalStateException("No external review decision found for "
                                 + claimId + "/" + task.actionId().value()
                                 + "/stage-" + task.currentStageIndex());

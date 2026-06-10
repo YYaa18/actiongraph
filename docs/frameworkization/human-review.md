@@ -54,6 +54,8 @@ handler.handle(new HumanReviewCallback(
 ));
 ```
 
+The claims precheck sample includes a JSONL callback replay fixture for local integration testing of shared-secret validation, duplicate-delivery idempotency, and resume continuity. See [Claims Precheck Review Callback Replay](claims-precheck-review-callbacks.md).
+
 ## JDBC Usage
 
 ```java
