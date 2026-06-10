@@ -5,6 +5,7 @@
 It brings these split endpoint starters together:
 
 - `actiongraph-runtime-api-spring-boot-starter`
+- `actiongraph-component-catalog-spring-boot-starter`
 - `actiongraph-human-review-api-spring-boot-starter`
 - `actiongraph-human-review-callback-spring-boot-starter`
 - `actiongraph-console-api-spring-boot-starter`
@@ -33,6 +34,8 @@ actiongraph:
   runtime:
     api:
       enabled: true
+  component-catalog:
+    enabled: true
   human-review:
     api:
       enabled: true
@@ -42,7 +45,21 @@ actiongraph:
     enabled: true
 ```
 
-The aggregate adds classpath availability only. Existing conditional beans still require the corresponding runtime services, repositories, interpreters, seeders, or console repositories.
+The aggregate adds classpath availability only. Existing conditional beans still require the corresponding runtime services, repositories, interpreters, seeders, or console repositories. The component catalog is self-contained, but it still remains opt-in through `actiongraph.component-catalog.enabled=true`.
+
+## Component Catalog Endpoints
+
+When the component catalog switch is enabled, the aggregate also exposes a read-only ecosystem view:
+
+```text
+GET /actiongraph/components
+GET /actiongraph/components/modules
+GET /actiongraph/components/modules/{module}
+GET /actiongraph/components/profiles
+GET /actiongraph/components/profiles/{profile}
+```
+
+Use `actiongraph.component-catalog.path`, `actiongraph.component-catalog.token-header`, and `actiongraph.component-catalog.shared-secret` to customize path and access control. The catalog endpoints do not execute runs, approve tasks, create repositories, or inspect application secrets; they return static module and composition metadata from `actiongraph-component-catalog`.
 
 ## Boundary
 

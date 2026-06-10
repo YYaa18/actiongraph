@@ -14,6 +14,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-memory-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph structured memory.",
     "actiongraph-interpretation" to "Optional goal interpretation contracts and GoalCatalog support for ActionGraph.",
     "actiongraph-runtime-api" to "Reusable ActionGraph goal interpretation, start, and resume API service.",
+    "actiongraph-component-catalog" to "Reusable machine-readable ActionGraph component catalog and composition profile service.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, and approval chains for ActionGraph.",
     "actiongraph-human-review-api" to "Reusable ActionGraph human-review task query and decision API service.",
     "actiongraph-llm" to "Provider-neutral LLM goal interpretation support for ActionGraph.",
@@ -25,6 +26,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-memory-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC memory repository.",
     "actiongraph-human-review-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC human-review repository.",
     "actiongraph-runtime-api-spring-boot-starter" to "Optional Spring MVC runtime start and resume endpoints for ActionGraph.",
+    "actiongraph-component-catalog-spring-boot-starter" to "Optional Spring MVC read-only endpoints for the ActionGraph component catalog.",
     "actiongraph-human-review-api-spring-boot-starter" to "Optional Spring MVC human-review task API endpoints for ActionGraph.",
     "actiongraph-human-review-callback-spring-boot-starter" to "Optional Spring MVC callback endpoint for ActionGraph human-review decisions.",
     "actiongraph-spring-boot-starter" to "Spring Boot auto-configuration for annotation-driven ActionGraph action registration.",
@@ -42,7 +44,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-console-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC console read model.",
     "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot repository-backed human-review policy support for ActionGraph.",
     "actiongraph-console-spring-boot-starter" to "Compatibility aggregate starter for the ActionGraph console API and UI.",
-    "actiongraph-control-plane-spring-boot-starter" to "Optional aggregate starter for ActionGraph runtime, human-review, and console control-plane endpoints."
+    "actiongraph-control-plane-spring-boot-starter" to "Optional aggregate starter for ActionGraph runtime, component catalog, human-review, and console control-plane endpoints."
 )
 
 val publishableModuleDescriptions = mapOf(

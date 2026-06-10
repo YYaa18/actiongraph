@@ -113,6 +113,42 @@ POST /actiongraph/runtime/runs/{runId}/resume
 
 It requires `actiongraph.runtime.api.enabled=true`, a servlet web application, `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. It does not create LLM clients, expose human-review task/callback endpoints, or expose Console endpoints.
 
+## Component Catalog
+
+Use this when a CLI, deployment check, gateway, or custom control-plane wants a machine-readable list of ActionGraph modules, capability tags, dependency hints, and recommended composition profiles.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-component-catalog")
+}
+```
+
+`actiongraph-component-catalog` has no Spring, JDBC, LLM, or runtime dependency. It provides `ActionGraphComponentCatalogService`, component records, and composition profile records that can be reused outside HTTP.
+
+## Spring MVC Component Catalog API
+
+Use this when a Spring MVC control-plane should expose the same component catalog as a read-only endpoint.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
+}
+```
+
+The starter exposes only:
+
+```text
+GET /actiongraph/components
+GET /actiongraph/components/modules
+GET /actiongraph/components/modules/{module}
+GET /actiongraph/components/profiles
+GET /actiongraph/components/profiles/{profile}
+```
+
+It requires `actiongraph.component-catalog.enabled=true` and a servlet web application. It does not create runtime beans, repositories, LLM clients, action registries, review storage, approval callbacks, or console run repositories.
+
 ## Spring Structured Memory
 
 Use this when a Spring Boot service wants in-memory structured memory defaults and `MemoryContextLoader`.
@@ -461,7 +497,7 @@ dependencies {
 
 ## Spring MVC Control-Plane Aggregate
 
-Use this convenience coordinate when one Spring MVC deployment should expose the built-in runtime entry API, approval task API, approval callback receiver, Console JSON API, Console UI, and Console export endpoints together.
+Use this convenience coordinate when one Spring MVC deployment should expose the built-in runtime entry API, component catalog API, approval task API, approval callback receiver, Console JSON API, Console UI, and Console export endpoints together.
 
 ```kotlin
 dependencies {
@@ -470,7 +506,7 @@ dependencies {
 }
 ```
 
-The aggregate brings only split endpoint starters. It does not create business runtime beans, interpreters, seeders, repositories, JDBC adapters, review storage, LLM clients, or governance policies. Each endpoint family still requires its own `actiongraph.*.enabled=true` switch and its own backing beans. Prefer the split endpoint starters when the deployment should expose only part of the built-in control plane.
+The aggregate brings only split endpoint starters. It does not create business runtime beans, interpreters, seeders, repositories, JDBC adapters, review storage, LLM clients, or governance policies. Each endpoint family still requires its own `actiongraph.*.enabled=true` switch and, except the self-contained component catalog, its own backing beans. Prefer the split endpoint starters when the deployment should expose only part of the built-in control plane.
 
 ## Full Pilot Service
 

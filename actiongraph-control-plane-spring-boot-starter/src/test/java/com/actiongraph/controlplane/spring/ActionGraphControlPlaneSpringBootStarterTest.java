@@ -5,6 +5,8 @@ import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionResult;
 import com.actiongraph.action.ActionRiskLevel;
 import com.actiongraph.action.ExecutionContext;
+import com.actiongraph.catalog.spring.ActionGraphComponentCatalogController;
+import com.actiongraph.catalog.spring.ActionGraphComponentCatalogWebAutoConfiguration;
 import com.actiongraph.console.ConsoleRunPage;
 import com.actiongraph.console.ConsoleRunQuery;
 import com.actiongraph.console.ConsoleRunRepository;
@@ -85,6 +87,7 @@ class ActionGraphControlPlaneSpringBootStarterTest {
                     JacksonAutoConfiguration.class,
                     HttpMessageConvertersAutoConfiguration.class,
                     WebMvcAutoConfiguration.class,
+                    ActionGraphComponentCatalogWebAutoConfiguration.class,
                     ActionGraphAutoConfiguration.class,
                     ActionGraphRuntimeApiWebAutoConfiguration.class,
                     ActionGraphHumanReviewApiWebAutoConfiguration.class,
@@ -101,6 +104,7 @@ class ActionGraphControlPlaneSpringBootStarterTest {
             .withBean(ConsoleRunRepository.class, InMemoryConsoleRunRepository::new)
             .withPropertyValues(
                     "actiongraph.runtime.api.enabled=true",
+                    "actiongraph.component-catalog.enabled=true",
                     "actiongraph.human-review.api.enabled=true",
                     "actiongraph.human-review.callback-endpoint.enabled=true",
                     "actiongraph.console.enabled=true"
@@ -110,6 +114,7 @@ class ActionGraphControlPlaneSpringBootStarterTest {
     void aggregateComposesRuntimeReviewCallbackAndConsoleEndpoints() {
         contextRunner.run(context -> {
             assertThat(context).hasSingleBean(ActionGraphRuntimeApiController.class);
+            assertThat(context).hasSingleBean(ActionGraphComponentCatalogController.class);
             assertThat(context).hasSingleBean(ActionGraphHumanReviewApiController.class);
             assertThat(context).hasSingleBean(ActionGraphHumanReviewCallbackController.class);
             assertThat(context).hasSingleBean(ActionGraphConsoleApiController.class);
@@ -132,6 +137,11 @@ class ActionGraphControlPlaneSpringBootStarterTest {
                     .andExpect(jsonPath("$.disposition").value("RUN_STARTED"))
                     .andExpect(jsonPath("$.run.status").value("COMPLETED"))
                     .andExpect(jsonPath("$.run.executedActions[0]").value("control-plane.finish"));
+
+            mockMvc.perform(get("/actiongraph/components/profiles/full-control-plane")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-spring-boot-starter"));
 
             mockMvc.perform(get("/actiongraph/human-review/tasks/pending"))
                     .andExpect(status().isOk())
@@ -173,6 +183,7 @@ class ActionGraphControlPlaneSpringBootStarterTest {
     @Test
     void aggregateDoesNotPullStorageOrRuntimeInfrastructureStarters() {
         assertLoadable("com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController");
+        assertLoadable("com.actiongraph.catalog.spring.ActionGraphComponentCatalogController");
         assertLoadable("com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiController");
         assertLoadable("com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController");
         assertLoadable("com.actiongraph.console.spring.ActionGraphConsoleApiController");
