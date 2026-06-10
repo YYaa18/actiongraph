@@ -2,7 +2,7 @@
 
 `actiongraph-component-catalog` is a reusable, non-Spring metadata component for ActionGraph's ecosystem modules.
 
-It turns the module split into a machine-readable API: deployment checks, CLIs, enterprise gateways, custom consoles, or docs generators can query which modules exist, what capability tags they provide, what they require, and which composition profiles are recommended.
+It turns the module split into a machine-readable API: deployment checks, CLIs, enterprise gateways, custom consoles, or docs generators can query which modules exist, what capability tags they provide, what they require, which compatibility level they target, and which composition profiles are recommended.
 
 ## Pure Java Usage
 
@@ -22,6 +22,9 @@ catalog.component("actiongraph-runtime-api")
 
 catalog.profile("full-control-plane")
         .ifPresent(profile -> System.out.println(profile.modules()));
+
+catalog.componentsByCompatibility("java8-client")
+        .forEach(component -> System.out.println(component.module()));
 ```
 
 The pure Java module has no dependency on Spring, JDBC, LLM providers, runtime repositories, or business samples.
@@ -49,6 +52,7 @@ Endpoints:
 ```text
 GET /actiongraph/components
 GET /actiongraph/components/modules
+GET /actiongraph/components/compatibility/{compatibility}
 GET /actiongraph/components/modules/{module}
 GET /actiongraph/components/profiles
 GET /actiongraph/components/profiles/{profile}
@@ -71,9 +75,24 @@ The default catalog includes profiles such as:
 | `console-control-plane` | Read-only console and audit export surface |
 | `full-control-plane` | Built-in endpoint aggregate |
 | `ecosystem-introspection` | Component catalog modules |
+| `java8-legacy-client` | Java 8 client-side integration over a deployed runtime API |
 | `full-pilot-service` | Pilot-oriented full composition |
 
 Profiles are guidance, not magic auto-installers. A service still chooses dependencies explicitly through Gradle/Maven and enables each endpoint family through its own `actiongraph.*` property.
+
+## Compatibility Labels
+
+Every component includes a `compatibility` value. Current labels are:
+
+| Label | Meaning |
+|---|---|
+| `no-runtime-code` | No loadable runtime classes, such as the BOM |
+| `java8-client` | Java 8 loadable client/control-plane helper; currently `actiongraph-control-plane-api` |
+| `java8-runtime` | Reserved for a future embeddable Java 8 runtime slice |
+| `java21-plus` | Current runtime, framework, infrastructure, governance, provider, and Spring modules |
+| `sample-only` | Demonstration code only |
+
+This lets old Java estates ask the catalog which artifacts are safe to load directly instead of guessing from artifact names.
 
 ## Boundary
 

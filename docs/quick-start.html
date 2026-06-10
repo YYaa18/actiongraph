@@ -209,6 +209,7 @@
   <tr><td><code>com.actiongraph:actiongraph-console-spring-boot-starter</code></td><td>Console API、页面、导出端点与 JDBC 仓储自动装配</td><td>Spring MVC 控制层需要内置只读运行监控时引入</td></tr>
 </table>
 <p><code>actiongraph-control-plane-api</code> 是 Java 8 兼容的控制层契约包：提供 <code>{"error":"UNAUTHORIZED","message":"..."}</code> 这类统一错误响应 DTO，也提供零外部依赖的 <code>ActionGraphRuntimeHttpClient</code>，用于老系统调用 <code>/interpret</code>、<code>/runs</code> 和 <code>/runs/{runId}/resume</code>。它还提供共享密钥 Header token 校验：未配置 <code>shared-secret</code> 时跳过校验，配置后使用常量时间比较。内置 Runtime API、Component Catalog、Human Review API、审批回调和 Console starter 都会复用它；企业 IAM、RBAC、租户权限和网关策略仍由接入系统负责。</p>
+<p>组件目录会为每个模块暴露 <code>compatibility</code> 标签；当前只有 <code>actiongraph-control-plane-api</code> 是 <code>java8-client</code>，现代运行时、Spring、JDBC、治理、LLM 与 Console 模块是 <code>java21-plus</code>，样例是 <code>sample-only</code>。Spring 目录端点支持 <code>/actiongraph/components/compatibility/java8-client</code> 过滤，方便网关、部署检查或老系统接入脚手架自动判断可引入边界。</p>
 
 <h2 id="step1"><span class="step-no">1</span>引入依赖</h2>
 <pre><code><span class="c">// build.gradle.kts</span>

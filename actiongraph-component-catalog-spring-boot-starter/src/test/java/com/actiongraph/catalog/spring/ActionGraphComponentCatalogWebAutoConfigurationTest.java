@@ -63,7 +63,17 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
                     mockMvc.perform(get("/internal/actiongraph/components/modules/actiongraph-control-plane-spring-boot-starter"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.kind").value("CONTROL_PLANE"))
+                            .andExpect(jsonPath("$.compatibility").value("java21-plus"))
                             .andExpect(jsonPath("$.capabilities[0]").value("control-plane-aggregate"));
+
+                    mockMvc.perform(get("/internal/actiongraph/components/modules/actiongraph-control-plane-api"))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.compatibility").value("java8-client"));
+
+                    mockMvc.perform(get("/internal/actiongraph/components/compatibility/java8-client"))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$[0].module").value("actiongraph-control-plane-api"))
+                            .andExpect(jsonPath("$[0].compatibility").value("java8-client"));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/ecosystem-introspection"))
                             .andExpect(status().isOk())
@@ -72,6 +82,10 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
                             .andExpect(jsonPath("$.modules[2]").value("actiongraph-component-catalog-spring-boot-starter"));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/control-plane-response-contracts"))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-api"));
+
+                    mockMvc.perform(get("/internal/actiongraph/components/profiles/java8-legacy-client"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-api"));
 

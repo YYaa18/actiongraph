@@ -49,6 +49,15 @@ public final class ActionGraphComponentCatalogController {
         return catalogService.components();
     }
 
+    @GetMapping("/compatibility/{compatibility}")
+    public List<ActionGraphComponent> modulesByCompatibility(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable("compatibility") String compatibility
+    ) {
+        verifyToken(headers);
+        return catalogService.componentsByCompatibility(compatibility);
+    }
+
     @GetMapping("/modules/{module}")
     public ActionGraphComponent module(
             @RequestHeader HttpHeaders headers,

@@ -50,8 +50,34 @@ class ActionGraphComponentCatalogServiceTest {
         assertThat(service.component("actiongraph-control-plane-api"))
                 .isPresent()
                 .get()
-                .satisfies(component -> assertThat(component.capabilities())
-                        .contains("java8-runtime-client", "shared-secret-token-verification"));
+                .satisfies(component -> {
+                    assertThat(component.compatibility()).isEqualTo(ComponentCompatibility.JAVA8_CLIENT.label());
+                    assertThat(component.capabilities())
+                            .contains("java8-runtime-client", "shared-secret-token-verification");
+                });
+        assertThat(service.component("actiongraph-core"))
+                .isPresent()
+                .get()
+                .satisfies(component -> assertThat(component.compatibility())
+                        .isEqualTo(ComponentCompatibility.JAVA21_PLUS.label()));
+        assertThat(service.component("actiongraph-samples"))
+                .isPresent()
+                .get()
+                .satisfies(component -> assertThat(component.compatibility())
+                        .isEqualTo(ComponentCompatibility.SAMPLE_ONLY.label()));
+        assertThat(service.component("actiongraph-bom"))
+                .isPresent()
+                .get()
+                .satisfies(component -> assertThat(component.compatibility())
+                        .isEqualTo(ComponentCompatibility.NO_RUNTIME_CODE.label()));
+        assertThat(service.componentsByCompatibility(ComponentCompatibility.JAVA8_CLIENT.label()))
+                .extracting(ActionGraphComponent::module)
+                .containsExactly("actiongraph-control-plane-api");
+        assertThat(service.componentsByCompatibility(ComponentCompatibility.JAVA8_RUNTIME.label()))
+                .isEmpty();
+        assertThat(service.componentsByCompatibility(null)).isEmpty();
+        assertThat(service.components())
+                .allSatisfy(component -> assertThat(component.compatibility()).isNotBlank());
         assertThat(service.component("actiongraph-control-plane" + "-auth"))
                 .isEmpty();
         assertThat(service.component("actiongraph-console-spring-boot-starter"))
@@ -102,6 +128,11 @@ class ActionGraphComponentCatalogServiceTest {
                         .contains("actiongraph-control-plane-api",
                                 "actiongraph-component-catalog-spring-boot-starter"));
         assertThat(service.profile("control-plane-response-contracts"))
+                .isPresent()
+                .get()
+                .satisfies(profile -> assertThat(profile.modules())
+                        .containsExactly("actiongraph-control-plane-api"));
+        assertThat(service.profile("java8-legacy-client"))
                 .isPresent()
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())

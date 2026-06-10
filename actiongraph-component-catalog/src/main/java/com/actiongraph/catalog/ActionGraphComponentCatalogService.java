@@ -30,6 +30,15 @@ public final class ActionGraphComponentCatalogService {
         return catalog.component(module);
     }
 
+    public List<ActionGraphComponent> componentsByCompatibility(String compatibility) {
+        if (compatibility == null || compatibility.isBlank()) {
+            return List.of();
+        }
+        return catalog.components().stream()
+                .filter(component -> component.compatibility().equals(compatibility))
+                .toList();
+    }
+
     public Optional<ActionGraphCompositionProfile> profile(String name) {
         return catalog.profile(name);
     }

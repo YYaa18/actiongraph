@@ -115,7 +115,7 @@ It requires `actiongraph.runtime.api.enabled=true`, a servlet web application, `
 
 ## Component Catalog
 
-Use this when a CLI, deployment check, gateway, or custom control-plane wants a machine-readable list of ActionGraph modules, capability tags, dependency hints, and recommended composition profiles.
+Use this when a CLI, deployment check, gateway, or custom control-plane wants a machine-readable list of ActionGraph modules, capability tags, dependency hints, compatibility labels, and recommended composition profiles.
 
 ```kotlin
 dependencies {
@@ -124,7 +124,7 @@ dependencies {
 }
 ```
 
-`actiongraph-component-catalog` has no Spring, JDBC, LLM, or runtime dependency. It provides `ActionGraphComponentCatalogService`, component records, and composition profile records that can be reused outside HTTP.
+`actiongraph-component-catalog` has no Spring, JDBC, LLM, or runtime dependency. It provides `ActionGraphComponentCatalogService`, component records, compatibility labels such as `java8-client` / `java21-plus`, and composition profile records that can be reused outside HTTP.
 
 ## Control-Plane API Contracts
 
@@ -155,6 +155,7 @@ The starter exposes only:
 ```text
 GET /actiongraph/components
 GET /actiongraph/components/modules
+GET /actiongraph/components/compatibility/{compatibility}
 GET /actiongraph/components/modules/{module}
 GET /actiongraph/components/profiles
 GET /actiongraph/components/profiles/{profile}

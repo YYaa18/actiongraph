@@ -12,6 +12,20 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 | Control-plane ecosystem | `actiongraph-component-catalog`, `actiongraph-control-plane-api`, `actiongraph-component-catalog-spring-boot-starter`, `actiongraph-runtime-api-spring-boot-starter`, `actiongraph-human-review-api-spring-boot-starter`, `actiongraph-console`, `actiongraph-console-spring-boot-starter`, `actiongraph-control-plane-spring-boot-starter` | Machine-readable component catalog, shared control-plane response contracts, shared control-plane token verification, optional catalog HTTP endpoints, runtime goal interpretation/start/resume HTTP endpoints, human-review task query/decision and callback HTTP endpoints, read-only Console query/JDBC/export services, optional Spring Console API/UI/export/JDBC auto-configuration, full endpoint aggregate starter |
 | Samples | `actiongraph-samples` | Reference domains and batch demos; not published as a library |
 
+## Compatibility Labels
+
+The component catalog exposes a machine-readable `compatibility` label for each module so old Java estates can tell which artifacts are safe to load directly.
+
+| Label | Current Use |
+|---|---|
+| `no-runtime-code` | `actiongraph-bom` |
+| `java8-client` | `actiongraph-control-plane-api`, for Java 8 HTTP/client integration |
+| `java8-runtime` | Reserved for a future embeddable Java 8 runtime slice |
+| `java21-plus` | Current runtime, framework, infrastructure, governance, provider, and Spring ecosystem modules |
+| `sample-only` | `actiongraph-samples` |
+
+This is intentionally stricter than a vague "supports Java" claim: Java 8 and older financial systems should use the deployed Runtime API over HTTP today. In-process runtime embedding remains a separate compatibility refactor.
+
 ## Composition Rules
 
 - Consumers should import `actiongraph-bom` first, then choose the modules they need without repeating versions.
@@ -53,8 +67,6 @@ The Runtime API module composes interpretation, Blackboard seeding, `GoapExecuto
 The Component Catalog module publishes static ActionGraph module metadata, capability tags, dependency hints, and composition profiles. It has no runtime dependency and can be used by CLIs, deployment checks, enterprise gateways, or custom consoles. The Component Catalog Spring Boot starter exposes that metadata through read-only HTTP endpoints and remains opt-in through its own property switch.
 
 The Control-Plane API module standardizes small response contracts such as `ControlPlaneErrorResponse` for endpoint starters and custom gateways. It depends only on the JDK, can be used without Spring, and intentionally does not map exceptions or register HTTP advice.
-
-The Control-Plane Auth module standardizes shared-secret token verification for endpoint starters and custom gateways. It depends only on the JDK, can be used without Spring, and intentionally does not provide enterprise IAM, RBAC, tenant checks, or gateway policy.
 
 The Human Review module provides pending review tasks, approval chains, in-memory review storage, repository-backed review policy, callback handling, stable task response DTOs, and decision operations for approval inboxes, CLIs, gateways, or web controllers. It depends only on core policy/action/planning types and can be used without Spring MVC, JDBC, governance, or console modules.
 
