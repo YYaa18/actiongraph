@@ -30,9 +30,11 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-human-review-callback-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-callback-spring-boot-starter:0.1.0` | Optional Spring MVC approval callback endpoint |
 | `actiongraph-console-core` | `com.actiongraph:actiongraph-console-core:0.1.0` | Reusable read-only Console query service and response model |
 | `actiongraph-console-jdbc` | `com.actiongraph:actiongraph-console-jdbc:0.1.0` | JDBC adapter for the Console query port |
+| `actiongraph-console-export` | `com.actiongraph:actiongraph-console-export:0.1.0` | CSV/JSONL audit export service over the Console query service |
 | `actiongraph-console-spring-boot-autoconfigure` | `com.actiongraph:actiongraph-console-spring-boot-autoconfigure:0.1.0` | Shared Spring Boot Console service auto-configuration |
 | `actiongraph-console-api-spring-boot-starter` | `com.actiongraph:actiongraph-console-api-spring-boot-starter:0.1.0` | Optional Spring MVC Console JSON API endpoints |
 | `actiongraph-console-ui-spring-boot-starter` | `com.actiongraph:actiongraph-console-ui-spring-boot-starter:0.1.0` | Optional Spring MVC built-in Console page |
+| `actiongraph-console-export-spring-boot-starter` | `com.actiongraph:actiongraph-console-export-spring-boot-starter:0.1.0` | Optional Spring MVC Console CSV/JSONL audit export endpoints |
 | `actiongraph-console-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-console-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC Console repository auto-configuration |
 | `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Compatibility aggregate for the Console API and UI starters |
 
@@ -206,6 +208,12 @@ JDBC-backed custom operational monitoring adds:
 implementation("com.actiongraph:actiongraph-console-jdbc")
 ```
 
+CSV/JSONL audit export for custom monitoring adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-console-export")
+```
+
 Spring Boot JDBC-backed operational monitoring adds:
 
 ```kotlin
@@ -222,6 +230,12 @@ Spring MVC built-in operational monitoring page adds:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
+```
+
+Spring MVC audit export endpoints add:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-console-export-spring-boot-starter")
 ```
 
 Existing applications can keep using the compatibility aggregate when they want both:

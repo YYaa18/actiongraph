@@ -299,6 +299,20 @@ dependencies {
 
 `actiongraph-console-jdbc` implements the `ConsoleRunRepository` port by adapting `JdbcTraceRunRepository`. It remains read-only and does not expose HTTP endpoints.
 
+## Custom Audit Export Service
+
+Use this for a custom control-plane, batch job, CLI, or audit archive process that wants CSV run summaries or CSV/JSONL trace evidence without Spring MVC endpoints.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-console-core")
+    implementation("com.actiongraph:actiongraph-console-export")
+}
+```
+
+`actiongraph-console-export` wraps `ActionGraphConsoleService` and formats the same read-only run summaries and trace details as CSV or JSONL. It has no Spring Web or JDBC dependency; add `actiongraph-console-jdbc` only when the export process should read ActionGraph trace tables directly.
+
 ## Spring MVC Read-Only Monitoring API
 
 Use this for a separate control-plane application that exposes read-only JSON endpoints over any `ConsoleRunRepository` without serving the bundled page.
@@ -325,6 +339,27 @@ dependencies {
 
 The Console UI starter serves only `GET /actiongraph/console` and injects the configured token header and paging limits into the page. It does not create repositories or expose `/runs` JSON endpoints.
 
+## Spring MVC Audit Export Endpoints
+
+Use this when a control-plane application wants only downloadable audit evidence over the Console service without exposing the bundled page or the regular JSON query API.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-console-export-spring-boot-starter")
+}
+```
+
+The Console export starter creates `ActionGraphConsoleExportService` and exposes only:
+
+```text
+GET /actiongraph/console/runs/export.csv
+GET /actiongraph/console/runs/{runId}/trace/export.csv
+GET /actiongraph/console/runs/{runId}/trace/export.jsonl
+```
+
+It uses the same `actiongraph.console.*` path and token settings as the API/UI starters, requires an `ActionGraphConsoleService` or `ConsoleRunRepository` bean, and must remain read-only.
+
 ## Spring MVC Read-Only Monitoring Aggregate
 
 Use this compatibility coordinate when an application wants the built-in page and JSON API together through the previous single dependency.
@@ -348,6 +383,7 @@ dependencies {
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-export-spring-boot-starter")
 }
 ```
 

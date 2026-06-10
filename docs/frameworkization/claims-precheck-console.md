@@ -81,6 +81,16 @@ This lets a future console list runs directly from the JDBC trace table, page/fi
 
 Custom consoles, CLI diagnostics, gateway adapters, or non-Spring services can depend on this module directly and provide their own `ConsoleRunRepository`.
 
+## Console Export
+
+`actiongraph-console-export` packages CSV and JSONL evidence formatting without Spring Web or JDBC coupling:
+
+- run-summary CSV export with paging/status/audit filters
+- per-run trace CSV export
+- per-run trace JSONL export
+
+It wraps `ActionGraphConsoleService`, so custom batch jobs, audit archive processes, and gateway adapters can reuse the same read-only query service without exposing HTTP endpoints.
+
 ## Console JDBC Adapter
 
 `actiongraph-console-jdbc` adapts the JDBC trace read model to the Console port:
@@ -103,7 +113,7 @@ This keeps the control-plane service independently reusable while still giving J
 - `actiongraph-console-api-spring-boot-starter` is on the runtime classpath
 - an `ActionGraphConsoleService` or `ConsoleRunRepository` bean is available
 
-The Console API starter wraps `actiongraph-console-core`, exposes only JSON query endpoints, and stays read-only. Add `actiongraph-console-ui-spring-boot-starter` when the same service should also serve the bundled page, or use the compatibility `actiongraph-console-spring-boot-starter` to bring API and UI together. Add `actiongraph-console-jdbc-spring-boot-starter` when a `DataSource` should be adapted into the default JDBC `ConsoleRunRepository`. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
+The Console API starter wraps `actiongraph-console-core`, exposes only JSON query endpoints, and stays read-only. Add `actiongraph-console-ui-spring-boot-starter` when the same service should also serve the bundled page, add `actiongraph-console-export-spring-boot-starter` when it should expose CSV/JSONL audit export endpoints, or use the compatibility `actiongraph-console-spring-boot-starter` to bring API and UI together. Add `actiongraph-console-jdbc-spring-boot-starter` when a `DataSource` should be adapted into the default JDBC `ConsoleRunRepository`. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
 
 ```yaml
 actiongraph:
@@ -123,6 +133,9 @@ GET /actiongraph/console
 GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
 GET /actiongraph/console/runs/{runId}
 GET /actiongraph/console/runs/{runId}/trace
+GET /actiongraph/console/runs/export.csv
+GET /actiongraph/console/runs/{runId}/trace/export.csv
+GET /actiongraph/console/runs/{runId}/trace/export.jsonl
 ```
 
-The built-in page shows the same read model as a compact operational surface: run list, status/audit filters, selected-run metadata, and a trace timeline. API responses are read-only summaries and trace details: run id, first/last trace timestamps, terminal or suspended status, trace event count, audit-chain verification fields, and individual trace event rows. Missing or invalid console tokens return `401 UNAUTHORIZED` for API calls when `shared-secret` is configured. A production deployment should still add enterprise authentication/authorization and retention controls.
+The built-in page shows the same read model as a compact operational surface: run list, status/audit filters, selected-run metadata, and a trace timeline. API responses are read-only summaries and trace details: run id, first/last trace timestamps, terminal or suspended status, trace event count, audit-chain verification fields, and individual trace event rows. Export responses return attachment-friendly CSV or JSONL evidence over the same read model. Missing or invalid console tokens return `401 UNAUTHORIZED` for API/export calls when `shared-secret` is configured. A production deployment should still add enterprise authentication/authorization and retention controls.
