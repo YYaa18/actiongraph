@@ -1,5 +1,7 @@
 # ActionGraph
 
+[中文文档](README.zh-CN.md)
+
 ActionGraph is a typed GOAP framework for governed business action execution in Java.
 
 It lets application teams expose ordinary business methods as typed Actions, then uses a deterministic symbolic planner to compose those Actions into auditable execution paths. LLMs can interpret user goals, but they do not generate or execute plans.
