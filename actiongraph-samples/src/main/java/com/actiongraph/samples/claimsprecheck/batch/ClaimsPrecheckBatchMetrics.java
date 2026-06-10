@@ -43,6 +43,27 @@ public record ClaimsPrecheckBatchMetrics(List<ClaimsPrecheckCaseResult> caseResu
                 .orElse(0.0);
     }
 
+    public double averageBusinessActionMillis() {
+        return caseResults.stream()
+                .mapToDouble(ClaimsPrecheckCaseResult::businessActionMillis)
+                .average()
+                .orElse(0.0);
+    }
+
+    public double averageReviewWaitMillis() {
+        return caseResults.stream()
+                .mapToDouble(ClaimsPrecheckCaseResult::reviewWaitMillis)
+                .average()
+                .orElse(0.0);
+    }
+
+    public double averageFrameworkMillis() {
+        return caseResults.stream()
+                .mapToDouble(ClaimsPrecheckCaseResult::frameworkMillis)
+                .average()
+                .orElse(0.0);
+    }
+
     public double interceptRate() {
         return rate(interceptedRuns());
     }

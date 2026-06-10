@@ -50,6 +50,15 @@ public final class ClaimsPrecheckBatchReportWriter {
         builder.append("- Audit Completeness Rate: ").append(percent(metrics.auditCompletenessRate())).append("\n");
         builder.append("- Average Runtime Ms: ")
                 .append(String.format(Locale.ROOT, "%.3f", metrics.averageRuntimeMillis()))
+                .append("\n");
+        builder.append("- Average Business Action Ms: ")
+                .append(String.format(Locale.ROOT, "%.3f", metrics.averageBusinessActionMillis()))
+                .append("\n");
+        builder.append("- Average Framework Ms: ")
+                .append(String.format(Locale.ROOT, "%.3f", metrics.averageFrameworkMillis()))
+                .append("\n");
+        builder.append("- Average Review Wait Ms: ")
+                .append(String.format(Locale.ROOT, "%.3f", metrics.averageReviewWaitMillis()))
                 .append("\n\n");
         if (!metadata.limitRules().isEmpty()) {
             builder.append("## Limit Rules\n\n");
@@ -67,8 +76,8 @@ public final class ClaimsPrecheckBatchReportWriter {
             builder.append("\n");
         }
         builder.append("## Case Results\n\n");
-        builder.append("| Claim ID | Status | Intercepted | Audit Complete | Trace Events | Runtime Ms |\n");
-        builder.append("|---|---:|---:|---:|---:|---:|\n");
+        builder.append("| Claim ID | Status | Intercepted | Audit Complete | Trace Events | Runtime Ms | Business Action Ms | Framework Ms | Review Wait Ms |\n");
+        builder.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|\n");
         for (ClaimsPrecheckCaseResult result : metrics.caseResults()) {
             builder.append("| ")
                     .append(result.claimId())
@@ -82,6 +91,12 @@ public final class ClaimsPrecheckBatchReportWriter {
                     .append(result.traceEventCount())
                     .append(" | ")
                     .append(String.format(Locale.ROOT, "%.3f", result.elapsedMillis()))
+                    .append(" | ")
+                    .append(String.format(Locale.ROOT, "%.3f", result.businessActionMillis()))
+                    .append(" | ")
+                    .append(String.format(Locale.ROOT, "%.3f", result.frameworkMillis()))
+                    .append(" | ")
+                    .append(String.format(Locale.ROOT, "%.3f", result.reviewWaitMillis()))
                     .append(" |\n");
         }
         return builder.toString();

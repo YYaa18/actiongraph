@@ -77,23 +77,26 @@ JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_
 
 ```text
 claimsPrecheckBatch totalRuns=5, completed=1, intercepted=3, failed=1, auditComplete=5
-interceptRate=60.00%, auditCompletenessRate=100.00%
-case claimId=CLM100, status=COMPLETED, intercepted=false, auditComplete=true
-case claimId=CLM101, status=HALTED_UNREACHABLE, intercepted=true, auditComplete=true
-case claimId=CLM102, status=HALTED_UNREACHABLE, intercepted=true, auditComplete=true
-case claimId=CLM103, status=DENIED_BY_POLICY, intercepted=true, auditComplete=true
-case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete=true
+interceptRate=60.00%, auditCompletenessRate=100.00%, averageRuntimeMs=8.936, averageBusinessActionMs=0.692, averageFrameworkMs=8.196, averageReviewWaitMs=0.048
+case claimId=CLM100, status=COMPLETED, intercepted=false, auditComplete=true, businessActionMs=2.730, frameworkMs=31.673, reviewWaitMs=0.238
+case claimId=CLM101, status=HALTED_UNREACHABLE, intercepted=true, auditComplete=true, businessActionMs=0.050, frameworkMs=2.976, reviewWaitMs=0.000
+case claimId=CLM102, status=HALTED_UNREACHABLE, intercepted=true, auditComplete=true, businessActionMs=0.044, frameworkMs=2.343, reviewWaitMs=0.000
+case claimId=CLM103, status=DENIED_BY_POLICY, intercepted=true, auditComplete=true, businessActionMs=0.559, frameworkMs=2.027, reviewWaitMs=0.000
+case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete=true, businessActionMs=0.077, frameworkMs=1.963, reviewWaitMs=0.001
 ```
 
 报告产物：
 
 - `claims-precheck-report.md`：业务可读指标摘要与明细表
-- `claims-precheck-results.csv`：每个样本的状态、是否拦截、审计完整性、trace 事件数、运行耗时
+- `claims-precheck-results.csv`：每个样本的状态、是否拦截、审计完整性、trace 事件数、运行耗时与耗时拆分
 - 报告头包含 batch id、environment、sample source 和当前限额参数；sample source 可以来自 CSV 路径或 JDBC URL
 
 当前指标口径：
 
 - 单均处理时长：批量运行 N 个理赔案，记录当前 auto-approve 模式下的端到端运行耗时
+- 业务 Action 耗时：样例 Action 的 `execute` / `compensate` 调用耗时，代表业务服务调用成本
+- 框架调度耗时：端到端耗时扣除业务 Action 耗时和审批等待耗时后的剩余时间
+- 审批等待耗时：human review policy 决策耗时；当前 auto-approve 样例接近 0，真实挂起审批需结合 resume 时间线继续扩展
 - 拦截率：资料缺失、已结案、超硬限额等被 guard/policy 拦截的比例
 - 审计完整率：每个 run 的 TraceChainVerifier 通过率与缺失事件率
 
@@ -102,4 +105,4 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 下一刀应继续把报告推进到更贴近生产的数据资产：
 
 - 接入真实数据库表或视图，并沉淀脱敏抽样脚本
-- 将业务服务耗时、框架耗时、审批等待耗时从当前端到端耗时中拆成独立字段
+- 将真实 suspend/resume 审批等待时间并入批量报告，而不只统计 auto-approve policy 决策耗时

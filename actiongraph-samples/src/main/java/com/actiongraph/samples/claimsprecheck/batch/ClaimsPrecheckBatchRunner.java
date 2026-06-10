@@ -2,14 +2,21 @@ package com.actiongraph.samples.claimsprecheck.batch;
 
 import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionId;
+import com.actiongraph.action.ActionResult;
+import com.actiongraph.action.ActionRiskLevel;
+import com.actiongraph.action.CompensationResult;
 import com.actiongraph.action.DefaultActionRegistry;
+import com.actiongraph.action.ExecutionContext;
+import com.actiongraph.planning.Condition;
 import com.actiongraph.policy.AmountAttributeContributor;
 import com.actiongraph.policy.AmountExtractor;
 import com.actiongraph.policy.AmountLimitPolicy;
 import com.actiongraph.policy.AmountLimitRule;
 import com.actiongraph.policy.AutoApproveHumanReviewPolicy;
 import com.actiongraph.policy.DefaultPolicyGuard;
+import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.MonetaryAmount;
+import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunResult;
@@ -30,6 +37,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class ClaimsPrecheckBatchRunner {
     private static final ActionId APPROVAL_ACTION_ID = new ActionId("claim.approval.request");
@@ -81,19 +90,20 @@ public final class ClaimsPrecheckBatchRunner {
         blackboard.addCondition(ClaimsPrecheckConditions.CLAIM_ID_PRESENT);
 
         InMemoryPayoutDraftService draftService = new InMemoryPayoutDraftService();
-        List<Action> actions = ClaimsPrecheckActionFactory.actions(
+        TimingRecorder timing = new TimingRecorder();
+        List<Action> actions = timing.wrapActions(ClaimsPrecheckActionFactory.actions(
                 new InMemoryClaimService(batchCase.closed(), batchCase.claimedAmount()),
                 new InMemoryClaimDocumentService(batchCase.missingInvoice()),
                 new InMemoryClaimPrecheckService(),
                 draftService,
                 new InMemoryClaimApprovalService(batchCase.approvalFails())
-        );
+        ));
         DefaultActionRegistry registry = ClaimsPrecheckActionFactory.registry(actions);
         InMemoryTraceRepository traceRepository = new InMemoryTraceRepository();
         AmountExtractor amountExtractor = claimPayoutAmountExtractor();
         GoapExecutor executor = GoapExecutor.builder()
                 .policyGuard(new DefaultPolicyGuard(new AmountLimitPolicy(amountExtractor, limitRules)))
-                .humanReviewPolicy(new AutoApproveHumanReviewPolicy())
+                .humanReviewPolicy(timing.wrapHumanReviewPolicy(new AutoApproveHumanReviewPolicy()))
                 .traceRepository(traceRepository)
                 .reviewAttributeContributor(new AmountAttributeContributor(amountExtractor, limitRules))
                 .build();
@@ -108,12 +118,18 @@ public final class ClaimsPrecheckBatchRunner {
         boolean businessIntercepted = batchCase.expectedIntercept()
                 && (result.status() == com.actiongraph.runtime.RunStatus.HALTED_UNREACHABLE
                 || result.status() == com.actiongraph.runtime.RunStatus.DENIED_BY_POLICY);
+        long businessActionNanos = timing.businessActionNanos();
+        long reviewWaitNanos = timing.reviewWaitNanos();
+        long frameworkNanos = Math.max(0, elapsed - businessActionNanos - reviewWaitNanos);
         return new ClaimsPrecheckCaseResult(
                 batchCase.claimId(),
                 result.status(),
                 businessIntercepted,
                 auditComplete,
                 elapsed,
+                businessActionNanos,
+                reviewWaitNanos,
+                frameworkNanos,
                 result.executedActions().size(),
                 traceEvents.size()
         );
@@ -127,5 +143,106 @@ public final class ClaimsPrecheckBatchRunner {
             return blackboard.get(PayoutApplicationDraft.class)
                     .map(draft -> new MonetaryAmount(draft.amount(), draft.currency()));
         };
+    }
+
+    private static final class TimingRecorder {
+        private final AtomicLong businessActionNanos = new AtomicLong();
+        private final AtomicLong reviewWaitNanos = new AtomicLong();
+
+        List<Action> wrapActions(List<Action> actions) {
+            return actions.stream()
+                    .map(action -> (Action) new TimingAction(action, this))
+                    .toList();
+        }
+
+        HumanReviewPolicy wrapHumanReviewPolicy(HumanReviewPolicy delegate) {
+            return request -> {
+                long start = System.nanoTime();
+                try {
+                    return delegate.review(request);
+                } finally {
+                    reviewWaitNanos.addAndGet(System.nanoTime() - start);
+                }
+            };
+        }
+
+        long businessActionNanos() {
+            return businessActionNanos.get();
+        }
+
+        long reviewWaitNanos() {
+            return reviewWaitNanos.get();
+        }
+
+        private void recordBusinessAction(long nanos) {
+            businessActionNanos.addAndGet(nanos);
+        }
+    }
+
+    private record TimingAction(Action delegate, TimingRecorder timing) implements Action {
+        @Override
+        public ActionId id() {
+            return delegate.id();
+        }
+
+        @Override
+        public Set<Class<?>> inputTypes() {
+            return delegate.inputTypes();
+        }
+
+        @Override
+        public Set<Class<?>> outputTypes() {
+            return delegate.outputTypes();
+        }
+
+        @Override
+        public Set<Condition> preconditions() {
+            return delegate.preconditions();
+        }
+
+        @Override
+        public Set<Condition> effects() {
+            return delegate.effects();
+        }
+
+        @Override
+        public int cost() {
+            return delegate.cost();
+        }
+
+        @Override
+        public ActionRiskLevel riskLevel() {
+            return delegate.riskLevel();
+        }
+
+        @Override
+        public boolean requiresHumanReview() {
+            return delegate.requiresHumanReview();
+        }
+
+        @Override
+        public boolean runtimeGuard(Blackboard blackboard) {
+            return delegate.runtimeGuard(blackboard);
+        }
+
+        @Override
+        public ActionResult execute(ExecutionContext context) {
+            long start = System.nanoTime();
+            try {
+                return delegate.execute(context);
+            } finally {
+                timing.recordBusinessAction(System.nanoTime() - start);
+            }
+        }
+
+        @Override
+        public CompensationResult compensate(ExecutionContext context) {
+            long start = System.nanoTime();
+            try {
+                return delegate.compensate(context);
+            } finally {
+                timing.recordBusinessAction(System.nanoTime() - start);
+            }
+        }
     }
 }

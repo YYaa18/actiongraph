@@ -31,7 +31,11 @@ public final class ClaimsPrecheckBatchMetricsApp {
                 + ", auditComplete=" + metrics.auditCompleteRuns());
         System.out.println("interceptRate=" + percent(metrics.interceptRate())
                 + ", auditCompletenessRate=" + percent(metrics.auditCompletenessRate())
-                + ", averageRuntimeMs=" + String.format(Locale.ROOT, "%.3f", metrics.averageRuntimeMillis()));
+                + ", averageRuntimeMs=" + String.format(Locale.ROOT, "%.3f", metrics.averageRuntimeMillis())
+                + ", averageBusinessActionMs="
+                + String.format(Locale.ROOT, "%.3f", metrics.averageBusinessActionMillis())
+                + ", averageFrameworkMs=" + String.format(Locale.ROOT, "%.3f", metrics.averageFrameworkMillis())
+                + ", averageReviewWaitMs=" + String.format(Locale.ROOT, "%.3f", metrics.averageReviewWaitMillis()));
         metrics.caseResults().forEach(result -> System.out.println(
                 "case claimId=" + result.claimId()
                         + ", status=" + result.status()
@@ -39,6 +43,10 @@ public final class ClaimsPrecheckBatchMetricsApp {
                         + ", auditComplete=" + result.auditComplete()
                         + ", traceEvents=" + result.traceEventCount()
                         + ", elapsedMs=" + String.format(Locale.ROOT, "%.3f", result.elapsedMillis())
+                        + ", businessActionMs="
+                        + String.format(Locale.ROOT, "%.3f", result.businessActionMillis())
+                        + ", frameworkMs=" + String.format(Locale.ROOT, "%.3f", result.frameworkMillis())
+                        + ", reviewWaitMs=" + String.format(Locale.ROOT, "%.3f", result.reviewWaitMillis())
         ));
         System.out.println("batchId=" + metadata.batchId()
                 + ", environment=" + metadata.environment()

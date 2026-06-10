@@ -48,7 +48,8 @@ public final class ClaimsPrecheckBatchCsv {
         createParent(output);
         CSVFormat outputFormat = CSVFormat.DEFAULT.builder()
                 .setHeader("claimId", "status", "businessIntercepted", "auditComplete",
-                        "elapsedMs", "executedActionCount", "traceEventCount")
+                        "elapsedMs", "businessActionMs", "frameworkMs", "reviewWaitMs",
+                        "executedActionCount", "traceEventCount")
                 .get();
         try (CSVPrinter printer = new CSVPrinter(Files.newBufferedWriter(output, StandardCharsets.UTF_8), outputFormat)) {
             for (ClaimsPrecheckCaseResult result : metrics.caseResults()) {
@@ -58,6 +59,9 @@ public final class ClaimsPrecheckBatchCsv {
                         result.businessIntercepted(),
                         result.auditComplete(),
                         String.format(Locale.ROOT, "%.3f", result.elapsedMillis()),
+                        String.format(Locale.ROOT, "%.3f", result.businessActionMillis()),
+                        String.format(Locale.ROOT, "%.3f", result.frameworkMillis()),
+                        String.format(Locale.ROOT, "%.3f", result.reviewWaitMillis()),
                         result.executedActionCount(),
                         result.traceEventCount()
                 );
