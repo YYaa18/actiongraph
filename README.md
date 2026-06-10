@@ -112,6 +112,7 @@ Batch reports include total runtime, business action time, framework overhead, a
 ## Documentation
 
 - [Quick start guide](docs/quick-start.html)
+- [Real LLM smoke test](docs/frameworkization/llm-smoke.md)
 - [Framework notes](docs/frameworkization/)
 - [Original PRD](docs/PRD-v0.md)
 - [F0 financialization PRD](docs/PRD-F0-finance.md)

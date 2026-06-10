@@ -175,6 +175,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 ## 文档
 
 - [快速接入指南](docs/quick-start.html)
+- [真实 LLM 冒烟测试](docs/frameworkization/llm-smoke.md)
 - [技术汇报演示文档](docs/actiongraph-pitch.html)
 - [框架化笔记](docs/frameworkization/)
 - [原始 PRD](docs/PRD-v0.md)

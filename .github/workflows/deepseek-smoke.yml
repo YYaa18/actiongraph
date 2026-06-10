@@ -1,0 +1,65 @@
+name: DeepSeek Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: DeepSeek model override
+        required: false
+        type: string
+      base-url:
+        description: DeepSeek-compatible base URL override
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deepseek-smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Real LLM Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set Up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set Up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      - name: Require DeepSeek Secret
+        shell: bash
+        run: |
+          if [ -z "${DEEPSEEK_API_KEY}" ]; then
+            echo "::error::Configure the DEEPSEEK_API_KEY repository secret before running this workflow."
+            exit 1
+          fi
+
+      - name: Configure Optional Overrides
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.model }}" ]; then
+            echo "DEEPSEEK_MODEL=${{ inputs.model }}" >> "${GITHUB_ENV}"
+          fi
+          if [ -n "${{ inputs.base-url }}" ]; then
+            echo "DEEPSEEK_BASE_URL=${{ inputs.base-url }}" >> "${GITHUB_ENV}"
+          fi
+
+      - name: Run Real LLM Smoke Test
+        run: ./gradlew :actiongraph-samples:test --tests com.actiongraph.llm.DeepSeekRealLlmSmokeTest --no-daemon --stacktrace

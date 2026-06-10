@@ -35,6 +35,8 @@ GitHub Actions also runs the CI workflow on every push to `main` and every pull 
 
 The workflow uses Java 21, validates the Gradle wrapper through `gradle/actions/setup-gradle`, and does not set `DEEPSEEK_API_KEY`, so the real LLM smoke test remains gated/skipped in CI.
 
+For real LLM verification, use the manual `DeepSeek Smoke` workflow after configuring the `DEEPSEEK_API_KEY` repository secret. See [Real LLM Smoke Test](llm-smoke.md).
+
 Then a consuming project can depend on:
 
 ```kotlin

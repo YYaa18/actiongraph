@@ -296,6 +296,7 @@ dependencies {
 DEEPSEEK_API_KEY=sk-xxxx          <span class="c"># 必填</span>
 DEEPSEEK_MODEL=deepseek-v4-flash  <span class="c"># 可选，有默认值</span>
 DEEPSEEK_BASE_URL=...             <span class="c"># 可选，私有网关时覆盖</span></code></pre>
+<p>真实 LLM 冒烟建议使用 GitHub Actions 的 <code>DeepSeek Smoke</code> 手动 workflow，并把 key 配置为仓库 Secret <code>DEEPSEEK_API_KEY</code>；不要把 key 写进命令历史或提交到仓库。</p>
 <pre><code><span class="a">@Bean</span>
 GoalInterpreter goalInterpreter(GoalCatalog catalog) {
     LlmGoalInterpreter llm = <span class="k">new</span> LlmGoalInterpreter(
