@@ -16,8 +16,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-component-catalog` | `com.actiongraph:actiongraph-component-catalog:0.1.0` | Reusable component catalog and composition profile metadata |
 | `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible control-plane contracts and lightweight runtime HTTP client |
 | `actiongraph-control-plane-auth` | `com.actiongraph:actiongraph-control-plane-auth:0.1.0` | Shared-secret token verification support for control-plane adapters |
-| `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
-| `actiongraph-human-review-api` | `com.actiongraph:actiongraph-human-review-api:0.1.0` | Reusable human-review task query and decision service |
+| `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
 | `actiongraph-governance-human-review` | `com.actiongraph:actiongraph-governance-human-review:0.1.0` | Optional non-Spring human-review governance policies for amount review attributes and approval routing |
 | `actiongraph-llm` | `com.actiongraph:actiongraph-llm:0.1.0` | Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing |
@@ -30,12 +29,10 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-governance-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-governance-human-review-spring-boot-starter:0.1.0` | Optional Spring Boot human-review governance policies for amount review attributes and approval routing |
 | `actiongraph-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot auto-configuration for core JDBC repositories |
 | `actiongraph-memory-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC memory repository auto-configuration |
-| `actiongraph-human-review-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC human-review repository auto-configuration |
 | `actiongraph-runtime-api-spring-boot-starter` | `com.actiongraph:actiongraph-runtime-api-spring-boot-starter:0.1.0` | Optional Spring MVC runtime start and resume endpoints |
 | `actiongraph-component-catalog-spring-boot-starter` | `com.actiongraph:actiongraph-component-catalog-spring-boot-starter:0.1.0` | Optional Spring MVC component catalog endpoints |
-| `actiongraph-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0` | Optional Spring Boot repository-backed review policy auto-configuration |
-| `actiongraph-human-review-api-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-api-spring-boot-starter:0.1.0` | Optional Spring MVC human-review task API endpoints |
-| `actiongraph-human-review-callback-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-callback-spring-boot-starter:0.1.0` | Optional Spring MVC approval callback endpoint |
+| `actiongraph-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0` | Optional Spring Boot repository-backed review policy and JDBC repository auto-configuration |
+| `actiongraph-human-review-api-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-api-spring-boot-starter:0.1.0` | Optional Spring MVC human-review task API and approval callback endpoints |
 | `actiongraph-console` | `com.actiongraph:actiongraph-console:0.1.0` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
 | `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Optional Spring MVC Console API, UI, export endpoints, and JDBC repository auto-configuration |
 | `actiongraph-control-plane-spring-boot-starter` | `com.actiongraph:actiongraph-control-plane-spring-boot-starter:0.1.0` | Optional aggregate for runtime, component catalog, human-review, callback, and Console endpoint starters |
@@ -193,12 +190,6 @@ Spring Boot durable memory persistence adds:
 implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
 ```
 
-Spring Boot durable human-review task persistence adds:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
-```
-
 Low-level non-Spring/manual core persistence adds:
 
 ```kotlin
@@ -212,7 +203,7 @@ implementation("com.actiongraph:actiongraph-memory-jdbc")
 implementation("com.actiongraph:actiongraph-human-review-jdbc")
 ```
 
-Spring Boot repository-backed review adds:
+Spring Boot repository-backed review and optional JDBC task persistence add:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
@@ -230,22 +221,10 @@ Spring MVC component catalog endpoints add:
 implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
 ```
 
-Custom human-review task APIs add:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-human-review-api")
-```
-
-Spring MVC human-review task endpoints add:
+Spring MVC human-review task and callback endpoints add:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
-```
-
-Spring MVC external approval callbacks add:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
 ```
 
 Custom read-only operational monitoring, JDBC-backed trace read models, and CSV/JSONL audit export add:

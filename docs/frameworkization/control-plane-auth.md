@@ -62,7 +62,6 @@ These Spring MVC endpoint starters depend on this module transitively:
 - `actiongraph-runtime-api-spring-boot-starter`
 - `actiongraph-component-catalog-spring-boot-starter`
 - `actiongraph-human-review-api-spring-boot-starter`
-- `actiongraph-human-review-callback-spring-boot-starter`
 - `actiongraph-console-spring-boot-starter`
 
 The aggregate `actiongraph-control-plane-spring-boot-starter` brings those endpoint starters together, so it also receives the shared auth behavior transitively.

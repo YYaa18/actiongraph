@@ -63,8 +63,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-component-catalog` | Reusable machine-readable component catalog and composition profiles |
 | `actiongraph-control-plane-api` | Java 8 compatible control-plane response contracts and lightweight runtime HTTP client |
 | `actiongraph-control-plane-auth` | Reusable shared-secret token verification support for control-plane endpoints |
-| `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
-| `actiongraph-human-review-api` | Reusable human-review task query and decision service |
+| `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
 | `actiongraph-governance-human-review` | Optional non-Spring human-review governance extension for amount review attributes and risk-based approval routing |
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
@@ -77,12 +76,10 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-governance-human-review-spring-boot-starter` | Optional Spring Boot human-review governance policies for amount review attributes and approval-chain routing |
 | `actiongraph-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for core JDBC repositories |
 | `actiongraph-memory-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC memory repository |
-| `actiongraph-human-review-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC human-review repository |
 | `actiongraph-runtime-api-spring-boot-starter` | Optional Spring MVC runtime start and resume endpoints |
-| `actiongraph-human-review-spring-boot-starter` | Optional repository-backed review policy auto-configuration |
+| `actiongraph-human-review-spring-boot-starter` | Optional repository-backed review policy and JDBC repository auto-configuration |
 | `actiongraph-component-catalog-spring-boot-starter` | Optional Spring MVC read-only component catalog endpoints |
-| `actiongraph-human-review-api-spring-boot-starter` | Optional Spring MVC human-review task API endpoints |
-| `actiongraph-human-review-callback-spring-boot-starter` | Optional Spring MVC approval callback endpoint for external review systems |
+| `actiongraph-human-review-api-spring-boot-starter` | Optional Spring MVC human-review task API and callback endpoints |
 | `actiongraph-control-plane-spring-boot-starter` | Optional aggregate for runtime, component catalog, human-review, callback, and console endpoint starters |
 | `actiongraph-console` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
 | `actiongraph-console-spring-boot-starter` | Optional Spring MVC Console API, UI, export endpoints, and JDBC repository auto-configuration |
@@ -97,7 +94,6 @@ dependencies {
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     // Optional ecosystem/control-plane components:
     implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")
@@ -113,7 +109,6 @@ dependencies {
     // implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
     // implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
     // implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
-    // implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
     // implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```
@@ -177,7 +172,7 @@ actiongraph:
     max-limit: 200
 ```
 
-When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, and trace read-model repositories. Add `actiongraph-memory-jdbc-spring-boot-starter` and/or `actiongraph-human-review-jdbc-spring-boot-starter` when structured memory or review tasks also need JDBC durability. Non-Spring services can still use `actiongraph-persistence-jdbc`, `actiongraph-memory-jdbc`, and `actiongraph-human-review-jdbc` directly and wire repositories by hand.
+When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, and trace read-model repositories. Add `actiongraph-memory-jdbc-spring-boot-starter` when structured memory also needs JDBC durability; `actiongraph-human-review-spring-boot-starter` now includes the property-gated JDBC human-review repository auto-configuration. Non-Spring services can still use `actiongraph-persistence-jdbc`, `actiongraph-memory-jdbc`, and `actiongraph-human-review-jdbc` directly and wire repositories by hand.
 
 Non-Spring services can use `actiongraph-governance` directly when they want packaged masking, amount-limit, or rule-based permission policies without Spring auto-configuration. Add `actiongraph-governance-human-review` only when review attributes or risk-based approval-chain routing are needed.
 
@@ -209,11 +204,11 @@ Custom gateways, endpoint adapters, or Java 8 legacy systems can use `actiongrap
 
 Custom gateways or Spring MVC endpoint starters can use `actiongraph-control-plane-auth` when they need the same shared-secret token semantics without depending on Spring Web. The module validates configured header names, skips token lookup when no shared secret is configured, and uses constant-time token comparison. Built-in runtime, component catalog, human-review, callback, and Console endpoint starters depend on it transitively; it is not an enterprise IAM or RBAC layer.
 
-Non-Spring services can use `actiongraph-human-review` directly when they need external approval task storage, callback handling, or multi-stage approval chains without Spring MVC.
+Non-Spring services can use `actiongraph-human-review` directly when they need external approval task storage, callback handling, multi-stage approval chains, or a stable task query/decision service without Spring MVC.
 
 When `actiongraph-governance-spring-boot-starter` is on the classpath, masking and amount-limit permission rules are activated. Add `actiongraph-governance-human-review-spring-boot-starter` when those limit rules should also enrich human-review requests or when `actiongraph.human-review.risk-based-approval-chain=true` should route approval stages. Without these modules, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and safe pending human review.
 
-When `actiongraph-human-review-spring-boot-starter` is on the classpath, Spring services get repository-backed human review defaults. The starter supplies an in-memory `HumanReviewRepository` by default, and `actiongraph-human-review-jdbc-spring-boot-starter` supplies a durable production bean when enabled. Add `actiongraph-human-review-api` in non-Spring services when approval inboxes, CLIs, or gateways need a stable task query/decision service. Add `actiongraph-human-review-api-spring-boot-starter` and enable `actiongraph.human-review.api.enabled=true` in a Spring MVC application to expose pending-task, run-task, task-detail, and decision endpoints. Add `actiongraph-human-review-callback-spring-boot-starter` and enable `actiongraph.human-review.callback-endpoint.enabled=true` when external approval systems should post callback decisions directly.
+When `actiongraph-human-review-spring-boot-starter` is on the classpath, Spring services get repository-backed human review defaults. The starter supplies an in-memory `HumanReviewRepository` by default, and supplies a durable JDBC `HumanReviewRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available. Add `actiongraph-human-review-api-spring-boot-starter` in a Spring MVC application to expose both pending-task/run-task/detail/decision endpoints and external approval callback endpoints; each surface still requires its own `actiongraph.human-review.*.enabled=true` switch.
 
 ```text
 API starter: GET  /actiongraph/human-review/tasks/pending
@@ -273,7 +268,7 @@ Run the sample apps:
 
 The JDBC batch input path uses standard `DriverManager`; add the target database driver to the sample runtime classpath before running against a real database. See `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql` for the anonymized view contract.
 For PostgreSQL staging connections, see the dialect mapping in `actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql` and [Claims Precheck PostgreSQL Mapping](docs/frameworkization/claims-precheck-postgresql.md).
-Batch reports include Markdown, CSV, and a read-only HTML console with total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` from `actiongraph-human-review` or enable the optional Spring Boot callback endpoint from `actiongraph-human-review-callback-spring-boot-starter`.
+Batch reports include Markdown, CSV, and a read-only HTML console with total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` from `actiongraph-human-review` or enable the optional Spring Boot callback endpoint from `actiongraph-human-review-api-spring-boot-starter`.
 The `external-callbacks` mode replays JSONL approval callback deliveries through `HumanReviewCallbackHandler`, including shared-secret checks and duplicate-delivery idempotency.
 
 ## Documentation

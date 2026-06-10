@@ -52,4 +52,4 @@ Each non-empty, non-comment JSONL line is one callback delivery:
 - Conflict detection: a duplicate delivery with a different final decision/reviewer/comment fails fast.
 - Resume continuity: after callback handling, the batch runner resumes the same suspended run through `GoapExecutor.resume(...)`.
 
-For Spring applications, add `actiongraph-human-review-spring-boot-starter` plus `actiongraph-human-review-callback-spring-boot-starter`; the `runId`, `actionId`, `expectedStageIndex`, `decision`, `reviewer`, and `comment` fields map to the callback endpoint at `/actiongraph/human-review/callbacks`. Send the shared secret through the configured token header, not as a JSON body field.
+For Spring applications, add `actiongraph-human-review-spring-boot-starter` plus `actiongraph-human-review-api-spring-boot-starter`; the `runId`, `actionId`, `expectedStageIndex`, `decision`, `reviewer`, and `comment` fields map to the callback endpoint at `/actiongraph/human-review/callbacks`. Send the shared secret through the configured token header, not as a JSON body field.

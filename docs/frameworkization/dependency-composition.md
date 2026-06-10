@@ -200,7 +200,7 @@ dependencies {
 }
 ```
 
-`actiongraph-human-review` depends only on `actiongraph-core`. It provides `HumanReviewRepository`, `HumanReviewTask`, `InMemoryHumanReviewRepository`, `RepositoryBackedHumanReviewPolicy`, `HumanReviewCallbackHandler`, and approval-chain support.
+`actiongraph-human-review` depends only on `actiongraph-core`. It provides `HumanReviewRepository`, `HumanReviewTask`, `InMemoryHumanReviewRepository`, `RepositoryBackedHumanReviewPolicy`, `HumanReviewCallbackHandler`, approval-chain support, `HumanReviewApiService`, and stable task query/decision DTOs.
 
 ## Durable Core Runtime
 
@@ -249,11 +249,11 @@ Add JDBC human-review tasks only when approval tasks and callback decisions must
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
 }
 ```
 
-Non-Spring services can depend on `actiongraph-human-review-jdbc` directly and instantiate `JdbcHumanReviewRepository`.
+Spring Boot applications enable the JDBC implementation with `actiongraph.persistence.jdbc.enabled=true` and a `DataSource`; the human-review starter still backs off when the application provides its own `HumanReviewRepository`. Non-Spring services can depend on `actiongraph-human-review-jdbc` directly and instantiate `JdbcHumanReviewRepository`.
 
 ## Non-Spring Governance Policies
 
@@ -353,38 +353,11 @@ dependencies {
 }
 ```
 
-The human-review starter brings `actiongraph-human-review` transitively. It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`; production services add `actiongraph-human-review-jdbc-spring-boot-starter` when review tasks and callback decisions must be durable. It does not expose HTTP endpoints.
+The human-review starter brings `actiongraph-human-review` and `actiongraph-human-review-jdbc` transitively. It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`; when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available, it creates a JDBC-backed `HumanReviewRepository`. It does not expose HTTP endpoints.
 
-## Spring MVC Human Review Callback Receiver
+## Spring MVC Human Review Control Plane
 
-Use this in the same business service, or in a separate approval integration service, to receive external review decisions over HTTP.
-
-```kotlin
-dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
-}
-```
-
-The callback starter brings `actiongraph-human-review` transitively, but it does not create `HumanReviewRepository` or `HumanReviewPolicy` beans. It only creates `HumanReviewCallbackHandler` and the Spring MVC controller when `actiongraph.human-review.callback-endpoint.enabled=true`, a servlet web application is present, and a `HumanReviewRepository` bean already exists.
-
-## Custom Human Review Task API
-
-Use this for an approval inbox, CLI, or gateway adapter that wants stable human-review task query/decision DTOs without Spring MVC endpoints.
-
-```kotlin
-dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-human-review-api")
-}
-```
-
-`actiongraph-human-review-api` wraps `HumanReviewRepository` with `HumanReviewApiService`, pending/run/detail task projections, and stage-aware decision operations. It does not create review storage, execute, resume, compensate runs, or expose HTTP endpoints.
-
-## Spring MVC Human Review Task API
-
-Use this when a control-plane application wants only approval task query and decision endpoints without exposing the callback receiver.
+Use this when a control-plane application needs approval task query/decision endpoints, external approval callback endpoints, or both, without creating review storage or runtime execution beans.
 
 ```kotlin
 dependencies {
@@ -393,16 +366,17 @@ dependencies {
 }
 ```
 
-The API starter exposes only:
+The API starter exposes:
 
 ```text
 GET  /actiongraph/human-review/tasks/pending
 GET  /actiongraph/human-review/tasks/runs/{runId}
 GET  /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}
 POST /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}/decision
+POST /actiongraph/human-review/callbacks
 ```
 
-It requires `actiongraph.human-review.api.enabled=true`, a servlet web application, and a `HumanReviewRepository` bean. It does not create review storage or expose `/actiongraph/human-review/callbacks`.
+Task query/decision endpoints require `actiongraph.human-review.api.enabled=true`; the callback endpoint requires `actiongraph.human-review.callback-endpoint.enabled=true`. Both surfaces require a servlet web application and an existing `HumanReviewRepository` bean. The starter brings `actiongraph-human-review` transitively, but it does not create review storage, execute runs, resume runs, or compensate runs.
 
 ## Custom Read-Only Monitoring And Audit Export
 
@@ -468,7 +442,6 @@ dependencies {
     implementation("com.actiongraph:actiongraph-governance-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")

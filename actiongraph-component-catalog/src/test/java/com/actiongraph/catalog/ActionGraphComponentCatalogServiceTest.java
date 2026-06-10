@@ -15,7 +15,7 @@ class ActionGraphComponentCatalogServiceTest {
                 .contains(
                         "actiongraph-core",
                         "actiongraph-runtime-api",
-                        "actiongraph-human-review-api",
+                        "actiongraph-human-review",
                         "actiongraph-control-plane-spring-boot-starter",
                         "actiongraph-component-catalog",
                         "actiongraph-control-plane-api",
@@ -29,6 +29,7 @@ class ActionGraphComponentCatalogServiceTest {
                 .extracting(ActionGraphComponent::module)
                 .contains(
                         "actiongraph-runtime-api-spring-boot-starter",
+                        "actiongraph-human-review-api-spring-boot-starter",
                         "actiongraph-console-spring-boot-starter",
                         "actiongraph-component-catalog-spring-boot-starter"
                 );
@@ -64,6 +65,16 @@ class ActionGraphComponentCatalogServiceTest {
                     assertThat(component.capabilities())
                             .contains("console-json-http-api", "console-html-ui", "console-export-http-api");
                 });
+        assertThat(service.component("actiongraph-human-review-api-spring-boot-starter"))
+                .isPresent()
+                .get()
+                .satisfies(component -> {
+                    assertThat(component.requires())
+                            .containsExactly("actiongraph-human-review", "actiongraph-control-plane-api",
+                                    "actiongraph-control-plane-auth");
+                    assertThat(component.capabilities())
+                            .contains("human-review-http-api", "human-review-callback-http-api");
+                });
     }
 
     @Test
@@ -97,6 +108,11 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())
                         .containsExactly("actiongraph-console", "actiongraph-console-spring-boot-starter"));
+        assertThat(service.profile("human-review-control-plane"))
+                .isPresent()
+                .get()
+                .satisfies(profile -> assertThat(profile.modules())
+                        .containsExactly("actiongraph-human-review", "actiongraph-human-review-api-spring-boot-starter"));
     }
 
     @Test

@@ -7,10 +7,9 @@ It brings these endpoint starters together:
 - `actiongraph-runtime-api-spring-boot-starter`
 - `actiongraph-component-catalog-spring-boot-starter`
 - `actiongraph-human-review-api-spring-boot-starter`
-- `actiongraph-human-review-callback-spring-boot-starter`
 - `actiongraph-console-spring-boot-starter`
 
-The endpoint starters remain independently usable. Prefer them when a deployment should expose only one surface, such as Console monitoring only, approval callbacks only, or runtime start/resume only.
+The endpoint starters remain independently usable. Prefer them when a deployment should expose only one surface, such as Console monitoring only, human-review task/callback endpoints only, or runtime start/resume only.
 
 ## Dependency
 

@@ -1,6 +1,6 @@
 # Human Review Integration
 
-v2 human review now has a repository-backed integration point for external approval systems. The non-Spring task/repository API lives in `actiongraph-human-review`; reusable task query/decision projections live in `actiongraph-human-review-api`; Spring auto-configuration for repository-backed review policy lives in `actiongraph-human-review-spring-boot-starter`; optional MVC task endpoints live in `actiongraph-human-review-api-spring-boot-starter`; the optional MVC callback endpoint lives in `actiongraph-human-review-callback-spring-boot-starter`.
+v2 human review now has a repository-backed integration point for external approval systems. The non-Spring task/repository API, callback handler, and reusable task query/decision projections live in `actiongraph-human-review`; durable storage lives in `actiongraph-human-review-jdbc`; Spring auto-configuration for repository-backed review policy and optional JDBC storage lives in `actiongraph-human-review-spring-boot-starter`; optional MVC task and callback endpoints live in `actiongraph-human-review-api-spring-boot-starter`.
 
 ## Dependency
 
@@ -65,10 +65,10 @@ handler.handle(new HumanReviewCallback(
 
 The claims precheck sample includes a JSONL callback replay fixture for local integration testing of shared-secret validation, duplicate-delivery idempotency, and resume continuity. See [Claims Precheck Review Callback Replay](claims-precheck-review-callbacks.md).
 
-Approval inboxes, CLIs, and gateway adapters can use `actiongraph-human-review-api` when they want stable response DTOs instead of exposing `HumanReviewTask` directly:
+Approval inboxes, CLIs, and gateway adapters can use `HumanReviewApiService` from `actiongraph-human-review` when they want stable response DTOs instead of exposing `HumanReviewTask` directly:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-human-review-api")
+implementation("com.actiongraph:actiongraph-human-review")
 ```
 
 ```java
@@ -129,7 +129,7 @@ The human-review starter provides these defaults:
 - `HumanReviewPolicy` -> `RepositoryBackedHumanReviewPolicy`
 - `ApprovalChainResolver` -> `SingleStageApprovalChainResolver`
 
-Applications can replace these beans. For durable review tasks, use `actiongraph-human-review-jdbc` directly or add `actiongraph-human-review-jdbc-spring-boot-starter` in Spring Boot services:
+Applications can replace these beans. For durable review tasks in Spring Boot services, enable the shared JDBC switch with a `DataSource`; the starter then creates a JDBC-backed `HumanReviewRepository` and still backs off if the application provides its own repository. Non-Spring services can use `actiongraph-human-review-jdbc` directly:
 
 ```java
 @Bean
@@ -166,13 +166,13 @@ GET  /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}
 POST /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}/decision
 ```
 
-The API starter is disabled by default and is only created in Servlet MVC applications that have a `HumanReviewRepository` bean. It does not expose the callback receiver and does not execute, resume, or compensate runs.
+The task API is disabled by default and is only created in Servlet MVC applications that have a `HumanReviewRepository` bean. It does not execute, resume, or compensate runs.
 
 Spring MVC applications can enable the optional callback endpoint without writing a controller:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
-implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
+implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
 ```
 
 ```yaml
