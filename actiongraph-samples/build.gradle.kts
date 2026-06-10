@@ -17,3 +17,10 @@ tasks.register<JavaExec>("runOrderCancellationSample") {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("com.actiongraph.samples.ordercancellation.OrderCancellationSampleApp")
 }
+
+tasks.register<JavaExec>("runClaimsPrecheckSample") {
+    group = "application"
+    description = "Runs the claims precheck sample app."
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.actiongraph.samples.claimsprecheck.ClaimsPrecheckSampleApp")
+}

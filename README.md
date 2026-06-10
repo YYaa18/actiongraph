@@ -74,6 +74,7 @@ Run the sample apps:
 ```bash
 ./gradlew :actiongraph-samples:run --args="--approve-human-review Prepare renewal quote for C123"
 ./gradlew :actiongraph-samples:runOrderCancellationSample --args="--approve-human-review Cancel order O100"
+./gradlew :actiongraph-samples:runClaimsPrecheckSample --args="--approve-human-review Prepare payout application for claim CLM100"
 ```
 
 ## Documentation
@@ -82,3 +83,4 @@ Run the sample apps:
 - [Framework notes](docs/frameworkization/)
 - [Original PRD](docs/PRD-v0.md)
 - [F0 financialization PRD](docs/PRD-F0-finance.md)
+- [F1 claims precheck notes](docs/f1-claims-precheck-notes.md)

@@ -753,9 +753,9 @@
         <span>审批申请已创建：APPROVAL-1，对应报价：QUOTE-1</span>
       </div>
       <div class="hud">
-        <div class="hud-item"><b>120</b><span>tests passing</span></div>
+        <div class="hud-item"><b>132</b><span>tests passing</span></div>
         <div class="hud-item"><b>5</b><span>modules</span></div>
-        <div class="hud-item"><b>2</b><span>reference domains</span></div>
+        <div class="hud-item"><b>3</b><span>reference domains</span></div>
         <div class="hud-item"><b>~6000</b><span>runs/s smoke</span></div>
       </div>
     </div>
@@ -984,7 +984,7 @@
           <div class="result-row"><b>业务侵入</b><span>不实现 Action 接口；普通 Spring Bean 方法加注解即可。</span></div>
           <div class="result-row"><b>规则归属</b><span>业务 Service 继续拥有最终裁决权，框架只编排和审计。</span></div>
           <div class="result-row"><b>失败处理</b><span>写入类 Action 声明 compensation 后自动进入 Saga 栈。</span></div>
-          <div class="result-row"><b>接入结果</b><span>续约报价、订单取消两个领域已用同一套 SPI 接入。</span></div>
+          <div class="result-row"><b>接入结果</b><span>续约报价、订单取消、理赔资料预审三个领域已用同一套 SPI 接入。</span></div>
         </div>
       </div>
     </div>
@@ -994,7 +994,7 @@
 <section class="slide" data-title="成熟度">
   <div class="content">
     <div class="kicker">不是概念稿，是已跑通的工程底座</div>
-    <h2>当前成熟度：<em>完整骨架 + 双参考域 + 可发布模块</em></h2>
+    <h2>当前成熟度：<em>完整骨架 + 三参考域 + 可发布模块</em></h2>
     <div class="layout-2">
       <div class="console compact short">
         <div class="console-head"><span>verification</span><span>LOCAL BUILD</span></div>
@@ -1004,15 +1004,15 @@
           <div><span class="log-ok">actiongraph-llm-deepseek:test</span> 8 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-persistence-jdbc:test</span> 19 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-spring-boot-starter:test</span> 14 tests, 0 failures</div>
-          <div><span class="log-ok">actiongraph-samples:test</span> 43 tests, 1 gated smoke skipped</div>
-          <div><span class="log-ok">BUILD SUCCESSFUL</span> 120 tests, 0 failures, 1 skipped</div>
+          <div><span class="log-ok">actiongraph-samples:test</span> 55 tests, 1 gated smoke skipped</div>
+          <div><span class="log-ok">BUILD SUCCESSFUL</span> 132 tests, 0 failures, 1 skipped</div>
         </div>
       </div>
       <div class="layout-3" style="grid-template-columns:1fr;">
-        <div class="panel ok"><div class="metric green">120</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、Spring starter、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略。</p></div>
+        <div class="panel ok"><div class="metric green">132</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、Spring starter、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景。</p></div>
         <div class="panel ok"><div class="metric green">~6000</div><h3>并发冒烟</h3><p>200 虚拟线程并发 1 万次运行；重复 resume 只产生一次业务副作用。</p></div>
         <div class="panel ok"><div class="metric green">5</div><h3>工程模块</h3><p>core / llm-deepseek / persistence-jdbc / spring-boot-starter / samples，可发内部 Maven。</p></div>
-        <div class="panel ok"><div class="metric green">2</div><h3>参考业务域</h3><p>续约报价、订单取消两个不同领域接入，证明核心可复用。</p></div>
+        <div class="panel ok"><div class="metric green">3</div><h3>参考业务域</h3><p>续约报价、订单取消、理赔资料预审三个不同领域接入，证明核心可复用并开始进入保险场景打穿。</p></div>
       </div>
     </div>
     <div class="pill-row">
@@ -1027,7 +1027,7 @@
       <span class="pill green">F0 脱敏 + 防篡改 + 多级审批 + 额度</span>
       <span class="pill green">0 LLM 生成 Plan</span>
     </div>
-    <div class="quote" style="margin-top:30px;">关键验证：第二个业务域接入时没有改动框架核心领域逻辑。同一套 runtime 支撑续约报价和订单取消，复用性已有工程证据。</div>
+    <div class="quote" style="margin-top:30px;">关键验证：新增理赔资料预审场景没有改动框架核心领域逻辑。同一套 runtime 支撑续约报价、订单取消、理赔预审，F1 场景打穿已有第一刀工程证据。</div>
   </div>
 </section>
 
