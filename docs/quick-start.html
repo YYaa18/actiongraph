@@ -205,6 +205,7 @@
   <tr><td><code>com.actiongraph:actiongraph-runtime-api-spring-boot-starter</code></td><td>运行入口 HTTP 端点</td><td>Spring MVC 控制层需要解释目标、启动运行和恢复挂起运行时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-api-spring-boot-starter</code></td><td>审批任务查询与决策 HTTP 端点</td><td>Spring MVC 控制层需要审批任务 API 时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-callback-spring-boot-starter</code></td><td>审批回调 HTTP 端点</td><td>Spring MVC 服务需要接收外部审批系统回写决策时引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-control-plane-spring-boot-starter</code></td><td>控制面端点聚合包</td><td>单个 Spring MVC 部署需要内置 Runtime / Human Review / Callback / Console 全套端点时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-core</code></td><td>只读 Console 查询服务 + 响应模型</td><td>自研控制台、CLI 或网关适配时使用，不引入 Spring MVC endpoint</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-jdbc</code></td><td>ConsoleRunRepository 的 JDBC read model 适配器</td><td>非 Spring 控制层需要直接读取 ActionGraph trace 表时使用</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-export</code></td><td>Console CSV/JSONL 审计导出服务</td><td>批处理、CLI 或审计归档需要导出运行摘要和 Trace 时使用</td></tr>
@@ -230,13 +231,16 @@ dependencies {
     implementation(<span class="s">"com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选 Memory 持久化</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选审批持久化</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-boot-starter"</span>)  <span class="c">// 可选仓储型审批</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-runtime-api-spring-boot-starter"</span>)  <span class="c">// 可选运行入口 API</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-human-review-api-spring-boot-starter"</span>)  <span class="c">// 可选审批任务 API</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-human-review-callback-spring-boot-starter"</span>)  <span class="c">// 可选审批回调入口</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-console-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选控制层 JDBC 读模型</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-console-api-spring-boot-starter"</span>)  <span class="c">// 可选控制层 JSON API</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-console-ui-spring-boot-starter"</span>)  <span class="c">// 可选控制层内置页面</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-console-export-spring-boot-starter"</span>)  <span class="c">// 可选控制层审计导出</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-control-plane-spring-boot-starter"</span>)  <span class="c">// 可选内置控制面聚合包</span>
+
+    <span class="c">// 或者按需选择拆分 endpoint starter：</span>
+    <span class="c">// implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")</span>
+    <span class="c">// implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")</span>
+    <span class="c">// implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")</span>
+    <span class="c">// implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")</span>
+    <span class="c">// implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")</span>
+    <span class="c">// implementation("com.actiongraph:actiongraph-console-export-spring-boot-starter")</span>
 }</code></pre>
 <p>基础 starter 引入后无需任何注解开关，自动装配以下 Bean（全部 <code>@ConditionalOnMissingBean</code>，你随时可以用自己的 <code>@Bean</code> 覆盖）：<code>Planner</code>、<code>GoapExecutor</code>、<code>ActionRegistry</code>、<code>ExecutionPolicyGuard</code>、<code>HumanReviewPolicy</code>、<code>TraceRepository</code>、<code>SuspendedRunRepository</code> 等。<code>MemoryContextLoader</code>、仓储型审批、JDBC 仓储和控制台端点都由对应可选 starter 显式提供。</p>
 

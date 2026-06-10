@@ -41,6 +41,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-console-export-spring-boot-starter` | `com.actiongraph:actiongraph-console-export-spring-boot-starter:0.1.0` | Optional Spring MVC Console CSV/JSONL audit export endpoints |
 | `actiongraph-console-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-console-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC Console repository auto-configuration |
 | `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Compatibility aggregate for the Console API and UI starters |
+| `actiongraph-control-plane-spring-boot-starter` | `com.actiongraph:actiongraph-control-plane-spring-boot-starter:0.1.0` | Optional aggregate for runtime, human-review, callback, and Console endpoint starters |
 
 `actiongraph-samples` remains an application/sample module and is intentionally not published.
 
@@ -270,6 +271,12 @@ Existing applications can keep using the compatibility aggregate when they want 
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
+```
+
+Full built-in Spring MVC control-plane endpoints add:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
 ```
 
 ## Private Repository Publishing

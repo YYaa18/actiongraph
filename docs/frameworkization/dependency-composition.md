@@ -459,6 +459,19 @@ dependencies {
 
 `actiongraph-console-jdbc-spring-boot-starter` creates the `ConsoleRunRepository` bean from a `DataSource`. Keeping it separate lets Spring MVC control-plane services use a custom repository without pulling JDBC read-model code.
 
+## Spring MVC Control-Plane Aggregate
+
+Use this convenience coordinate when one Spring MVC deployment should expose the built-in runtime entry API, approval task API, approval callback receiver, Console JSON API, Console UI, and Console export endpoints together.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
+}
+```
+
+The aggregate brings only split endpoint starters. It does not create business runtime beans, interpreters, seeders, repositories, JDBC adapters, review storage, LLM clients, or governance policies. Each endpoint family still requires its own `actiongraph.*.enabled=true` switch and its own backing beans. Prefer the split endpoint starters when the deployment should expose only part of the built-in control plane.
+
 ## Full Pilot Service
 
 Use this for a single deployment that runs the business workflow, receives approval callbacks, persists state, interprets natural-language goals, and exposes the read-only Console.
@@ -475,12 +488,8 @@ dependencies {
     implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
 }
 ```
 

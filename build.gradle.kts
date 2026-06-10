@@ -41,7 +41,8 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-console-export-spring-boot-starter" to "Optional Spring MVC audit export endpoints for the ActionGraph console.",
     "actiongraph-console-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC console read model.",
     "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot repository-backed human-review policy support for ActionGraph.",
-    "actiongraph-console-spring-boot-starter" to "Compatibility aggregate starter for the ActionGraph console API and UI."
+    "actiongraph-console-spring-boot-starter" to "Compatibility aggregate starter for the ActionGraph console API and UI.",
+    "actiongraph-control-plane-spring-boot-starter" to "Optional aggregate starter for ActionGraph runtime, human-review, and console control-plane endpoints."
 )
 
 val publishableModuleDescriptions = mapOf(

@@ -36,6 +36,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional runtime API Spring Boot starter with goal interpretation, start, and resume endpoints
 - Optional human-review API Spring Boot starter with task query and decision endpoints
 - Optional human-review callback Spring Boot starter with approval callback endpoint support
+- Optional control-plane aggregate Spring Boot starter for runtime, human-review, callback, and console endpoints
 - Reusable console core service for read-only run monitoring
 - Optional JDBC adapter for the console query port
 - Reusable console export service for CSV and JSONL audit evidence
@@ -77,6 +78,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-human-review-spring-boot-starter` | Optional repository-backed review policy auto-configuration |
 | `actiongraph-human-review-api-spring-boot-starter` | Optional Spring MVC human-review task API endpoints |
 | `actiongraph-human-review-callback-spring-boot-starter` | Optional Spring MVC approval callback endpoint for external review systems |
+| `actiongraph-control-plane-spring-boot-starter` | Optional aggregate for runtime, human-review, callback, and console endpoint starters |
 | `actiongraph-console-core` | Reusable read-only console query service and response model |
 | `actiongraph-console-jdbc` | Optional JDBC adapter for the console query port |
 | `actiongraph-console-export` | Reusable CSV/JSONL audit export service over the Console query service |
@@ -104,13 +106,18 @@ dependencies {
     implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-governance-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-export-spring-boot-starter")
+
+    // Option A: full built-in control-plane endpoints in one aggregate.
+    implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
+
+    // Option B: choose split endpoint starters instead.
+    // implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
+    // implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
+    // implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
+    // implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
+    // implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
+    // implementation("com.actiongraph:actiongraph-console-export-spring-boot-starter")
 }
 ```
 
@@ -215,6 +222,8 @@ If `shared-secret` is configured, the request must include the configured token 
 
 `actiongraph-console-core` can be used directly by custom monitoring services that want the run query service, response model, and `ConsoleRunRepository` port without Spring MVC or JDBC coupling. Add `actiongraph-console-jdbc` when that custom service wants to read ActionGraph trace tables through JDBC. Add `actiongraph-console-export` when custom tools need CSV run summaries or CSV/JSONL trace evidence without exposing HTTP endpoints. Spring MVC control-plane services add `actiongraph-console-api-spring-boot-starter` for JSON endpoints, `actiongraph-console-ui-spring-boot-starter` for the built-in page, `actiongraph-console-export-spring-boot-starter` for audit export endpoints, or the compatibility `actiongraph-console-spring-boot-starter` when they want the legacy API+UI aggregate. Provide any `ConsoleRunRepository` bean, or add `actiongraph-console-jdbc-spring-boot-starter` when that repository should be auto-created from a `DataSource`. With `actiongraph.console.enabled=true`, the read-only surface is:
 
+If a single Spring MVC deployment should expose the built-in runtime entry, approval task, approval callback, and console endpoints together, add `actiongraph-control-plane-spring-boot-starter`. It is only an endpoint aggregate over the split starters; it still does not create runtime actions, interpreters, repositories, JDBC adapters, LLM clients, or governance policies.
+
 ```text
 UI starter:  GET /actiongraph/console
 API starter: GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
@@ -257,6 +266,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Real LLM smoke test](docs/frameworkization/llm-smoke.md)
 - [Human review integration](docs/frameworkization/human-review.md)
 - [Runtime API](docs/frameworkization/runtime-api.md)
+- [Control-plane starter](docs/frameworkization/control-plane-starter.md)
 - [Governance Spring Boot starter](docs/frameworkization/governance-spring-boot-starter.md)
 - [Claims precheck PostgreSQL mapping](docs/frameworkization/claims-precheck-postgresql.md)
 - [Claims precheck review callbacks](docs/frameworkization/claims-precheck-review-callbacks.md)
