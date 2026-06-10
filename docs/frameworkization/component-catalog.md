@@ -103,6 +103,7 @@ The catalog is part of the release contract, not only documentation. Tests verif
 - every catalog component uses one of the closed compatibility labels
 - every module listed as Java 8 compatible by the build passes the Java 8 bytecode and dependency guard
 - the documented Java 8 control-plane client example can be consumed from standalone `javac --release 8` source
+- the documented older-than-Java-8 raw HTTP gateway example can be consumed from standalone `javac --release 8` source with an empty classpath and no ActionGraph imports
 
 Adding a module therefore requires updating the catalog, assigning compatibility, and deciding whether the artifact belongs in the BOM.
 

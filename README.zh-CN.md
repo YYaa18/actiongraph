@@ -320,7 +320,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 - 285 个自动化测试通过。
 - 并发冒烟约 6000 runs/s；重复 resume 只产生一次业务副作用。
-- 41 个 Gradle 模块完成拆分。
+- Gradle 模块已按 core、control-plane、governance、human-review、memory、console、starter 与 samples 等边界拆分。
 - 3 个参考业务域完整跑通。
 - 支持模块发布到 Maven Local / 私服。
 - 支持 Spring Boot 注解式接入。
@@ -338,6 +338,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - [控制层响应契约](docs/frameworkization/control-plane-api.md)
 - [Java 8 老系统接入](docs/frameworkization/java8-legacy-integration.md)
 - [Java 8 老系统客户端示例](docs/examples/java8-legacy-client)
+- [Java 8 以前系统 Raw HTTP 网关示例](docs/examples/pre-java8-http-gateway)
 - [控制面聚合 Starter](docs/frameworkization/control-plane-starter.md)
 - [治理策略 Spring Boot Starter](docs/frameworkization/governance-spring-boot-starter.md)
 - [理赔预审 PostgreSQL 映射](docs/frameworkization/claims-precheck-postgresql.md)

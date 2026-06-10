@@ -21,6 +21,12 @@ CI also compiles the documented Java 8 consumer example with `javac --release 8`
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
 ```
 
+Systems older than Java 8 should not depend on this artifact. For those estates, the repository also provides a raw HTTP gateway example that imports no ActionGraph classes and is compiled in CI with `javac --release 8` and an empty classpath:
+
+```text
+docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java
+```
+
 ## Error Response
 
 All built-in JSON endpoints expose errors with this shape:
@@ -70,6 +76,8 @@ The client uses only `HttpURLConnection`. It sends:
 - `POST /runs/{runId}/resume`
 
 The response body is returned as raw JSON so Java 8 callers can parse it with their existing stack, or simply forward it through an enterprise gateway without adding a new JSON dependency.
+
+For Java 6/7 estates, copy the raw HTTP gateway example instead of introducing this jar. It uses the same request shape and token header while leaving JSON parsing, logging, retries, and network policy under the host system's existing stack. Modern CI toolchains no longer provide a reliable Java 6/7 target here, so those estates should run their own platform compiler check after copying the file.
 
 ## Shared-Secret Token Verification
 

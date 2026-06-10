@@ -46,6 +46,18 @@ docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionG
 
 The test suite compiles that exact file with `javac --release 8`, so the example is both documentation and compatibility evidence. It demonstrates runtime start calls, response handling, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
 
+## Older-Than-Java-8 HTTP Gateway Example
+
+Java 6/7 applications should not load ActionGraph jars in-process. They can still call the same deployed Runtime API over HTTP from an existing gateway, ESB adapter, batch job, or sidecar.
+
+A raw HTTP template lives at:
+
+```text
+docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java
+```
+
+The test suite compiles that exact file with `javac --release 8` and an empty classpath, then scans the source to keep ActionGraph imports and Java 8-only conveniences out of the template. It demonstrates the same `/interpret`, `/runs`, and `/runs/{runId}/resume` contract with shared-secret header forwarding. This is not a full Java 6/7 bootclasspath check because modern CI toolchains no longer provide reliable Java 6/7 targets; Java 6/7 estates should run their own platform compiler check after copying the file, or reuse the HTTP shape through an enterprise gateway, ESB, or Java 8+ sidecar.
+
 ## Machine-Readable Compatibility
 
 `actiongraph-component-catalog` now exposes a `compatibility` label for every public component. The built-in Spring catalog endpoint also supports filtering:
@@ -83,4 +95,4 @@ Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Com
 
 This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.
 
-The control-plane API tests also compile the documented Java 8 client example with `javac --release 8`. That source uses the runtime HTTP client, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. This catches public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code.
+The control-plane API tests also compile the documented Java 8 client example with `javac --release 8`. That source uses the runtime HTTP client, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, then scans for ActionGraph imports and Java 8-only conveniences. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.

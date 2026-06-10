@@ -17,26 +17,76 @@ class Java8ConsumerCompilationTest {
 
     @Test
     void publicApiCanBeCompiledByJava8ConsumerCode() throws Exception {
+        compileExample(
+                "8",
+                repositoryRoot().resolve(
+                        "docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java"),
+                mainClassesClasspath(),
+                "com/company/legacy/LegacyActionGraphClientUsage.class");
+    }
+
+    @Test
+    void rawHttpGatewayExampleCanBeCompiledWithoutActionGraphClasspath() throws Exception {
+        compileExample(
+                "8",
+                repositoryRoot().resolve(
+                        "docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java"),
+                emptyClasspath().toString(),
+                "com/company/legacygateway/RawHttpActionGraphGatewayUsage.class");
+    }
+
+    @Test
+    void rawHttpGatewayExampleDoesNotUseActionGraphOrJava8OnlyConveniences() throws Exception {
+        Path sourceFile = repositoryRoot().resolve(
+                "docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java");
+        String source = java.nio.file.Files.readString(sourceFile);
+
+        assertThat(source).doesNotContain("import com.actiongraph.");
+        assertThat(source).doesNotContain("->");
+        assertThat(source).doesNotContain("::");
+        assertThat(source).doesNotContain("java.util.function");
+        assertThat(source).doesNotContain("java.util.stream");
+        assertThat(source).doesNotContain("java.util.Optional");
+        assertThat(source).doesNotContain("java.time.");
+        assertThat(source).doesNotContain("java.nio.");
+        assertThat(source).doesNotContain("StandardCharsets");
+        assertThat(source).doesNotContain("Map.of(");
+        assertThat(source).doesNotContain("List.of(");
+    }
+
+    private void compileExample(String release, Path sourceFile, String classpath, String expectedClassFile) throws Exception {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         assertThat(compiler).as("JDK compiler must be available").isNotNull();
 
-        Path outputDir = tempDir.resolve("classes");
+        Path outputDir = tempDir.resolve("classes-" + release);
         java.nio.file.Files.createDirectories(outputDir);
-        Path sourceFile = repositoryRoot().resolve(
-                "docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java");
 
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         int exitCode = compiler.run(null, null, stderr,
-                "--release", "8",
+                "--release", release,
                 "-encoding", "UTF-8",
-                "-classpath", System.getProperty("java.class.path"),
+                "-classpath", classpath,
                 "-d", outputDir.toString(),
                 sourceFile.toString());
 
         assertThat(exitCode)
                 .as(new String(stderr.toByteArray(), StandardCharsets.UTF_8))
                 .isZero();
-        assertThat(outputDir.resolve("com/company/legacy/LegacyActionGraphClientUsage.class")).exists();
+        assertThat(outputDir.resolve(expectedClassFile)).exists();
+    }
+
+    private String mainClassesClasspath() throws Exception {
+        return Path.of(ControlPlaneHttpResponse.class.getProtectionDomain()
+                        .getCodeSource()
+                        .getLocation()
+                        .toURI())
+                .toString();
+    }
+
+    private Path emptyClasspath() throws Exception {
+        Path empty = tempDir.resolve("empty-classpath");
+        java.nio.file.Files.createDirectories(empty);
+        return empty;
     }
 
     private Path repositoryRoot() {
