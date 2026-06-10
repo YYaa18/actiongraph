@@ -13,6 +13,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Human review with atomic suspend/resume claiming
 - Saga-style compensation for failed or denied runs
 - Trace, suspended-run, review-task, and memory repositories, including batched JDBC trace writes
+- Optional data masking for trace details/data and human-review previews
 - Spring Boot starter with annotation-driven Action registration
 - DeepSeek-compatible LLM goal interpretation
 - Reference samples for renewal quote and order cancellation flows
@@ -56,6 +57,8 @@ actiongraph:
     max-depth: 32
   executor:
     max-steps: 64
+  masking:
+    enabled: false
 ```
 
 ## Build And Test
@@ -76,3 +79,4 @@ Run the sample apps:
 - [Quick start guide](docs/quick-start.html)
 - [Framework notes](docs/frameworkization/)
 - [Original PRD](docs/PRD-v0.md)
+- [F0 financialization PRD](docs/PRD-F0-finance.md)

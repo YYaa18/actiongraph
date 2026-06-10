@@ -91,6 +91,8 @@ Suspended run repository:
 - suspension message
 - resume status and claim timestamp
 
+Suspended-run Blackboard snapshots are intentionally not masked. They are recovery state, not a human-readable audit surface, so masking them would make `resume` lossy. Treat the suspended-run table as highly sensitive runtime state: only the runtime service account should read or write it.
+
 Human review repository:
 
 - run id
@@ -119,6 +121,8 @@ On resume, the executor atomically claims the suspended run before restoring the
 ## Serialization Boundary
 
 Blackboard objects are serialized with Jackson using their concrete runtime class names and Blackboard key ids. This keeps the core runtime free of persistence concerns, but it means persisted domain objects should be Jackson-serializable and class names must remain stable across deployment versions.
+
+`DataMaskingPolicy` masks trace detail/data and human-review previews before they reach JDBC repositories. It does not mask suspended-run snapshots.
 
 For schema or package migrations, introduce an application-level migration step before calling `resume`.
 

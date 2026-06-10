@@ -8,13 +8,16 @@ import com.actiongraph.memory.MemoryContextLoader;
 import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.planning.Planner;
+import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.DefaultPermissionPolicy;
 import com.actiongraph.policy.DefaultPolicyGuard;
 import com.actiongraph.policy.ExecutionPolicyGuard;
 import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.policy.InMemoryHumanReviewRepository;
+import com.actiongraph.policy.NoopMaskingPolicy;
 import com.actiongraph.policy.PermissionPolicy;
+import com.actiongraph.policy.RegexMaskingPolicy;
 import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.GoapExecutor;
@@ -90,6 +93,18 @@ public class ActionGraphAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
+    public DataMaskingPolicy actionGraphDataMaskingPolicy(ActionGraphProperties properties) {
+        if (!properties.getMasking().isEnabled()) {
+            return NoopMaskingPolicy.INSTANCE;
+        }
+        return RegexMaskingPolicy.builder()
+                .addFinancialDefaults()
+                .addBlockedKeys(properties.getMasking().getBlockedKeys())
+                .build();
+    }
+
+    @Bean
     @ConditionalOnMissingBean(Executor.class)
     public GoapExecutor actionGraphExecutor(
             Planner planner,
@@ -97,16 +112,18 @@ public class ActionGraphAutoConfiguration {
             HumanReviewPolicy humanReviewPolicy,
             TraceRepository traceRepository,
             SuspendedRunRepository suspendedRunRepository,
+            DataMaskingPolicy maskingPolicy,
             ActionGraphProperties properties
     ) {
-        return new GoapExecutor(
-                planner,
-                policyGuard,
-                humanReviewPolicy,
-                traceRepository,
-                suspendedRunRepository,
-                properties.getExecutor().getMaxSteps()
-        );
+        return GoapExecutor.builder()
+                .planner(planner)
+                .policyGuard(policyGuard)
+                .humanReviewPolicy(humanReviewPolicy)
+                .traceRepository(traceRepository)
+                .suspendedRunRepository(suspendedRunRepository)
+                .maskingPolicy(maskingPolicy)
+                .maxSteps(properties.getExecutor().getMaxSteps())
+                .build();
     }
 
     @Bean

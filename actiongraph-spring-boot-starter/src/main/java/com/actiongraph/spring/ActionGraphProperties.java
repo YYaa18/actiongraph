@@ -5,7 +5,9 @@ import com.actiongraph.runtime.GoapExecutor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @ConfigurationProperties(prefix = "actiongraph")
 public class ActionGraphProperties {
@@ -13,6 +15,7 @@ public class ActionGraphProperties {
     private final ExecutorProperties executor = new ExecutorProperties();
     private final ActionsProperties actions = new ActionsProperties();
     private final PersistenceProperties persistence = new PersistenceProperties();
+    private final MaskingProperties masking = new MaskingProperties();
 
     public PlannerProperties getPlanner() {
         return planner;
@@ -28,6 +31,10 @@ public class ActionGraphProperties {
 
     public PersistenceProperties getPersistence() {
         return persistence;
+    }
+
+    public MaskingProperties getMasking() {
+        return masking;
     }
 
     public static final class PlannerProperties {
@@ -88,6 +95,27 @@ public class ActionGraphProperties {
                 throw new IllegalArgumentException("suspendedRunClaimTimeout must be positive");
             }
             this.suspendedRunClaimTimeout = value;
+        }
+    }
+
+    public static final class MaskingProperties {
+        private boolean enabled = false;
+        private Set<String> blockedKeys = new LinkedHashSet<>();
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public Set<String> getBlockedKeys() {
+            return blockedKeys;
+        }
+
+        public void setBlockedKeys(Set<String> blockedKeys) {
+            this.blockedKeys = blockedKeys == null ? new LinkedHashSet<>() : new LinkedHashSet<>(blockedKeys);
         }
     }
 }

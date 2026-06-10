@@ -138,6 +138,7 @@
   <a href="#step4" class="sub">④ 接入 LLM 解释器</a>
   <a href="#step5" class="sub">⑤ 运行与处理结果</a>
   <a href="#review">人工审批与挂起恢复</a>
+  <a href="#masking">敏感数据脱敏</a>
   <a href="#persistence">持久化（生产必读）</a>
   <a href="#config">配置项</a>
   <a href="#design">Action 设计规范</a>
@@ -360,6 +361,17 @@ RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pr
   resume 会先从 <code>SuspendedRunRepository</code> 原子认领挂起快照；同一个 <code>runId</code> 被重复回调或多实例并发消费时，只有一个恢复流程能继续执行业务动作。resume 后若执行失败，<b>挂起之前已成功的动作同样会被逆序补偿</b> —— 补偿链跨挂起边界完整。审批拒绝（DENIED）同样触发补偿，不会留下孤儿草稿。
 </div>
 
+<h2 id="masking">敏感数据脱敏</h2>
+<p>金融场景建议开启默认正则脱敏。它只作用于两个人类可读面：<code>TraceEvent.detail/data</code> 与 <code>HumanReviewRequest.blackboardPreview</code>；<code>SuspendedRun</code> 的 Blackboard 快照不会脱敏，确保 resume 可无损恢复。</p>
+<pre><code>actiongraph:
+  masking:
+    enabled: true
+    blocked-keys:
+      - idCard
+      - cardNo
+      - customerName</code></pre>
+<p>默认规则覆盖身份证、银行卡、手机号、邮箱；<code>blocked-keys</code> 命中的字段会整体替换为 <code>***</code>。如果需要对接行内统一脱敏服务，直接提供自己的 <code>DataMaskingPolicy</code> Bean 即可覆盖默认实现。</p>
+
 <h2 id="persistence">持久化（生产必读）</h2>
 <p>默认仓储全部是内存实现，<b>重启即丢</b>，仅适合开发联调。生产环境用四个 <code>@Bean</code> 覆盖为 JDBC 实现：</p>
 <pre><code><span class="a">@Configuration</span>
@@ -385,7 +397,7 @@ RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pr
 }</code></pre>
 <div class="card callout danger">
   <div class="title">安全边界</div>
-  挂起快照按类名 + JSON 恢复 Blackboard 对象，<b>挂起表必须视为可信输入</b>：严格控制该库表的写权限，不要与低信任系统共库。
+  挂起快照按类名 + JSON 恢复 Blackboard 对象，且为了无损 resume 不做脱敏。<b>挂起表必须视为高敏可信输入</b>：仅 runtime 服务账号可读写，严格控制库表权限，不要与低信任系统共库。
 </div>
 
 <h2 id="config">配置项</h2>
@@ -395,6 +407,8 @@ RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pr
   <tr><td><code>actiongraph.planner.max-expansions</code></td><td>10000</td><td>规划搜索最大展开数（防爆）</td></tr>
   <tr><td><code>actiongraph.executor.max-steps</code></td><td>64</td><td>单次运行最大执行步数</td></tr>
   <tr><td><code>actiongraph.actions.auto-register-annotated</code></td><td>true</td><td>是否自动扫描注解 Bean 注册 Action</td></tr>
+  <tr><td><code>actiongraph.masking.enabled</code></td><td>false</td><td>是否启用默认金融正则脱敏（Trace 与审批预览）</td></tr>
+  <tr><td><code>actiongraph.masking.blocked-keys</code></td><td>空</td><td>命中字段名时整体脱敏为 <code>***</code></td></tr>
   <tr><td><code>actiongraph.persistence.suspended-run-claim-timeout</code></td><td>15m</td><td>JDBC resume 认领后进程崩溃时，RESUMING 快照多久后可被重新认领</td></tr>
 </table>
 

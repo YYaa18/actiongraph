@@ -12,11 +12,13 @@ import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.planning.Plan;
 import com.actiongraph.planning.Planner;
 import com.actiongraph.policy.DefaultPolicyGuard;
+import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.ExecutionPolicyGuard;
 import com.actiongraph.policy.HumanReviewDecision;
 import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRequest;
 import com.actiongraph.policy.HumanReviewResult;
+import com.actiongraph.policy.NoopMaskingPolicy;
 import com.actiongraph.policy.PendingHumanReviewPolicy;
 import com.actiongraph.policy.PolicyDecision;
 import com.actiongraph.trace.InMemoryTraceRepository;
@@ -48,6 +50,7 @@ public final class GoapExecutor implements Executor {
     private final HumanReviewPolicy humanReviewPolicy;
     private final TraceRepository traceRepository;
     private final SuspendedRunRepository suspendedRunRepository;
+    private final DataMaskingPolicy maskingPolicy;
     private final int maxSteps;
 
     public GoapExecutor() {
@@ -98,6 +101,19 @@ public final class GoapExecutor implements Executor {
             SuspendedRunRepository suspendedRunRepository,
             int maxSteps
     ) {
+        this(planner, policyGuard, humanReviewPolicy, traceRepository, suspendedRunRepository,
+                NoopMaskingPolicy.INSTANCE, maxSteps);
+    }
+
+    private GoapExecutor(
+            Planner planner,
+            ExecutionPolicyGuard policyGuard,
+            HumanReviewPolicy humanReviewPolicy,
+            TraceRepository traceRepository,
+            SuspendedRunRepository suspendedRunRepository,
+            DataMaskingPolicy maskingPolicy,
+            int maxSteps
+    ) {
         if (maxSteps <= 0) {
             throw new IllegalArgumentException("maxSteps must be > 0");
         }
@@ -106,7 +122,12 @@ public final class GoapExecutor implements Executor {
         this.humanReviewPolicy = Objects.requireNonNull(humanReviewPolicy, "humanReviewPolicy");
         this.traceRepository = Objects.requireNonNull(traceRepository, "traceRepository");
         this.suspendedRunRepository = Objects.requireNonNull(suspendedRunRepository, "suspendedRunRepository");
+        this.maskingPolicy = Objects.requireNonNull(maskingPolicy, "maskingPolicy");
         this.maxSteps = maxSteps;
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public TraceRepository traceRepository() {
@@ -125,7 +146,7 @@ public final class GoapExecutor implements Executor {
         Objects.requireNonNull(registry, "registry");
 
         String runId = UUID.randomUUID().toString();
-        RunTrace trace = new RunTrace(traceRepository, runId);
+        RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy);
         trace.append(TraceEventType.RUN_STARTED, null, "Run started", Map.of(
                 "goal", goal.name(),
                 "targetConditions", conditionKeys(goal.targetConditions())
@@ -149,7 +170,7 @@ public final class GoapExecutor implements Executor {
 
         SuspendedRun suspendedRun = suspendedRunRepository.claimForResume(runId)
                 .orElseThrow(() -> new SuspendedRunNotClaimableException(runId));
-        RunTrace trace = new RunTrace(traceRepository, runId);
+        RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy);
         trace.append(TraceEventType.RUN_RESUMED, suspendedRun.pendingActionId(), "Run resumed", Map.of(
                 "pendingActionId", suspendedRun.pendingActionId().value()
         ));
@@ -315,7 +336,7 @@ public final class GoapExecutor implements Executor {
                         action.requiresHumanReview(),
                         plan,
                         state,
-                        objectPreview(blackboard.snapshotEntries())
+                        maskingPolicy.maskData(objectPreview(blackboard.snapshotEntries()))
                 ));
                 trace.append(TraceEventType.HUMAN_REVIEW_DECIDED, action.id(),
                         review.message(), Map.of(
@@ -492,13 +513,15 @@ public final class GoapExecutor implements Executor {
 
     private static final class RunTrace {
         private final TraceRepository repository;
+        private final DataMaskingPolicy maskingPolicy;
         private final String runId;
         private final List<TraceEvent> buffer = new ArrayList<>();
         private long seq;
 
-        private RunTrace(TraceRepository repository, String runId) {
+        private RunTrace(TraceRepository repository, String runId, DataMaskingPolicy maskingPolicy) {
             this.repository = repository;
             this.runId = runId;
+            this.maskingPolicy = maskingPolicy;
             this.seq = repository.findByRun(runId).stream()
                     .mapToLong(TraceEvent::seq)
                     .max()
@@ -512,8 +535,8 @@ public final class GoapExecutor implements Executor {
                     Instant.now(),
                     type,
                     actionId == null ? null : actionId.value(),
-                    detail,
-                    data
+                    maskingPolicy.maskText(detail),
+                    maskingPolicy.maskData(data)
             ));
         }
 
@@ -523,6 +546,63 @@ public final class GoapExecutor implements Executor {
             }
             repository.appendAll(List.copyOf(buffer));
             buffer.clear();
+        }
+    }
+
+    public static final class Builder {
+        private Planner planner = new GoapPlanner();
+        private ExecutionPolicyGuard policyGuard = new DefaultPolicyGuard();
+        private HumanReviewPolicy humanReviewPolicy = new PendingHumanReviewPolicy();
+        private TraceRepository traceRepository = new InMemoryTraceRepository();
+        private SuspendedRunRepository suspendedRunRepository = new InMemorySuspendedRunRepository();
+        private DataMaskingPolicy maskingPolicy = NoopMaskingPolicy.INSTANCE;
+        private int maxSteps = DEFAULT_MAX_STEPS;
+
+        public Builder planner(Planner planner) {
+            this.planner = Objects.requireNonNull(planner, "planner");
+            return this;
+        }
+
+        public Builder policyGuard(ExecutionPolicyGuard policyGuard) {
+            this.policyGuard = Objects.requireNonNull(policyGuard, "policyGuard");
+            return this;
+        }
+
+        public Builder humanReviewPolicy(HumanReviewPolicy humanReviewPolicy) {
+            this.humanReviewPolicy = Objects.requireNonNull(humanReviewPolicy, "humanReviewPolicy");
+            return this;
+        }
+
+        public Builder traceRepository(TraceRepository traceRepository) {
+            this.traceRepository = Objects.requireNonNull(traceRepository, "traceRepository");
+            return this;
+        }
+
+        public Builder suspendedRunRepository(SuspendedRunRepository suspendedRunRepository) {
+            this.suspendedRunRepository = Objects.requireNonNull(suspendedRunRepository, "suspendedRunRepository");
+            return this;
+        }
+
+        public Builder maskingPolicy(DataMaskingPolicy maskingPolicy) {
+            this.maskingPolicy = Objects.requireNonNull(maskingPolicy, "maskingPolicy");
+            return this;
+        }
+
+        public Builder maxSteps(int maxSteps) {
+            this.maxSteps = maxSteps;
+            return this;
+        }
+
+        public GoapExecutor build() {
+            return new GoapExecutor(
+                    planner,
+                    policyGuard,
+                    humanReviewPolicy,
+                    traceRepository,
+                    suspendedRunRepository,
+                    maskingPolicy,
+                    maxSteps
+            );
         }
     }
 }

@@ -14,9 +14,11 @@ import com.actiongraph.memory.MemoryContextLoader;
 import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
+import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.policy.InMemoryHumanReviewRepository;
+import com.actiongraph.policy.NoopMaskingPolicy;
 import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.InMemoryBlackboard;
@@ -26,6 +28,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -156,6 +159,28 @@ class ActionGraphAutoConfigurationTest {
                 .run(context -> assertThat(context.getBean(ActionGraphProperties.class)
                         .getPersistence()
                         .getSuspendedRunClaimTimeout()).isEqualTo(Duration.ofMinutes(2)));
+    }
+
+    @Test
+    void createsNoopMaskingPolicyByDefault() {
+        contextRunner.run(context -> assertThat(context.getBean(DataMaskingPolicy.class))
+                .isInstanceOf(NoopMaskingPolicy.class));
+    }
+
+    @Test
+    void createsRegexMaskingPolicyWhenEnabled() {
+        contextRunner
+                .withPropertyValues(
+                        "actiongraph.masking.enabled=true",
+                        "actiongraph.masking.blocked-keys=customerName"
+                )
+                .run(context -> {
+                    DataMaskingPolicy policy = context.getBean(DataMaskingPolicy.class);
+
+                    assertThat(policy.maskText("13812345678")).isEqualTo("138****5678");
+                    assertThat(policy.maskData(Map.of("customerName", "张三")))
+                            .containsEntry("customerName", "***");
+                });
     }
 
     static final class AnnotatedWorkflow {
