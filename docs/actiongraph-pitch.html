@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ActionGraph 领导演示版</title>
+<title>ActionGraph 技术汇报版</title>
 <style>
   :root {
     --black: #05070b;
@@ -368,6 +368,24 @@
   .step b { display: block; color: var(--text); font-size: 1.06rem; margin-bottom: 8px; }
   .step span { color: var(--muted); line-height: 1.55; }
 
+  .pipeline.vertical {
+    grid-template-columns: 1fr;
+    margin-top: 0;
+  }
+
+  .pipeline.vertical .step {
+    min-height: 118px;
+  }
+
+  .pipeline.vertical .step::after {
+    top: auto;
+    right: auto;
+    bottom: -13px;
+    left: 28px;
+    width: 2px;
+    height: 13px;
+  }
+
   .console {
     min-height: 470px;
     border: 1px solid rgba(54,216,255,0.36);
@@ -394,7 +412,16 @@
     font-family: "SFMono-Regular", Consolas, monospace;
     font-size: 0.92rem;
     line-height: 1.85;
+    overflow-wrap: anywhere;
   }
+
+  .console.compact .console-body {
+    font-size: 0.78rem;
+    line-height: 1.58;
+  }
+
+  .console.short { min-height: 350px; }
+  .console.tall { min-height: 560px; }
 
   .log-ok { color: var(--green); }
   .log-info { color: var(--cyan); }
@@ -418,6 +445,36 @@
 
   .audit b { display: block; color: var(--text); margin-bottom: 4px; }
   .audit span { color: var(--faint); font-size: 0.82rem; }
+
+  .result-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .result-row {
+    display: grid;
+    grid-template-columns: 148px 1fr;
+    gap: 16px;
+    align-items: start;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.045);
+    padding: 13px 15px;
+  }
+
+  .result-row b {
+    color: var(--cyan);
+    font-size: 0.84rem;
+  }
+
+  .result-row span {
+    color: #c8d4df;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
 
   table {
     width: 100%;
@@ -564,7 +621,7 @@
 <body>
 <div class="progress" id="progress"></div>
 <div class="topbar">
-  <div class="mini-title">ActionGraph / Executive Demo</div>
+  <div class="mini-title">ActionGraph / Technical Briefing</div>
   <div>Typed GOAP Framework · 2026</div>
 </div>
 
@@ -635,60 +692,91 @@
   </div>
 </section>
 
-<section class="slide" data-title="架构">
+<section class="slide" data-title="代码到图谱">
   <div class="content">
-    <div class="kicker">ActionGraph 的核心分工</div>
-    <h2><em>AI 理解目标</em>，图搜索决定路径，业务服务执行真实动作</h2>
-    <div class="pipeline">
-      <div class="step"><div class="step-num">01 INPUT</div><b>自然语言目标</b><span>“帮客户 C001 准备续约报价”</span></div>
-      <div class="step"><div class="step-num">02 INTERPRET</div><b>LLM Goal Interpreter</b><span>只抽取 goalType 和参数，不能生成计划</span></div>
-      <div class="step"><div class="step-num">03 PLAN</div><b>确定性 GOAP Planner</b><span>基于 precondition / effect 搜索 Action 图</span></div>
-      <div class="step"><div class="step-num">04 GOVERN</div><b>策略与人工审批</b><span>权限、租户、风险、人工 review 统一拦截</span></div>
-      <div class="step"><div class="step-num">05 EXECUTE</div><b>业务系统执行</b><span>调用已有 Java Service，失败按 Saga 补偿</span></div>
-    </div>
-    <div class="pill-row">
-      <span class="pill">每步执行后重新规划</span>
-      <span class="pill green">高风险动作自动挂起</span>
-      <span class="pill gold">runId / trace seq 跨恢复续接</span>
-      <span class="pill">Blackboard 类型化数据</span>
+    <div class="kicker">从已有 Java 方法变成可规划能力</div>
+    <h2>业务系统只暴露<em>可控 Action</em>，框架自动形成可搜索的执行图谱</h2>
+    <div class="layout-2">
+      <div class="console compact tall">
+        <div class="console-head"><span>OrderCancellationService.java</span><span>ORDINARY SPRING BEAN</span></div>
+        <div class="console-body">
+          <div><span class="log-info">@ActionGraphAction</span>(</div>
+          <div>&nbsp;&nbsp;id = "order.cancellation.request.draft",</div>
+          <div>&nbsp;&nbsp;preconditions = {</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"order:ORDER_LOADED",</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"order:CANCELLATION_ELIGIBLE"</div>
+          <div>&nbsp;&nbsp;},</div>
+          <div>&nbsp;&nbsp;effects = "order:CANCELLATION_DRAFT_CREATED",</div>
+          <div>&nbsp;&nbsp;riskLevel = RiskLevel.HIGH,</div>
+          <div>&nbsp;&nbsp;requiresHumanReview = true</div>
+          <div>)</div>
+          <div><span class="log-ok">public CancellationRequestDraft createDraft</span>(</div>
+          <div>&nbsp;&nbsp;OrderRecord order, CancellationEligibility eligibility) {</div>
+          <div>&nbsp;&nbsp;return cancellationService.createDraft(order.id());</div>
+          <div>}</div>
+          <br>
+          <div><span class="log-warn">@ActionGraphGuard</span>(actionId = "order.cancellation.request.draft")</div>
+          <div>boolean canDraft(CancellationEligibility e) { return e.allowed(); }</div>
+          <br>
+          <div><span class="log-warn">@ActionGraphCompensation</span>(actionId = "order.cancellation.request.draft")</div>
+          <div>void voidDraft(CancellationRequestDraft draft) { service.voidDraft(draft.requestId()); }</div>
+        </div>
+      </div>
+      <div>
+        <div class="pipeline vertical">
+          <div class="step"><div class="step-num">01 REGISTER</div><b>Spring 扫描注解</b><span>业务类不实现框架接口，starter 把 Bean 方法适配成 Action。</span></div>
+          <div class="step"><div class="step-num">02 SEARCH</div><b>Planner 只看条件图</b><span>preconditions/effects 决定路径，LLM 不能生成 Plan。</span></div>
+          <div class="step"><div class="step-num">03 EXECUTE</div><b>每步执行后重规划</b><span>guard、审批、失败补偿都发生在运行期。</span></div>
+        </div>
+        <div class="result-list">
+          <div class="result-row"><b>输入</b><span>Cancel order O100</span></div>
+          <div class="result-row"><b>目标条件</b><span>order:OPERATIONS_APPROVAL_REQUESTED</span></div>
+          <div class="result-row"><b>结果对象</b><span>OperationsApprovalRequest("OPS-APPROVAL-1", "CANCEL-1")</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="slide" data-title="现场效果">
+<section class="slide" data-title="运行日志">
   <div class="content">
-    <div class="kicker">现场演示效果</div>
-    <h2>从“点八个页面”到“说一句话”，但<em>每一步都可解释</em></h2>
+    <div class="kicker">续约报价演示：命令、过程、结果</div>
+    <h2>从自然语言到业务结果，Trace 直接展示<em>每一步发生了什么</em></h2>
     <div class="layout-2">
-      <div class="console">
-        <div class="console-head"><span>RUN / renewal-quote / C123</span><span>STATUS: COMPLETED</span></div>
+      <div class="console compact tall">
+        <div class="console-head"><span>stdout / renewal-quote / C123</span><span>STATUS: COMPLETED</span></div>
         <div class="console-body">
-          <div><span class="log-muted">user&gt;</span> 帮客户 C123 准备一份续约报价</div>
-          <div><span class="log-info">interpret</span> goalType=prepareRenewalQuote parameters={customerId=C123}</div>
-          <div><span class="log-info">plan</span> contract.current.query → customer.profile.query → eligibility.check</div>
-          <div><span class="log-info">plan</span> quote.draft.create → sales.approval.request</div>
-          <div><span class="log-ok">execute</span> contract.current.query OK</div>
-          <div><span class="log-ok">execute</span> quote.draft.create OK / QUOTE-1</div>
-          <div><span class="log-warn">review</span> human approval required before sales.approval.request</div>
-          <div><span class="log-ok">resume</span> approved → sales.approval.request OK / APPROVAL-1</div>
-          <div><span class="log-ok">audit</span> 30 trace events persisted, compensation stack sealed</div>
+          <div><span class="log-muted">$</span> ./gradlew :actiongraph-samples:run \</div>
+          <div>&nbsp;&nbsp;--args="--approve-human-review 帮客户 C123 准备一份续约报价"</div>
+          <br>
+          <div><span class="log-muted">input=</span>帮客户 C123 准备一份续约报价</div>
+          <div><span class="log-info">goalType=</span>prepareRenewalQuote</div>
+          <div><span class="log-info">parameters=</span>{customerId=C123}</div>
+          <div><span class="log-info">Plan:</span> contract.current.query -> customer.profile.query -> renewal.eligibility.check -> quote.draft.create -> sales.approval.request</div>
+          <div><span class="log-ok">status=</span>COMPLETED</div>
+          <div><span class="log-ok">executedActions=</span>[contract.current.query, customer.profile.query, renewal.eligibility.check, quote.draft.create, sales.approval.request]</div>
+          <div><span class="log-ok">finalConditions=</span>[renewal:SALES_APPROVAL_REQUESTED, renewal:CURRENT_CONTRACT_LOADED, renewal:CUSTOMER_PROFILE_LOADED, renewal:RENEWAL_ELIGIBILITY_CHECKED, renewal:CUSTOMER_ID_PRESENT, renewal:QUOTE_DRAFT_CREATED]</div>
+          <div><span class="log-ok">Result:</span> renewal quote prepared and approval requested: ApprovalRequest[approvalId=APPROVAL-1, quoteId=QUOTE-1]</div>
+          <div><span class="log-ok">traceEvents=</span>30</div>
         </div>
       </div>
       <div>
         <div class="panel ok">
-          <h3>领导能看到什么</h3>
-          <p>不是“AI 黑盒说它做完了”，而是完整计划、每步状态、审批卡点、审计证据和最终业务结果。</p>
+          <h3>最终业务结果</h3>
+          <p>不是“AI 说它完成了”，而是 Blackboard 中真实产生了审批申请对象，Trace 中能回放从目标解释到审批完成的全链路。</p>
         </div>
         <div class="audit-strip">
-          <div class="audit"><b>Goal</b><span>用户原话</span></div>
-          <div class="audit"><b>Plan</b><span>确定路径</span></div>
+          <div class="audit"><b>Goal</b><span>用户原话保留</span></div>
+          <div class="audit"><b>Plan</b><span>每步重新生成</span></div>
           <div class="audit"><b>Guard</b><span>运行时校验</span></div>
-          <div class="audit"><b>Review</b><span>人工审批</span></div>
-          <div class="audit"><b>Trace</b><span>全链可回放</span></div>
+          <div class="audit"><b>Review</b><span>高风险动作审批</span></div>
+          <div class="audit"><b>Trace</b><span>seq 连续可回放</span></div>
         </div>
-        <div class="panel" style="margin-top:16px;">
-          <h3>一句话演示口径</h3>
-          <p>ActionGraph 把“AI 想做什么”和“系统允许做什么”彻底分离：AI 负责理解，框架负责约束，业务系统负责裁决。</p>
+        <div class="result-list">
+          <div class="result-row"><b>RunStatus</b><span>COMPLETED</span></div>
+          <div class="result-row"><b>Output</b><span>ApprovalRequest[approvalId=APPROVAL-1, quoteId=QUOTE-1]</span></div>
+          <div class="result-row"><b>Trace 摘录</b><span>RUN_STARTED -> PLAN_GENERATED -> ACTION_SUCCEEDED -> HUMAN_REVIEW_DECIDED -> RUN_ENDED</span></div>
+          <div class="result-row"><b>Safety</b><span>LLM 没有生成计划，执行路径由条件图搜索得到。</span></div>
         </div>
       </div>
     </div>
@@ -697,15 +785,38 @@
 
 <section class="slide" data-title="安全">
   <div class="content">
-    <div class="kicker">生产级安全边界</div>
-    <h2>五道闸门，解决领导最担心的<em>失控、越权、说不清</em></h2>
-    <div class="layout-3">
-      <div class="panel"><h3>Action 白名单</h3><p>只允许执行注册过的业务 Action。LLM 不能自由写 SQL、不能临时发明 API、不能跳过流程。</p></div>
-      <div class="panel"><h3>权限 / 租户策略</h3><p>统一策略层在执行前判定 subject、tenant、riskLevel。拒绝即终止并按需补偿。</p></div>
-      <div class="panel"><h3>人工审批挂起</h3><p>高风险动作自动进入 `SUSPENDED_PENDING_REVIEW`，审批后可从同一个 runId 恢复。</p></div>
-      <div class="panel"><h3>Saga 逆序补偿</h3><p>失败或拒绝后按已执行 Action 栈逆序撤销，草稿、审批单等副作用不留孤儿。</p></div>
-      <div class="panel"><h3>全链路审计</h3><p>PLAN_GENERATED、ACTION_STARTED、BLACKBOARD_UPDATED、COMPENSATED 等事件全部持久化。</p></div>
-      <div class="panel"><h3>LLM 降级不熔断入口</h3><p>LLM 失败可降级规则解释器；结构化输出畸形转澄清问题，而不是让业务流程崩溃。</p></div>
+    <div class="kicker">拒绝审批时：副作用如何收口</div>
+    <h2>高风险动作被拒绝后，框架按补偿栈<em>逆序撤销已完成动作</em></h2>
+    <div class="layout-2">
+      <div class="console compact short">
+        <div class="console-head"><span>stdout / renewal-quote / denied-review</span><span>STATUS: DENIED_BY_POLICY</span></div>
+        <div class="console-body">
+          <div><span class="log-muted">$</span> ./gradlew :actiongraph-samples:run \</div>
+          <div>&nbsp;&nbsp;--args="--deny-human-review 帮客户 C123 准备一份续约报价"</div>
+          <div><span class="log-info">Plan:</span> contract.current.query -> customer.profile.query -> renewal.eligibility.check -> quote.draft.create -> sales.approval.request</div>
+          <div><span class="log-warn">status=</span>DENIED_BY_POLICY</div>
+          <div><span class="log-warn">executedActions=</span>[contract.current.query, customer.profile.query, renewal.eligibility.check, quote.draft.create]</div>
+          <div><span class="log-warn">Result:</span> denied by policy. Human review denied sales.approval.request</div>
+          <div><span class="log-ok">traceEvents=</span>31</div>
+        </div>
+      </div>
+      <div>
+        <div class="result-list" style="margin-top:0;">
+          <div class="result-row"><b>Trace 证据</b><span>POLICY_DENIED -> COMPENSATED quote.draft.create -> RUN_ENDED</span></div>
+          <div class="result-row"><b>测试断言</b><span>quoteService.voidedQuoteIds() containsExactly("QUOTE-1")</span></div>
+          <div class="result-row"><b>语义边界</b><span>SUSPENDED_PENDING_REVIEW 不补偿；DENIED_BY_POLICY 是终态，触发补偿。</span></div>
+        </div>
+        <div class="layout-3" style="grid-template-columns:1fr; margin-top:16px;">
+          <div class="panel"><h3>Action 白名单</h3><p>只允许执行注册过的业务 Action。LLM 不能自由写 SQL、不能临时发明 API、不能跳过流程。</p></div>
+          <div class="panel"><h3>权限 / 租户策略</h3><p>统一策略层在执行前判定 subject、tenant、riskLevel。拒绝即终止并触发补偿。</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="pill-row">
+      <span class="pill">挂起不补偿</span>
+      <span class="pill green">拒绝才补偿</span>
+      <span class="pill gold">补偿失败升级为 FAILED_COMPENSATION_INCOMPLETE</span>
+      <span class="pill">runId / trace seq 跨恢复续接</span>
     </div>
   </div>
 </section>
@@ -737,25 +848,49 @@
     <div class="kicker">业务团队的真实成本</div>
     <h2>接入不是重构系统，而是给已有 Service 方法<em>加一层 ActionGraph 注解</em></h2>
     <div class="layout-2">
-      <div class="console">
-        <div class="console-head"><span>Spring Bean Adapter</span><span>NO INTERFACE IMPLEMENTATION</span></div>
+      <div class="console compact tall">
+        <div class="console-head"><span>RenewalQuoteService.java</span><span>ANNOTATION SPI</span></div>
         <div class="console-body">
           <div><span class="log-info">@ActionGraphAction</span>(</div>
-          <div>&nbsp;&nbsp;id = "order.lookup",</div>
-          <div>&nbsp;&nbsp;preconditions = "order:ORDER_ID_PRESENT",</div>
-          <div>&nbsp;&nbsp;effects = "order:ORDER_LOADED"</div>
+          <div>&nbsp;&nbsp;id = "quote.draft.create",</div>
+          <div>&nbsp;&nbsp;preconditions = {</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"renewal:CUSTOMER_PROFILE_LOADED",</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"renewal:CONTRACT_LOADED",</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;"renewal:ELIGIBLE"</div>
+          <div>&nbsp;&nbsp;},</div>
+          <div>&nbsp;&nbsp;effects = "renewal:QUOTE_DRAFT_CREATED"</div>
           <div>)</div>
-          <div><span class="log-ok">public OrderRecord lookup(OrderId id)</span> {</div>
-          <div>&nbsp;&nbsp;return orderService.find(id);</div>
+          <div><span class="log-ok">public QuoteDraft createDraft</span>(CustomerProfile profile, CurrentContract contract) {</div>
+          <div>&nbsp;&nbsp;return quoteService.createDraft(profile.customerId(), contract.contractId());</div>
           <div>}</div>
           <br>
-          <div><span class="log-warn">@ActionGraphGuard</span> 和 <span class="log-warn">@ActionGraphCompensation</span> 可选补充</div>
+          <div><span class="log-warn">@ActionGraphGuard</span>(actionId = "quote.draft.create")</div>
+          <div>boolean policyAllows(RenewalEligibility eligibility) {</div>
+          <div>&nbsp;&nbsp;return eligibility.eligible() && !eligibility.requiresExceptionApproval();</div>
+          <div>}</div>
+          <br>
+          <div><span class="log-warn">@ActionGraphCompensation</span>(actionId = "quote.draft.create")</div>
+          <div>void compensate(QuoteDraft draft) { quoteService.voidDraft(draft.quoteId()); }</div>
         </div>
       </div>
-      <div class="layout-3" style="grid-template-columns:1fr;">
-        <div class="panel ok"><div class="metric green">0.5 天</div><p>首条业务链路半天级接入，参考域已验证。</p></div>
-        <div class="panel"><div class="metric cyan">0 行</div><p>业务规则迁移。现有 Service 保持最终裁决权。</p></div>
-        <div class="panel warn"><div class="metric gold">1 套</div><p>全公司统一的规划、审批、补偿、审计标准。</p></div>
+      <div>
+        <div class="console compact short">
+          <div class="console-head"><span>Spring startup</span><span>AUTO REGISTRATION</span></div>
+          <div class="console-body">
+            <div><span class="log-ok">registered</span> quote.draft.create</div>
+            <div><span class="log-ok">guard</span> quote.draft.create -> policyAllows</div>
+            <div><span class="log-ok">compensation</span> quote.draft.create -> compensate</div>
+            <div><span class="log-info">input types</span> CustomerProfile, CurrentContract</div>
+            <div><span class="log-info">output type</span> QuoteDraft</div>
+            <div><span class="log-info">conditions</span> renewal:* namespace accepted</div>
+          </div>
+        </div>
+        <div class="result-list">
+          <div class="result-row"><b>业务侵入</b><span>不实现 Action 接口；普通 Spring Bean 方法加注解即可。</span></div>
+          <div class="result-row"><b>规则归属</b><span>业务 Service 继续拥有最终裁决权，框架只编排和审计。</span></div>
+          <div class="result-row"><b>失败处理</b><span>写入类 Action 声明 compensation 后自动进入 Saga 栈。</span></div>
+          <div class="result-row"><b>接入结果</b><span>续约报价、订单取消两个领域已用同一套 SPI 接入。</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -765,10 +900,24 @@
   <div class="content">
     <div class="kicker">不是概念稿，是已跑通的工程底座</div>
     <h2>当前成熟度：<em>完整骨架 + 双参考域 + 可发布模块</em></h2>
-    <div class="layout-3">
-      <div class="panel ok"><div class="metric green">83</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、Spring starter。</p></div>
-      <div class="panel ok"><div class="metric green">5</div><h3>工程模块</h3><p>core / llm-deepseek / persistence-jdbc / spring-boot-starter / samples，可发内部 Maven。</p></div>
-      <div class="panel ok"><div class="metric green">2</div><h3>参考业务域</h3><p>续约报价、订单取消两个不同领域接入，证明核心可复用。</p></div>
+    <div class="layout-2">
+      <div class="console compact short">
+        <div class="console-head"><span>verification</span><span>LOCAL BUILD</span></div>
+        <div class="console-body">
+          <div><span class="log-muted">$</span> ./gradlew build --rerun-tasks</div>
+          <div><span class="log-ok">actiongraph-core:test</span> 21 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-llm-deepseek:test</span> 8 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-persistence-jdbc:test</span> 10 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-spring-boot-starter:test</span> 8 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-samples:test</span> 36 tests, 1 gated smoke skipped</div>
+          <div><span class="log-ok">BUILD SUCCESSFUL</span> 83 tests, 0 failures, 1 skipped</div>
+        </div>
+      </div>
+      <div class="layout-3" style="grid-template-columns:1fr;">
+        <div class="panel ok"><div class="metric green">83</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、Spring starter。</p></div>
+        <div class="panel ok"><div class="metric green">5</div><h3>工程模块</h3><p>core / llm-deepseek / persistence-jdbc / spring-boot-starter / samples，可发内部 Maven。</p></div>
+        <div class="panel ok"><div class="metric green">2</div><h3>参考业务域</h3><p>续约报价、订单取消两个不同领域接入，证明核心可复用。</p></div>
+      </div>
     </div>
     <div class="pill-row">
       <span class="pill green">类型化 GOAP Planner</span>
@@ -780,7 +929,7 @@
       <span class="pill green">Spring Boot Starter</span>
       <span class="pill green">注解式接入</span>
     </div>
-    <div class="quote" style="margin-top:30px;">关键验证：第二个业务域接入时没有改动框架核心一行代码。可复用性不是口号，是事实。</div>
+    <div class="quote" style="margin-top:30px;">关键验证：第二个业务域接入时没有改动框架核心领域逻辑。同一套 runtime 支撑续约报价和订单取消，复用性已有工程证据。</div>
   </div>
 </section>
 
