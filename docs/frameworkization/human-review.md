@@ -103,7 +103,8 @@ Set `actiongraph.human-review.risk-based-approval-chain=true` to use `RiskBasedC
 Spring MVC applications can add the optional callback starter to expose an approval callback endpoint without writing a controller:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0")
+implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
 ```
 
 ```yaml

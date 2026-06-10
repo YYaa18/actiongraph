@@ -6,22 +6,25 @@ The runtime is split into publishable library modules plus a non-published actio
 
 | Module | Artifact | Purpose |
 |---|---|---|
+| `actiongraph-bom` | `com.actiongraph:actiongraph-bom:0.1.0` | BOM for aligning ActionGraph module versions |
 | `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, trace, and interpretation APIs |
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | DeepSeek-compatible LLM goal interpretation |
-| `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace and suspended-run repositories |
+| `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace, suspended-run, review-task, and memory repositories |
 | `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Spring Boot auto-configuration and annotation-driven action registration |
 | `actiongraph-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0` | Optional Spring MVC approval callback endpoint |
 | `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Optional read-only Console UI and Spring MVC query endpoints |
 
 `actiongraph-samples` remains an application/sample module and is intentionally not published.
 
-Each published module emits:
+Each published library module emits:
 
 - main jar
 - sources jar
 - javadoc jar
 - Maven POM
 - Gradle module metadata
+
+`actiongraph-bom` is a Java Platform publication. It emits a Maven BOM POM and Gradle module metadata, but no runtime jar.
 
 ## Local Verification
 
@@ -48,38 +51,40 @@ repositories {
 }
 
 dependencies {
-    implementation("com.actiongraph:actiongraph-spring-boot-starter:0.1.0")
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-spring-boot-starter")
 }
 ```
 
 Pure Java/non-Spring consumers can depend on:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-core:0.1.0")
+implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+implementation("com.actiongraph:actiongraph-core")
 ```
 
 LLM-backed goal interpretation adds:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-llm-deepseek:0.1.0")
+implementation("com.actiongraph:actiongraph-llm-deepseek")
 ```
 
 Durable trace and suspend/resume persistence adds:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-persistence-jdbc:0.1.0")
+implementation("com.actiongraph:actiongraph-persistence-jdbc")
 ```
 
 External approval callbacks add:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0")
+implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
 ```
 
 Read-only operational monitoring adds:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0")
+implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 ```
 
 ## Private Repository Publishing

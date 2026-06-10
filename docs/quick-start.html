@@ -179,6 +179,7 @@
 <h2 id="modules">模块与依赖</h2>
 <table>
   <tr><th>Maven 坐标（version 0.1.0）</th><th>内容</th><th>什么时候需要</th></tr>
+  <tr><td><code>com.actiongraph:actiongraph-bom</code></td><td>版本对齐 BOM</td><td><b>推荐先引入</b>，之后各组件无需重复写版本号</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-spring-boot-starter</code></td><td>自动装配 + 注解 Bean 扫描</td><td><b>业务执行型 Spring Boot 应用常用</b>，自带 core</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、审批、记忆</td><td>非 Spring 应用直接依赖它</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>DeepSeek 客户端 + GoalCatalog prompt 渲染</td><td>需要自然语言入口时</td></tr>
@@ -190,11 +191,13 @@
 <h2 id="step1"><span class="step-no">1</span>引入依赖</h2>
 <pre><code><span class="c">// build.gradle.kts</span>
 dependencies {
-    implementation(<span class="s">"com.actiongraph:actiongraph-spring-boot-starter:0.1.0"</span>)
-    implementation(<span class="s">"com.actiongraph:actiongraph-llm-deepseek:0.1.0"</span>)
-    implementation(<span class="s">"com.actiongraph:actiongraph-persistence-jdbc:0.1.0"</span>)  <span class="c">// 生产持久化</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0"</span>)  <span class="c">// 可选审批回调</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0"</span>)  <span class="c">// 可选控制层</span>
+    implementation(platform(<span class="s">"com.actiongraph:actiongraph-bom:0.1.0"</span>))
+
+    implementation(<span class="s">"com.actiongraph:actiongraph-spring-boot-starter"</span>)
+    implementation(<span class="s">"com.actiongraph:actiongraph-llm-deepseek"</span>)
+    implementation(<span class="s">"com.actiongraph:actiongraph-persistence-jdbc"</span>)  <span class="c">// 生产持久化</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-boot-starter"</span>)  <span class="c">// 可选审批回调</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-console-spring-boot-starter"</span>)  <span class="c">// 可选控制层</span>
 }</code></pre>
 <p>starter 引入后无需任何注解开关，自动装配以下 Bean（全部 <code>@ConditionalOnMissingBean</code>，你随时可以用自己的 <code>@Bean</code> 覆盖）：<code>Planner</code>、<code>GoapExecutor</code>、<code>ActionRegistry</code>、<code>ExecutionPolicyGuard</code>、<code>HumanReviewPolicy</code>、<code>TraceRepository</code>、<code>SuspendedRunRepository</code>、<code>MemoryContextLoader</code> 等。</p>
 

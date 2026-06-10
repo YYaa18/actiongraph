@@ -31,6 +31,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 
 | Module | Purpose |
 |---|---|
+| `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
 | `actiongraph-core` | Core action, planning, runtime, policy, trace, memory, and interpretation APIs |
 | `actiongraph-llm-deepseek` | DeepSeek-compatible LLM client and GoalCatalog prompt support |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, human review, and memory |
@@ -43,12 +44,14 @@ It lets application teams expose ordinary business methods as typed Actions, the
 
 ```kotlin
 dependencies {
-    implementation("com.actiongraph:actiongraph-spring-boot-starter:0.1.0")
-    implementation("com.actiongraph:actiongraph-llm-deepseek:0.1.0")
-    implementation("com.actiongraph:actiongraph-persistence-jdbc:0.1.0")
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+
+    implementation("com.actiongraph:actiongraph-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-llm-deepseek")
+    implementation("com.actiongraph:actiongraph-persistence-jdbc")
     // Optional ecosystem/control-plane components:
-    implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0")
-    implementation("com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0")
+    implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```
 
@@ -146,6 +149,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Claims precheck PostgreSQL mapping](docs/frameworkization/claims-precheck-postgresql.md)
 - [Claims precheck review callbacks](docs/frameworkization/claims-precheck-review-callbacks.md)
 - [Claims precheck read-only console](docs/frameworkization/claims-precheck-console.md)
+- [Dependency composition](docs/frameworkization/dependency-composition.md)
 - [Ecosystem modularity](docs/frameworkization/ecosystem-modularity.md)
 - [Framework notes](docs/frameworkization/)
 - [Original PRD](docs/PRD-v0.md)

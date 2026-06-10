@@ -6,6 +6,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 
 | Layer | Modules | Responsibility |
 |---|---|---|
+| Version platform | `actiongraph-bom` | Aligns all ActionGraph module versions for mix-and-match adoption |
 | Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace, memory, interpretation contracts |
 | Optional adapters | `actiongraph-spring-boot-starter`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Spring wiring, LLM goal interpretation, durable repositories |
 | Control-plane ecosystem | `actiongraph-human-review-spring-boot-starter`, `actiongraph-console-spring-boot-starter` | Approval callback endpoints, read-only operational Console UI and query endpoints |
@@ -13,6 +14,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 
 ## Composition Rules
 
+- Consumers should import `actiongraph-bom` first, then choose the modules they need without repeating versions.
 - A pure Java service can depend only on `actiongraph-core`.
 - A Spring Boot business service can depend on `actiongraph-spring-boot-starter` without exposing any HTTP control-plane endpoint.
 - Durable production runs add `actiongraph-persistence-jdbc`.
@@ -25,6 +27,8 @@ The Human Review starter depends on the core review repository contract instead 
 The Console starter depends on the JDBC read model instead of the runtime starter. This makes the control layer independently usable by a separate monitoring application that only has read access to the trace database.
 
 ## Boundary
+
+`actiongraph-bom` is a version alignment platform. It has no runtime code and must not introduce transitive application dependencies.
 
 `actiongraph-spring-boot-starter` is part of the public framework integration surface: it registers actions, runtime defaults, policies, and repositories.
 

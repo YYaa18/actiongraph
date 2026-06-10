@@ -6,7 +6,8 @@
 
 ```kotlin
 dependencies {
-    implementation("com.actiongraph:actiongraph-persistence-jdbc:0.1.0")
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-persistence-jdbc")
 }
 ```
 

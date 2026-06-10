@@ -1,6 +1,7 @@
 rootProject.name = "actiongraph"
 
 include("actiongraph-core")
+include("actiongraph-bom")
 include("actiongraph-llm-deepseek")
 include("actiongraph-persistence-jdbc")
 include("actiongraph-spring-boot-starter")
