@@ -76,8 +76,12 @@ Trace repository:
 - action id
 - detail
 - event data JSON
+- previous event hash
+- event hash
 
 `JdbcTraceRepository.appendAll(...)` writes trace events with JDBC batch execution. The executor buffers normal run events and flushes at terminal states; it also flushes before external human review, before suspension is saved, and before compensation begins so audit-critical boundaries are durable.
+
+Trace hashes are calculated in core before persistence, after `DataMaskingPolicy` has processed detail/data. The JDBC table stores `prev_hash` and `hash`; existing tables are migrated with nullable columns, and pre-F0 rows with empty hashes are reported invalid by `TraceChainVerifier` rather than backfilled.
 
 Suspended run repository:
 
@@ -132,6 +136,8 @@ The module tests cover:
 
 - trace events persisted and read back in sequence order
 - trace events persisted through batch append
+- trace hash columns persisted, read back, and used to detect tampering
+- legacy trace tables migrated with empty hashes treated as pre-F0 data
 - suspended run snapshots restored with Goal, Blackboard, executed actions, and compensation stack
 - suspended run resume claims succeeding only once
 - multiple same-type Blackboard values restored by key

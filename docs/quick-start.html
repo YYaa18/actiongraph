@@ -139,6 +139,7 @@
   <a href="#step5" class="sub">⑤ 运行与处理结果</a>
   <a href="#review">人工审批与挂起恢复</a>
   <a href="#masking">敏感数据脱敏</a>
+  <a href="#trace-chain">审计链防篡改</a>
   <a href="#persistence">持久化（生产必读）</a>
   <a href="#config">配置项</a>
   <a href="#design">Action 设计规范</a>
@@ -371,6 +372,17 @@ RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pr
       - cardNo
       - customerName</code></pre>
 <p>默认规则覆盖身份证、银行卡、手机号、邮箱；<code>blocked-keys</code> 命中的字段会整体替换为 <code>***</code>。如果需要对接行内统一脱敏服务，直接提供自己的 <code>DataMaskingPolicy</code> Bean 即可覆盖默认实现。</p>
+
+<h2 id="trace-chain">审计链防篡改</h2>
+<p>每条 <code>TraceEvent</code> 都会在写入前带上 <code>prevHash</code> 与 <code>hash</code>。哈希按 <code>runId</code> 隔离串链，计算对象是已经脱敏后的落库形态；因此监管或审计侧可以直接读取数据库里的 trace 重新计算并验证。</p>
+<pre><code>List&lt;TraceEvent&gt; events = traceRepository.findByRun(runId);
+TraceChainVerifier.ChainVerification verification =
+        new TraceChainVerifier().verify(events);
+
+if (!verification.valid()) {
+    log.warn("trace broken at seq {}", verification.firstBrokenSeq());
+}</code></pre>
+<p>JDBC trace 表会自动创建或迁移 <code>prev_hash</code> / <code>hash</code> 两列。旧版本无哈希历史行不会回填，验证器会明确报告为 pre-F0 数据。</p>
 
 <h2 id="persistence">持久化（生产必读）</h2>
 <p>默认仓储全部是内存实现，<b>重启即丢</b>，仅适合开发联调。生产环境用四个 <code>@Bean</code> 覆盖为 JDBC 实现：</p>

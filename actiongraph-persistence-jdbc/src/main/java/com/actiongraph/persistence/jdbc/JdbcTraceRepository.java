@@ -6,6 +6,7 @@ import com.actiongraph.trace.TraceRepository;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,6 +15,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public final class JdbcTraceRepository implements TraceRepository {
@@ -47,11 +49,15 @@ public final class JdbcTraceRepository implements TraceRepository {
                 + "action_id varchar(256),"
                 + "detail clob not null,"
                 + "data_json clob not null,"
+                + "prev_hash varchar(64),"
+                + "hash varchar(64),"
                 + "primary key (run_id, seq)"
                 + ")";
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
             statement.execute(sql);
+            ensureColumn(connection, "prev_hash", "varchar(64)");
+            ensureColumn(connection, "hash", "varchar(64)");
         } catch (SQLException ex) {
             throw new IllegalStateException("Cannot initialize trace repository schema", ex);
         }
@@ -70,7 +76,8 @@ public final class JdbcTraceRepository implements TraceRepository {
             return;
         }
         String sql = "insert into " + table
-                + " (run_id, seq, at, type, action_id, detail, data_json) values (?, ?, ?, ?, ?, ?, ?)";
+                + " (run_id, seq, at, type, action_id, detail, data_json, prev_hash, hash) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             for (TraceEvent event : events) {
@@ -81,6 +88,8 @@ public final class JdbcTraceRepository implements TraceRepository {
                 statement.setString(5, event.actionId());
                 statement.setString(6, event.detail());
                 statement.setString(7, codec.writeTraceData(event.data()));
+                statement.setString(8, event.prevHash());
+                statement.setString(9, event.hash());
                 statement.addBatch();
             }
             statement.executeBatch();
@@ -92,7 +101,7 @@ public final class JdbcTraceRepository implements TraceRepository {
     @Override
     public List<TraceEvent> findByRun(String runId) {
         Objects.requireNonNull(runId, "runId");
-        String sql = "select run_id, seq, at, type, action_id, detail, data_json from " + table
+        String sql = "select run_id, seq, at, type, action_id, detail, data_json, prev_hash, hash from " + table
                 + " where run_id = ? order by seq";
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -107,7 +116,9 @@ public final class JdbcTraceRepository implements TraceRepository {
                             TraceEventType.valueOf(resultSet.getString("type")),
                             resultSet.getString("action_id"),
                             resultSet.getString("detail"),
-                            codec.readTraceData(resultSet.getString("data_json"))
+                            codec.readTraceData(resultSet.getString("data_json")),
+                            resultSet.getString("prev_hash"),
+                            resultSet.getString("hash")
                     ));
                 }
                 return List.copyOf(events);
@@ -115,6 +126,35 @@ public final class JdbcTraceRepository implements TraceRepository {
         } catch (SQLException ex) {
             throw new IllegalStateException("Cannot find trace events for runId: " + runId, ex);
         }
+    }
+
+    private void ensureColumn(Connection connection, String column, String definition) throws SQLException {
+        if (columnExists(connection, column)) {
+            return;
+        }
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("alter table " + table + " add column " + column + " " + definition);
+        }
+    }
+
+    private boolean columnExists(Connection connection, String column) throws SQLException {
+        DatabaseMetaData metaData = connection.getMetaData();
+        String requested = column.toLowerCase(Locale.ROOT);
+        try (ResultSet resultSet = metaData.getColumns(null, null, table, null)) {
+            while (resultSet.next()) {
+                if (requested.equals(resultSet.getString("COLUMN_NAME").toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        try (ResultSet resultSet = metaData.getColumns(null, null, table.toUpperCase(Locale.ROOT), null)) {
+            while (resultSet.next()) {
+                if (requested.equals(resultSet.getString("COLUMN_NAME").toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     static String validateIdentifier(String identifier) {

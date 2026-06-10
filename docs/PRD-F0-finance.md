@@ -1,7 +1,7 @@
 # PRD — F0 内核金融化（脱敏 / 审计防篡改 / 多级审批 / 额度策略）
 
 > 交付对象：实现方（Codex）
-> 前置版本：当前 main（89 tests，5 模块，包根 `com.actiongraph`）
+> 前置版本：F0-1 完成后的 main（94 tests，5 模块，包根 `com.actiongraph`）
 > 战略依据：docs/finance-strategy.md
 > 状态：可直接实施
 
@@ -13,7 +13,7 @@
 
 > 敏感数据脱敏 ＋ 审计链防篡改 ＋ 多级审批链 ＋ 单笔额度策略。
 
-四项全部为 **additive 扩展**：现有 89 个测试必须全部保持绿色（允许因新增字段微调断言，不允许语义改变）。
+四项全部为 **additive 扩展**：现有测试必须全部保持绿色（允许因新增字段微调断言，不允许语义改变）。
 
 ---
 
@@ -217,7 +217,7 @@ actiongraph:
 
 ## 7. 验收标准（Definition of Done）
 
-1. **回归**：现有 89 个测试全绿（断言可因新增字段微调，语义不得变）。
+1. **回归**：现有测试全绿（断言可因新增字段微调，语义不得变）。
 2. **脱敏**：构造含身份证/卡号/手机号的 Blackboard 跑完整链 → JDBC trace 落库值与 `HumanReviewTask.blackboardPreview` 中**检索不到任何明文敏感串**；`SuspendedRun` 快照恢复后对象与原值完全一致（证明快照未被脱敏污染）。
 3. **防篡改**：完整运行后 `TraceChainVerifier.verify` 通过；手工 UPDATE 任一行 detail 后验证失败且 `firstBrokenSeq` 指向被改行；resume 跨越后链仍连续可验证。
 4. **多级审批**：HIGH 风险动作 → 任务两级；第一级 approve 后 run resume 仍 `SUSPENDED_PENDING_REVIEW`；第二级 approve 后 resume → `COMPLETED`；任一级 deny → `DENIED_BY_POLICY` 且补偿执行；同一级并发两次 decide，第二次抛 `StageAlreadyDecidedException`；`stageDecisions` 完整记录各级审批人。

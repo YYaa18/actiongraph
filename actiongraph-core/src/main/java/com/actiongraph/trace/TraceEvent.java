@@ -11,8 +11,22 @@ public record TraceEvent(
         TraceEventType type,
         String actionId,
         String detail,
-        Map<String, String> data
+        Map<String, String> data,
+        String prevHash,
+        String hash
 ) {
+    public TraceEvent(
+            String runId,
+            long seq,
+            Instant at,
+            TraceEventType type,
+            String actionId,
+            String detail,
+            Map<String, String> data
+    ) {
+        this(runId, seq, at, type, actionId, detail, data, "", "");
+    }
+
     public TraceEvent {
         if (runId == null || runId.isBlank()) {
             throw new IllegalArgumentException("runId must not be blank");
@@ -24,5 +38,7 @@ public record TraceEvent(
         type = Objects.requireNonNull(type, "type");
         detail = detail == null ? "" : detail;
         data = data == null ? Map.of() : Map.copyOf(data);
+        prevHash = prevHash == null ? "" : prevHash;
+        hash = hash == null ? "" : hash;
     }
 }

@@ -14,6 +14,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Saga-style compensation for failed or denied runs
 - Trace, suspended-run, review-task, and memory repositories, including batched JDBC trace writes
 - Optional data masking for trace details/data and human-review previews
+- Tamper-evident TraceEvent hash chains with verification support
 - Spring Boot starter with annotation-driven Action registration
 - DeepSeek-compatible LLM goal interpretation
 - Reference samples for renewal quote and order cancellation flows

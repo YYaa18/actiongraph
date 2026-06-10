@@ -24,6 +24,7 @@ import com.actiongraph.policy.PolicyDecision;
 import com.actiongraph.trace.InMemoryTraceRepository;
 import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceEventType;
+import com.actiongraph.trace.TraceHasher;
 import com.actiongraph.trace.TraceRepository;
 
 import java.time.Instant;
@@ -517,27 +518,53 @@ public final class GoapExecutor implements Executor {
         private final String runId;
         private final List<TraceEvent> buffer = new ArrayList<>();
         private long seq;
+        private String previousHash;
 
         private RunTrace(TraceRepository repository, String runId, DataMaskingPolicy maskingPolicy) {
             this.repository = repository;
             this.runId = runId;
             this.maskingPolicy = maskingPolicy;
-            this.seq = repository.findByRun(runId).stream()
+            List<TraceEvent> existingEvents = repository.findByRun(runId);
+            this.seq = existingEvents.stream()
                     .mapToLong(TraceEvent::seq)
                     .max()
                     .orElse(0);
+            this.previousHash = existingEvents.stream()
+                    .max(Comparator.comparingLong(TraceEvent::seq))
+                    .map(TraceEvent::hash)
+                    .filter(hash -> !hash.isBlank())
+                    .orElse("");
         }
 
         void append(TraceEventType type, ActionId actionId, String detail, Map<String, String> data) {
+            long nextSeq = ++seq;
+            Instant at = Instant.now();
+            String maskedDetail = maskingPolicy.maskText(detail);
+            Map<String, String> maskedData = maskingPolicy.maskData(data);
+            String actionIdValue = actionId == null ? null : actionId.value();
+            String prevHash = previousHash;
+            String hash = TraceHasher.hash(
+                    runId,
+                    nextSeq,
+                    at,
+                    type,
+                    actionIdValue,
+                    maskedDetail,
+                    maskedData,
+                    prevHash
+            );
             buffer.add(new TraceEvent(
                     runId,
-                    ++seq,
-                    Instant.now(),
+                    nextSeq,
+                    at,
                     type,
-                    actionId == null ? null : actionId.value(),
-                    maskingPolicy.maskText(detail),
-                    maskingPolicy.maskData(data)
+                    actionIdValue,
+                    maskedDetail,
+                    maskedData,
+                    prevHash,
+                    hash
             ));
+            previousHash = hash;
         }
 
         void flush() {

@@ -20,6 +20,7 @@ import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunStatus;
 import com.actiongraph.trace.TraceEvent;
+import com.actiongraph.trace.TraceChainVerifier;
 import com.actiongraph.trace.TraceEventType;
 import org.junit.jupiter.api.Test;
 
@@ -91,6 +92,7 @@ class JdbcExecutorPersistenceTest {
                         TraceEventType.COMPENSATED,
                         TraceEventType.RUN_ENDED
                 );
+        assertThat(new TraceChainVerifier().verify(traceRepository.findByRun(suspended.runId())).valid()).isTrue();
     }
 
     @Test
