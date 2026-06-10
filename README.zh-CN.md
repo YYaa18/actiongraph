@@ -337,6 +337,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - [组件目录 Component Catalog](docs/frameworkization/component-catalog.md)
 - [控制层响应契约](docs/frameworkization/control-plane-api.md)
 - [Java 8 老系统接入](docs/frameworkization/java8-legacy-integration.md)
+- [Java 8 老系统客户端示例](docs/examples/java8-legacy-client)
 - [控制面聚合 Starter](docs/frameworkization/control-plane-starter.md)
 - [治理策略 Spring Boot Starter](docs/frameworkization/governance-spring-boot-starter.md)
 - [理赔预审 PostgreSQL 映射](docs/frameworkization/claims-precheck-postgresql.md)

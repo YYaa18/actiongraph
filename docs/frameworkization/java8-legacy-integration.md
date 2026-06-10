@@ -36,6 +36,16 @@ if (response.successful()) {
 
 The client uses only JDK `HttpURLConnection` and returns the raw JSON body. This keeps legacy projects free to use their existing JSON library, gateway wrapper, or audit logging rules.
 
+## Copy-Paste Example
+
+A Java 8 client template lives at:
+
+```text
+docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
+```
+
+The test suite compiles that exact file with `javac --release 8`, so the example is both documentation and compatibility evidence. It demonstrates runtime start calls, response handling, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
+
 ## Machine-Readable Compatibility
 
 `actiongraph-component-catalog` now exposes a `compatibility` label for every public component. The built-in Spring catalog endpoint also supports filtering:
@@ -73,4 +83,4 @@ Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Com
 
 This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.
 
-The control-plane API tests also compile an independent consumer source file with `javac --release 8`. That source uses the runtime HTTP client, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. This catches public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code.
+The control-plane API tests also compile the documented Java 8 client example with `javac --release 8`. That source uses the runtime HTTP client, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. This catches public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code.

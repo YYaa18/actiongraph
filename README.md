@@ -278,6 +278,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Component catalog](docs/frameworkization/component-catalog.md)
 - [Control-plane API contracts](docs/frameworkization/control-plane-api.md)
 - [Java 8 legacy integration](docs/frameworkization/java8-legacy-integration.md)
+- [Java 8 legacy client example](docs/examples/java8-legacy-client)
 - [Control-plane starter](docs/frameworkization/control-plane-starter.md)
 - [Governance Spring Boot starter](docs/frameworkization/governance-spring-boot-starter.md)
 - [Claims precheck PostgreSQL mapping](docs/frameworkization/claims-precheck-postgresql.md)

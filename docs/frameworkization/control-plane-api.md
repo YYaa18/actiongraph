@@ -15,7 +15,11 @@ dependencies {
 
 The module has no Spring, JDBC, LLM, runtime, servlet, Jackson, OkHttp, or Apache HTTP Client dependency. Its main classes are compiled with `--release 8` so Java 8 applications can load the jar.
 
-CI also compiles a standalone Java 8 consumer source with `javac --release 8` against this module. The compiled snippet covers the runtime HTTP client, response DTOs, shared-secret token verification, and exception type.
+CI also compiles the documented Java 8 consumer example with `javac --release 8` against this module. The compiled example covers the runtime HTTP client, response DTOs, shared-secret token verification, and exception type:
+
+```text
+docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
+```
 
 ## Error Response
 
