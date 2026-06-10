@@ -1,9 +1,10 @@
 package com.actiongraph.humanreview.api.spring;
 
+import com.actiongraph.controlplane.auth.SharedSecretTokenProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "actiongraph.human-review.api")
-public class ActionGraphHumanReviewApiProperties {
+public class ActionGraphHumanReviewApiProperties implements SharedSecretTokenProperties {
     private boolean enabled = false;
     private String path = "/actiongraph/human-review/tasks";
     private String tokenHeader = "X-ActionGraph-Review-Token";

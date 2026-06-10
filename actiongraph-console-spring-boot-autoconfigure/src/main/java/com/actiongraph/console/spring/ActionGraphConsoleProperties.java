@@ -1,9 +1,10 @@
 package com.actiongraph.console.spring;
 
+import com.actiongraph.controlplane.auth.SharedSecretTokenProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "actiongraph.console")
-public class ActionGraphConsoleProperties {
+public class ActionGraphConsoleProperties implements SharedSecretTokenProperties {
     private boolean enabled = false;
     private String path = "/actiongraph/console";
     private String tokenHeader = "X-ActionGraph-Console-Token";

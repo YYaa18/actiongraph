@@ -1,9 +1,10 @@
 package com.actiongraph.humanreview.spring;
 
+import com.actiongraph.controlplane.auth.SharedSecretTokenProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "actiongraph.human-review.callback-endpoint")
-public class ActionGraphHumanReviewCallbackProperties {
+public class ActionGraphHumanReviewCallbackProperties implements SharedSecretTokenProperties {
     private boolean enabled = false;
     private String path = "/actiongraph/human-review/callbacks";
     private String tokenHeader = "X-ActionGraph-Review-Token";

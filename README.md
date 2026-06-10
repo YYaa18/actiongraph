@@ -28,6 +28,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional Spring Boot starter for structured memory
 - Reusable runtime API service for goal interpretation, start, and resume gateways
 - Reusable machine-readable component catalog and composition profiles
+- Reusable control-plane shared-secret token verification component
 - Optional non-Spring human review tasks, callback handling, and approval chains
 - Reusable human-review task API service for approval inboxes and gateways
 - Spring Boot starter with annotation-driven Action registration and runtime defaults
@@ -62,6 +63,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-interpretation` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
 | `actiongraph-runtime-api` | Reusable goal interpretation, start, and resume service |
 | `actiongraph-component-catalog` | Reusable machine-readable component catalog and composition profiles |
+| `actiongraph-control-plane-auth` | Reusable shared-secret token verification support for control-plane endpoints |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
 | `actiongraph-human-review-api` | Reusable human-review task query and decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
@@ -213,6 +215,8 @@ Catalog starter: GET /actiongraph/components/profiles
 Catalog starter: GET /actiongraph/components/profiles/{profile}
 ```
 
+Custom gateways or Spring MVC endpoint starters can use `actiongraph-control-plane-auth` when they need the same shared-secret token semantics without depending on Spring Web. The module validates configured header names, skips token lookup when no shared secret is configured, and uses constant-time token comparison. Built-in runtime, component catalog, human-review, callback, Console API, and Console export endpoint starters depend on it transitively; it is not an enterprise IAM or RBAC layer.
+
 Non-Spring services can use `actiongraph-human-review` directly when they need external approval task storage, callback handling, or multi-stage approval chains without Spring MVC.
 
 When `actiongraph-governance-spring-boot-starter` is on the classpath, masking and amount-limit permission rules are activated. Add `actiongraph-governance-human-review-spring-boot-starter` when those limit rules should also enrich human-review requests or when `actiongraph.human-review.risk-based-approval-chain=true` should route approval stages. Without these modules, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and safe pending human review.
@@ -287,6 +291,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Human review integration](docs/frameworkization/human-review.md)
 - [Runtime API](docs/frameworkization/runtime-api.md)
 - [Component catalog](docs/frameworkization/component-catalog.md)
+- [Control-plane shared auth](docs/frameworkization/control-plane-auth.md)
 - [Control-plane starter](docs/frameworkization/control-plane-starter.md)
 - [Governance Spring Boot starter](docs/frameworkization/governance-spring-boot-starter.md)
 - [Claims precheck PostgreSQL mapping](docs/frameworkization/claims-precheck-postgresql.md)

@@ -4,6 +4,8 @@ import com.actiongraph.console.ConsoleErrorResponse;
 import com.actiongraph.console.ConsoleRunNotFoundException;
 import com.actiongraph.console.export.ActionGraphConsoleExportService;
 import com.actiongraph.console.spring.ActionGraphConsoleProperties;
+import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,7 +21,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.Objects;
 
 @RestController
@@ -27,6 +28,8 @@ import java.util.Objects;
 public final class ActionGraphConsoleExportController {
     private static final MediaType TEXT_CSV = MediaType.parseMediaType("text/csv;charset=UTF-8");
     private static final MediaType JSONL = MediaType.parseMediaType("application/x-ndjson;charset=UTF-8");
+    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
+    private static final String UNAUTHORIZED_MESSAGE = "Console token is missing or invalid";
 
     private final ActionGraphConsoleExportService exportService;
     private final ActionGraphConsoleProperties properties;
@@ -83,21 +86,7 @@ public final class ActionGraphConsoleExportController {
     }
 
     private void verifyToken(HttpHeaders headers) {
-        if (!properties.hasSharedSecret()) {
-            return;
-        }
-        String actual = headers.getFirst(properties.getTokenHeader());
-        if (!sameSecret(properties.getSharedSecret(), actual)) {
-            throw new UnauthorizedConsoleException();
-        }
-    }
-
-    private boolean sameSecret(String expected, String actual) {
-        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
-        byte[] actualBytes = actual == null
-                ? new byte[0]
-                : actual.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(expectedBytes, actualBytes);
+        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
     }
 
     private String safeFilename(String value) {
@@ -118,9 +107,9 @@ public final class ActionGraphConsoleExportController {
         return safe.isEmpty() ? "run" : safe.toString();
     }
 
-    @ExceptionHandler(UnauthorizedConsoleException.class)
+    @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ConsoleErrorResponse handleUnauthorized(UnauthorizedConsoleException exception) {
+    public ConsoleErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return new ConsoleErrorResponse("UNAUTHORIZED", exception.getMessage());
     }
 
@@ -136,9 +125,4 @@ public final class ActionGraphConsoleExportController {
         return new ConsoleErrorResponse("NOT_FOUND", exception.getMessage());
     }
 
-    private static final class UnauthorizedConsoleException extends RuntimeException {
-        private UnauthorizedConsoleException() {
-            super("Console token is missing or invalid");
-        }
-    }
 }

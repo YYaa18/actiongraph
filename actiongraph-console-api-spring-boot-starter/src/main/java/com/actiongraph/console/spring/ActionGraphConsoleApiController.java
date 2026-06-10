@@ -6,6 +6,8 @@ import com.actiongraph.console.ConsoleRunNotFoundException;
 import com.actiongraph.console.ConsoleRunSummaryResponse;
 import com.actiongraph.console.ConsoleRunsResponse;
 import com.actiongraph.console.ConsoleTraceResponse;
+import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,13 +19,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("${actiongraph.console.path:/actiongraph/console}")
 public final class ActionGraphConsoleApiController {
+    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
+    private static final String UNAUTHORIZED_MESSAGE = "Console token is missing or invalid";
+
     private final ActionGraphConsoleService consoleService;
     private final ActionGraphConsoleProperties properties;
 
@@ -66,26 +69,12 @@ public final class ActionGraphConsoleApiController {
     }
 
     private void verifyToken(HttpHeaders headers) {
-        if (!properties.hasSharedSecret()) {
-            return;
-        }
-        String actual = headers.getFirst(properties.getTokenHeader());
-        if (!sameSecret(properties.getSharedSecret(), actual)) {
-            throw new UnauthorizedConsoleException();
-        }
+        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
     }
 
-    private boolean sameSecret(String expected, String actual) {
-        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
-        byte[] actualBytes = actual == null
-                ? new byte[0]
-                : actual.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(expectedBytes, actualBytes);
-    }
-
-    @ExceptionHandler(UnauthorizedConsoleException.class)
+    @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ConsoleErrorResponse handleUnauthorized(UnauthorizedConsoleException exception) {
+    public ConsoleErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return new ConsoleErrorResponse("UNAUTHORIZED", exception.getMessage());
     }
 
@@ -101,9 +90,4 @@ public final class ActionGraphConsoleApiController {
         return new ConsoleErrorResponse("NOT_FOUND", exception.getMessage());
     }
 
-    private static final class UnauthorizedConsoleException extends RuntimeException {
-        private UnauthorizedConsoleException() {
-            super("Console token is missing or invalid");
-        }
-    }
 }

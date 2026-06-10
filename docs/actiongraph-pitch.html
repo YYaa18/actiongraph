@@ -753,8 +753,8 @@
         <span>审批申请已创建：APPROVAL-1，对应报价：QUOTE-1</span>
       </div>
       <div class="hud">
-        <div class="hud-item"><b>272</b><span>tests passing</span></div>
-        <div class="hud-item"><b>39</b><span>modules</span></div>
+        <div class="hud-item"><b>277</b><span>tests passing</span></div>
+        <div class="hud-item"><b>40</b><span>modules</span></div>
         <div class="hud-item"><b>3</b><span>reference domains</span></div>
         <div class="hud-item"><b>~6000</b><span>runs/s smoke</span></div>
       </div>
@@ -1036,15 +1036,16 @@
           <div><span class="log-ok">actiongraph-console-export-spring-boot-starter:test</span> 5 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-console-jdbc-spring-boot-starter:test</span> 5 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-console-spring-boot-starter:test</span> 1 test, 0 failures</div>
+          <div><span class="log-ok">actiongraph-control-plane-auth:test</span> 5 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-control-plane-spring-boot-starter:test</span> 2 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-samples:test</span> 61 tests, 1 gated smoke skipped</div>
-          <div><span class="log-ok">BUILD SUCCESSFUL</span> 272 tests, 0 failures, 1 skipped</div>
+          <div><span class="log-ok">BUILD SUCCESSFUL</span> 277 tests, 0 failures, 1 skipped</div>
         </div>
       </div>
       <div class="layout-3" style="grid-template-columns:1fr;">
-        <div class="panel ok"><div class="metric green">272</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、Spring starter、Memory starter、Runtime API starter、Component Catalog、Human Review starter、Human Review API starter、Human Review Callback starter、Governance starter、人审治理扩展、核心 JDBC starter、Memory JDBC starter、Human Review JDBC starter、Console core、Console JDBC adapter、Console CSV/JSONL export、Console JDBC Spring starter、Console API/UI/Export 独立 starter、Control Plane 聚合 starter、运行入口解释/启动/恢复端点与鉴权、组件目录查询与鉴权、审批任务查询/决策端点与鉴权、审批回调端点与鉴权、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
+        <div class="panel ok"><div class="metric green">277</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、Spring starter、Memory starter、Runtime API starter、Component Catalog、Control Plane Auth、Human Review starter、Human Review API starter、Human Review Callback starter、Governance starter、人审治理扩展、核心 JDBC starter、Memory JDBC starter、Human Review JDBC starter、Console core、Console JDBC adapter、Console CSV/JSONL export、Console JDBC Spring starter、Console API/UI/Export 独立 starter、Control Plane 聚合 starter、运行入口解释/启动/恢复端点与鉴权、组件目录查询与鉴权、审批任务查询/决策端点与鉴权、审批回调端点与鉴权、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
         <div class="panel ok"><div class="metric green">~6000</div><h3>并发冒烟</h3><p>200 虚拟线程并发 1 万次运行；重复 resume 只产生一次业务副作用。</p></div>
-        <div class="panel ok"><div class="metric green">39</div><h3>工程模块</h3><p>bom / core / annotations / memory / memory-jdbc / memory-spring-boot-starter / memory-jdbc-spring-boot-starter / interpretation / runtime-api / runtime-api-spring-boot-starter / component-catalog / component-catalog-spring-boot-starter / human-review / human-review-api / human-review-jdbc / human-review-spring-boot-starter / human-review-api-spring-boot-starter / human-review-callback-spring-boot-starter / human-review-jdbc-spring-boot-starter / governance / governance-human-review / governance-spring-boot-starter / governance-human-review-spring-boot-starter / llm / llm-deepseek / persistence-jdbc / spring-boot-starter / jdbc-spring-boot-starter / console-core / console-jdbc / console-export / console-spring-boot-autoconfigure / console-api-spring-boot-starter / console-ui-spring-boot-starter / console-export-spring-boot-starter / console-jdbc-spring-boot-starter / console-spring-boot-starter / control-plane-spring-boot-starter / samples；公共内核、注解适配、结构化记忆、目标解释、运行入口、组件目录、审批生态、基础治理、人审治理、LLM provider、基础设施适配和控制层生态组件可独立组合。</p></div>
+        <div class="panel ok"><div class="metric green">40</div><h3>工程模块</h3><p>bom / core / annotations / memory / memory-jdbc / memory-spring-boot-starter / memory-jdbc-spring-boot-starter / interpretation / runtime-api / runtime-api-spring-boot-starter / component-catalog / control-plane-auth / component-catalog-spring-boot-starter / human-review / human-review-api / human-review-jdbc / human-review-spring-boot-starter / human-review-api-spring-boot-starter / human-review-callback-spring-boot-starter / human-review-jdbc-spring-boot-starter / governance / governance-human-review / governance-spring-boot-starter / governance-human-review-spring-boot-starter / llm / llm-deepseek / persistence-jdbc / spring-boot-starter / jdbc-spring-boot-starter / console-core / console-jdbc / console-export / console-spring-boot-autoconfigure / console-api-spring-boot-starter / console-ui-spring-boot-starter / console-export-spring-boot-starter / console-jdbc-spring-boot-starter / console-spring-boot-starter / control-plane-spring-boot-starter / samples；公共内核、注解适配、结构化记忆、目标解释、运行入口、组件目录、共享认证、审批生态、基础治理、人审治理、LLM provider、基础设施适配和控制层生态组件可独立组合。</p></div>
         <div class="panel ok"><div class="metric green">3</div><h3>参考业务域</h3><p>续约报价、订单取消、理赔资料预审三个不同领域接入，证明核心可复用并开始进入保险场景打穿。</p></div>
       </div>
     </div>

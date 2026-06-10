@@ -126,6 +126,19 @@ dependencies {
 
 `actiongraph-component-catalog` has no Spring, JDBC, LLM, or runtime dependency. It provides `ActionGraphComponentCatalogService`, component records, and composition profile records that can be reused outside HTTP.
 
+## Control-Plane Shared Auth
+
+Use this when a custom gateway or endpoint adapter wants ActionGraph's shared-secret token semantics without depending on Spring MVC.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-control-plane-auth")
+}
+```
+
+`actiongraph-control-plane-auth` validates token-header configuration, treats blank shared secrets as disabled, and uses constant-time token comparison. It has no Spring, JDBC, LLM, or runtime dependency. Built-in Spring MVC endpoint starters bring it transitively, so applications usually add it directly only for custom control-plane adapters.
+
 ## Spring MVC Component Catalog API
 
 Use this when a Spring MVC control-plane should expose the same component catalog as a read-only endpoint.

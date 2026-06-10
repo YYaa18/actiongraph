@@ -1,9 +1,10 @@
 package com.actiongraph.runtime.api.spring;
 
+import com.actiongraph.controlplane.auth.SharedSecretTokenProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "actiongraph.runtime.api")
-public class ActionGraphRuntimeApiProperties {
+public class ActionGraphRuntimeApiProperties implements SharedSecretTokenProperties {
     private boolean enabled = false;
     private String path = "/actiongraph/runtime";
     private String tokenHeader = "X-ActionGraph-Runtime-Token";

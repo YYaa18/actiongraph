@@ -25,6 +25,8 @@ dependencies {
 
 The aggregate does not include runtime action registration, JDBC repositories, review-task storage, LLM clients, governance policies, or Console JDBC adapters. Add those components separately when the deployment owns them.
 
+All built-in endpoint starters share `actiongraph-control-plane-auth` for shared-secret token checks. That component keeps header lookup, disabled-secret semantics, and constant-time comparison consistent across Runtime API, Component Catalog, Human Review API, callback, Console API, and export endpoints. It is still only a lightweight token guard; enterprise identity, gateway policy, RBAC, tenant checks, and rate limits remain outside this aggregate.
+
 ## Endpoint Switches
 
 Each endpoint surface still uses its own explicit property switch:

@@ -1,5 +1,7 @@
 package com.actiongraph.humanreview.api.spring;
 
+import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import com.actiongraph.humanreview.api.HumanReviewApiService;
 import com.actiongraph.humanreview.api.HumanReviewTaskNotFoundException;
 import com.actiongraph.humanreview.api.HumanReviewTaskResponse;
@@ -17,14 +19,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.List;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("${actiongraph.human-review.api.path:/actiongraph/human-review/tasks}")
 public final class ActionGraphHumanReviewApiController {
+    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
+    private static final String UNAUTHORIZED_MESSAGE = "Human review API token is missing or invalid";
+
     private final HumanReviewApiService apiService;
     private final ActionGraphHumanReviewApiProperties properties;
 
@@ -80,26 +83,12 @@ public final class ActionGraphHumanReviewApiController {
     }
 
     private void verifyToken(HttpHeaders headers) {
-        if (!properties.hasSharedSecret()) {
-            return;
-        }
-        String actual = headers.getFirst(properties.getTokenHeader());
-        if (!sameSecret(properties.getSharedSecret(), actual)) {
-            throw new UnauthorizedHumanReviewApiException();
-        }
+        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
     }
 
-    private boolean sameSecret(String expected, String actual) {
-        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
-        byte[] actualBytes = actual == null
-                ? new byte[0]
-                : actual.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(expectedBytes, actualBytes);
-    }
-
-    @ExceptionHandler(UnauthorizedHumanReviewApiException.class)
+    @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public HumanReviewApiErrorResponse handleUnauthorized(UnauthorizedHumanReviewApiException exception) {
+    public HumanReviewApiErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return new HumanReviewApiErrorResponse("UNAUTHORIZED", exception.getMessage());
     }
 
@@ -133,11 +122,5 @@ public final class ActionGraphHumanReviewApiController {
             String error,
             String message
     ) {
-    }
-
-    private static final class UnauthorizedHumanReviewApiException extends RuntimeException {
-        private UnauthorizedHumanReviewApiException() {
-            super("Human review API token is missing or invalid");
-        }
     }
 }

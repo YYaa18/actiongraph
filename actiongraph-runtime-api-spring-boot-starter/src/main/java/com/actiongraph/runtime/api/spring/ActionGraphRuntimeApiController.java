@@ -1,5 +1,7 @@
 package com.actiongraph.runtime.api.spring;
 
+import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import com.actiongraph.runtime.SuspendedRunNotClaimableException;
 import com.actiongraph.runtime.api.ActionGraphRuntimeApiService;
 import com.actiongraph.runtime.api.RuntimeInterpretationResponse;
@@ -16,14 +18,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.Map;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("${actiongraph.runtime.api.path:/actiongraph/runtime}")
 public final class ActionGraphRuntimeApiController {
+    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
+    private static final String UNAUTHORIZED_MESSAGE = "Runtime API token is missing or invalid";
+
     private final ActionGraphRuntimeApiService apiService;
     private final ActionGraphRuntimeApiProperties properties;
 
@@ -63,26 +66,12 @@ public final class ActionGraphRuntimeApiController {
     }
 
     private void verifyToken(HttpHeaders headers) {
-        if (!properties.hasSharedSecret()) {
-            return;
-        }
-        String actual = headers.getFirst(properties.getTokenHeader());
-        if (!sameSecret(properties.getSharedSecret(), actual)) {
-            throw new UnauthorizedRuntimeApiException();
-        }
+        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
     }
 
-    private boolean sameSecret(String expected, String actual) {
-        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
-        byte[] actualBytes = actual == null
-                ? new byte[0]
-                : actual.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(expectedBytes, actualBytes);
-    }
-
-    @ExceptionHandler(UnauthorizedRuntimeApiException.class)
+    @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public RuntimeApiErrorResponse handleUnauthorized(UnauthorizedRuntimeApiException exception) {
+    public RuntimeApiErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return new RuntimeApiErrorResponse("UNAUTHORIZED", exception.getMessage());
     }
 
@@ -111,11 +100,5 @@ public final class ActionGraphRuntimeApiController {
             String error,
             String message
     ) {
-    }
-
-    private static final class UnauthorizedRuntimeApiException extends RuntimeException {
-        private UnauthorizedRuntimeApiException() {
-            super("Runtime API token is missing or invalid");
-        }
     }
 }

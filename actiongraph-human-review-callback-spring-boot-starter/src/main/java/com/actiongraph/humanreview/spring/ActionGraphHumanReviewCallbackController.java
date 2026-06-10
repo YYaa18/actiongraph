@@ -1,6 +1,8 @@
 package com.actiongraph.humanreview.spring;
 
 import com.actiongraph.action.ActionId;
+import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import com.actiongraph.policy.HumanReviewCallback;
 import com.actiongraph.policy.HumanReviewCallbackHandler;
 import com.actiongraph.policy.HumanReviewDecision;
@@ -16,13 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("${actiongraph.human-review.callback-endpoint.path:/actiongraph/human-review/callbacks}")
 public final class ActionGraphHumanReviewCallbackController {
+    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
+    private static final String UNAUTHORIZED_MESSAGE = "Human review callback token is missing or invalid";
+
     private final HumanReviewCallbackHandler handler;
     private final ActionGraphHumanReviewCallbackProperties properties;
 
@@ -60,26 +63,12 @@ public final class ActionGraphHumanReviewCallbackController {
     }
 
     private void verifyToken(HttpHeaders headers) {
-        if (!properties.hasSharedSecret()) {
-            return;
-        }
-        String actual = headers.getFirst(properties.getTokenHeader());
-        if (!sameSecret(properties.getSharedSecret(), actual)) {
-            throw new UnauthorizedCallbackException();
-        }
+        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
     }
 
-    private boolean sameSecret(String expected, String actual) {
-        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
-        byte[] actualBytes = actual == null
-                ? new byte[0]
-                : actual.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(expectedBytes, actualBytes);
-    }
-
-    @ExceptionHandler(UnauthorizedCallbackException.class)
+    @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public HumanReviewCallbackErrorResponse handleUnauthorized(UnauthorizedCallbackException exception) {
+    public HumanReviewCallbackErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return new HumanReviewCallbackErrorResponse("UNAUTHORIZED", exception.getMessage());
     }
 
@@ -126,11 +115,5 @@ public final class ActionGraphHumanReviewCallbackController {
             String error,
             String message
     ) {
-    }
-
-    private static final class UnauthorizedCallbackException extends RuntimeException {
-        private UnauthorizedCallbackException() {
-            super("Human review callback token is missing or invalid");
-        }
     }
 }

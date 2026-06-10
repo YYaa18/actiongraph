@@ -1,9 +1,10 @@
 package com.actiongraph.catalog.spring;
 
+import com.actiongraph.controlplane.auth.SharedSecretTokenProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "actiongraph.component-catalog")
-public class ActionGraphComponentCatalogProperties {
+public class ActionGraphComponentCatalogProperties implements SharedSecretTokenProperties {
     private boolean enabled = false;
     private String path = "/actiongraph/components";
     private String tokenHeader = "X-ActionGraph-Catalog-Token";

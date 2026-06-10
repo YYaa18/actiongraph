@@ -18,6 +18,7 @@ class ActionGraphComponentCatalogServiceTest {
                         "actiongraph-human-review-api",
                         "actiongraph-control-plane-spring-boot-starter",
                         "actiongraph-component-catalog",
+                        "actiongraph-control-plane-auth",
                         "actiongraph-component-catalog-spring-boot-starter"
                 );
         assertThat(service.components())
@@ -33,6 +34,16 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(component -> assertThat(component.requires())
                         .contains("actiongraph-component-catalog-spring-boot-starter"));
+        assertThat(service.component("actiongraph-runtime-api-spring-boot-starter"))
+                .isPresent()
+                .get()
+                .satisfies(component -> assertThat(component.requires())
+                        .contains("actiongraph-control-plane-auth"));
+        assertThat(service.component("actiongraph-component-catalog-spring-boot-starter"))
+                .isPresent()
+                .get()
+                .satisfies(component -> assertThat(component.requires())
+                        .contains("actiongraph-control-plane-auth"));
     }
 
     @Test
@@ -48,7 +59,13 @@ class ActionGraphComponentCatalogServiceTest {
                 .isPresent()
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())
-                        .contains("actiongraph-component-catalog-spring-boot-starter"));
+                        .contains("actiongraph-control-plane-auth",
+                                "actiongraph-component-catalog-spring-boot-starter"));
+        assertThat(service.profile("control-plane-shared-auth"))
+                .isPresent()
+                .get()
+                .satisfies(profile -> assertThat(profile.modules())
+                        .containsExactly("actiongraph-control-plane-auth"));
     }
 
     @Test

@@ -4,6 +4,8 @@ import com.actiongraph.catalog.ActionGraphComponent;
 import com.actiongraph.catalog.ActionGraphComponentCatalog;
 import com.actiongraph.catalog.ActionGraphComponentCatalogService;
 import com.actiongraph.catalog.ActionGraphCompositionProfile;
+import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,14 +16,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.List;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("${actiongraph.component-catalog.path:/actiongraph/components}")
 public final class ActionGraphComponentCatalogController {
+    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
+    private static final String UNAUTHORIZED_MESSAGE = "Component catalog token is missing or invalid";
+
     private final ActionGraphComponentCatalogService catalogService;
     private final ActionGraphComponentCatalogProperties properties;
 
@@ -72,26 +75,12 @@ public final class ActionGraphComponentCatalogController {
     }
 
     private void verifyToken(HttpHeaders headers) {
-        if (!properties.hasSharedSecret()) {
-            return;
-        }
-        String actual = headers.getFirst(properties.getTokenHeader());
-        if (!sameSecret(properties.getSharedSecret(), actual)) {
-            throw new UnauthorizedComponentCatalogException();
-        }
+        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
     }
 
-    private boolean sameSecret(String expected, String actual) {
-        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
-        byte[] actualBytes = actual == null
-                ? new byte[0]
-                : actual.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(expectedBytes, actualBytes);
-    }
-
-    @ExceptionHandler(UnauthorizedComponentCatalogException.class)
+    @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ComponentCatalogErrorResponse handleUnauthorized(UnauthorizedComponentCatalogException exception) {
+    public ComponentCatalogErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return new ComponentCatalogErrorResponse("UNAUTHORIZED", exception.getMessage());
     }
 
@@ -111,11 +100,5 @@ public final class ActionGraphComponentCatalogController {
             String error,
             String message
     ) {
-    }
-
-    private static final class UnauthorizedComponentCatalogException extends RuntimeException {
-        private UnauthorizedComponentCatalogException() {
-            super("Component catalog token is missing or invalid");
-        }
     }
 }
