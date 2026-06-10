@@ -45,7 +45,7 @@ The generated HTML artifact is a productization seed, not the final console serv
 
 ## JDBC Read Model
 
-`actiongraph-persistence-jdbc` provides `JdbcTraceRunRepository` as the first read-only building block for a service-backed console:
+`actiongraph-persistence-jdbc` provides `JdbcTraceRunRepository` as the low-level read model for trace tables:
 
 ```java
 JdbcTraceRunRepository runs =
@@ -71,14 +71,29 @@ This lets a future console list runs directly from the JDBC trace table, page/fi
 
 ## Console Core
 
-`actiongraph-console-core` packages the read-only control-plane logic without Spring Web:
+`actiongraph-console-core` packages the read-only control-plane logic without Spring Web or JDBC coupling:
 
 - `ActionGraphConsoleService`
+- `ConsoleRunRepository` port
 - Console response records for run pages, run summaries, trace events, and errors
 - paging and limit validation
 - built-in page template rendering helpers
 
-Custom consoles, CLI diagnostics, gateway adapters, or non-Spring services can depend on this module directly and call the service with a `JdbcTraceRunRepository`.
+Custom consoles, CLI diagnostics, gateway adapters, or non-Spring services can depend on this module directly and provide their own `ConsoleRunRepository`.
+
+## Console JDBC Adapter
+
+`actiongraph-console-jdbc` adapts the JDBC trace read model to the Console port:
+
+```java
+ConsoleRunRepository repository =
+        new JdbcConsoleRunRepository(dataSource);
+
+ActionGraphConsoleService service =
+        new ActionGraphConsoleService(repository, ConsoleOptions.defaults());
+```
+
+This keeps the control-plane service independently reusable while still giving JDBC deployments an off-the-shelf adapter.
 
 ## Spring Boot Read-Only Endpoint
 
@@ -88,7 +103,7 @@ Custom consoles, CLI diagnostics, gateway adapters, or non-Spring services can d
 - `actiongraph-console-spring-boot-starter` is on the runtime classpath
 - a `DataSource` bean is available
 
-The Console starter wraps `actiongraph-console-core`, brings the JDBC read model as an implementation dependency, and stays read-only. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
+The Console starter wraps `actiongraph-console-core`, brings `actiongraph-console-jdbc` as its default read-model adapter, and stays read-only. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
 
 ```yaml
 actiongraph:

@@ -1,18 +1,15 @@
 package com.actiongraph.console;
 
-import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
-import com.actiongraph.persistence.jdbc.TraceRunPage;
-import com.actiongraph.persistence.jdbc.TraceRunQuery;
 import com.actiongraph.trace.TraceEvent;
 
 import java.util.List;
 import java.util.Objects;
 
 public final class ActionGraphConsoleService {
-    private final JdbcTraceRunRepository runRepository;
+    private final ConsoleRunRepository runRepository;
     private final ConsoleOptions options;
 
-    public ActionGraphConsoleService(JdbcTraceRunRepository runRepository, ConsoleOptions options) {
+    public ActionGraphConsoleService(ConsoleRunRepository runRepository, ConsoleOptions options) {
         this.runRepository = Objects.requireNonNull(runRepository, "runRepository");
         this.options = Objects.requireNonNull(options, "options");
     }
@@ -25,8 +22,8 @@ public final class ActionGraphConsoleService {
     ) {
         int resolvedLimit = resolveLimit(limit);
         int resolvedOffset = resolveOffset(offset);
-        TraceRunQuery query = new TraceRunQuery(resolvedLimit, resolvedOffset, status, auditComplete);
-        TraceRunPage page = runRepository.findRuns(query);
+        ConsoleRunQuery query = new ConsoleRunQuery(resolvedLimit, resolvedOffset, status, auditComplete);
+        ConsoleRunPage page = runRepository.findRuns(query);
         List<ConsoleRunSummaryResponse> runs = page.runs()
                 .stream()
                 .map(ConsoleRunSummaryResponse::from)

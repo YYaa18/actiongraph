@@ -25,6 +25,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional governance Spring Boot starter for masking, amount limits, and approval routing
 - Optional human-review Spring Boot starter with approval callback endpoint support
 - Reusable console core service for read-only run monitoring
+- Optional JDBC adapter for the console query port
 - Optional console Spring Boot starter with read-only run monitoring UI/endpoints
 - Optional JDBC Spring Boot starter for durable repository auto-configuration
 - DeepSeek-compatible LLM goal interpretation
@@ -43,6 +44,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC repositories |
 | `actiongraph-human-review-spring-boot-starter` | Optional approval callback endpoint for external review systems |
 | `actiongraph-console-core` | Reusable read-only console query service and response model |
+| `actiongraph-console-jdbc` | Optional JDBC adapter for the console query port |
 | `actiongraph-console-spring-boot-starter` | Optional read-only Console UI and Spring MVC query endpoints |
 | `actiongraph-samples` | Pure Java sample applications |
 
@@ -124,7 +126,7 @@ When `actiongraph-human-review-spring-boot-starter` is on the classpath and the 
 
 If `shared-secret` is configured, the request must include the configured token header with the same value. Missing or invalid callback tokens return `401 UNAUTHORIZED`.
 
-`actiongraph-console-core` can be used directly by custom monitoring services that want the run query service and response model without Spring MVC. When `actiongraph-console-spring-boot-starter` is on the classpath and `actiongraph.console.enabled=true`, a Spring MVC application with a `DataSource` exposes read-only run monitoring endpoints:
+`actiongraph-console-core` can be used directly by custom monitoring services that want the run query service, response model, and `ConsoleRunRepository` port without Spring MVC or JDBC coupling. Add `actiongraph-console-jdbc` when that custom service wants to read ActionGraph trace tables through JDBC. When `actiongraph-console-spring-boot-starter` is on the classpath and `actiongraph.console.enabled=true`, a Spring MVC application with a `DataSource` exposes read-only run monitoring endpoints:
 
 ```text
 GET /actiongraph/console

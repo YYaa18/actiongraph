@@ -2,6 +2,8 @@ package com.actiongraph.console.spring;
 
 import com.actiongraph.console.ActionGraphConsoleService;
 import com.actiongraph.console.ConsoleOptions;
+import com.actiongraph.console.ConsoleRunRepository;
+import com.actiongraph.console.jdbc.JdbcConsoleRunRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
 import com.actiongraph.trace.TraceEvent;
@@ -14,6 +16,7 @@ import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConf
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -68,6 +71,9 @@ class ActionGraphConsoleWebAutoConfigurationTest {
                 )
                 .run(context -> {
                     assertThat(context).hasSingleBean(ActionGraphConsoleService.class);
+                    assertThat(context).hasSingleBean(ConsoleRunRepository.class);
+                    assertThat(context.getBean(ConsoleRunRepository.class))
+                            .isInstanceOf(JdbcConsoleRunRepository.class);
                     mockMvc(context).perform(get("/internal/actiongraph-console")
                                     .accept(MediaType.TEXT_HTML))
                             .andExpect(status().isOk())
@@ -86,7 +92,7 @@ class ActionGraphConsoleWebAutoConfigurationTest {
         contextRunner
                 .withBean(DataSource.class, ActionGraphConsoleWebAutoConfigurationTest::h2)
                 .withBean(ActionGraphConsoleService.class, () -> new ActionGraphConsoleService(
-                        new JdbcTraceRunRepository(h2()),
+                        new JdbcConsoleRunRepository(h2()),
                         new ConsoleOptions("X-Custom-Console-Token", 3, 9)
                 ))
                 .withPropertyValues("actiongraph.console.enabled=true")
@@ -198,6 +204,24 @@ class ActionGraphConsoleWebAutoConfigurationTest {
     }
 
     @Test
+    void consoleReusesExistingJdbcTraceRunRepository() {
+        contextRunner
+                .withBean(DataSource.class, ActionGraphConsoleWebAutoConfigurationTest::h2)
+                .withUserConfiguration(CustomTraceRunRepositoryConfiguration.class)
+                .withPropertyValues("actiongraph.console.enabled=true")
+                .run(context -> {
+                    seed(context.getBean(DataSource.class), "custom_trace", "RUN-CUSTOM", "2026-06-10T10:00:00Z",
+                            TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
+
+                    mockMvc(context).perform(get("/actiongraph/console/runs")
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.total").value(1))
+                            .andExpect(jsonPath("$.runs[0].runId").value("RUN-CUSTOM"));
+                });
+    }
+
+    @Test
     void consoleReturnsRunDetailsAndNotFoundErrors() {
         contextRunner
                 .withBean(DataSource.class, ActionGraphConsoleWebAutoConfigurationTest::h2)
@@ -276,7 +300,18 @@ class ActionGraphConsoleWebAutoConfigurationTest {
             TraceEventType terminalType,
             Map<String, String> terminalData
     ) {
-        JdbcTraceRepository repository = new JdbcTraceRepository(dataSource);
+        seed(dataSource, JdbcTraceRepository.DEFAULT_TABLE, runId, startedAt, terminalType, terminalData);
+    }
+
+    private static void seed(
+            DataSource dataSource,
+            String table,
+            String runId,
+            String startedAt,
+            TraceEventType terminalType,
+            Map<String, String> terminalData
+    ) {
+        JdbcTraceRepository repository = new JdbcTraceRepository(dataSource, table);
         TraceEvent started = hashed(runId, 1, "", Instant.parse(startedAt),
                 TraceEventType.RUN_STARTED, Map.of());
         TraceEvent ended = hashed(runId, 2, started.hash(), Instant.parse(startedAt).plusSeconds(1),
@@ -312,5 +347,12 @@ class ActionGraphConsoleWebAutoConfigurationTest {
     ) {
         String hash = TraceHasher.hash(runId, seq, at, type, null, type.name(), data, prevHash);
         return new TraceEvent(runId, seq, at, type, null, type.name(), data, prevHash, hash);
+    }
+
+    static final class CustomTraceRunRepositoryConfiguration {
+        @Bean
+        JdbcTraceRunRepository jdbcTraceRunRepository(DataSource dataSource) {
+            return new JdbcTraceRunRepository(dataSource, "custom_trace");
+        }
     }
 }

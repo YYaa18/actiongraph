@@ -2,6 +2,8 @@ package com.actiongraph.console.spring;
 
 import com.actiongraph.console.ActionGraphConsoleService;
 import com.actiongraph.console.ConsoleOptions;
+import com.actiongraph.console.ConsoleRunRepository;
+import com.actiongraph.console.jdbc.JdbcConsoleRunRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -10,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
@@ -18,7 +21,7 @@ import javax.sql.DataSource;
         afterName = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
 )
 @ConditionalOnClass(name = {
-        "com.actiongraph.persistence.jdbc.JdbcTraceRunRepository",
+        "com.actiongraph.console.jdbc.JdbcConsoleRunRepository",
         "org.springframework.web.bind.annotation.RestController",
         "org.springframework.web.servlet.DispatcherServlet"
 })
@@ -33,18 +36,23 @@ import javax.sql.DataSource;
 public class ActionGraphConsoleWebAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
-    public JdbcTraceRunRepository actionGraphTraceRunRepository(DataSource dataSource) {
-        return new JdbcTraceRunRepository(dataSource);
+    public ConsoleRunRepository actionGraphConsoleRunRepository(
+            DataSource dataSource,
+            ObjectProvider<JdbcTraceRunRepository> traceRunRepository
+    ) {
+        return new JdbcConsoleRunRepository(traceRunRepository.getIfAvailable(
+                () -> new JdbcTraceRunRepository(dataSource)
+        ));
     }
 
     @Bean
     @ConditionalOnMissingBean
     public ActionGraphConsoleService actionGraphConsoleService(
-            JdbcTraceRunRepository traceRunRepository,
+            ConsoleRunRepository runRepository,
             ActionGraphConsoleProperties properties
     ) {
         return new ActionGraphConsoleService(
-                traceRunRepository,
+                runRepository,
                 new ConsoleOptions(
                         properties.getTokenHeader(),
                         properties.getDefaultLimit(),

@@ -1,18 +1,18 @@
 package com.actiongraph.console;
 
-import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
-import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
 import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceEventType;
 import com.actiongraph.trace.TraceHasher;
-import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 
-import javax.sql.DataSource;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Objects;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,15 +20,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ActionGraphConsoleServiceTest {
     @Test
     void listsRunsWithDefaultPagingAndFilters() {
-        DataSource dataSource = h2();
-        seed(dataSource, "RUN-OLDER", "2026-06-10T10:00:00Z",
+        InMemoryConsoleRunRepository repository = new InMemoryConsoleRunRepository();
+        seed(repository, "RUN-OLDER", "2026-06-10T10:00:00Z",
                 TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
-        seed(dataSource, "RUN-SUSPENDED", "2026-06-10T10:05:00Z",
+        seed(repository, "RUN-SUSPENDED", "2026-06-10T10:05:00Z",
                 TraceEventType.RUN_SUSPENDED, Map.of("status", "SUSPENDED_PENDING_REVIEW"));
-        seed(dataSource, "RUN-NEWER", "2026-06-10T10:10:00Z",
+        seed(repository, "RUN-NEWER", "2026-06-10T10:10:00Z",
                 TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
 
-        ActionGraphConsoleService service = service(dataSource, new ConsoleOptions(
+        ActionGraphConsoleService service = service(repository, new ConsoleOptions(
                 ConsoleOptions.DEFAULT_TOKEN_HEADER,
                 2,
                 10
@@ -50,7 +50,7 @@ class ActionGraphConsoleServiceTest {
 
     @Test
     void validatesLimitAndOffset() {
-        ActionGraphConsoleService service = service(h2(), new ConsoleOptions(
+        ActionGraphConsoleService service = service(new InMemoryConsoleRunRepository(), new ConsoleOptions(
                 ConsoleOptions.DEFAULT_TOKEN_HEADER,
                 5,
                 5
@@ -69,10 +69,10 @@ class ActionGraphConsoleServiceTest {
 
     @Test
     void returnsRunSummaryAndTraceEvents() {
-        DataSource dataSource = h2();
-        seed(dataSource, "RUN-1", "2026-06-10T10:00:00Z",
+        InMemoryConsoleRunRepository repository = new InMemoryConsoleRunRepository();
+        seed(repository, "RUN-1", "2026-06-10T10:00:00Z",
                 TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
-        ActionGraphConsoleService service = service(dataSource, ConsoleOptions.defaults());
+        ActionGraphConsoleService service = service(repository, ConsoleOptions.defaults());
 
         ConsoleRunSummaryResponse summary = service.run("RUN-1");
         ConsoleTraceResponse trace = service.trace("RUN-1");
@@ -91,7 +91,7 @@ class ActionGraphConsoleServiceTest {
 
     @Test
     void raisesTypedNotFoundForMissingRun() {
-        ActionGraphConsoleService service = service(h2(), ConsoleOptions.defaults());
+        ActionGraphConsoleService service = service(new InMemoryConsoleRunRepository(), ConsoleOptions.defaults());
 
         assertThatThrownBy(() -> service.run("MISSING"))
                 .isInstanceOf(ConsoleRunNotFoundException.class)
@@ -120,31 +120,31 @@ class ActionGraphConsoleServiceTest {
         assertThat(rendered).contains("maxLimit: 75");
     }
 
-    private static ActionGraphConsoleService service(DataSource dataSource, ConsoleOptions options) {
-        return new ActionGraphConsoleService(new JdbcTraceRunRepository(dataSource), options);
-    }
-
-    private static DataSource h2() {
-        JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1");
-        dataSource.setUser("sa");
-        dataSource.setPassword("");
-        return dataSource;
+    private static ActionGraphConsoleService service(ConsoleRunRepository repository, ConsoleOptions options) {
+        return new ActionGraphConsoleService(repository, options);
     }
 
     private static void seed(
-            DataSource dataSource,
+            InMemoryConsoleRunRepository repository,
             String runId,
             String startedAt,
             TraceEventType terminalType,
             Map<String, String> terminalData
     ) {
-        JdbcTraceRepository repository = new JdbcTraceRepository(dataSource);
         TraceEvent started = hashed(runId, 1, "", Instant.parse(startedAt),
                 TraceEventType.RUN_STARTED, Map.of());
         TraceEvent ended = hashed(runId, 2, started.hash(), Instant.parse(startedAt).plusSeconds(1),
                 terminalType, terminalData);
-        repository.appendAll(List.of(started, ended));
+        repository.save(new ConsoleRunSummary(
+                runId,
+                started.at(),
+                ended.at(),
+                terminalData.getOrDefault("status", terminalType.name()),
+                2,
+                true,
+                0,
+                "Trace chain is valid"
+        ), List.of(started, ended));
     }
 
     private static TraceEvent hashed(
@@ -157,5 +157,41 @@ class ActionGraphConsoleServiceTest {
     ) {
         String hash = TraceHasher.hash(runId, seq, at, type, null, type.name(), data, prevHash);
         return new TraceEvent(runId, seq, at, type, null, type.name(), data, prevHash, hash);
+    }
+
+    private static final class InMemoryConsoleRunRepository implements ConsoleRunRepository {
+        private final Map<String, ConsoleRunSummary> summaries = new LinkedHashMap<>();
+        private final Map<String, List<TraceEvent>> traces = new LinkedHashMap<>();
+
+        void save(ConsoleRunSummary summary, List<TraceEvent> trace) {
+            summaries.put(summary.runId(), summary);
+            traces.put(summary.runId(), List.copyOf(trace));
+        }
+
+        @Override
+        public ConsoleRunPage findRuns(ConsoleRunQuery query) {
+            Objects.requireNonNull(query, "query");
+            List<ConsoleRunSummary> matching = summaries.values()
+                    .stream()
+                    .filter(summary -> query.status() == null || query.status().equals(summary.status()))
+                    .filter(summary -> query.auditComplete() == null
+                            || query.auditComplete() == summary.auditComplete())
+                    .sorted(Comparator.comparing(ConsoleRunSummary::lastEventAt).reversed())
+                    .toList();
+            int total = matching.size();
+            int from = Math.min(query.offset(), total);
+            int to = Math.min(total, from + query.limit());
+            return new ConsoleRunPage(query.limit(), query.offset(), total, new ArrayList<>(matching.subList(from, to)));
+        }
+
+        @Override
+        public Optional<ConsoleRunSummary> findRun(String runId) {
+            return Optional.ofNullable(summaries.get(runId));
+        }
+
+        @Override
+        public List<TraceEvent> findTraceEvents(String runId) {
+            return traces.getOrDefault(runId, List.of());
+        }
     }
 }

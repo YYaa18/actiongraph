@@ -1,7 +1,5 @@
 package com.actiongraph.console;
 
-import com.actiongraph.persistence.jdbc.TraceRunSummary;
-
 import java.time.Instant;
 
 public record ConsoleRunSummaryResponse(
@@ -14,7 +12,7 @@ public record ConsoleRunSummaryResponse(
         long firstBrokenSeq,
         String auditMessage
 ) {
-    static ConsoleRunSummaryResponse from(TraceRunSummary summary) {
+    static ConsoleRunSummaryResponse from(ConsoleRunSummary summary) {
         return new ConsoleRunSummaryResponse(
                 summary.runId(),
                 summary.firstEventAt(),

@@ -121,7 +121,21 @@ dependencies {
 }
 ```
 
-The console core depends on the JDBC read model and remains read-only. It provides `ActionGraphConsoleService`, response records, paging validation, and console page template rendering, but it does not expose HTTP endpoints or authenticate requests.
+The console core has no JDBC or Spring Web dependency. It provides `ActionGraphConsoleService`, response records, paging validation, console page template rendering, and the `ConsoleRunRepository` port. Applications provide an implementation for their own read model.
+
+## JDBC Read-Only Monitoring Adapter
+
+Use this for a custom non-Spring monitoring service that reads ActionGraph trace tables directly.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-console-core")
+    implementation("com.actiongraph:actiongraph-console-jdbc")
+}
+```
+
+`actiongraph-console-jdbc` implements the `ConsoleRunRepository` port by adapting `JdbcTraceRunRepository`. It remains read-only and does not expose HTTP endpoints.
 
 ## Spring MVC Read-Only Monitoring Service
 
@@ -134,7 +148,7 @@ dependencies {
 }
 ```
 
-The Console starter wraps `actiongraph-console-core` with a Spring MVC controller, built-in static page, token-header check, and auto-configuration. It requires a `DataSource` and must remain read-only: it does not execute, resume, approve, deny, or compensate runs.
+The Console starter wraps `actiongraph-console-core` and `actiongraph-console-jdbc` with a Spring MVC controller, built-in static page, token-header check, and auto-configuration. It requires a `DataSource` and must remain read-only: it does not execute, resume, approve, deny, or compensate runs.
 
 ## Full Pilot Service
 
