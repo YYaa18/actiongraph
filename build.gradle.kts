@@ -41,16 +41,9 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-governance-human-review" to "Optional governance policies that enrich human-review approval chains and review attributes.",
     "actiongraph-governance-spring-boot-starter" to "Optional Spring Boot governance policies for masking, amount limits, and rule-based permissions.",
     "actiongraph-governance-human-review-spring-boot-starter" to "Optional Spring Boot governance policies for human-review routing and review attributes.",
-    "actiongraph-console-core" to "Reusable ActionGraph console query service and response model.",
-    "actiongraph-console-jdbc" to "JDBC adapter for the ActionGraph console query port.",
-    "actiongraph-console-export" to "Reusable ActionGraph console audit export service for CSV and JSONL output.",
-    "actiongraph-console-spring-boot-autoconfigure" to "Optional Spring Boot service auto-configuration for ActionGraph console components.",
-    "actiongraph-console-api-spring-boot-starter" to "Optional Spring MVC JSON API endpoints for the ActionGraph console.",
-    "actiongraph-console-ui-spring-boot-starter" to "Optional Spring MVC HTML page for the ActionGraph console.",
-    "actiongraph-console-export-spring-boot-starter" to "Optional Spring MVC audit export endpoints for the ActionGraph console.",
-    "actiongraph-console-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC console read model.",
+    "actiongraph-console" to "Reusable ActionGraph console query, JDBC read model, and audit export services.",
     "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot repository-backed human-review policy support for ActionGraph.",
-    "actiongraph-console-spring-boot-starter" to "Compatibility aggregate starter for the ActionGraph console API and UI.",
+    "actiongraph-console-spring-boot-starter" to "Spring Boot starter for the ActionGraph console API, UI, export, and JDBC read model.",
     "actiongraph-control-plane-spring-boot-starter" to "Optional aggregate starter for ActionGraph runtime, component catalog, human-review, and console control-plane endpoints."
 )
 

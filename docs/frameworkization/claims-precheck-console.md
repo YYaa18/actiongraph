@@ -69,31 +69,21 @@ Each `TraceRunSummary` includes:
 
 This lets a future console list runs directly from the JDBC trace table, page/filter operational views, inspect trace details, and flag tampered or legacy audit chains without replaying business code.
 
-## Console Core
+## Console Library
 
-`actiongraph-console-core` packages the read-only control-plane logic without Spring Web or JDBC coupling:
+`actiongraph-console` packages the read-only control-plane logic without Spring Web coupling:
 
 - `ActionGraphConsoleService`
 - `ConsoleRunRepository` port
 - Console response records for run pages, run summaries, trace events, and errors
 - paging and limit validation
 - built-in page template rendering helpers
-
-Custom consoles, CLI diagnostics, gateway adapters, or non-Spring services can depend on this module directly and provide their own `ConsoleRunRepository`.
-
-## Console Export
-
-`actiongraph-console-export` packages CSV and JSONL evidence formatting without Spring Web or JDBC coupling:
-
 - run-summary CSV export with paging/status/audit filters
 - per-run trace CSV export
 - per-run trace JSONL export
+- JDBC trace read model adapter for `ConsoleRunRepository`
 
-It wraps `ActionGraphConsoleService`, so custom batch jobs, audit archive processes, and gateway adapters can reuse the same read-only query service without exposing HTTP endpoints.
-
-## Console JDBC Adapter
-
-`actiongraph-console-jdbc` adapts the JDBC trace read model to the Console port:
+Custom consoles, CLI diagnostics, gateway adapters, audit archive jobs, or non-Spring services can depend on this module directly and provide their own `ConsoleRunRepository`, or use the built-in JDBC adapter:
 
 ```java
 ConsoleRunRepository repository =
@@ -103,17 +93,17 @@ ActionGraphConsoleService service =
         new ActionGraphConsoleService(repository, ConsoleOptions.defaults());
 ```
 
-This keeps the control-plane service independently reusable while still giving JDBC deployments an off-the-shelf adapter.
+This keeps the control-plane service independently reusable while still giving JDBC deployments an off-the-shelf adapter and export formatter.
 
 ## Spring Boot Read-Only Control Plane
 
-`actiongraph-console-api-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
+`actiongraph-console-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
 
 - `actiongraph.console.enabled=true`
-- `actiongraph-console-api-spring-boot-starter` is on the runtime classpath
-- an `ActionGraphConsoleService` or `ConsoleRunRepository` bean is available
+- `actiongraph-console-spring-boot-starter` is on the runtime classpath
+- an `ActionGraphConsoleService` or `ConsoleRunRepository` bean is available, or a `DataSource` is available for the starter's JDBC repository auto-configuration
 
-The Console API starter wraps `actiongraph-console-core`, exposes only JSON query endpoints, and stays read-only. Add `actiongraph-console-ui-spring-boot-starter` when the same service should also serve the bundled page, add `actiongraph-console-export-spring-boot-starter` when it should expose CSV/JSONL audit export endpoints, or use the compatibility `actiongraph-console-spring-boot-starter` to bring API and UI together. Add `actiongraph-console-jdbc-spring-boot-starter` when a `DataSource` should be adapted into the default JDBC `ConsoleRunRepository`. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
+The Console starter wraps `actiongraph-console`, exposes the built-in page, JSON query endpoints, and CSV/JSONL export endpoints, and stays read-only. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
 
 ```yaml
 actiongraph:

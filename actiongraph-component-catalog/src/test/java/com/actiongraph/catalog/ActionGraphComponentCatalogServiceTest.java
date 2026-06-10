@@ -20,14 +20,16 @@ class ActionGraphComponentCatalogServiceTest {
                         "actiongraph-component-catalog",
                         "actiongraph-control-plane-api",
                         "actiongraph-control-plane-auth",
-                        "actiongraph-component-catalog-spring-boot-starter"
+                        "actiongraph-component-catalog-spring-boot-starter",
+                        "actiongraph-console",
+                        "actiongraph-console-spring-boot-starter"
                 );
         assertThat(service.components())
                 .filteredOn(component -> component.kind() == ComponentKind.CONTROL_PLANE)
                 .extracting(ActionGraphComponent::module)
                 .contains(
                         "actiongraph-runtime-api-spring-boot-starter",
-                        "actiongraph-console-api-spring-boot-starter",
+                        "actiongraph-console-spring-boot-starter",
                         "actiongraph-component-catalog-spring-boot-starter"
                 );
         assertThat(service.component("actiongraph-control-plane-spring-boot-starter"))
@@ -52,6 +54,16 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(component -> assertThat(component.capabilities())
                         .contains("java8-runtime-client"));
+        assertThat(service.component("actiongraph-console-spring-boot-starter"))
+                .isPresent()
+                .get()
+                .satisfies(component -> {
+                    assertThat(component.requires())
+                            .containsExactly("actiongraph-console", "actiongraph-control-plane-api",
+                                    "actiongraph-control-plane-auth");
+                    assertThat(component.capabilities())
+                            .contains("console-json-http-api", "console-html-ui", "console-export-http-api");
+                });
     }
 
     @Test
@@ -80,6 +92,11 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())
                         .containsExactly("actiongraph-control-plane-auth"));
+        assertThat(service.profile("console-control-plane"))
+                .isPresent()
+                .get()
+                .satisfies(profile -> assertThat(profile.modules())
+                        .containsExactly("actiongraph-console", "actiongraph-console-spring-boot-starter"));
     }
 
     @Test

@@ -158,7 +158,7 @@ TraceRunPage completed = runs.findRuns(new TraceRunQuery(
 List<TraceEvent> trace = runs.findTraceEvents("RUN-1");
 ```
 
-Control-plane services that want the stable Console port instead of the low-level JDBC model can add `actiongraph-console-jdbc`, which adapts `JdbcTraceRunRepository` to `ConsoleRunRepository`.
+Control-plane services that want the stable Console port instead of the low-level JDBC model can add `actiongraph-console`, which adapts `JdbcTraceRunRepository` to `ConsoleRunRepository`.
 
 Suspended run repository:
 

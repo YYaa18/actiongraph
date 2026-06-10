@@ -2,17 +2,15 @@
 
 `actiongraph-control-plane-spring-boot-starter` is an optional aggregate for Spring MVC deployments that want the built-in control-plane endpoint set through one coordinate.
 
-It brings these split endpoint starters together:
+It brings these endpoint starters together:
 
 - `actiongraph-runtime-api-spring-boot-starter`
 - `actiongraph-component-catalog-spring-boot-starter`
 - `actiongraph-human-review-api-spring-boot-starter`
 - `actiongraph-human-review-callback-spring-boot-starter`
-- `actiongraph-console-api-spring-boot-starter`
-- `actiongraph-console-ui-spring-boot-starter`
-- `actiongraph-console-export-spring-boot-starter`
+- `actiongraph-console-spring-boot-starter`
 
-The split starters remain independently usable. Prefer them when a deployment should expose only one surface, such as API-only Console, approval callbacks only, or runtime start/resume only.
+The endpoint starters remain independently usable. Prefer them when a deployment should expose only one surface, such as Console monitoring only, approval callbacks only, or runtime start/resume only.
 
 ## Dependency
 
@@ -23,9 +21,9 @@ dependencies {
 }
 ```
 
-The aggregate does not include runtime action registration, JDBC repositories, review-task storage, LLM clients, governance policies, or Console JDBC adapters. Add those components separately when the deployment owns them.
+The aggregate does not include runtime action registration, runtime JDBC repositories, review-task storage, LLM clients, or governance policies. Add those components separately when the deployment owns them.
 
-All built-in endpoint starters share `actiongraph-control-plane-api` for error response contracts and `actiongraph-control-plane-auth` for shared-secret token checks. The API component keeps the JSON error shape consistent across Runtime API, Component Catalog, Human Review API, callback, Console API, and export endpoints, and also provides a Java 8 compatible `ActionGraphRuntimeHttpClient` for legacy callers; the auth component keeps header lookup, disabled-secret semantics, and constant-time comparison consistent. These are still lightweight control-plane utilities; enterprise identity, gateway policy, RBAC, tenant checks, and rate limits remain outside this aggregate.
+All built-in endpoint starters share `actiongraph-control-plane-api` for error response contracts and `actiongraph-control-plane-auth` for shared-secret token checks. The API component keeps the JSON error shape consistent across Runtime API, Component Catalog, Human Review API, callback, and Console endpoints, and also provides a Java 8 compatible `ActionGraphRuntimeHttpClient` for legacy callers; the auth component keeps header lookup, disabled-secret semantics, and constant-time comparison consistent. These are still lightweight control-plane utilities; enterprise identity, gateway policy, RBAC, tenant checks, and rate limits remain outside this aggregate.
 
 ## Endpoint Switches
 

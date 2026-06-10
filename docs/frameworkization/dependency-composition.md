@@ -404,97 +404,22 @@ POST /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}/decision
 
 It requires `actiongraph.human-review.api.enabled=true`, a servlet web application, and a `HumanReviewRepository` bean. It does not create review storage or expose `/actiongraph/human-review/callbacks`.
 
-## Custom Read-Only Monitoring Service
+## Custom Read-Only Monitoring And Audit Export
 
-Use this for a custom control-plane, CLI, or gateway adapter that wants the console query service and response model without Spring MVC endpoints.
-
-```kotlin
-dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-console-core")
-}
-```
-
-The console core has no JDBC or Spring Web dependency. It provides `ActionGraphConsoleService`, response records, paging validation, console page template rendering, and the `ConsoleRunRepository` port. Applications provide an implementation for their own read model.
-
-## JDBC Read-Only Monitoring Adapter
-
-Use this for a custom non-Spring monitoring service that reads ActionGraph trace tables directly.
+Use this for a custom control-plane, CLI, gateway adapter, batch job, or audit archive process that wants read-only monitoring and export services without Spring MVC endpoints.
 
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-console-core")
-    implementation("com.actiongraph:actiongraph-console-jdbc")
+    implementation("com.actiongraph:actiongraph-console")
 }
 ```
 
-`actiongraph-console-jdbc` implements the `ConsoleRunRepository` port by adapting `JdbcTraceRunRepository`. It remains read-only and does not expose HTTP endpoints.
+`actiongraph-console` provides `ActionGraphConsoleService`, response records, paging validation, console page template rendering, the `ConsoleRunRepository` port, a JDBC adapter over `JdbcTraceRunRepository`, and CSV/JSONL audit export services. It remains read-only: it does not execute, resume, approve, deny, compensate runs, or expose HTTP endpoints.
 
-## Custom Audit Export Service
+## Spring MVC Read-Only Console
 
-Use this for a custom control-plane, batch job, CLI, or audit archive process that wants CSV run summaries or CSV/JSONL trace evidence without Spring MVC endpoints.
-
-```kotlin
-dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-console-core")
-    implementation("com.actiongraph:actiongraph-console-export")
-}
-```
-
-`actiongraph-console-export` wraps `ActionGraphConsoleService` and formats the same read-only run summaries and trace details as CSV or JSONL. It has no Spring Web or JDBC dependency; add `actiongraph-console-jdbc` only when the export process should read ActionGraph trace tables directly.
-
-## Spring MVC Read-Only Monitoring API
-
-Use this for a separate control-plane application that exposes read-only JSON endpoints over any `ConsoleRunRepository` without serving the bundled page.
-
-```kotlin
-dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
-}
-```
-
-The Console API starter wraps `actiongraph-console-core` with Spring MVC JSON endpoints, token-header check, and shared service auto-configuration. It requires an `ActionGraphConsoleService` or `ConsoleRunRepository` bean and must remain read-only: it does not execute, resume, approve, deny, compensate runs, or serve the bundled page.
-
-## Spring MVC Read-Only Monitoring UI
-
-Use this when a control-plane application wants only the bundled HTML page, for example when JSON requests are routed through an enterprise gateway or a custom API service.
-
-```kotlin
-dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
-}
-```
-
-The Console UI starter serves only `GET /actiongraph/console` and injects the configured token header and paging limits into the page. It does not create repositories or expose `/runs` JSON endpoints.
-
-## Spring MVC Audit Export Endpoints
-
-Use this when a control-plane application wants only downloadable audit evidence over the Console service without exposing the bundled page or the regular JSON query API.
-
-```kotlin
-dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-console-export-spring-boot-starter")
-}
-```
-
-The Console export starter creates `ActionGraphConsoleExportService` and exposes only:
-
-```text
-GET /actiongraph/console/runs/export.csv
-GET /actiongraph/console/runs/{runId}/trace/export.csv
-GET /actiongraph/console/runs/{runId}/trace/export.jsonl
-```
-
-It uses the same `actiongraph.console.*` path and token settings as the API/UI starters, requires an `ActionGraphConsoleService` or `ConsoleRunRepository` bean, and must remain read-only.
-
-## Spring MVC Read-Only Monitoring Aggregate
-
-Use this compatibility coordinate when an application wants the built-in page and JSON API together through the previous single dependency.
+Use this for a Spring MVC control-plane application that wants the built-in Console page, JSON query API, downloadable audit evidence, and optional JDBC repository auto-configuration.
 
 ```kotlin
 dependencies {
@@ -503,23 +428,19 @@ dependencies {
 }
 ```
 
-The aggregate starter brings `actiongraph-console-api-spring-boot-starter` and `actiongraph-console-ui-spring-boot-starter` transitively. New applications should prefer the split dependencies when endpoint exposure needs to be explicit.
+The Console starter wraps `actiongraph-console` with Spring MVC endpoints, token-header checks, shared service auto-configuration, and optional `DataSource` to `ConsoleRunRepository` wiring. It exposes only read-only endpoints:
 
-## Spring MVC JDBC Read-Only Monitoring Adapter
-
-Use this when the Spring MVC control-plane should read ActionGraph JDBC trace tables directly.
-
-```kotlin
-dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-ui-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-export-spring-boot-starter")
-}
+```text
+GET /actiongraph/console
+GET /actiongraph/console/runs
+GET /actiongraph/console/runs/{runId}
+GET /actiongraph/console/runs/{runId}/trace
+GET /actiongraph/console/runs/export.csv
+GET /actiongraph/console/runs/{runId}/trace/export.csv
+GET /actiongraph/console/runs/{runId}/trace/export.jsonl
 ```
 
-`actiongraph-console-jdbc-spring-boot-starter` creates the `ConsoleRunRepository` bean from a `DataSource`. Keeping it separate lets Spring MVC control-plane services use a custom repository without pulling JDBC read-model code.
+It requires `actiongraph.console.enabled=true` and either an `ActionGraphConsoleService`/`ConsoleRunRepository` bean or an enabled JDBC repository auto-configuration with a `DataSource`. It must remain read-only: it does not execute, resume, approve, deny, or compensate runs.
 
 ## Spring MVC Control-Plane Aggregate
 
@@ -532,7 +453,7 @@ dependencies {
 }
 ```
 
-The aggregate brings only split endpoint starters. It does not create business runtime beans, interpreters, seeders, repositories, JDBC adapters, review storage, LLM clients, or governance policies. Each endpoint family still requires its own `actiongraph.*.enabled=true` switch and, except the self-contained component catalog, its own backing beans. Prefer the split endpoint starters when the deployment should expose only part of the built-in control plane.
+The aggregate brings only endpoint starters. It does not create business runtime beans, interpreters, seeders, runtime repositories, review storage, LLM clients, or governance policies. Each endpoint family still requires its own `actiongraph.*.enabled=true` switch and, except the self-contained component catalog, its own backing beans. Console read-model repository wiring remains property-gated by the Console starter. Prefer split endpoint starters when the deployment should expose only part of the built-in control plane.
 
 ## Full Pilot Service
 
@@ -551,7 +472,7 @@ dependencies {
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```
 

@@ -181,7 +181,7 @@ class ActionGraphControlPlaneSpringBootStarterTest {
     }
 
     @Test
-    void aggregateDoesNotPullStorageOrRuntimeInfrastructureStarters() {
+    void aggregateDoesNotPullRuntimeOrDomainStorageStarters() {
         assertLoadable("com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController");
         assertLoadable("com.actiongraph.catalog.spring.ActionGraphComponentCatalogController");
         assertLoadable("com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiController");
@@ -193,7 +193,7 @@ class ActionGraphControlPlaneSpringBootStarterTest {
         assertNotLoadable("com.actiongraph.jdbc.spring.ActionGraphJdbcAutoConfiguration");
         assertNotLoadable("com.actiongraph.memory.jdbc.spring.ActionGraphMemoryJdbcAutoConfiguration");
         assertNotLoadable("com.actiongraph.humanreview.jdbc.spring.ActionGraphHumanReviewJdbcAutoConfiguration");
-        assertNotLoadable("com.actiongraph.console.jdbc.spring.ActionGraphConsoleJdbcAutoConfiguration");
+        assertLoadable("com.actiongraph.console.jdbc.spring.ActionGraphConsoleJdbcAutoConfiguration");
         assertNotLoadable("com.actiongraph.humanreview.spring.ActionGraphHumanReviewAutoConfiguration");
     }
 
