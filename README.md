@@ -23,6 +23,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Single-transaction amount limits with hard denial and review escalation
 - Spring Boot starter with annotation-driven Action registration and runtime defaults
 - Optional human-review Spring Boot starter with approval callback endpoint support
+- Reusable console core service for read-only run monitoring
 - Optional console Spring Boot starter with read-only run monitoring UI/endpoints
 - Optional JDBC Spring Boot starter for durable repository auto-configuration
 - DeepSeek-compatible LLM goal interpretation
@@ -39,6 +40,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning |
 | `actiongraph-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC repositories |
 | `actiongraph-human-review-spring-boot-starter` | Optional approval callback endpoint for external review systems |
+| `actiongraph-console-core` | Reusable read-only console query service and response model |
 | `actiongraph-console-spring-boot-starter` | Optional read-only Console UI and Spring MVC query endpoints |
 | `actiongraph-samples` | Pure Java sample applications |
 
@@ -117,7 +119,7 @@ When `actiongraph-human-review-spring-boot-starter` is on the classpath and the 
 
 If `shared-secret` is configured, the request must include the configured token header with the same value. Missing or invalid callback tokens return `401 UNAUTHORIZED`.
 
-When `actiongraph-console-spring-boot-starter` is on the classpath and `actiongraph.console.enabled=true`, a Spring MVC application with a `DataSource` exposes read-only run monitoring endpoints:
+`actiongraph-console-core` can be used directly by custom monitoring services that want the run query service and response model without Spring MVC. When `actiongraph-console-spring-boot-starter` is on the classpath and `actiongraph.console.enabled=true`, a Spring MVC application with a `DataSource` exposes read-only run monitoring endpoints:
 
 ```text
 GET /actiongraph/console

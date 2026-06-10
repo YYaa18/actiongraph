@@ -1,5 +1,7 @@
 package com.actiongraph.console.spring;
 
+import com.actiongraph.console.ActionGraphConsoleService;
+import com.actiongraph.console.ConsoleOptions;
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -36,11 +38,27 @@ public class ActionGraphConsoleWebAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "actionGraphConsoleController")
-    public ActionGraphConsoleController actionGraphConsoleController(
+    @ConditionalOnMissingBean
+    public ActionGraphConsoleService actionGraphConsoleService(
             JdbcTraceRunRepository traceRunRepository,
             ActionGraphConsoleProperties properties
     ) {
-        return new ActionGraphConsoleController(traceRunRepository, properties);
+        return new ActionGraphConsoleService(
+                traceRunRepository,
+                new ConsoleOptions(
+                        properties.getTokenHeader(),
+                        properties.getDefaultLimit(),
+                        properties.getMaxLimit()
+                )
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "actionGraphConsoleController")
+    public ActionGraphConsoleController actionGraphConsoleController(
+            ActionGraphConsoleService consoleService,
+            ActionGraphConsoleProperties properties
+    ) {
+        return new ActionGraphConsoleController(consoleService, properties);
     }
 }

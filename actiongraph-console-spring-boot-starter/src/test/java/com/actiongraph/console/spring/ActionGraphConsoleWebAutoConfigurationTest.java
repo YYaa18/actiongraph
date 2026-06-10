@@ -1,6 +1,9 @@
 package com.actiongraph.console.spring;
 
+import com.actiongraph.console.ActionGraphConsoleService;
+import com.actiongraph.console.ConsoleOptions;
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
+import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
 import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceEventType;
 import com.actiongraph.trace.TraceHasher;
@@ -63,16 +66,39 @@ class ActionGraphConsoleWebAutoConfigurationTest {
                         "actiongraph.console.default-limit=25",
                         "actiongraph.console.max-limit=75"
                 )
-                .run(context -> mockMvc(context).perform(get("/internal/actiongraph-console")
-                                .accept(MediaType.TEXT_HTML))
-                        .andExpect(status().isOk())
-                        .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                        .andExpect(content().string(containsString("ActionGraph Console")))
-                        .andExpect(content().string(containsString("Run monitoring and trace audit")))
-                        .andExpect(content().string(containsString("tokenHeader: 'X-Internal-Console-Token'")))
-                        .andExpect(content().string(containsString("defaultLimit: 25")))
-                        .andExpect(content().string(containsString("maxLimit: 75")))
-                        .andExpect(content().string(containsString("\"/trace\""))));
+                .run(context -> {
+                    assertThat(context).hasSingleBean(ActionGraphConsoleService.class);
+                    mockMvc(context).perform(get("/internal/actiongraph-console")
+                                    .accept(MediaType.TEXT_HTML))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                            .andExpect(content().string(containsString("ActionGraph Console")))
+                            .andExpect(content().string(containsString("Run monitoring and trace audit")))
+                            .andExpect(content().string(containsString("tokenHeader: 'X-Internal-Console-Token'")))
+                            .andExpect(content().string(containsString("defaultLimit: 25")))
+                            .andExpect(content().string(containsString("maxLimit: 75")))
+                            .andExpect(content().string(containsString("\"/trace\"")));
+                });
+    }
+
+    @Test
+    void applicationCanOverrideConsoleService() {
+        contextRunner
+                .withBean(DataSource.class, ActionGraphConsoleWebAutoConfigurationTest::h2)
+                .withBean(ActionGraphConsoleService.class, () -> new ActionGraphConsoleService(
+                        new JdbcTraceRunRepository(h2()),
+                        new ConsoleOptions("X-Custom-Console-Token", 3, 9)
+                ))
+                .withPropertyValues("actiongraph.console.enabled=true")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(ActionGraphConsoleService.class);
+                    mockMvc(context).perform(get("/actiongraph/console")
+                                    .accept(MediaType.TEXT_HTML))
+                            .andExpect(status().isOk())
+                            .andExpect(content().string(containsString("tokenHeader: 'X-Custom-Console-Token'")))
+                            .andExpect(content().string(containsString("defaultLimit: 3")))
+                            .andExpect(content().string(containsString("maxLimit: 9")));
+                });
     }
 
     @Test

@@ -69,6 +69,17 @@ Each `TraceRunSummary` includes:
 
 This lets a future console list runs directly from the JDBC trace table, page/filter operational views, inspect trace details, and flag tampered or legacy audit chains without replaying business code.
 
+## Console Core
+
+`actiongraph-console-core` packages the read-only control-plane logic without Spring Web:
+
+- `ActionGraphConsoleService`
+- Console response records for run pages, run summaries, trace events, and errors
+- paging and limit validation
+- built-in page template rendering helpers
+
+Custom consoles, CLI diagnostics, gateway adapters, or non-Spring services can depend on this module directly and call the service with a `JdbcTraceRunRepository`.
+
 ## Spring Boot Read-Only Endpoint
 
 `actiongraph-console-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
@@ -77,7 +88,7 @@ This lets a future console list runs directly from the JDBC trace table, page/fi
 - `actiongraph-console-spring-boot-starter` is on the runtime classpath
 - a `DataSource` bean is available
 
-The Console starter brings the JDBC read model as an implementation dependency and stays read-only. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
+The Console starter wraps `actiongraph-console-core`, brings the JDBC read model as an implementation dependency, and stays read-only. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
 
 ```yaml
 actiongraph:

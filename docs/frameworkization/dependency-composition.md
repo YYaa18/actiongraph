@@ -90,7 +90,20 @@ dependencies {
 
 The callback starter requires a `HumanReviewRepository` bean. A business runtime service can get the in-memory default from `actiongraph-spring-boot-starter`; production services normally add `actiongraph-jdbc-spring-boot-starter` so the callback handler writes durable review decisions.
 
-## Read-Only Monitoring Service
+## Custom Read-Only Monitoring Service
+
+Use this for a custom control-plane, CLI, or gateway adapter that wants the console query service and response model without Spring MVC endpoints.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-console-core")
+}
+```
+
+The console core depends on the JDBC read model and remains read-only. It provides `ActionGraphConsoleService`, response records, paging validation, and console page template rendering, but it does not expose HTTP endpoints or authenticate requests.
+
+## Spring MVC Read-Only Monitoring Service
 
 Use this for a separate control-plane application that only queries trace data.
 
@@ -101,7 +114,7 @@ dependencies {
 }
 ```
 
-The Console starter depends on the JDBC read model and requires a `DataSource`. It must remain read-only: it does not execute, resume, approve, deny, or compensate runs.
+The Console starter wraps `actiongraph-console-core` with a Spring MVC controller, built-in static page, token-header check, and auto-configuration. It requires a `DataSource` and must remain read-only: it does not execute, resume, approve, deny, or compensate runs.
 
 ## Full Pilot Service
 

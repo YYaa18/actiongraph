@@ -13,6 +13,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Spring Boot auto-configuration and annotation-driven action registration |
 | `actiongraph-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot auto-configuration for JDBC repositories |
 | `actiongraph-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0` | Optional Spring MVC approval callback endpoint |
+| `actiongraph-console-core` | `com.actiongraph:actiongraph-console-core:0.1.0` | Reusable read-only Console query service and response model |
 | `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Optional read-only Console UI and Spring MVC query endpoints |
 
 `actiongraph-samples` remains an application/sample module and is intentionally not published.
@@ -88,7 +89,13 @@ External approval callbacks add:
 implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
 ```
 
-Read-only operational monitoring adds:
+Custom read-only operational monitoring adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-console-core")
+```
+
+Spring MVC read-only operational monitoring adds:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-console-spring-boot-starter")

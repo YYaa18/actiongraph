@@ -78,7 +78,7 @@ Set `actiongraph.actions.auto-register-annotated=false` to build an `ActionRegis
 
 ## Optional Ecosystem Components
 
-This starter intentionally does not include durable persistence or HTTP control-plane endpoints. Add `actiongraph-jdbc-spring-boot-starter` when a Spring Boot application needs JDBC-backed repositories, add `actiongraph-human-review-spring-boot-starter` when it needs approval callbacks, and add `actiongraph-console-spring-boot-starter` when it needs operational run monitoring. Keeping these separate lets services use ActionGraph runtime integration without pulling in infrastructure or endpoint surfaces they do not need.
+This starter intentionally does not include durable persistence or HTTP control-plane endpoints. Add `actiongraph-jdbc-spring-boot-starter` when a Spring Boot application needs JDBC-backed repositories, add `actiongraph-human-review-spring-boot-starter` when it needs approval callbacks, add `actiongraph-console-core` for custom read-only monitoring integrations, and add `actiongraph-console-spring-boot-starter` when it needs the built-in Spring MVC operational run monitoring endpoint/page. Keeping these separate lets services use ActionGraph runtime integration without pulling in infrastructure or endpoint surfaces they do not need.
 
 ## Current Scope
 
