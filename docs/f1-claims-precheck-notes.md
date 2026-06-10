@@ -82,8 +82,9 @@ JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_
 真实库接入时推荐暴露一个脱敏视图而不是让 ActionGraph 直接读业务原表。参考脚本：
 
 - `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql`
+- `actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql`
 
-这个脚本给出源表字段、脱敏视图 `claims_precheck_cases`、金额千元取整和敏感字段隔离示例；测试会用 H2 执行脚本并通过默认 JDBC reader 读取视图，保证契约可运行。
+这些脚本给出源表字段、脱敏视图 `claims_precheck_cases`、金额千元取整和敏感字段隔离示例；H2 版本会被测试执行并通过默认 JDBC reader 读取视图，PostgreSQL 版本会被静态契约测试校验字段形状和敏感字段隔离。PostgreSQL 接入说明见 `docs/frameworkization/claims-precheck-postgresql.md`。
 
 `--review-mode suspend-resume` 会使用 `RepositoryBackedHumanReviewPolicy` 和 `SuspendedRunRepository` 跑真实的挂起/恢复路径；`--simulate-review-wait-ms` 用于在 demo 或压测中模拟审批系统回调延迟，`reviewWaitMs` 从 `HumanReviewTask.updatedAt` 时间线计算，接真实审批回调时可以复用同一口径。
 
@@ -122,5 +123,5 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 下一刀应继续把样板域推进到真实试点资产：
 
-- 将脱敏视图契约映射到一家真实业务库，并补充对应数据库方言版本
+- 基于 PostgreSQL 方言契约连接真实/准真实保险库，记录字段映射差异和数据库权限验收结果
 - 将真实审批系统的回调消息接入 `HumanReviewCallbackHandler` 或 Spring Boot 回调端点，并补充联调环境的鉴权、幂等、重试验收用例

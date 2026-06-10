@@ -146,7 +146,7 @@ public void voidDraft(CancellationRequestDraft draft) {
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args='--jdbc-url jdbc:postgresql://db.example/claims --jdbc-user actiongraph_reader --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-JDBC-001 --environment staging'
 ```
 
-JDBC 批量输入使用标准 `DriverManager`；连接真实数据库前，需要把目标数据库驱动加入样例运行 classpath。脱敏视图契约见 `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql`。
+JDBC 批量输入使用标准 `DriverManager`；连接真实数据库前，需要把目标数据库驱动加入样例运行 classpath。脱敏视图契约见 `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql`，PostgreSQL 方言映射见 `actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql` 和 [Claims Precheck PostgreSQL Mapping](docs/frameworkization/claims-precheck-postgresql.md)。
 批量报告会按样本拆出总耗时、业务 Action 耗时、框架调度耗时和审批等待耗时；`suspend-resume` / `external-decisions` 审批模式会走真实挂起/恢复路径，并从审批任务时间戳计算等待。生产审批系统可以通过 `HumanReviewCallbackHandler` 写入审批结果，也可以启用 Spring Boot 回调端点接收 HTTP 回调。
 
 ## 设计边界
@@ -162,7 +162,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 ## 当前成熟度
 
-- 162 个自动化测试通过。
+- 164 个自动化测试通过。
 - 并发冒烟约 6000 runs/s；重复 resume 只产生一次业务副作用。
 - 5 个 Gradle 模块完成拆分。
 - 3 个参考业务域完整跑通。
@@ -170,12 +170,13 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - 支持 Spring Boot 注解式接入。
 - 支持 suspend / resume、JDBC persistence、human review、structured memory。
 - F0 内核金融化完成：Trace/审批预览敏感数据脱敏、审计链防篡改、多级审批链、单笔额度策略。
-- F1 已进入场景打穿：理赔资料预审 + 赔付申请草稿样板域已跑通，可从 CSV 或 JDBC 样本、外部审批决策输出带批次、环境、样本来源、限额参数、审批模式和耗时拆分的 Markdown/CSV 指标报告。
+- F1 已进入场景打穿：理赔资料预审 + 赔付申请草稿样板域已跑通，可从 CSV 或 JDBC 样本、PostgreSQL 脱敏视图映射、外部审批决策输出带批次、环境、样本来源、限额参数、审批模式和耗时拆分的 Markdown/CSV 指标报告。
 
 ## 文档
 
 - [快速接入指南](docs/quick-start.html)
 - [真实 LLM 冒烟测试](docs/frameworkization/llm-smoke.md)
+- [理赔预审 PostgreSQL 映射](docs/frameworkization/claims-precheck-postgresql.md)
 - [技术汇报演示文档](docs/actiongraph-pitch.html)
 - [框架化笔记](docs/frameworkization/)
 - [原始 PRD](docs/PRD-v0.md)

@@ -445,6 +445,7 @@ AmountExtractor amountExtractor() {
   <div class="title">安全边界</div>
   挂起快照按类名 + JSON 恢复 Blackboard 对象，且为了无损 resume 不做脱敏。<b>挂起表必须视为高敏可信输入</b>：仅 runtime 服务账号可读写，严格控制库表权限，不要与低信任系统共库；生产环境应配置 <code>BlackboardTypeRegistry</code>，只允许业务包下的快照类型恢复。JDBC 挂起表同时保存 <code>snapshot_version</code>，不兼容版本会在恢复前拒绝。
 </div>
+<p>理赔预审样板域提供 H2 可执行契约和 PostgreSQL 方言映射：<code>actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql</code>、<code>actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql</code>。真实库接入时建议只授予运行账号读取脱敏视图的权限。</p>
 
 <h2 id="config">配置项</h2>
 <table>
