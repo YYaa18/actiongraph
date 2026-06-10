@@ -41,7 +41,7 @@ actiongraph-samples/build/reports/claims-precheck-console/claims-precheck-consol
 
 ## Boundary
 
-This is a productization seed, not the final console service. It proves the information architecture for run monitoring and audit inspection while keeping the runtime unchanged. A production console should read from JDBC repositories directly and add authentication, authorization, paging, filters, and deployment-specific retention controls.
+The generated HTML artifact is a productization seed, not the final console service. It proves the information architecture for run monitoring and audit inspection while keeping the runtime unchanged.
 
 ## JDBC Read Model
 
@@ -64,3 +64,31 @@ Each `TraceRunSummary` includes:
 - trace-chain verification result, including first broken sequence and message
 
 This lets a future console list recent runs directly from the JDBC trace table and flag tampered or legacy audit chains without replaying business code.
+
+## Spring Boot Read-Only Endpoint
+
+`actiongraph-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
+
+- `actiongraph.console.enabled=true`
+- `actiongraph-persistence-jdbc` is on the runtime classpath
+- a `DataSource` bean is available
+
+```yaml
+actiongraph:
+  console:
+    enabled: true
+    path: /actiongraph/console
+    token-header: X-ActionGraph-Console-Token
+    shared-secret: ${ACTIONGRAPH_CONSOLE_SECRET}
+    default-limit: 50
+    max-limit: 200
+```
+
+Endpoints:
+
+```text
+GET /actiongraph/console/runs?limit=50
+GET /actiongraph/console/runs/{runId}
+```
+
+The responses are read-only summaries: run id, first/last trace timestamps, terminal or suspended status, trace event count, and audit-chain verification fields. Missing or invalid console tokens return `401 UNAUTHORIZED` when `shared-secret` is configured. This is still a backend query API; a production console should add enterprise authentication/authorization, richer paging and filters, retention controls, and a front-end review surface.

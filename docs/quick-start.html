@@ -460,6 +460,12 @@ AmountExtractor amountExtractor() {
   <tr><td><code>actiongraph.human-review.callback-endpoint.path</code></td><td><code>/actiongraph/human-review/callbacks</code></td><td>审批回调 HTTP 端点路径</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.token-header</code></td><td><code>X-ActionGraph-Review-Token</code></td><td>启用共享密钥后用于传递回调 token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.shared-secret</code></td><td>空</td><td>审批回调共享密钥；为空时不校验，生产环境建议通过环境变量或密钥系统注入</td></tr>
+  <tr><td><code>actiongraph.console.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露只读运行监控 HTTP 端点；需要 <code>actiongraph-persistence-jdbc</code> 与 <code>DataSource</code></td></tr>
+  <tr><td><code>actiongraph.console.path</code></td><td><code>/actiongraph/console</code></td><td>只读 Console HTTP 端点前缀，提供 <code>GET /runs</code> 与 <code>GET /runs/{runId}</code></td></tr>
+  <tr><td><code>actiongraph.console.token-header</code></td><td><code>X-ActionGraph-Console-Token</code></td><td>启用共享密钥后用于传递 Console token 的 Header 名</td></tr>
+  <tr><td><code>actiongraph.console.shared-secret</code></td><td>空</td><td>Console 共享密钥；为空时不校验，生产环境建议接入企业网关或密钥系统</td></tr>
+  <tr><td><code>actiongraph.console.default-limit</code></td><td>50</td><td>查询最近运行列表时未传 <code>limit</code> 的默认条数</td></tr>
+  <tr><td><code>actiongraph.console.max-limit</code></td><td>200</td><td>查询最近运行列表允许的最大 <code>limit</code></td></tr>
   <tr><td><code>actiongraph.masking.enabled</code></td><td>false</td><td>是否启用默认金融正则脱敏（Trace 与审批预览）</td></tr>
   <tr><td><code>actiongraph.masking.blocked-keys</code></td><td>空</td><td>命中字段名时整体脱敏为 <code>***</code></td></tr>
   <tr><td><code>actiongraph.limits.rules[].action-id</code></td><td>无</td><td>额度规则匹配的 Action id，支持 <code>*</code> 通配</td></tr>

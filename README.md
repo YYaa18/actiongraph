@@ -21,7 +21,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional data masking for trace details/data and human-review previews
 - Tamper-evident TraceEvent hash chains with verification support
 - Single-transaction amount limits with hard denial and review escalation
-- Spring Boot starter with annotation-driven Action registration and optional human-review callback endpoint
+- Spring Boot starter with annotation-driven Action registration plus optional human-review callback and read-only console endpoints
 - DeepSeek-compatible LLM goal interpretation
 - Reference samples for renewal quote and order cancellation flows
 
@@ -72,6 +72,13 @@ actiongraph:
       path: /actiongraph/human-review/callbacks
       token-header: X-ActionGraph-Review-Token
       shared-secret: ${ACTIONGRAPH_REVIEW_CALLBACK_SECRET}
+  console:
+    enabled: true
+    path: /actiongraph/console
+    token-header: X-ActionGraph-Console-Token
+    shared-secret: ${ACTIONGRAPH_CONSOLE_SECRET}
+    default-limit: 50
+    max-limit: 200
 ```
 
 When the callback endpoint is enabled in a Spring MVC application, approval systems can post decisions directly:
@@ -88,6 +95,15 @@ When the callback endpoint is enabled in a Spring MVC application, approval syst
 ```
 
 If `shared-secret` is configured, the request must include the configured token header with the same value. Missing or invalid callback tokens return `401 UNAUTHORIZED`.
+
+When `actiongraph.console.enabled=true`, a Spring MVC application that also has `actiongraph-persistence-jdbc` and a `DataSource` exposes read-only run monitoring endpoints:
+
+```text
+GET /actiongraph/console/runs?limit=50
+GET /actiongraph/console/runs/{runId}
+```
+
+The console responses include run status, first/last trace timestamps, trace event count, and trace-chain verification results. Configure `actiongraph.console.shared-secret` to require the console token header.
 
 ## Build And Test
 

@@ -71,9 +71,27 @@ actiongraph:
     max-steps: 64
   actions:
     auto-register-annotated: true
+  console:
+    enabled: false
+    path: /actiongraph/console
+    token-header: X-ActionGraph-Console-Token
+    shared-secret: ${ACTIONGRAPH_CONSOLE_SECRET}
+    default-limit: 50
+    max-limit: 200
 ```
 
 Set `actiongraph.actions.auto-register-annotated=false` to build an `ActionRegistry` only from explicit Spring `Action` beans.
+
+## Read-Only Console Endpoint
+
+When `actiongraph.console.enabled=true`, `actiongraph-persistence-jdbc` is on the runtime classpath, and the application has a `DataSource` bean, the starter exposes a read-only run monitoring API:
+
+```text
+GET /actiongraph/console/runs?limit=50
+GET /actiongraph/console/runs/{runId}
+```
+
+The endpoint returns `TraceRunSummary`-shaped JSON with run status, first/last trace timestamps, event count, and trace-chain verification. Configure `actiongraph.console.shared-secret` to require the configured token header. The endpoint does not mutate runtime state and does not resume or approve runs.
 
 ## Current Scope
 

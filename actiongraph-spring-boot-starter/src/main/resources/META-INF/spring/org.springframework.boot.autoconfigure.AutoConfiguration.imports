@@ -1,2 +1,3 @@
 com.actiongraph.spring.ActionGraphAutoConfiguration
 com.actiongraph.spring.ActionGraphHumanReviewCallbackWebAutoConfiguration
+com.actiongraph.spring.ActionGraphConsoleWebAutoConfiguration
