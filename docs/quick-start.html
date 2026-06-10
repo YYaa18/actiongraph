@@ -461,7 +461,7 @@ AmountExtractor amountExtractor() {
   <tr><td><code>actiongraph.human-review.callback-endpoint.token-header</code></td><td><code>X-ActionGraph-Review-Token</code></td><td>启用共享密钥后用于传递回调 token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.shared-secret</code></td><td>空</td><td>审批回调共享密钥；为空时不校验，生产环境建议通过环境变量或密钥系统注入</td></tr>
   <tr><td><code>actiongraph.console.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露只读运行监控 HTTP 端点；需要 <code>actiongraph-persistence-jdbc</code> 与 <code>DataSource</code></td></tr>
-  <tr><td><code>actiongraph.console.path</code></td><td><code>/actiongraph/console</code></td><td>只读 Console HTTP 端点前缀，提供 <code>GET /runs</code>、<code>GET /runs/{runId}</code> 与 <code>GET /runs/{runId}/trace</code>；列表支持 <code>limit</code>、<code>offset</code>、<code>status</code>、<code>auditComplete</code></td></tr>
+  <tr><td><code>actiongraph.console.path</code></td><td><code>/actiongraph/console</code></td><td>只读 Console 页面与 HTTP 端点前缀，提供内置页面、<code>GET /runs</code>、<code>GET /runs/{runId}</code> 与 <code>GET /runs/{runId}/trace</code>；列表支持 <code>limit</code>、<code>offset</code>、<code>status</code>、<code>auditComplete</code></td></tr>
   <tr><td><code>actiongraph.console.token-header</code></td><td><code>X-ActionGraph-Console-Token</code></td><td>启用共享密钥后用于传递 Console token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.console.shared-secret</code></td><td>空</td><td>Console 共享密钥；为空时不校验，生产环境建议接入企业网关或密钥系统</td></tr>
   <tr><td><code>actiongraph.console.default-limit</code></td><td>50</td><td>查询最近运行列表时未传 <code>limit</code> 的默认条数</td></tr>

@@ -25,6 +25,7 @@ The starter auto-configures:
 - `MemoryContextLoader`
 - `Executor` backed by `GoapExecutor`
 - `ActionRegistry`
+- optional read-only Console page and HTTP query endpoints when enabled with JDBC persistence
 
 The generated `ActionRegistry` includes:
 
@@ -87,12 +88,13 @@ Set `actiongraph.actions.auto-register-annotated=false` to build an `ActionRegis
 When `actiongraph.console.enabled=true`, `actiongraph-persistence-jdbc` is on the runtime classpath, and the application has a `DataSource` bean, the starter exposes a read-only run monitoring API:
 
 ```text
+GET /actiongraph/console
 GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
 GET /actiongraph/console/runs/{runId}
 GET /actiongraph/console/runs/{runId}/trace
 ```
 
-The endpoint returns `TraceRunSummary`-shaped JSON with paging metadata, run status, first/last trace timestamps, event count, trace-chain verification, and trace event details for a selected run. Configure `actiongraph.console.shared-secret` to require the configured token header. The endpoint does not mutate runtime state and does not resume or approve runs.
+The built-in page renders a compact operational view with filters, run metadata, and a trace timeline. The API returns `TraceRunSummary`-shaped JSON with paging metadata, run status, first/last trace timestamps, event count, trace-chain verification, and trace event details for a selected run. Configure `actiongraph.console.shared-secret` to require the configured token header for API calls. The console does not mutate runtime state and does not resume or approve runs.
 
 ## Current Scope
 

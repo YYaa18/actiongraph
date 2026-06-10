@@ -91,9 +91,10 @@ actiongraph:
 Endpoints:
 
 ```text
+GET /actiongraph/console
 GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
 GET /actiongraph/console/runs/{runId}
 GET /actiongraph/console/runs/{runId}/trace
 ```
 
-The responses are read-only summaries and trace details: run id, first/last trace timestamps, terminal or suspended status, trace event count, audit-chain verification fields, and individual trace event rows. Missing or invalid console tokens return `401 UNAUTHORIZED` when `shared-secret` is configured. This is still a backend query API; a production console should add enterprise authentication/authorization, retention controls, and a front-end review surface.
+The built-in page shows the same read model as a compact operational surface: run list, status/audit filters, selected-run metadata, and a trace timeline. API responses are read-only summaries and trace details: run id, first/last trace timestamps, terminal or suspended status, trace event count, audit-chain verification fields, and individual trace event rows. Missing or invalid console tokens return `401 UNAUTHORIZED` for API calls when `shared-secret` is configured. A production deployment should still add enterprise authentication/authorization and retention controls.

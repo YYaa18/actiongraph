@@ -7,6 +7,7 @@ import com.actiongraph.persistence.jdbc.TraceRunSummary;
 import com.actiongraph.trace.TraceEvent;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -26,8 +29,11 @@ import java.util.Objects;
 @RestController
 @RequestMapping("${actiongraph.console.path:/actiongraph/console}")
 public final class ActionGraphConsoleController {
+    private static final String CONSOLE_PAGE_RESOURCE = "/actiongraph/console/index.html";
+
     private final JdbcTraceRunRepository runRepository;
     private final ActionGraphProperties.ConsoleProperties properties;
+    private final String consolePage;
 
     public ActionGraphConsoleController(
             JdbcTraceRunRepository runRepository,
@@ -35,6 +41,12 @@ public final class ActionGraphConsoleController {
     ) {
         this.runRepository = Objects.requireNonNull(runRepository, "runRepository");
         this.properties = Objects.requireNonNull(properties, "properties");
+        this.consolePage = renderConsolePage(loadConsolePage(), properties);
+    }
+
+    @GetMapping(value = {"", "/"}, produces = MediaType.TEXT_HTML_VALUE)
+    public String page() {
+        return consolePage;
     }
 
     @GetMapping("/runs")
@@ -128,6 +140,43 @@ public final class ActionGraphConsoleController {
                 ? new byte[0]
                 : actual.getBytes(StandardCharsets.UTF_8);
         return MessageDigest.isEqual(expectedBytes, actualBytes);
+    }
+
+    private String loadConsolePage() {
+        try (InputStream input = ActionGraphConsoleController.class.getResourceAsStream(CONSOLE_PAGE_RESOURCE)) {
+            if (input == null) {
+                throw new IllegalStateException("Console page resource not found: " + CONSOLE_PAGE_RESOURCE);
+            }
+            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Cannot read console page resource", ex);
+        }
+    }
+
+    private String renderConsolePage(String template, ActionGraphProperties.ConsoleProperties consoleProperties) {
+        return template
+                .replace("__ACTIONGRAPH_CONSOLE_TOKEN_HEADER__", jsString(consoleProperties.getTokenHeader()))
+                .replace("__ACTIONGRAPH_CONSOLE_DEFAULT_LIMIT__", Integer.toString(consoleProperties.getDefaultLimit()))
+                .replace("__ACTIONGRAPH_CONSOLE_MAX_LIMIT__", Integer.toString(consoleProperties.getMaxLimit()));
+    }
+
+    private String jsString(String value) {
+        StringBuilder escaped = new StringBuilder("'");
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            switch (ch) {
+                case '\\' -> escaped.append("\\\\");
+                case '\'' -> escaped.append("\\'");
+                case '\n' -> escaped.append("\\n");
+                case '\r' -> escaped.append("\\r");
+                case '\t' -> escaped.append("\\t");
+                case '<' -> escaped.append("\\u003c");
+                case '>' -> escaped.append("\\u003e");
+                case '&' -> escaped.append("\\u0026");
+                default -> escaped.append(ch);
+            }
+        }
+        return escaped.append("'").toString();
     }
 
     @ExceptionHandler(UnauthorizedConsoleException.class)

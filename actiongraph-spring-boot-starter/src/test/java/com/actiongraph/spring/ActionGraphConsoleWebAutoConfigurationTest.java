@@ -23,7 +23,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,6 +50,29 @@ class ActionGraphConsoleWebAutoConfigurationTest {
         contextRunner
                 .withPropertyValues("actiongraph.console.enabled=true")
                 .run(context -> assertThat(context).doesNotHaveBean(ActionGraphConsoleController.class));
+    }
+
+    @Test
+    void consoleServesReadOnlyPageWithInjectedConfiguration() {
+        contextRunner
+                .withBean(DataSource.class, ActionGraphConsoleWebAutoConfigurationTest::h2)
+                .withPropertyValues(
+                        "actiongraph.console.enabled=true",
+                        "actiongraph.console.path=/internal/actiongraph-console",
+                        "actiongraph.console.token-header=X-Internal-Console-Token",
+                        "actiongraph.console.default-limit=25",
+                        "actiongraph.console.max-limit=75"
+                )
+                .run(context -> mockMvc(context).perform(get("/internal/actiongraph-console")
+                                .accept(MediaType.TEXT_HTML))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                        .andExpect(content().string(containsString("ActionGraph Console")))
+                        .andExpect(content().string(containsString("Run monitoring and trace audit")))
+                        .andExpect(content().string(containsString("tokenHeader: 'X-Internal-Console-Token'")))
+                        .andExpect(content().string(containsString("defaultLimit: 25")))
+                        .andExpect(content().string(containsString("maxLimit: 75")))
+                        .andExpect(content().string(containsString("\"/trace\""))));
     }
 
     @Test

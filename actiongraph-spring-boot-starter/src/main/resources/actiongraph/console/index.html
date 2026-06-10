@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ActionGraph Console</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-2: #eef2f6;
+      --ink: #1c2630;
+      --muted: #607080;
+      --line: #d7dee7;
+      --line-strong: #b9c5d1;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --ok: #15803d;
+      --warn: #b45309;
+      --bad: #b42318;
+      --shadow: 0 12px 32px rgba(17, 24, 39, 0.08);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      letter-spacing: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      letter-spacing: 0;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      min-height: 36px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--surface);
+      padding: 0 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    button.primary:hover {
+      background: var(--accent-strong);
+      color: #ffffff;
+    }
+
+    input,
+    select {
+      min-height: 36px;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      padding: 0 10px;
+      font-size: 13px;
+    }
+
+    input:focus,
+    select:focus,
+    button:focus-visible {
+      outline: 2px solid rgba(15, 118, 110, 0.2);
+      outline-offset: 1px;
+      border-color: var(--accent);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    .topbar {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      background: linear-gradient(180deg, #ffffff 0%, #eef6f4 100%);
+      flex: 0 0 auto;
+    }
+
+    .mark svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.15;
+      font-weight: 760;
+    }
+
+    .brand small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .connection {
+      display: grid;
+      grid-template-columns: minmax(180px, 280px) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) 92px 92px auto auto auto;
+      gap: 10px;
+      align-items: end;
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 720;
+      text-transform: uppercase;
+    }
+
+    .summary-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .main-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(520px, 1.25fr) minmax(360px, 0.75fr);
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel {
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .panel-body {
+      min-height: 0;
+      height: calc(100vh - 64px - 65px - 28px - 48px);
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      height: 38px;
+      padding: 0 12px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 760;
+      text-align: left;
+      text-transform: uppercase;
+    }
+
+    td {
+      height: 48px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    tr.run-row {
+      cursor: pointer;
+    }
+
+    tr.run-row:hover {
+      background: #f7fbfa;
+    }
+
+    tr.run-row.selected {
+      background: #edf8f6;
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    .status,
+    .audit {
+      display: inline-block;
+      min-height: 24px;
+      max-width: 100%;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 760;
+      line-height: 22px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status.completed,
+    .audit.ok {
+      color: var(--ok);
+      background: #eaf7ef;
+      border: 1px solid #b7e3c4;
+    }
+
+    .status.suspended {
+      color: var(--warn);
+      background: #fff6e8;
+      border: 1px solid #f4d39b;
+    }
+
+    .status.failed,
+    .audit.bad {
+      color: var(--bad);
+      background: #fff0ee;
+      border: 1px solid #fac7c0;
+    }
+
+    .status.unknown {
+      color: var(--muted);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+
+    .detail {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100%;
+    }
+
+    .detail-empty,
+    .state {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .detail-content {
+      display: none;
+      min-height: 0;
+      grid-template-rows: auto 1fr;
+    }
+
+    .detail-content.active {
+      display: grid;
+    }
+
+    .run-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .meta-cell {
+      min-width: 0;
+      padding: 12px 14px;
+      background: var(--surface);
+    }
+
+    .meta-cell span {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 720;
+      text-transform: uppercase;
+    }
+
+    .meta-cell strong {
+      display: block;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+      font-weight: 680;
+    }
+
+    .trace-list {
+      min-height: 0;
+      overflow: auto;
+      padding: 10px 12px 18px;
+    }
+
+    .trace-item {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .trace-seq {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .trace-card {
+      min-width: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .trace-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .trace-type {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .trace-time {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .trace-detail {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .trace-data {
+      margin: 2px 0 0;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f8fafb;
+      color: #334155;
+      font-size: 11px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      max-width: min(420px, calc(100vw - 36px));
+      display: none;
+      padding: 12px 14px;
+      border: 1px solid #fac7c0;
+      border-radius: 8px;
+      background: #fff7f5;
+      color: var(--bad);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      line-height: 1.4;
+      z-index: 10;
+    }
+
+    .toast.active {
+      display: block;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 1040px) {
+      .toolbar {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .summary-strip {
+        grid-column: 1 / -1;
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-body {
+        height: auto;
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar {
+        height: auto;
+        align-items: stretch;
+        flex-direction: column;
+        padding: 14px;
+      }
+
+      .connection {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+        padding: 12px 14px;
+      }
+
+      .toolbar button {
+        width: 100%;
+      }
+
+      .main-grid {
+        padding: 10px;
+      }
+
+      .run-meta {
+        grid-template-columns: 1fr;
+      }
+
+      th:nth-child(4),
+      td:nth-child(4),
+      th:nth-child(5),
+      td:nth-child(5) {
+        display: none;
+      }
+
+      .status,
+      .audit {
+        padding: 0 6px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 7.5h6l3 4.5-3 4.5H6L3 12l3-4.5Z"></path>
+            <path d="M15 7.5h3l3 4.5-3 4.5h-3"></path>
+            <path d="M7.5 12h9"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>ActionGraph Console</h1>
+          <small>Run monitoring and trace audit</small>
+        </div>
+      </div>
+      <div class="connection">
+        <label class="sr-only" for="token">Console token</label>
+        <input id="token" type="password" autocomplete="off" placeholder="Console token">
+        <button id="saveToken" type="button">Use token</button>
+      </div>
+    </header>
+
+    <form class="toolbar" id="filters">
+      <div class="field">
+        <label for="status">Status</label>
+        <select id="status">
+          <option value="">All statuses</option>
+          <option value="COMPLETED">COMPLETED</option>
+          <option value="SUSPENDED_PENDING_REVIEW">SUSPENDED_PENDING_REVIEW</option>
+          <option value="DENIED_BY_POLICY">DENIED_BY_POLICY</option>
+          <option value="FAILED_COMPENSATED">FAILED_COMPENSATED</option>
+          <option value="FAILED_COMPENSATION_INCOMPLETE">FAILED_COMPENSATION_INCOMPLETE</option>
+          <option value="HALTED_UNREACHABLE">HALTED_UNREACHABLE</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="audit">Audit</label>
+        <select id="audit">
+          <option value="">All audit chains</option>
+          <option value="true">Complete</option>
+          <option value="false">Broken or legacy</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="limit">Limit</label>
+        <input id="limit" type="number" min="1" value="50">
+      </div>
+      <div class="field">
+        <label for="offset">Offset</label>
+        <input id="offset" type="number" min="0" value="0">
+      </div>
+      <button id="prev" type="button">Prev</button>
+      <button id="next" type="button">Next</button>
+      <button class="primary" type="submit">Refresh</button>
+      <div class="summary-strip" id="summary">No runs loaded</div>
+    </form>
+
+    <main class="main-grid">
+      <section class="panel" aria-labelledby="runsTitle">
+        <div class="panel-head">
+          <h2 id="runsTitle">Runs</h2>
+          <span class="summary-strip" id="listState">Idle</span>
+        </div>
+        <div class="panel-body">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 28%;">Run</th>
+                <th style="width: 18%;">Status</th>
+                <th style="width: 16%;">Audit</th>
+                <th style="width: 14%;">Events</th>
+                <th style="width: 24%;">Last event</th>
+              </tr>
+            </thead>
+            <tbody id="runsBody">
+              <tr><td colspan="5"><div class="state">Loading runs</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel detail" aria-labelledby="detailTitle">
+        <div class="panel-head">
+          <h2 id="detailTitle">Run detail</h2>
+          <span class="summary-strip" id="detailState">No selection</span>
+        </div>
+        <div class="detail-empty" id="detailEmpty">Select a run to inspect its audit trace.</div>
+        <div class="detail-content" id="detailContent">
+          <div class="run-meta" id="runMeta"></div>
+          <div class="trace-list" id="traceList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="alert"></div>
+
+  <script>
+    const CONFIG = {
+      tokenHeader: __ACTIONGRAPH_CONSOLE_TOKEN_HEADER__,
+      defaultLimit: __ACTIONGRAPH_CONSOLE_DEFAULT_LIMIT__,
+      maxLimit: __ACTIONGRAPH_CONSOLE_MAX_LIMIT__
+    };
+
+    const state = {
+      selectedRunId: null,
+      page: null,
+      token: window.localStorage.getItem("actiongraph.console.token") || ""
+    };
+
+    const els = {
+      token: document.getElementById("token"),
+      saveToken: document.getElementById("saveToken"),
+      filters: document.getElementById("filters"),
+      status: document.getElementById("status"),
+      audit: document.getElementById("audit"),
+      limit: document.getElementById("limit"),
+      offset: document.getElementById("offset"),
+      prev: document.getElementById("prev"),
+      next: document.getElementById("next"),
+      summary: document.getElementById("summary"),
+      listState: document.getElementById("listState"),
+      runsBody: document.getElementById("runsBody"),
+      detailState: document.getElementById("detailState"),
+      detailEmpty: document.getElementById("detailEmpty"),
+      detailContent: document.getElementById("detailContent"),
+      runMeta: document.getElementById("runMeta"),
+      traceList: document.getElementById("traceList"),
+      toast: document.getElementById("toast")
+    };
+
+    els.limit.value = String(CONFIG.defaultLimit);
+    els.limit.max = String(CONFIG.maxLimit);
+    els.token.value = state.token;
+
+    function apiRoot() {
+      return window.location.pathname.replace(/\/$/, "");
+    }
+
+    function headers() {
+      const result = { "Accept": "application/json" };
+      if (state.token) {
+        result[CONFIG.tokenHeader] = state.token;
+      }
+      return result;
+    }
+
+    async function getJson(path) {
+      const response = await fetch(apiRoot() + path, { headers: headers() });
+      const contentType = response.headers.get("content-type") || "";
+      const body = contentType.includes("application/json") ? await response.json() : null;
+      if (!response.ok) {
+        const message = body && body.message ? body.message : response.statusText;
+        throw new Error(message);
+      }
+      return body;
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("active");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => els.toast.classList.remove("active"), 4200);
+    }
+
+    function fmtDate(value) {
+      if (!value) {
+        return "-";
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return value;
+      }
+      return date.toLocaleString();
+    }
+
+    function statusClass(value) {
+      const normalized = (value || "UNKNOWN").toLowerCase();
+      if (normalized.includes("completed")) {
+        return "completed";
+      }
+      if (normalized.includes("suspended")) {
+        return "suspended";
+      }
+      if (normalized.includes("failed") || normalized.includes("denied") || normalized.includes("halted")) {
+        return "failed";
+      }
+      return "unknown";
+    }
+
+    function textCell(text, className) {
+      const td = document.createElement("td");
+      if (className) {
+        td.className = className;
+      }
+      td.textContent = text == null ? "" : String(text);
+      return td;
+    }
+
+    function badge(text, className) {
+      const span = document.createElement("span");
+      span.className = className;
+      span.textContent = text;
+      return span;
+    }
+
+    function renderRuns(page) {
+      state.page = page;
+      els.runsBody.replaceChildren();
+      if (!page.runs.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 5;
+        const empty = document.createElement("div");
+        empty.className = "state";
+        empty.textContent = "No runs match the current filters.";
+        cell.append(empty);
+        row.append(cell);
+        els.runsBody.append(row);
+      }
+
+      page.runs.forEach((run) => {
+        const row = document.createElement("tr");
+        row.className = "run-row";
+        if (run.runId === state.selectedRunId) {
+          row.classList.add("selected");
+        }
+        row.tabIndex = 0;
+        row.setAttribute("role", "button");
+        row.setAttribute("aria-label", "Open run " + run.runId);
+        row.addEventListener("click", () => selectRun(run.runId));
+        row.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectRun(run.runId);
+          }
+        });
+
+        row.append(textCell(run.runId, "mono"));
+
+        const statusTd = document.createElement("td");
+        statusTd.append(badge(run.status || "UNKNOWN", "status " + statusClass(run.status)));
+        row.append(statusTd);
+
+        const auditTd = document.createElement("td");
+        auditTd.append(badge(run.auditComplete ? "Complete" : "Broken", "audit " + (run.auditComplete ? "ok" : "bad")));
+        row.append(auditTd);
+
+        row.append(textCell(run.traceEventCount));
+        row.append(textCell(fmtDate(run.lastEventAt)));
+        els.runsBody.append(row);
+      });
+
+      els.summary.textContent = page.total + " total / " + page.count + " shown";
+      els.listState.textContent = page.hasMore ? "More results available" : "End of result set";
+      els.prev.disabled = page.offset === 0;
+      els.next.disabled = !page.hasMore;
+    }
+
+    function currentQuery() {
+      const params = new URLSearchParams();
+      params.set("limit", safeNumber(els.limit.value, CONFIG.defaultLimit));
+      params.set("offset", safeNumber(els.offset.value, 0));
+      if (els.status.value) {
+        params.set("status", els.status.value);
+      }
+      if (els.audit.value) {
+        params.set("auditComplete", els.audit.value);
+      }
+      return params;
+    }
+
+    function safeNumber(value, fallback) {
+      const parsed = Number.parseInt(value, 10);
+      if (Number.isNaN(parsed)) {
+        return String(fallback);
+      }
+      return String(parsed);
+    }
+
+    async function loadRuns() {
+      els.listState.textContent = "Loading";
+      try {
+        const page = await getJson("/runs?" + currentQuery().toString());
+        renderRuns(page);
+        if (state.selectedRunId && !page.runs.some((run) => run.runId === state.selectedRunId)) {
+          clearDetail();
+        }
+      } catch (error) {
+        els.listState.textContent = "Error";
+        showToast(error.message);
+      }
+    }
+
+    function clearDetail() {
+      state.selectedRunId = null;
+      els.detailState.textContent = "No selection";
+      els.detailContent.classList.remove("active");
+      els.detailEmpty.style.display = "grid";
+      els.detailEmpty.textContent = "Select a run to inspect its audit trace.";
+      els.runMeta.replaceChildren();
+      els.traceList.replaceChildren();
+      renderRuns(state.page || { runs: [], total: 0, count: 0, offset: 0, hasMore: false });
+    }
+
+    async function selectRun(runId) {
+      state.selectedRunId = runId;
+      els.detailState.textContent = "Loading";
+      els.detailEmpty.style.display = "none";
+      els.detailContent.classList.add("active");
+      renderRuns(state.page);
+      try {
+        const [run, trace] = await Promise.all([
+          getJson("/runs/" + encodeURIComponent(runId)),
+          getJson("/runs/" + encodeURIComponent(runId) + "/trace")
+        ]);
+        renderDetail(run, trace.events);
+      } catch (error) {
+        els.detailState.textContent = "Error";
+        showToast(error.message);
+      }
+    }
+
+    function renderDetail(run, events) {
+      els.detailState.textContent = run.runId;
+      els.runMeta.replaceChildren(
+        metaCell("Status", run.status || "UNKNOWN"),
+        metaCell("Audit", run.auditComplete ? "Complete" : run.auditMessage || "Broken"),
+        metaCell("First event", fmtDate(run.firstEventAt)),
+        metaCell("Last event", fmtDate(run.lastEventAt)),
+        metaCell("Trace events", run.traceEventCount),
+        metaCell("Broken seq", run.firstBrokenSeq || "-")
+      );
+      els.traceList.replaceChildren();
+      events.forEach((event) => els.traceList.append(traceItem(event)));
+    }
+
+    function metaCell(label, value) {
+      const cell = document.createElement("div");
+      cell.className = "meta-cell";
+      const labelEl = document.createElement("span");
+      labelEl.textContent = label;
+      const valueEl = document.createElement("strong");
+      valueEl.textContent = value == null ? "" : String(value);
+      cell.append(labelEl, valueEl);
+      return cell;
+    }
+
+    function traceItem(event) {
+      const item = document.createElement("div");
+      item.className = "trace-item";
+      const seq = document.createElement("div");
+      seq.className = "trace-seq mono";
+      seq.textContent = "#" + event.seq;
+
+      const card = document.createElement("div");
+      card.className = "trace-card";
+      const top = document.createElement("div");
+      top.className = "trace-top";
+      const type = document.createElement("div");
+      type.className = "trace-type mono";
+      type.textContent = event.type;
+      const at = document.createElement("div");
+      at.className = "trace-time";
+      at.textContent = fmtDate(event.at);
+      top.append(type, at);
+
+      const detail = document.createElement("div");
+      detail.className = "trace-detail";
+      detail.textContent = event.actionId ? event.actionId + " - " + event.detail : event.detail;
+
+      const data = document.createElement("pre");
+      data.className = "trace-data mono";
+      data.textContent = JSON.stringify(event.data || {}, null, 2);
+
+      card.append(top, detail, data);
+      item.append(seq, card);
+      return item;
+    }
+
+    els.filters.addEventListener("submit", (event) => {
+      event.preventDefault();
+      els.offset.value = safeNumber(els.offset.value, 0);
+      loadRuns();
+    });
+
+    els.prev.addEventListener("click", () => {
+      const limit = Number.parseInt(els.limit.value, 10) || CONFIG.defaultLimit;
+      const offset = Number.parseInt(els.offset.value, 10) || 0;
+      els.offset.value = String(Math.max(0, offset - limit));
+      loadRuns();
+    });
+
+    els.next.addEventListener("click", () => {
+      const limit = Number.parseInt(els.limit.value, 10) || CONFIG.defaultLimit;
+      const offset = Number.parseInt(els.offset.value, 10) || 0;
+      els.offset.value = String(offset + limit);
+      loadRuns();
+    });
+
+    els.saveToken.addEventListener("click", () => {
+      state.token = els.token.value.trim();
+      if (state.token) {
+        window.localStorage.setItem("actiongraph.console.token", state.token);
+      } else {
+        window.localStorage.removeItem("actiongraph.console.token");
+      }
+      loadRuns();
+    });
+
+    loadRuns();
+  </script>
+</body>
+</html>
