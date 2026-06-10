@@ -27,10 +27,12 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
 - Optional non-Spring human review tasks, callback handling, and approval chains
+- Reusable human-review task API service for approval inboxes and gateways
 - Spring Boot starter with annotation-driven Action registration and runtime defaults
 - Optional governance Spring Boot starter for masking, amount limits, and rule-based permissions
 - Optional human-review governance Spring Boot starter for review attributes and approval-chain routing
 - Optional human-review Spring Boot starter with repository-backed review policy support
+- Optional human-review API Spring Boot starter with task query and decision endpoints
 - Optional human-review callback Spring Boot starter with approval callback endpoint support
 - Reusable console core service for read-only run monitoring
 - Optional JDBC adapter for the console query port
@@ -54,6 +56,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-memory-spring-boot-starter` | Optional Spring Boot auto-configuration for structured memory |
 | `actiongraph-interpretation` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
+| `actiongraph-human-review-api` | Reusable human-review task query and decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
 | `actiongraph-governance-human-review` | Optional non-Spring human-review governance extension for amount review attributes and risk-based approval routing |
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
@@ -68,6 +71,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-memory-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC memory repository |
 | `actiongraph-human-review-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC human-review repository |
 | `actiongraph-human-review-spring-boot-starter` | Optional repository-backed review policy auto-configuration |
+| `actiongraph-human-review-api-spring-boot-starter` | Optional Spring MVC human-review task API endpoints |
 | `actiongraph-human-review-callback-spring-boot-starter` | Optional Spring MVC approval callback endpoint for external review systems |
 | `actiongraph-console-core` | Reusable read-only console query service and response model |
 | `actiongraph-console-jdbc` | Optional JDBC adapter for the console query port |
@@ -96,6 +100,7 @@ dependencies {
     implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-governance-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")
@@ -133,6 +138,11 @@ actiongraph:
         allowed-packages:
           - com.example.business
   human-review:
+    api:
+      enabled: true
+      path: /actiongraph/human-review/tasks
+      token-header: X-ActionGraph-Review-Token
+      shared-secret: ${ACTIONGRAPH_REVIEW_API_SECRET}
     callback-endpoint:
       enabled: true
       path: /actiongraph/human-review/callbacks
@@ -161,7 +171,15 @@ Non-Spring services can use `actiongraph-human-review` directly when they need e
 
 When `actiongraph-governance-spring-boot-starter` is on the classpath, masking and amount-limit permission rules are activated. Add `actiongraph-governance-human-review-spring-boot-starter` when those limit rules should also enrich human-review requests or when `actiongraph.human-review.risk-based-approval-chain=true` should route approval stages. Without these modules, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and safe pending human review.
 
-When `actiongraph-human-review-spring-boot-starter` is on the classpath, Spring services get repository-backed human review defaults. The starter supplies an in-memory `HumanReviewRepository` by default, and `actiongraph-human-review-jdbc-spring-boot-starter` supplies a durable production bean when enabled. Add `actiongraph-human-review-callback-spring-boot-starter` and enable `actiongraph.human-review.callback-endpoint.enabled=true` in a Spring MVC application to let approval systems post decisions directly.
+When `actiongraph-human-review-spring-boot-starter` is on the classpath, Spring services get repository-backed human review defaults. The starter supplies an in-memory `HumanReviewRepository` by default, and `actiongraph-human-review-jdbc-spring-boot-starter` supplies a durable production bean when enabled. Add `actiongraph-human-review-api` in non-Spring services when approval inboxes, CLIs, or gateways need a stable task query/decision service. Add `actiongraph-human-review-api-spring-boot-starter` and enable `actiongraph.human-review.api.enabled=true` in a Spring MVC application to expose pending-task, run-task, task-detail, and decision endpoints. Add `actiongraph-human-review-callback-spring-boot-starter` and enable `actiongraph.human-review.callback-endpoint.enabled=true` when external approval systems should post callback decisions directly.
+
+```text
+API starter: GET  /actiongraph/human-review/tasks/pending
+API starter: GET  /actiongraph/human-review/tasks/runs/{runId}
+API starter: GET  /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}
+API starter: POST /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}/decision
+Callback starter: POST /actiongraph/human-review/callbacks
+```
 
 ```json
 {

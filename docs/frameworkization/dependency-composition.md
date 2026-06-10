@@ -272,6 +272,41 @@ dependencies {
 
 The callback starter brings `actiongraph-human-review` transitively, but it does not create `HumanReviewRepository` or `HumanReviewPolicy` beans. It only creates `HumanReviewCallbackHandler` and the Spring MVC controller when `actiongraph.human-review.callback-endpoint.enabled=true`, a servlet web application is present, and a `HumanReviewRepository` bean already exists.
 
+## Custom Human Review Task API
+
+Use this for an approval inbox, CLI, or gateway adapter that wants stable human-review task query/decision DTOs without Spring MVC endpoints.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-human-review-api")
+}
+```
+
+`actiongraph-human-review-api` wraps `HumanReviewRepository` with `HumanReviewApiService`, pending/run/detail task projections, and stage-aware decision operations. It does not create review storage, execute, resume, compensate runs, or expose HTTP endpoints.
+
+## Spring MVC Human Review Task API
+
+Use this when a control-plane application wants only approval task query and decision endpoints without exposing the callback receiver.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
+}
+```
+
+The API starter exposes only:
+
+```text
+GET  /actiongraph/human-review/tasks/pending
+GET  /actiongraph/human-review/tasks/runs/{runId}
+GET  /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}
+POST /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}/decision
+```
+
+It requires `actiongraph.human-review.api.enabled=true`, a servlet web application, and a `HumanReviewRepository` bean. It does not create review storage or expose `/actiongraph/human-review/callbacks`.
+
 ## Custom Read-Only Monitoring Service
 
 Use this for a custom control-plane, CLI, or gateway adapter that wants the console query service and response model without Spring MVC endpoints.
@@ -405,6 +440,7 @@ dependencies {
     implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-api-spring-boot-starter")

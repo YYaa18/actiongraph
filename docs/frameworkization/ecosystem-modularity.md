@@ -8,8 +8,8 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 |---|---|---|
 | Version platform | `actiongraph-bom` | Aligns all ActionGraph module versions for mix-and-match adoption |
 | Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace |
-| Optional adapters | `actiongraph-annotations`, `actiongraph-memory`, `actiongraph-memory-spring-boot-starter`, `actiongraph-memory-jdbc`, `actiongraph-memory-jdbc-spring-boot-starter`, `actiongraph-interpretation`, `actiongraph-human-review`, `actiongraph-human-review-jdbc`, `actiongraph-human-review-jdbc-spring-boot-starter`, `actiongraph-human-review-spring-boot-starter`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-human-review`, `actiongraph-governance-spring-boot-starter`, `actiongraph-governance-human-review-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, structured memory context, Spring memory wiring, JDBC memory storage, goal interpretation contracts, repository-backed human review, JDBC review storage, Spring review-policy wiring, Spring runtime wiring, reusable governance policies, human-review governance extensions, Spring governance wiring, Spring core JDBC wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
-| Control-plane ecosystem | `actiongraph-human-review-callback-spring-boot-starter`, `actiongraph-console-core`, `actiongraph-console-jdbc`, `actiongraph-console-export`, `actiongraph-console-spring-boot-autoconfigure`, `actiongraph-console-api-spring-boot-starter`, `actiongraph-console-ui-spring-boot-starter`, `actiongraph-console-export-spring-boot-starter`, `actiongraph-console-jdbc-spring-boot-starter`, `actiongraph-console-spring-boot-starter` | Approval callback HTTP endpoint, read-only Console query service, JDBC Console adapter, CSV/JSONL audit export service, shared Spring Console service auto-configuration, optional JSON API, optional HTML UI, optional export endpoints, Spring JDBC Console repository auto-configuration, compatibility aggregate starter |
+| Optional adapters | `actiongraph-annotations`, `actiongraph-memory`, `actiongraph-memory-spring-boot-starter`, `actiongraph-memory-jdbc`, `actiongraph-memory-jdbc-spring-boot-starter`, `actiongraph-interpretation`, `actiongraph-human-review`, `actiongraph-human-review-api`, `actiongraph-human-review-jdbc`, `actiongraph-human-review-jdbc-spring-boot-starter`, `actiongraph-human-review-spring-boot-starter`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-human-review`, `actiongraph-governance-spring-boot-starter`, `actiongraph-governance-human-review-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, structured memory context, Spring memory wiring, JDBC memory storage, goal interpretation contracts, repository-backed human review, reusable human-review task API service, JDBC review storage, Spring review-policy wiring, Spring runtime wiring, reusable governance policies, human-review governance extensions, Spring governance wiring, Spring core JDBC wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
+| Control-plane ecosystem | `actiongraph-human-review-api-spring-boot-starter`, `actiongraph-human-review-callback-spring-boot-starter`, `actiongraph-console-core`, `actiongraph-console-jdbc`, `actiongraph-console-export`, `actiongraph-console-spring-boot-autoconfigure`, `actiongraph-console-api-spring-boot-starter`, `actiongraph-console-ui-spring-boot-starter`, `actiongraph-console-export-spring-boot-starter`, `actiongraph-console-jdbc-spring-boot-starter`, `actiongraph-console-spring-boot-starter` | Human-review task query/decision HTTP endpoints, approval callback HTTP endpoint, read-only Console query service, JDBC Console adapter, CSV/JSONL audit export service, shared Spring Console service auto-configuration, optional JSON API, optional HTML UI, optional export endpoints, Spring JDBC Console repository auto-configuration, compatibility aggregate starter |
 | Samples | `actiongraph-samples` | Reference domains and batch demos; not published as a library |
 
 ## Composition Rules
@@ -21,7 +21,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 - Spring Boot structured memory defaults add `actiongraph-memory-spring-boot-starter`.
 - JDBC structured memory adds `actiongraph-memory-jdbc`; Spring Boot JDBC memory adds `actiongraph-memory-jdbc-spring-boot-starter`.
 - Goal catalogs, rule-based interpreters, and Goal-to-Blackboard seeding add `actiongraph-interpretation`.
-- Repository-backed external review tasks and callback handling add `actiongraph-human-review`.
+- Repository-backed external review tasks and callback handling add `actiongraph-human-review`; stable task query/decision projections add `actiongraph-human-review-api`.
 - JDBC review task storage adds `actiongraph-human-review-jdbc`; Spring Boot JDBC review task storage adds `actiongraph-human-review-jdbc-spring-boot-starter`.
 - A Spring Boot business service can depend on `actiongraph-spring-boot-starter` without exposing any HTTP control-plane endpoint.
 - Non-Spring masking, amount-limit, and rule-based permission policies add `actiongraph-governance`; human-review approval routing or review attributes add `actiongraph-governance-human-review`.
@@ -29,7 +29,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 - Durable Spring Boot production runs add `actiongraph-jdbc-spring-boot-starter`; non-Spring/manual runtimes add `actiongraph-persistence-jdbc`. Memory and review-task durability are opt-in through their own JDBC modules.
 - Provider-neutral natural-language goal interpretation adds `actiongraph-llm`.
 - DeepSeek-compatible model access adds `actiongraph-llm-deepseek`.
-- Spring Boot repository-backed approval tasks add `actiongraph-human-review-spring-boot-starter`; Spring MVC external approval callbacks add `actiongraph-human-review-callback-spring-boot-starter`.
+- Spring Boot repository-backed approval tasks add `actiongraph-human-review-spring-boot-starter`; Spring MVC approval task APIs add `actiongraph-human-review-api-spring-boot-starter`; Spring MVC external approval callbacks add `actiongraph-human-review-callback-spring-boot-starter`.
 - Custom operational monitoring adds `actiongraph-console-core`; JDBC-backed custom monitoring also adds `actiongraph-console-jdbc`; CSV/JSONL audit export adds `actiongraph-console-export`; Spring MVC API-only monitoring adds `actiongraph-console-api-spring-boot-starter`; Spring MVC page-only monitoring adds `actiongraph-console-ui-spring-boot-starter`; Spring MVC export-only monitoring adds `actiongraph-console-export-spring-boot-starter`; old-style full Spring MVC monitoring adds the compatibility `actiongraph-console-spring-boot-starter`; Spring MVC JDBC-backed monitoring also adds `actiongraph-console-jdbc-spring-boot-starter`.
 
 The JDBC Spring Boot starter depends on the low-level core JDBC repositories and the Spring `DataSource` contract. It creates durable trace/suspended-run repository beans only when `actiongraph.persistence.jdbc.enabled=true`, and it does not register actions, execute runs, expose HTTP endpoints, configure Memory/Human Review storage, or start any control-plane surface.
@@ -45,6 +45,8 @@ The Memory JDBC modules provide durable `MemoryRepository` storage without forci
 The Interpretation module provides GoalCatalog metadata, GoalInterpreter contracts, interpretation results, missing-field clarification types, and Blackboard seeders. It depends only on core planning/runtime types and can be used without LLM providers.
 
 The Human Review module provides pending review tasks, approval chains, in-memory review storage, repository-backed review policy, and callback handling. It depends only on core policy/action/planning types and can be used without Spring MVC, JDBC, governance, or console modules.
+
+The Human Review API module maps `HumanReviewRepository` into stable task response DTOs and decision operations for approval inboxes, CLIs, gateways, or web controllers. It depends on `actiongraph-human-review` and does not expose HTTP endpoints.
 
 The Governance Spring Boot starter depends on core policy contracts and Spring auto-configuration. It activates optional masking, amount-limit, and permission policy beans from configuration, but it does not register actions, persist state, route approval chains, or expose endpoints.
 
@@ -68,6 +70,8 @@ The Console core defines the read-only monitoring service, response models, pagi
 
 `actiongraph-human-review` is an optional public framework component: it maps high-risk runtime decisions into review tasks and external callbacks. It must depend only on core contracts and must not expose HTTP endpoints or own durable persistence.
 
+`actiongraph-human-review-api` is an optional public framework component: it maps review repositories into stable task query and decision service APIs. It must not expose HTTP endpoints, create review storage, execute, resume, or compensate runs.
+
 `actiongraph-spring-boot-starter` is part of the public framework integration surface: it registers actions and minimal runtime defaults. It must not bring memory, repository-backed review, JDBC persistence, or control-plane endpoints transitively.
 
 `actiongraph-memory-spring-boot-starter` is an optional Spring adapter: it configures structured memory defaults. It must not register actions, execute runs, or expose endpoints.
@@ -89,6 +93,8 @@ The Console core defines the read-only monitoring service, response models, pagi
 `actiongraph-memory-jdbc-spring-boot-starter` and `actiongraph-human-review-jdbc-spring-boot-starter` are optional infrastructure adapters. They create only their corresponding JDBC repository bean and must not expose endpoints.
 
 `actiongraph-human-review-spring-boot-starter` is an optional Spring adapter: it wires repository-backed review tasks and policy defaults. It must not expose HTTP endpoints, execute, resume, or compensate runs.
+
+`actiongraph-human-review-api-spring-boot-starter` is an ecosystem component: it exposes optional Spring MVC task query and decision endpoints over `HumanReviewApiService`. It must not create review storage, expose callback endpoints, execute, resume, or compensate runs.
 
 `actiongraph-human-review-callback-spring-boot-starter` is an ecosystem component: it exposes an optional Spring MVC callback endpoint that writes external approval decisions through `HumanReviewCallbackHandler` from `actiongraph-human-review`. It must not create review storage, execute, resume, or compensate runs.
 
