@@ -27,8 +27,9 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-governance-spring-boot-starter" to "Optional Spring Boot governance policies for masking, approval routing, and amount limits.",
     "actiongraph-console-core" to "Reusable ActionGraph console query service and response model.",
     "actiongraph-console-jdbc" to "JDBC adapter for the ActionGraph console query port.",
+    "actiongraph-console-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC console read model.",
     "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot repository-backed human-review policy and callback endpoint support for ActionGraph.",
-    "actiongraph-console-spring-boot-starter" to "Optional Spring Boot read-only console UI and query endpoints for ActionGraph JDBC trace runs."
+    "actiongraph-console-spring-boot-starter" to "Optional Spring Boot read-only console UI and query endpoints for ActionGraph."
 )
 
 val publishableModuleDescriptions = mapOf(

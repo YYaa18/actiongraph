@@ -261,7 +261,7 @@ dependencies {
 
 ## Spring MVC Read-Only Monitoring Service
 
-Use this for a separate control-plane application that only queries trace data.
+Use this for a separate control-plane application that exposes read-only HTTP/UI endpoints over any `ConsoleRunRepository`.
 
 ```kotlin
 dependencies {
@@ -270,7 +270,21 @@ dependencies {
 }
 ```
 
-The Console starter wraps `actiongraph-console-core` and `actiongraph-console-jdbc` with a Spring MVC controller, built-in static page, token-header check, and auto-configuration. It requires a `DataSource` and must remain read-only: it does not execute, resume, approve, deny, or compensate runs.
+The Console Web starter wraps `actiongraph-console-core` with a Spring MVC controller, built-in static page, token-header check, and auto-configuration. It requires an `ActionGraphConsoleService` or `ConsoleRunRepository` bean and must remain read-only: it does not execute, resume, approve, deny, or compensate runs.
+
+## Spring MVC JDBC Read-Only Monitoring Adapter
+
+Use this when the Spring MVC control-plane should read ActionGraph JDBC trace tables directly.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
+}
+```
+
+`actiongraph-console-jdbc-spring-boot-starter` creates the `ConsoleRunRepository` bean from a `DataSource`. Keeping it separate lets Spring MVC control-plane services use a custom repository without pulling JDBC read-model code.
 
 ## Full Pilot Service
 
@@ -287,6 +301,7 @@ dependencies {
     implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```

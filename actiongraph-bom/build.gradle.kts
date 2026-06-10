@@ -23,6 +23,7 @@ dependencies {
         api(project(":actiongraph-governance-spring-boot-starter"))
         api(project(":actiongraph-console-core"))
         api(project(":actiongraph-console-jdbc"))
+        api(project(":actiongraph-console-jdbc-spring-boot-starter"))
         api(project(":actiongraph-human-review-spring-boot-starter"))
         api(project(":actiongraph-console-spring-boot-starter"))
     }
