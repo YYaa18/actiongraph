@@ -1,0 +1,76 @@
+# ActionGraph
+
+ActionGraph is a typed GOAP framework for governed business action execution in Java.
+
+It lets application teams expose ordinary business methods as typed Actions, then uses a deterministic symbolic planner to compose those Actions into auditable execution paths. LLMs can interpret user goals, but they do not generate or execute plans.
+
+## What It Provides
+
+- Deterministic GOAP planning over Action preconditions and effects
+- Runtime guards for value-dependent business checks
+- Human review with suspend/resume support
+- Saga-style compensation for failed or denied runs
+- Trace, suspended-run, review-task, and memory repositories
+- Spring Boot starter with annotation-driven Action registration
+- DeepSeek-compatible LLM goal interpretation
+- Reference samples for renewal quote and order cancellation flows
+
+## Modules
+
+| Module | Purpose |
+|---|---|
+| `actiongraph-core` | Core action, planning, runtime, policy, trace, memory, and interpretation APIs |
+| `actiongraph-llm-deepseek` | DeepSeek-compatible LLM client and GoalCatalog prompt support |
+| `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, human review, and memory |
+| `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning |
+| `actiongraph-samples` | Pure Java sample applications |
+
+## Quick Start
+
+```kotlin
+dependencies {
+    implementation("com.actiongraph:actiongraph-spring-boot-starter:0.1.0")
+    implementation("com.actiongraph:actiongraph-llm-deepseek:0.1.0")
+    implementation("com.actiongraph:actiongraph-persistence-jdbc:0.1.0")
+}
+```
+
+```java
+@ActionGraphAction(
+        id = "order.lookup",
+        preconditions = "order-cancellation:ORDER_ID_PRESENT",
+        effects = "order-cancellation:ORDER_LOADED"
+)
+public OrderRecord lookup(OrderId orderId) {
+    return orderService.find(orderId);
+}
+```
+
+Spring configuration uses the `actiongraph.*` prefix:
+
+```yaml
+actiongraph:
+  planner:
+    max-depth: 32
+  executor:
+    max-steps: 64
+```
+
+## Build And Test
+
+```bash
+./gradlew build
+```
+
+Run the sample apps:
+
+```bash
+./gradlew :actiongraph-samples:run --args="--approve-human-review Prepare renewal quote for C123"
+./gradlew :actiongraph-samples:runOrderCancellationSample --args="--approve-human-review Cancel order O100"
+```
+
+## Documentation
+
+- [Quick start guide](docs/quick-start.html)
+- [Framework notes](docs/frameworkization/)
+- [Original PRD](docs/PRD-v0.md)

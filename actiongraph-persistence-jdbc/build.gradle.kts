@@ -1,0 +1,12 @@
+plugins {
+    `java-library`
+}
+
+dependencies {
+    api(project(":actiongraph-core"))
+
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.0")
+
+    testImplementation("com.h2database:h2:2.2.224")
+}

@@ -1,0 +1,7 @@
+.gradle/
+build/
+out/
+.claude/
+
+*.class
+*.log

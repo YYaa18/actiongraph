@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ActionGraph — 让企业业务系统安全获得 AI 能力</title>
+<style>
+  :root {
+    --bg: #0d1220;
+    --bg2: #131a2e;
+    --surface: rgba(255,255,255,0.05);
+    --surface2: rgba(255,255,255,0.09);
+    --border: rgba(255,255,255,0.13);
+    --text: #eef1f8;
+    --dim: #9aa5bd;
+    --accent: #4d8dff;
+    --accent2: #38d39f;
+    --warn: #ffb454;
+    --danger: #ff6b66;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  .deck { height: 100%; position: relative; }
+  .slide {
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; justify-content: center;
+    padding: 5vh 8vw; overflow: hidden;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(77,141,255,0.13), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(56,211,159,0.09), transparent 60%),
+      linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%);
+  }
+  .slide.active { display: flex; animation: fadeIn .45s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .kicker {
+    color: var(--accent); font-weight: 700; letter-spacing: .14em;
+    font-size: clamp(12px, 1.3vw, 15px); text-transform: uppercase; margin-bottom: 14px;
+  }
+  h1 { font-size: clamp(34px, 5.2vw, 64px); line-height: 1.18; font-weight: 800; }
+  h2 { font-size: clamp(26px, 3.4vw, 44px); line-height: 1.25; font-weight: 800; margin-bottom: 3.5vh; }
+  h2 em { color: var(--accent); font-style: normal; }
+  .sub { color: var(--dim); font-size: clamp(15px, 1.7vw, 21px); margin-top: 18px; max-width: 46em; line-height: 1.7; }
+  .cols { display: flex; gap: 2.2vw; align-items: stretch; }
+  .col { flex: 1; min-width: 0; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: clamp(14px, 2vh, 26px) clamp(16px, 1.6vw, 26px);
+  }
+  .card h3 { font-size: clamp(15px, 1.6vw, 20px); margin-bottom: 8px; }
+  .card p, .card li { color: var(--dim); font-size: clamp(13px, 1.35vw, 16.5px); line-height: 1.65; }
+  .card ul { margin-left: 18px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2vh 1.6vw; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2vh 1.6vw; }
+  .big-num { font-size: clamp(34px, 4.5vw, 58px); font-weight: 800; color: var(--accent); line-height: 1.1; }
+  .big-num.green { color: var(--accent2); }
+  .stat-label { color: var(--dim); font-size: clamp(12px, 1.3vw, 15px); margin-top: 4px; }
+  .icon { font-size: clamp(22px, 2.6vw, 34px); margin-bottom: 10px; display: block; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: clamp(12.5px, 1.35vw, 16px);
+    background: var(--surface); border-radius: var(--radius); overflow: hidden;
+  }
+  th { background: var(--surface2); padding: 1.4vh 1.1vw; text-align: left; font-weight: 700; }
+  td { padding: 1.3vh 1.1vw; border-top: 1px solid var(--border); color: var(--dim); }
+  td.hl-col, th.hl-col { background: rgba(77,141,255,0.12); color: var(--text); }
+  .yes { color: var(--accent2); font-weight: 700; }
+  .no { color: var(--danger); font-weight: 700; }
+  .part { color: var(--warn); font-weight: 700; }
+  .flow { display: flex; align-items: center; gap: .9vw; flex-wrap: wrap; }
+  .fnode {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 1.5vh 1.3vw; text-align: center; flex: 1; min-width: 120px;
+  }
+  .fnode b { display: block; font-size: clamp(13px, 1.45vw, 17px); margin-bottom: 4px; }
+  .fnode span { color: var(--dim); font-size: clamp(11px, 1.15vw, 14px); line-height: 1.5; display: block; }
+  .fnode.hl { border-color: var(--accent); background: rgba(77,141,255,0.12); }
+  .fnode.green { border-color: var(--accent2); background: rgba(56,211,159,0.1); }
+  .farr { color: var(--dim); font-size: clamp(16px, 2vw, 26px); flex-shrink: 0; }
+  .tag {
+    display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: clamp(11px, 1.2vw, 14px);
+    font-weight: 700; background: rgba(77,141,255,0.16); color: var(--accent); margin-right: 8px; margin-bottom: 8px;
+  }
+  .tag.green { background: rgba(56,211,159,0.14); color: var(--accent2); }
+  .tag.warn { background: rgba(255,180,84,0.14); color: var(--warn); }
+  .quote-box {
+    border-left: 4px solid var(--accent); background: var(--surface);
+    border-radius: 0 var(--radius) var(--radius) 0; padding: 2vh 1.8vw;
+    font-size: clamp(15px, 1.8vw, 22px); line-height: 1.7;
+  }
+  .timeline { display: flex; gap: 1.4vw; }
+  .tstep { flex: 1; position: relative; }
+  .tstep .dot {
+    width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+    margin-bottom: 12px; position: relative; z-index: 1;
+  }
+  .tstep::before {
+    content: ""; position: absolute; top: 6px; left: 14px; right: -1.4vw; height: 2px;
+    background: var(--border);
+  }
+  .tstep:last-child::before { display: none; }
+  .tstep .week { color: var(--accent); font-weight: 700; font-size: clamp(12px, 1.3vw, 15px); margin-bottom: 6px; }
+  .tstep h3 { font-size: clamp(14px, 1.5vw, 18px); margin-bottom: 6px; }
+  .tstep p { color: var(--dim); font-size: clamp(12px, 1.25vw, 15px); line-height: 1.6; }
+  .footer-hint {
+    position: fixed; bottom: 18px; right: 26px; color: var(--dim);
+    font-size: 12.5px; z-index: 10; user-select: none;
+  }
+  .pageno { position: fixed; bottom: 18px; left: 26px; color: var(--dim); font-size: 12.5px; z-index: 10; }
+  .dots {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 7px; z-index: 10;
+  }
+  .dots i {
+    width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.22);
+    cursor: pointer; transition: all .2s;
+  }
+  .dots i.on { background: var(--accent); transform: scale(1.3); }
+  .logo-mark { font-weight: 800; letter-spacing: -0.5px; }
+  .logo-mark .g { color: var(--accent); }
+  .chat-sample { display: flex; flex-direction: column; gap: 1.4vh; max-width: 620px; }
+  .bubble {
+    padding: 1.4vh 1.3vw; border-radius: 14px; font-size: clamp(13px, 1.4vw, 16.5px); line-height: 1.6;
+    max-width: 92%;
+  }
+  .bubble.user { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .bubble.agent { background: var(--surface2); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .bubble.agent .steps { color: var(--dim); font-size: .92em; margin-top: 6px; line-height: 1.7; }
+  .risk-band { display:flex; gap:1vw; margin-top: 2.5vh; }
+  .risk-band .card { flex:1; border-top: 3px solid var(--accent); }
+  .risk-band .card:nth-child(2) { border-top-color: var(--accent2); }
+  .risk-band .card:nth-child(3) { border-top-color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 封面 -->
+<section class="slide active">
+  <div class="kicker">内部技术框架提案</div>
+  <h1><span class="logo-mark">Action<span class="g">Graph</span></span></h1>
+  <h1 style="font-size:clamp(24px,3.4vw,44px); margin-top:1.5vh; font-weight:700;">让公司每个 Java 业务系统，安全地获得 AI 能力</h1>
+  <p class="sub">用户说一句话，系统自动规划并执行业务流程 —— 但每一步都在白名单内、高风险必须人工审批、全程可审计、失败自动回滚。</p>
+  <p class="sub" style="margin-top:3vh; font-size:clamp(13px,1.4vw,16px);">技术中台 · 2026 年 6 月</p>
+</section>
+
+<!-- 2 痛点 -->
+<section class="slide">
+  <div class="kicker">为什么需要它</div>
+  <h2>AI 落地业务系统，今天只有三条路 —— <em>每条都有致命伤</em></h2>
+  <div class="grid3">
+    <div class="card">
+      <span class="icon">🎲</span>
+      <h3>让 LLM 直接操作系统</h3>
+      <p>LLM 自己写 SQL、自己调 API。<b style="color:var(--danger)">不可控、不可审计</b>，一次幻觉就可能改错正式数据 —— 没有企业敢上生产。</p>
+    </div>
+    <div class="card">
+      <span class="icon">💬</span>
+      <h3>只做问答机器人</h3>
+      <p>能聊天、能查资料，但<b style="color:var(--warn)">不能替用户把事办完</b>。业务价值停留在客服层，核心流程没有提效。</p>
+    </div>
+    <div class="card">
+      <span class="icon">🧩</span>
+      <h3>各系统各自接 AI</h3>
+      <p>每个团队重复造轮子：各写一套 prompt、各做一套审批和审计。<b style="color:var(--warn)">成本 × N，风险敞口 × N</b>，标准无法统一。</p>
+    </div>
+  </div>
+  <p class="sub" style="margin-top:3vh">我们需要的是：<b style="color:var(--text)">一个统一的、安全边界内置的 AI 执行底座</b> —— 各业务系统按同一套标准接入。</p>
+</section>
+
+<!-- 3 方案定位 -->
+<section class="slide">
+  <div class="kicker">ActionGraph 是什么</div>
+  <h2>分工明确：<em>AI 负责理解，算法负责规划，业务系统拥有最终裁决权</em></h2>
+  <div class="flow" style="margin-top:1vh">
+    <div class="fnode"><b>🗣 用户目标</b><span>"帮客户 C001<br>准备续约报价"</span></div>
+    <div class="farr">→</div>
+    <div class="fnode"><b>🤖 LLM 理解层</b><span>识别意图 · 补全参数<br>缺信息就追问</span></div>
+    <div class="farr">→</div>
+    <div class="fnode hl"><b>⚙️ 确定性规划器</b><span>在已注册的业务能力图谱中<br>搜索执行路径（非 LLM）</span></div>
+    <div class="farr">→</div>
+    <div class="fnode hl"><b>🛡 受控执行器</b><span>权限闸门 · 人工审批<br>失败自动回滚</span></div>
+    <div class="farr">→</div>
+    <div class="fnode green"><b>🏢 业务系统</b><span>真正的校验与变更<br>规则一行不动</span></div>
+  </div>
+  <div class="risk-band">
+    <div class="card"><h3>LLM 永远碰不到数据库</h3><p>它只能从注册过的业务 Action 白名单里"选"，不能自由调 API、写 SQL、跳过审批。</p></div>
+    <div class="card"><h3>执行路径是算出来的</h3><p>规划由确定性图搜索完成，同样输入永远同样路径 —— 可复现、可测试、可解释。</p></div>
+    <div class="card"><h3>业务逻辑零迁移</h3><p>现有 Service 原样保留，只需加注解封装成 Action。业务规则的裁决权不转移。</p></div>
+  </div>
+</section>
+
+<!-- 4 效果演示 -->
+<section class="slide">
+  <div class="kicker">用户视角的实际效果</div>
+  <h2>从「点八个页面」到「说一句话」</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="chat-sample">
+        <div class="bubble user">帮客户 C001 准备一份续约报价</div>
+        <div class="bubble agent">
+          好的，我将执行以下步骤：
+          <div class="steps">
+            ① 查询客户资料 → ② 获取当前合同 → ③ 校验续约资格 → ④ 生成报价草稿 → ⑤ 提交销售主管审批<br>
+            ⚠️ 不会直接发送给客户，不会修改正式合同。是否继续？
+          </div>
+        </div>
+        <div class="bubble user">继续</div>
+        <div class="bubble agent">✅ 报价草稿 QUOTE-1 已生成，已提交销售主管审批（审批单 APPROVAL-1）。全过程 29 条审计记录可查。</div>
+      </div>
+    </div>
+    <div class="col" style="display:flex; flex-direction:column; justify-content:center; gap:2vh;">
+      <div class="card"><h3>先解释，再执行</h3><p>执行前向用户展示完整计划和边界声明，用户确认后才动手。</p></div>
+      <div class="card"><h3>中途有变自动改道</h3><p>查不到现有合同？规划器自动改走「创建合同草稿」路径，无需人写 if-else 流程。</p></div>
+      <div class="card"><h3>高风险动作自动卡审批</h3><p>提交审批环节自动挂起，审批人在现有审批系统里通过后继续执行。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 安全五保证 -->
+<section class="slide">
+  <div class="kicker">领导最关心的问题</div>
+  <h2>五道内置防线，<em>每一道都有代码和测试背书</em></h2>
+  <div class="grid2" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="card"><h3>① Action 白名单</h3><p>AI 只能调用注册过的业务能力，禁止自由 SQL / API / 脚本。能力目录由各业务系统自己定义和维护。</p></div>
+    <div class="card"><h3>② 高风险必须人工审批</h3><p>付款、退款、删数据、对外发送、改正式状态 —— 执行前自动挂起，审批通过才继续，拒绝则自动回滚已做动作。</p></div>
+    <div class="card"><h3>③ 先解释后执行</h3><p>执行计划先以人话呈现给用户确认。用户看到的，就是系统将做的 —— 不多不少。</p></div>
+    <div class="card"><h3>④ 失败自动补偿（Saga）</h3><p>流程做到一半失败，已完成的动作按逆序自动撤销：撤回审批、作废草稿。即使跨系统重启也不丢补偿链。</p></div>
+  </div>
+  <div class="card" style="margin-top:2vh; border-color:var(--accent);">
+    <h3>⑤ 全链路审计</h3>
+    <p>用户原话 → AI 解析结果 → 生成的计划 → 每步输入输出 → 权限判定 → 审批人与意见 → 最终结果，全部入库可回放。合规审查随时拉得出完整证据链。</p>
+  </div>
+</section>
+
+<!-- 6 对比 -->
+<section class="slide">
+  <div class="kicker">为什么不用别的方案</div>
+  <h2>与替代方案对比</h2>
+  <table>
+    <tr>
+      <th>能力维度</th>
+      <th>直接调 LLM API</th>
+      <th>工作流引擎 + 聊天入口</th>
+      <th>外部 Agent 平台</th>
+      <th class="hl-col">ActionGraph</th>
+    </tr>
+    <tr><td>执行路径可控可复现</td><td class="no">✗ LLM 随机</td><td class="yes">✓</td><td class="no">✗ 黑盒</td><td class="hl-col yes">✓ 确定性搜索</td></tr>
+    <tr><td>新场景无需画流程图</td><td class="yes">✓</td><td class="no">✗ 每条流程手工编排</td><td class="part">部分</td><td class="hl-col yes">✓ 注册 Action 即自动成路</td></tr>
+    <tr><td>异常自动改道</td><td class="no">✗</td><td class="no">✗ 需预画分支</td><td class="part">部分</td><td class="hl-col yes">✓ 每步重规划</td></tr>
+    <tr><td>人工审批 + 失败回滚内置</td><td class="no">✗ 自研</td><td class="part">审批有，回滚自研</td><td class="part">不一</td><td class="hl-col yes">✓ 框架原生</td></tr>
+    <tr><td>数据与逻辑留在公司内</td><td class="part">取决于用法</td><td class="yes">✓</td><td class="no">✗ 业务能力外送</td><td class="hl-col yes">✓ 纯内部 Java 库</td></tr>
+    <tr><td>接入成本（已有 Spring 系统）</td><td class="part">低但各自重复</td><td class="no">高</td><td class="no">高 + 供应商绑定</td><td class="hl-col yes">半天起，加注解即可</td></tr>
+  </table>
+  <p class="sub" style="margin-top:2vh">一句话：<b style="color:var(--text)">工作流引擎的可控 + Agent 的灵活，两者兼得，且完全自主可控。</b></p>
+</section>
+
+<!-- 7 接入成本 -->
+<section class="slide">
+  <div class="kicker">业务团队的账</div>
+  <h2>接入成本：<em>业务方只写注解，半天出第一条链</em></h2>
+  <div class="cols">
+    <div class="col">
+      <div class="card" style="height:100%">
+        <h3>业务团队要做的（全部工作）</h3>
+        <ul style="margin-top:1vh">
+          <li>给已有 Service 方法加 <b style="color:var(--accent)">@ActionGraphAction</b> 注解 —— 声明前置条件、效果、风险等级</li>
+          <li>注册业务目标（一个目标 ≈ 10 行代码）</li>
+          <li>处理 6 种运行结果状态</li>
+        </ul>
+        <p style="margin-top:1.5vh">不需要懂 AI、不需要写 prompt、不需要画流程图。<br>Prompt 由框架根据目标目录<b>自动生成</b>。</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" style="height:100%">
+        <h3>框架统一提供的</h3>
+        <ul style="margin-top:1vh">
+          <li>自然语言理解 + 缺参追问（LLM 故障自动降级，入口不挂）</li>
+          <li>路径规划、每步重规划、异常改道</li>
+          <li>权限闸门、审批挂起恢复、失败补偿</li>
+          <li>全链路审计、挂起快照持久化</li>
+          <li>Spring Boot Starter：引依赖即自动装配</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:2.5vh">
+    <div class="card" style="text-align:center"><div class="big-num">0.5 天</div><div class="stat-label">首条业务链接入（参考域实测）</div></div>
+    <div class="card" style="text-align:center"><div class="big-num">0 行</div><div class="stat-label">业务规则迁移 / 核心系统改动</div></div>
+    <div class="card" style="text-align:center"><div class="big-num">1 套</div><div class="stat-label">全公司统一的审批、审计、安全标准</div></div>
+  </div>
+</section>
+
+<!-- 8 成熟度 -->
+<section class="slide">
+  <div class="kicker">不是 PPT，是已验证的工程</div>
+  <h2>当前成熟度：<em>骨架完整，双参考域跑通</em></h2>
+  <div class="grid3">
+    <div class="card" style="text-align:center"><div class="big-num green">83</div><div class="stat-label">自动化测试，0 失败<br>覆盖规划 / 补偿 / 审批 / 持久化</div></div>
+    <div class="card" style="text-align:center"><div class="big-num green">5</div><div class="stat-label">独立模块，core 零外部依赖<br>可发内部 Maven 仓库</div></div>
+    <div class="card" style="text-align:center"><div class="big-num green">2</div><div class="stat-label">完整参考业务域<br>续约报价 / 订单取消</div></div>
+  </div>
+  <div style="margin-top:2.5vh">
+    <span class="tag green">✓ 类型化 GOAP 规划器</span>
+    <span class="tag green">✓ 每步执行后重规划</span>
+    <span class="tag green">✓ Saga 失败补偿</span>
+    <span class="tag green">✓ 审批挂起 / 跨重启恢复</span>
+    <span class="tag green">✓ JDBC 持久化（审计 / 挂起 / 审批 / 记忆）</span>
+    <span class="tag green">✓ Spring Boot Starter</span>
+    <span class="tag green">✓ 注解式接入</span>
+    <span class="tag green">✓ DeepSeek 接入 + 规则降级</span>
+    <span class="tag green">✓ 异常动态改道</span>
+    <span class="tag green">✓ 结构化长期记忆</span>
+  </div>
+  <div class="quote-box" style="margin-top:3vh">
+    关键验证结论：第二个业务域接入<b style="color:var(--accent)">没有改动框架核心一行代码</b> —— 可复用性不是设计承诺，是已被事实证明的属性。
+  </div>
+</section>
+
+<!-- 9 试点提案 -->
+<section class="slide">
+  <div class="kicker">建议的下一步</div>
+  <h2>三周试点计划：<em>用一个真实场景验证全链路</em></h2>
+  <div class="timeline" style="margin-top:1vh">
+    <div class="tstep">
+      <div class="dot"></div><div class="week">第 1 周</div>
+      <h3>选型与接入</h3>
+      <p>选 1 个低风险高频场景（建议：草稿生成类 / 申请发起类），业务团队在框架组陪跑下完成 Action 封装与目标注册。</p>
+    </div>
+    <div class="tstep">
+      <div class="dot"></div><div class="week">第 2 周</div>
+      <h3>对接与联调</h3>
+      <p>对接现有审批系统与数据库持久化，跑通「挂起 → 审批 → 恢复」与失败回滚演练，安全团队评审审计链。</p>
+    </div>
+    <div class="tstep">
+      <div class="dot"></div><div class="week">第 3 周</div>
+      <h3>灰度与评估</h3>
+      <p>小范围真实用户灰度，采集指标，输出试点报告与推广决策建议。</p>
+    </div>
+  </div>
+  <div class="cols" style="margin-top:3.5vh">
+    <div class="col"><div class="card">
+      <h3>成功指标（试点报告交付）</h3>
+      <ul>
+        <li>单流程操作耗时下降幅度（目标 ≥ 50%）</li>
+        <li>接入人天实测（目标 ≤ 3 人天）</li>
+        <li>审批拦截率 100%、回滚成功率 100%、审计链完整率 100%</li>
+      </ul>
+    </div></div>
+    <div class="col"><div class="card">
+      <h3>需要的支持</h3>
+      <ul>
+        <li>1 个试点业务团队（约 0.5 人 × 3 周）</li>
+        <li>框架组 1 人陪跑</li>
+        <li>测试环境 LLM API 额度（成本极低，仅意图理解，单次调用 &lt; 1 分钱）</li>
+      </ul>
+    </div></div>
+  </div>
+</section>
+
+<!-- 10 愿景收尾 -->
+<section class="slide">
+  <div class="kicker">为什么是现在</div>
+  <h2>把 AI 能力变成<em>基础设施</em>，而不是各团队的副业</h2>
+  <div class="quote-box">
+    每个业务系统注册自己的能力图谱，全公司共享一个安全、可审计的 AI 执行底座。<br>
+    接入的系统越多，能力图谱越大，AI 能替员工完成的事就越多 —— <b style="color:var(--accent)">这是平台效应，先建者定标准。</b>
+  </div>
+  <div class="grid3" style="margin-top:3.5vh">
+    <div class="card"><h3>近期</h3><p>试点落地 → 2~3 个系统接入 → 内部 Maven 发布 + 接入文档（已就绪）</p></div>
+    <div class="card"><h3>中期</h3><p>对接统一审批中心与权限体系，跨系统目标编排（一个目标调用多个系统的 Action）</p></div>
+    <div class="card"><h3>远期</h3><p>能力图谱市场：各团队发布 / 复用业务能力，新业务流程由图谱自动组合而成</p></div>
+  </div>
+  <h2 style="margin-top:5vh; border:none;">请求批准：<em>启动三周试点</em></h2>
+</section>
+
+</div>
+
+<div class="pageno" id="pageno">1 / 10</div>
+<div class="dots" id="dots"></div>
+<div class="footer-hint">← → 方向键 / 点击翻页 · F 全屏</div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var dotsBox = document.getElementById('dots');
+  var pageno = document.getElementById('pageno');
+  var cur = 0;
+
+  slides.forEach(function (_, i) {
+    var d = document.createElement('i');
+    d.addEventListener('click', function (e) { e.stopPropagation(); go(i); });
+    dotsBox.appendChild(d);
+  });
+  var dots = Array.prototype.slice.call(dotsBox.children);
+
+  function go(n) {
+    if (n < 0 || n >= slides.length) return;
+    slides[cur].classList.remove('active');
+    dots[cur].classList.remove('on');
+    cur = n;
+    slides[cur].classList.add('active');
+    dots[cur].classList.add('on');
+    pageno.textContent = (cur + 1) + ' / ' + slides.length;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') go(cur + 1);
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') go(cur - 1);
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+    }
+  });
+
+  document.getElementById('deck').addEventListener('click', function (e) {
+    var x = e.clientX / window.innerWidth;
+    if (x > 0.6) go(cur + 1); else if (x < 0.25) go(cur - 1);
+  });
+
+  var touchX = null;
+  document.addEventListener('touchstart', function (e) { touchX = e.touches[0].clientX; });
+  document.addEventListener('touchend', function (e) {
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    if (dx < -40) go(cur + 1); else if (dx > 40) go(cur - 1);
+    touchX = null;
+  });
+
+  go(0);
+})();
+</script>
+</body>
+</html>

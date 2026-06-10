@@ -1,0 +1,11 @@
+package com.actiongraph.llm;
+
+public final class LlmClientException extends RuntimeException {
+    public LlmClientException(String message) {
+        super(message);
+    }
+
+    public LlmClientException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}

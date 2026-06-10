@@ -1,0 +1,88 @@
+# Publishing Artifacts
+
+The runtime is split into publishable library modules plus a non-published actiongraph-samples module.
+
+## Published Modules
+
+| Module | Artifact | Purpose |
+|---|---|---|
+| `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, trace, and interpretation APIs |
+| `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | DeepSeek-compatible LLM goal interpretation |
+| `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace and suspended-run repositories |
+| `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Spring Boot auto-configuration and annotation-driven action registration |
+
+`actiongraph-samples` remains an application/sample module and is intentionally not published.
+
+Each published module emits:
+
+- main jar
+- sources jar
+- javadoc jar
+- Maven POM
+- Gradle module metadata
+
+## Local Verification
+
+```bash
+./gradlew publishToMavenLocal
+```
+
+Then a consuming project can depend on:
+
+```kotlin
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation("com.actiongraph:actiongraph-spring-boot-starter:0.1.0")
+}
+```
+
+Pure Java/non-Spring consumers can depend on:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-core:0.1.0")
+```
+
+LLM-backed goal interpretation adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-llm-deepseek:0.1.0")
+```
+
+Durable trace and suspend/resume persistence adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-persistence-jdbc:0.1.0")
+```
+
+## Private Repository Publishing
+
+By default, `publish` writes to each module's local `build/repository` directory. To publish to a company Maven repository, pass a URL and optional credentials:
+
+```bash
+./gradlew publish \
+  -PactionGraphPublishUrl=https://maven.company.internal/releases \
+  -PactionGraphPublishUsername="$MAVEN_USERNAME" \
+  -PactionGraphPublishPassword="$MAVEN_PASSWORD"
+```
+
+Credentials can also come from environment variables:
+
+```bash
+ACTIONGRAPH_PUBLISH_USERNAME=... \
+ACTIONGRAPH_PUBLISH_PASSWORD=... \
+./gradlew publish -PactionGraphPublishUrl=https://maven.company.internal/releases
+```
+
+## Versioning
+
+The current version is defined once in the root `build.gradle.kts`:
+
+```kotlin
+version = "0.1.0"
+```
+
+Before publishing a breaking API change, bump this version and document the migration in the relevant frameworkization note.

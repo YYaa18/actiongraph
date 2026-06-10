@@ -1,0 +1,10 @@
+package com.actiongraph.runtime;
+
+public enum RunStatus {
+    COMPLETED,
+    HALTED_UNREACHABLE,
+    SUSPENDED_PENDING_REVIEW,
+    DENIED_BY_POLICY,
+    FAILED_COMPENSATED,
+    FAILED_COMPENSATION_INCOMPLETE
+}
