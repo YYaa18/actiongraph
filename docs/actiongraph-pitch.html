@@ -203,61 +203,129 @@
     50% { transform: translateX(60%); }
   }
 
-  .graph-map {
-    position: absolute;
-    inset: 42px 30px 128px;
+  .evidence-board {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
   }
 
-  .node {
-    position: absolute;
-    width: 112px;
-    height: 50px;
+  .evidence-board::before { display: none; }
+
+  .evidence-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .evidence-head b {
+    display: block;
+    color: var(--text);
+    font-size: 1.24rem;
+    margin-bottom: 6px;
+  }
+
+  .evidence-head span,
+  .evidence-tag {
+    color: var(--faint);
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  .evidence-tag {
+    flex: 0 0 auto;
+    border: 1px solid rgba(52,211,153,0.36);
+    border-radius: 999px;
+    padding: 7px 11px;
+    color: #d9fff0;
+    background: rgba(52,211,153,0.09);
+    font-weight: 800;
+  }
+
+  .evidence-input {
+    border: 1px solid rgba(54,216,255,0.28);
+    border-radius: var(--radius);
+    background: rgba(54,216,255,0.07);
+    padding: 13px 16px;
+    color: #d9f8ff;
+    font-size: 1.02rem;
+    line-height: 1.55;
+  }
+
+  .evidence-input b {
+    display: block;
+    color: var(--cyan);
+    font-size: 0.82rem;
+    margin-bottom: 7px;
+  }
+
+  .evidence-flow {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .flow-row {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 10px;
+    align-items: start;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.045);
+    min-height: 118px;
+    padding: 11px 12px;
+  }
+
+  .flow-row strong {
+    width: 30px;
+    height: 30px;
     display: grid;
     place-items: center;
-    border: 1px solid rgba(54,216,255,0.5);
+    border-radius: 8px;
+    color: var(--black);
+    background: linear-gradient(135deg, var(--cyan), var(--green));
+    font-size: 0.86rem;
+  }
+
+  .flow-row b {
+    color: var(--text);
+    font-size: 0.94rem;
+    margin-top: 3px;
+  }
+
+  .flow-row span {
+    grid-column: 2;
+    color: var(--muted);
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .evidence-result {
+    border: 1px solid rgba(245,196,81,0.36);
     border-radius: var(--radius);
-    background: rgba(10, 18, 26, 0.78);
-    color: #d9f8ff;
-    font-weight: 800;
-    box-shadow: 0 0 26px rgba(54,216,255,0.18);
+    background: rgba(245,196,81,0.09);
+    padding: 13px 16px;
   }
 
-  .node.small { width: 100px; color: #dcfff3; border-color: rgba(52,211,153,0.55); }
-  .node.gate { width: 78px; height: 78px; transform: rotate(45deg); color: var(--gold); border-color: rgba(245,196,81,0.72); }
-  .node.gate span { transform: rotate(-45deg); }
-  .node.final { color: #fff0c5; border-color: rgba(245,196,81,0.72); }
-
-  .line {
-    position: absolute;
-    height: 2px;
-    background: linear-gradient(90deg, rgba(54,216,255,0.12), var(--cyan), var(--green));
-    transform-origin: left center;
-    box-shadow: 0 0 18px rgba(54,216,255,0.48);
+  .evidence-result b {
+    display: block;
+    color: var(--gold);
+    margin-bottom: 6px;
   }
 
-  .line.gold { background: linear-gradient(90deg, rgba(245,196,81,0.1), var(--gold)); box-shadow: 0 0 18px rgba(245,196,81,0.42); }
-
-  .n0 { left: 2%; top: 45%; }
-  .n1 { left: 24%; top: 9%; }
-  .n2 { left: 24%; top: 45%; }
-  .n3 { left: 24%; top: 79%; }
-  .n4 { left: 48%; top: 24%; }
-  .n5 { left: 48%; top: 64%; }
-  .n6 { left: 54%; top: 45%; }
-  .n7 { right: 2%; top: 10%; }
-  .n8 { right: 2%; top: 45%; }
-  .n9 { right: 2%; top: 78%; }
-  .l0 { left: 18%; top: 50%; width: 13%; transform: rotate(-42deg); }
-  .l1 { left: 18%; top: 50%; width: 12%; }
-  .l2 { left: 18%; top: 50%; width: 13%; transform: rotate(42deg); }
-  .l3 { left: 39%; top: 17%; width: 12%; transform: rotate(28deg); }
-  .l4 { left: 39%; top: 50%; width: 12%; transform: rotate(-28deg); }
-  .l5 { left: 39%; top: 84%; width: 12%; transform: rotate(-28deg); }
-  .l6 { left: 59%; top: 32%; width: 12%; transform: rotate(28deg); }
-  .l7 { left: 59%; top: 72%; width: 12%; transform: rotate(-28deg); }
-  .l8 { left: 63%; top: 51%; width: 25%; transform: rotate(-40deg); }
-  .l9 { left: 63%; top: 51%; width: 25%; }
-  .l10 { left: 63%; top: 51%; width: 25%; transform: rotate(40deg); }
+  .evidence-result span {
+    color: #fff0bd;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
 
   .hud {
     position: absolute;
@@ -278,6 +346,11 @@
 
   .hud-item b { display: block; color: var(--text); font-size: 1.35rem; }
   .hud-item span { color: var(--faint); font-size: 0.78rem; }
+
+  .evidence-board .hud {
+    position: static;
+    margin-top: auto;
+  }
 
   .layout-2 {
     display: grid;
@@ -612,6 +685,7 @@
     h1 { font-size: 3rem; }
     h2 { font-size: 2rem; }
     .hero-grid, .layout-2, .layout-3, .pipeline, .timeline { grid-template-columns: 1fr; }
+    .evidence-flow { grid-template-columns: 1fr; }
     .command { min-height: 520px; }
     .step::after { display: none; }
     .audit-strip { grid-template-columns: 1fr 1fr; }
@@ -640,22 +714,43 @@
         <span class="pill gold">业务系统最终裁决</span>
       </div>
     </div>
-    <div class="command" aria-label="ActionGraph command center visual">
-      <div class="graph-map">
-        <div class="line l0"></div><div class="line l1"></div><div class="line l2"></div>
-        <div class="line l3"></div><div class="line l4"></div><div class="line l5"></div>
-        <div class="line l6"></div><div class="line l7"></div>
-        <div class="line gold l8"></div><div class="line gold l9"></div><div class="line gold l10"></div>
-        <div class="node n0">Goal</div>
-        <div class="node small n1">Profile</div>
-        <div class="node small n2">Contract</div>
-        <div class="node small n3">Policy</div>
-        <div class="node n4">Plan A</div>
-        <div class="node n5">Plan B</div>
-        <div class="node gate n6"><span>Guard</span></div>
-        <div class="node final n7">Review</div>
-        <div class="node final n8">Execute</div>
-        <div class="node final n9">Audit</div>
+    <div class="command evidence-board" aria-label="ActionGraph execution evidence board">
+      <div class="evidence-head">
+        <div>
+          <b>一次完整业务执行</b>
+          <span>自然语言入口，确定性规划，策略审批，最后落到真实业务对象。</span>
+        </div>
+        <div class="evidence-tag">TRACEABLE RUN</div>
+      </div>
+      <div class="evidence-input">
+        <b>用户输入</b>
+        帮客户 C123 准备一份续约报价
+      </div>
+      <div class="evidence-flow">
+        <div class="flow-row">
+          <strong>1</strong>
+          <b>解释目标</b>
+          <span>目标=准备续约报价；客户=C123</span>
+        </div>
+        <div class="flow-row">
+          <strong>2</strong>
+          <b>生成计划</b>
+          <span>查合同 -> 查客户 -> 验资格 -> 建报价 -> 发审批</span>
+        </div>
+        <div class="flow-row">
+          <strong>3</strong>
+          <b>审批闸门</b>
+          <span>高风险审批通过后，运行从同一条审计链继续</span>
+        </div>
+        <div class="flow-row">
+          <strong>4</strong>
+          <b>执行完成</b>
+          <span>状态=COMPLETED；审计事件=30；补偿栈已记录</span>
+        </div>
+      </div>
+      <div class="evidence-result">
+        <b>最终业务结果</b>
+        <span>审批申请已创建：APPROVAL-1，对应报价：QUOTE-1</span>
       </div>
       <div class="hud">
         <div class="hud-item"><b>83</b><span>tests passing</span></div>
