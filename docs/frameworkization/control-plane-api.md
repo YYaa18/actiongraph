@@ -15,6 +15,8 @@ dependencies {
 
 The module has no Spring, JDBC, LLM, runtime, servlet, Jackson, OkHttp, or Apache HTTP Client dependency. Its main classes are compiled with `--release 8` so Java 8 applications can load the jar.
 
+CI also compiles a standalone Java 8 consumer source with `javac --release 8` against this module. The compiled snippet covers the runtime HTTP client, response DTOs, shared-secret token verification, and exception type.
+
 ## Error Response
 
 All built-in JSON endpoints expose errors with this shape:

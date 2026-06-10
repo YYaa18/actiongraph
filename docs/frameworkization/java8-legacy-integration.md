@@ -72,3 +72,5 @@ Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Com
 - produces a `.class` file with major version greater than `52`
 
 This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.
+
+The control-plane API tests also compile an independent consumer source file with `javac --release 8`. That source uses the runtime HTTP client, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. This catches public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code.
