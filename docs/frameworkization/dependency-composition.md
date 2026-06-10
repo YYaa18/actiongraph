@@ -37,6 +37,20 @@ dependencies {
 
 `actiongraph-annotations` depends only on `actiongraph-core`. It provides `@ActionGraphAction`, `@ActionGraphGuard`, `@ActionGraphCompensation`, `@BlackboardValue`, and `AnnotatedActionFactory`.
 
+## Structured Memory Context
+
+Use this when a service wants ActionGraph structured long-term memory without adopting Spring, JDBC, LLM, or governance modules.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-core")
+    implementation("com.actiongraph:actiongraph-memory")
+}
+```
+
+`actiongraph-memory` depends only on `actiongraph-core`. It provides `MemoryScope`, `MemoryRecord`, `MemoryRepository`, `InMemoryMemoryRepository`, `MemoryContext`, and `MemoryContextLoader`.
+
 ## Spring Business Runtime
 
 Use this for a business service that executes ActionGraph runs and registers ordinary Spring bean methods as actions.

@@ -3,6 +3,7 @@ rootProject.name = "actiongraph"
 include("actiongraph-core")
 include("actiongraph-bom")
 include("actiongraph-annotations")
+include("actiongraph-memory")
 include("actiongraph-llm")
 include("actiongraph-llm-deepseek")
 include("actiongraph-persistence-jdbc")

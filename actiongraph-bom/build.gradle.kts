@@ -6,6 +6,7 @@ dependencies {
     constraints {
         api(project(":actiongraph-core"))
         api(project(":actiongraph-annotations"))
+        api(project(":actiongraph-memory"))
         api(project(":actiongraph-llm"))
         api(project(":actiongraph-llm-deepseek"))
         api(project(":actiongraph-persistence-jdbc"))

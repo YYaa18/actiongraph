@@ -754,7 +754,7 @@
       </div>
       <div class="hud">
         <div class="hud-item"><b>198</b><span>tests passing</span></div>
-        <div class="hud-item"><b>15</b><span>modules</span></div>
+        <div class="hud-item"><b>16</b><span>modules</span></div>
         <div class="hud-item"><b>3</b><span>reference domains</span></div>
         <div class="hud-item"><b>~6000</b><span>runs/s smoke</span></div>
       </div>
@@ -1000,8 +1000,9 @@
         <div class="console-head"><span>verification</span><span>LOCAL BUILD</span></div>
         <div class="console-body">
           <div><span class="log-muted">$</span> ./gradlew build --rerun-tasks</div>
-          <div><span class="log-ok">actiongraph-core:test</span> 28 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-core:test</span> 26 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-annotations:test</span> 7 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-memory:test</span> 2 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-governance:test</span> 12 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-llm:test</span> 7 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-llm-deepseek:test</span> 1 test, 0 failures</div>
@@ -1020,7 +1021,7 @@
       <div class="layout-3" style="grid-template-columns:1fr;">
         <div class="panel ok"><div class="metric green">198</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、Spring starter、Governance starter、JDBC starter、Console core、Console JDBC adapter、审批回调端点与鉴权、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
         <div class="panel ok"><div class="metric green">~6000</div><h3>并发冒烟</h3><p>200 虚拟线程并发 1 万次运行；重复 resume 只产生一次业务副作用。</p></div>
-        <div class="panel ok"><div class="metric green">15</div><h3>工程模块</h3><p>bom / core / annotations / governance / llm / llm-deepseek / persistence-jdbc / spring-boot-starter / governance-spring-boot-starter / jdbc-spring-boot-starter / human-review-spring-boot-starter / console-core / console-jdbc / console-spring-boot-starter / samples；公共框架、注解适配、治理策略、LLM provider、基础设施适配和控制层生态组件可独立组合。</p></div>
+        <div class="panel ok"><div class="metric green">16</div><h3>工程模块</h3><p>bom / core / annotations / memory / governance / llm / llm-deepseek / persistence-jdbc / spring-boot-starter / governance-spring-boot-starter / jdbc-spring-boot-starter / human-review-spring-boot-starter / console-core / console-jdbc / console-spring-boot-starter / samples；公共内核、注解适配、结构化记忆、治理策略、LLM provider、基础设施适配和控制层生态组件可独立组合。</p></div>
         <div class="panel ok"><div class="metric green">3</div><h3>参考业务域</h3><p>续约报价、订单取消、理赔资料预审三个不同领域接入，证明核心可复用并开始进入保险场景打穿。</p></div>
       </div>
     </div>

@@ -14,7 +14,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Runtime guards for value-dependent business checks
 - Multi-stage human review with atomic suspend/resume claiming
 - Saga-style compensation for failed or denied runs
-- Trace, suspended-run, review-task, and memory repositories, including batched JDBC trace writes
+- Trace, suspended-run, review-task, and optional memory repositories, including batched JDBC trace writes
 - JDBC read model for paged and filtered run summaries, trace details, and trace-chain verification in read-only consoles
 - Suspended-run Blackboard type allowlists for safer JDBC resume
 - Suspended-run snapshot format version checks for deployment discipline
@@ -23,6 +23,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Single-transaction amount limits with hard denial and review escalation
 - Reusable non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
+- Optional structured memory context component
 - Spring Boot starter with annotation-driven Action registration and runtime defaults
 - Optional governance Spring Boot starter for masking, amount limits, and approval routing
 - Optional human-review Spring Boot starter with approval callback endpoint support
@@ -39,8 +40,9 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | Module | Purpose |
 |---|---|
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | Core action, planning, runtime, policy, trace, memory, and interpretation APIs |
+| `actiongraph-core` | Core action, planning, runtime, policy, trace, and interpretation APIs |
 | `actiongraph-annotations` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
+| `actiongraph-memory` | Optional structured memory records, repository contract, in-memory implementation, and Blackboard context loader |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
@@ -116,6 +118,8 @@ actiongraph:
 When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, review-task, memory, and console read-model repositories. Non-Spring services can still use `actiongraph-persistence-jdbc` directly and wire repositories by hand.
 
 Non-Spring services can use `actiongraph-governance` directly when they want the packaged masking, amount-limit, approval-chain, or rule-based permission policies without Spring auto-configuration.
+
+Non-Spring services can use `actiongraph-memory` directly when they want structured long-term memory without adopting Spring, JDBC, or LLM modules.
 
 When `actiongraph-governance-spring-boot-starter` is on the classpath, masking, amount-limit rules, and risk-based approval-chain properties are activated. Without it, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and single-stage review.
 
