@@ -26,6 +26,8 @@ The component catalog exposes a machine-readable `compatibility` label for each 
 
 This is intentionally stricter than a vague "supports Java" claim: Java 8 and older financial systems should use the deployed Runtime API over HTTP today. In-process runtime embedding remains a separate compatibility refactor.
 
+The module catalog is checked against `settings.gradle.kts` and the BOM in tests. A new module must be cataloged, classified, and either included in the BOM or explicitly treated as sample-only.
+
 ## Composition Rules
 
 - Consumers should import `actiongraph-bom` first, then choose the modules they need without repeating versions.

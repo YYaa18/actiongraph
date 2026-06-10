@@ -64,4 +64,4 @@ Today, `actiongraph-control-plane-api` is the only `java8-client` module. `actio
 
 ## Release Gate
 
-Every public module must keep an explicit compatibility label in the component catalog. Any new module requires PRD-level approval and an explicit label before it can be published.
+Every public module must keep an explicit compatibility label in the component catalog. Automated tests compare `settings.gradle.kts`, `actiongraph-bom`, and the default component catalog so new modules cannot silently bypass compatibility classification. Any new module requires PRD-level approval and an explicit label before it can be published.

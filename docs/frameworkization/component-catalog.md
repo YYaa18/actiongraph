@@ -94,6 +94,16 @@ Every component includes a `compatibility` value. Current labels are:
 
 This lets old Java estates ask the catalog which artifacts are safe to load directly instead of guessing from artifact names.
 
+## Release Gate
+
+The catalog is part of the release contract, not only documentation. Tests verify:
+
+- every module in `settings.gradle.kts` appears in the default catalog
+- every non-sample library module appears in the BOM constraints
+- every catalog component uses one of the closed compatibility labels
+
+Adding a module therefore requires updating the catalog, assigning compatibility, and deciding whether the artifact belongs in the BOM.
+
 ## Boundary
 
 The catalog does not inspect application runtime state, database contents, secrets, or the actual classpath. It returns static ActionGraph ecosystem metadata. Use it to standardize dependency guidance and control-plane discovery, not as a security scanner.

@@ -2,6 +2,16 @@ package com.actiongraph.catalog;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -152,6 +162,39 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void defaultCatalogStaysAlignedWithGradleModuleSurface() throws IOException {
+        Path root = repositoryRoot();
+        ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
+
+        Set<String> includedModules = parseModules(root.resolve("settings.gradle.kts"),
+                "include\\(\"([^\"]+)\"\\)");
+        Set<String> catalogModules = service.components().stream()
+                .map(ActionGraphComponent::module)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        assertThat(catalogModules).containsExactlyInAnyOrderElementsOf(includedModules);
+
+        Set<String> bomModules = parseModules(root.resolve("actiongraph-bom/build.gradle.kts"),
+                "api\\(project\\(\":([^\"]+)\"\\)\\)");
+        Set<String> publishableLibraryModules = service.components().stream()
+                .filter(component -> component.kind() != ComponentKind.SAMPLE)
+                .map(ActionGraphComponent::module)
+                .filter(module -> !module.equals("actiongraph-bom"))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        assertThat(bomModules).containsExactlyInAnyOrderElementsOf(publishableLibraryModules);
+    }
+
+    @Test
+    void compatibilityLabelsAreFromClosedSet() {
+        ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
+        Set<String> validLabels = Arrays.stream(ComponentCompatibility.values())
+                .map(ComponentCompatibility::label)
+                .collect(Collectors.toSet());
+
+        assertThat(service.components())
+                .allSatisfy(component -> assertThat(validLabels).contains(component.compatibility()));
+    }
+
+    @Test
     void lookupReturnsEmptyForUnknownEntries() {
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
 
@@ -187,5 +230,27 @@ class ActionGraphComponentCatalogServiceTest {
                 java.util.List.of(profile, profile)
         )).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("duplicate profiles");
+    }
+
+    private Path repositoryRoot() {
+        Path current = Path.of("").toAbsolutePath();
+        while (current != null) {
+            if (Files.exists(current.resolve("settings.gradle.kts"))
+                    && Files.isDirectory(current.resolve("actiongraph-component-catalog"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        throw new IllegalStateException("Could not locate repository root");
+    }
+
+    private Set<String> parseModules(Path file, String regex) throws IOException {
+        String content = Files.readString(file, StandardCharsets.UTF_8);
+        var matcher = Pattern.compile(regex).matcher(content);
+        Set<String> modules = new LinkedHashSet<>();
+        while (matcher.find()) {
+            modules.add(matcher.group(1));
+        }
+        return modules;
     }
 }
