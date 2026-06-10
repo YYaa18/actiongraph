@@ -28,7 +28,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional Spring Boot starter for structured memory
 - Reusable runtime API service for goal interpretation, start, and resume gateways
 - Java 8 compatible machine-readable component catalog and composition profiles
-- Java 8 compatible control-plane contracts and lightweight runtime HTTP client
+- Java 8 compatible control-plane contracts plus lightweight runtime and component catalog HTTP clients
 - Machine-readable compatibility labels for distinguishing Java 8 client artifacts from modern runtime modules
 - Reusable control-plane shared-secret token verification component
 - Optional non-Spring human review tasks, callback handling, and approval chains
@@ -62,7 +62,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-interpretation` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
 | `actiongraph-runtime-api` | Reusable goal interpretation, start, and resume service |
 | `actiongraph-component-catalog` | Java 8 compatible machine-readable component catalog and composition profiles |
-| `actiongraph-control-plane-api` | Java 8 compatible control-plane response contracts, lightweight runtime HTTP client, and shared-secret token verification |
+| `actiongraph-control-plane-api` | Java 8 compatible control-plane response contracts, lightweight Runtime and Component Catalog HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
 | `actiongraph-governance-human-review` | Optional non-Spring human-review governance extension for amount review attributes and risk-based approval routing |

@@ -7,7 +7,7 @@ Many financial systems still run on Java 8, and some are older. ActionGraph ther
 | Level | Supported Runtime | Intended Use |
 |---|---|---|
 | Java 8 component catalog | Java 8+ | Legacy systems, gateways, or deployment checks inspect ActionGraph module metadata through `actiongraph-component-catalog` |
-| Java 8 HTTP client | Java 8+ | Legacy systems call a deployed ActionGraph Runtime API through `actiongraph-control-plane-api` |
+| Java 8 HTTP clients | Java 8+ | Legacy systems call deployed Runtime API and Component Catalog endpoints through `actiongraph-control-plane-api` |
 | Java 8 embeddable core | Target, not yet complete | Future narrowed core/annotations/governance packages compiled with `--release 8` |
 | Modern service runtime | Java 21+ build today | ActionGraph runtime service, Spring Boot starters, JDBC persistence, console, samples, and CI |
 | Older than Java 8 | HTTP only | Use platform gateway, ESB, or a thin Java 8+ sidecar; do not embed jars in-process |
@@ -37,15 +37,32 @@ if (response.successful()) {
 
 The client uses only JDK `HttpURLConnection` and returns the raw JSON body. This keeps legacy projects free to use their existing JSON library, gateway wrapper, or audit logging rules.
 
+The same artifact also includes a Java 8 Component Catalog HTTP client for remote ecosystem discovery:
+
+```java
+ActionGraphComponentCatalogHttpClient catalog = ActionGraphComponentCatalogHttpClient
+        .builder("https://agent.example.com/actiongraph/components")
+        .sharedSecret("catalog-shared-secret")
+        .build();
+
+ControlPlaneHttpResponse modules = catalog.modulesByCompatibility("java8-client");
+if (modules.successful()) {
+    System.out.println(modules.body());
+}
+```
+
+That path is useful when a legacy gateway should query the deployed catalog endpoint without loading the local catalog model classes.
+
 ## Copy-Paste Example
 
 A Java 8 client template lives at:
 
 ```text
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
+docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
 ```
 
-The test suite compiles that exact file with `javac --release 8`, so the example is both documentation and compatibility evidence. It demonstrates runtime start calls, response handling, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
+The test suite compiles those exact files with `javac --release 8`, so the examples are both documentation and compatibility evidence. They demonstrate runtime start calls, catalog metadata calls, response handling, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
 
 ## Older-Than-Java-8 HTTP Gateway Example
 
@@ -96,4 +113,4 @@ Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Com
 
 This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.
 
-The control-plane API tests also compile the documented Java 8 client example with `javac --release 8`. That source uses the runtime HTTP client, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, then scans for ActionGraph imports and Java 8-only conveniences. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.
+The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the runtime HTTP client, component catalog HTTP client, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, then scans for ActionGraph imports and Java 8-only conveniences. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.

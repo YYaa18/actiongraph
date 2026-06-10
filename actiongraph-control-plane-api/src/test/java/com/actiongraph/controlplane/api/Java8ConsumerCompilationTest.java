@@ -26,6 +26,16 @@ class Java8ConsumerCompilationTest {
     }
 
     @Test
+    void catalogHttpClientExampleCanBeCompiledByJava8ConsumerCode() throws Exception {
+        compileExample(
+                "8",
+                repositoryRoot().resolve(
+                        "docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java"),
+                mainClassesClasspath(),
+                "com/company/deployment/ActionGraphCatalogHttpClientUsage.class");
+    }
+
+    @Test
     void rawHttpGatewayExampleCanBeCompiledWithoutActionGraphClasspath() throws Exception {
         compileExample(
                 "8",

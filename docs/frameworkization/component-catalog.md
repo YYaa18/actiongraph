@@ -37,6 +37,40 @@ docs/examples/java8-component-catalog-client/src/main/java/com/company/deploymen
 
 The test suite compiles that exact file with `javac --release 8`, so deployment checks and legacy gateways have a verified copy-paste starting point for local component discovery.
 
+## Java 8 HTTP Usage
+
+If an old system should not load the catalog model jar, or if component guidance is centralized behind an enterprise gateway, use `actiongraph-control-plane-api` and call the deployed catalog endpoint instead:
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-control-plane-api")
+}
+```
+
+```java
+ActionGraphComponentCatalogHttpClient client = ActionGraphComponentCatalogHttpClient
+        .builder("https://agent.example.com/actiongraph/components")
+        .sharedSecret(System.getenv("ACTIONGRAPH_CATALOG_TOKEN"))
+        .build();
+
+ControlPlaneHttpResponse response = client.profile("java8-legacy-client");
+if (!response.successful()) {
+    throw new IllegalStateException(response.body());
+}
+System.out.println(response.body());
+```
+
+The HTTP client is Java 8 compatible, has no JSON dependency, and returns raw JSON so callers can keep their existing parser, logging, and retry stack.
+
+A Java 8 HTTP template lives at:
+
+```text
+docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
+```
+
+The test suite compiles that exact file with `javac --release 8`.
+
 ## Spring MVC Endpoint
 
 ```kotlin

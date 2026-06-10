@@ -15,10 +15,11 @@ dependencies {
 
 The module has no Spring, JDBC, LLM, runtime, servlet, Jackson, OkHttp, or Apache HTTP Client dependency. Its main classes are compiled with `--release 8` so Java 8 applications can load the jar.
 
-CI also compiles the documented Java 8 consumer example with `javac --release 8` against this module. The compiled example covers the runtime HTTP client, response DTOs, shared-secret token verification, and exception type:
+CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the runtime HTTP client, component catalog HTTP client, response DTOs, shared-secret token verification, and exception type:
 
 ```text
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
+docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
 ```
 
 Systems older than Java 8 should not depend on this artifact. For those estates, the repository also provides a raw HTTP gateway example that imports no ActionGraph classes and is compiled in CI with `javac --release 8` and an empty classpath:
@@ -78,6 +79,34 @@ The client uses only `HttpURLConnection`. It sends:
 The response body is returned as raw JSON so Java 8 callers can parse it with their existing stack, or simply forward it through an enterprise gateway without adding a new JSON dependency.
 
 For Java 6/7 estates, copy the raw HTTP gateway example instead of introducing this jar. It uses the same request shape and token header while leaving JSON parsing, logging, retries, and network policy under the host system's existing stack. Modern CI toolchains no longer provide a reliable Java 6/7 target here, so those estates should run their own platform compiler check after copying the file.
+
+## Java 8 Component Catalog HTTP Client
+
+Legacy deployment checks, enterprise gateways, and custom consoles can inspect a deployed Component Catalog endpoint through `ActionGraphComponentCatalogHttpClient`:
+
+```java
+ActionGraphComponentCatalogHttpClient catalog = ActionGraphComponentCatalogHttpClient
+        .builder("https://agent.example.com/actiongraph/components")
+        .sharedSecret(System.getenv("ACTIONGRAPH_CATALOG_TOKEN"))
+        .build();
+
+ControlPlaneHttpResponse response = catalog.modulesByCompatibility("java8-client");
+if (!response.successful()) {
+    throw new IllegalStateException(response.body());
+}
+System.out.println(response.body());
+```
+
+The client uses only `HttpURLConnection`. It sends:
+
+- `GET /`
+- `GET /modules`
+- `GET /compatibility/{compatibility}`
+- `GET /modules/{module}`
+- `GET /profiles`
+- `GET /profiles/{profile}`
+
+The response body is raw JSON. This keeps old Java callers from depending on ActionGraph catalog model classes when they only need remote ecosystem discovery or dependency guidance.
 
 ## Shared-Secret Token Verification
 
