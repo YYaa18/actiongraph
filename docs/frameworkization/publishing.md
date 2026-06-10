@@ -27,6 +27,14 @@ Each published module emits:
 ./gradlew publishToMavenLocal
 ```
 
+GitHub Actions also runs the CI workflow on every push to `main` and every pull request:
+
+```bash
+./gradlew build --no-daemon --stacktrace
+```
+
+The workflow uses Java 21, validates the Gradle wrapper through `gradle/actions/setup-gradle`, and does not set `DEEPSEEK_API_KEY`, so the real LLM smoke test remains gated/skipped in CI.
+
 Then a consuming project can depend on:
 
 ```kotlin

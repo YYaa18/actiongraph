@@ -1,5 +1,7 @@
 # ActionGraph
 
+[![CI](https://github.com/YYaa18/actiongraph/actions/workflows/ci.yml/badge.svg)](https://github.com/YYaa18/actiongraph/actions/workflows/ci.yml)
+
 [中文文档](README.zh-CN.md)
 
 ActionGraph is a typed GOAP framework for governed business action execution in Java.
