@@ -9,8 +9,19 @@ public record ClaimsPrecheckBatchReportMetadata(
         String batchId,
         String sampleSource,
         String environment,
-        List<AmountLimitRule> limitRules
+        List<AmountLimitRule> limitRules,
+        String reviewMode,
+        long simulatedReviewWaitMillis
 ) {
+    public ClaimsPrecheckBatchReportMetadata(
+            String batchId,
+            String sampleSource,
+            String environment,
+            List<AmountLimitRule> limitRules
+    ) {
+        this(batchId, sampleSource, environment, limitRules, "auto-approve", 0);
+    }
+
     public ClaimsPrecheckBatchReportMetadata {
         if (batchId == null || batchId.isBlank()) {
             throw new IllegalArgumentException("batchId must not be blank");
@@ -21,6 +32,12 @@ public record ClaimsPrecheckBatchReportMetadata(
         if (environment == null || environment.isBlank()) {
             throw new IllegalArgumentException("environment must not be blank");
         }
+        if (reviewMode == null || reviewMode.isBlank()) {
+            throw new IllegalArgumentException("reviewMode must not be blank");
+        }
+        if (simulatedReviewWaitMillis < 0) {
+            throw new IllegalArgumentException("simulatedReviewWaitMillis must not be negative");
+        }
         limitRules = List.copyOf(Objects.requireNonNull(limitRules, "limitRules"));
     }
 
@@ -29,7 +46,9 @@ public record ClaimsPrecheckBatchReportMetadata(
                 "ad-hoc",
                 "built-in-default-cases",
                 "local",
-                limitRules
+                limitRules,
+                "auto-approve",
+                0
         );
     }
 }

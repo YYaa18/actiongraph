@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,6 +54,41 @@ class ClaimsPrecheckBatchIoTest {
         assertThat(Files.readString(csv))
                 .contains("claimId,status,businessIntercepted,auditComplete,elapsedMs,businessActionMs,frameworkMs,reviewWaitMs")
                 .contains("CLM103,DENIED_BY_POLICY,true,true");
+    }
+
+    @Test
+    void suspendResumeReviewSimulationAddsReviewWaitToReport() throws Exception {
+        ClaimsPrecheckBatchRunner runner = new ClaimsPrecheckBatchRunner(
+                ClaimsPrecheckBatchRunner.defaultLimitRules(),
+                ClaimsPrecheckBatchReviewOptions.suspendResume(5)
+        );
+        ClaimsPrecheckBatchMetrics metrics = runner.run(List.of(
+                ClaimsPrecheckBatchCase.normal("CLM300", "260000")
+        ));
+        ClaimsPrecheckBatchReportMetadata metadata = new ClaimsPrecheckBatchReportMetadata(
+                "BATCH-SUSPEND-RESUME",
+                "test-cases",
+                "test",
+                runner.limitRules(),
+                runner.reviewOptions().modeName(),
+                runner.reviewOptions().simulatedReviewWaitMillis()
+        );
+
+        new ClaimsPrecheckBatchReportWriter().write(tempDir, metrics, metadata);
+
+        ClaimsPrecheckCaseResult result = metrics.caseResults().getFirst();
+        assertThat(result.status()).isEqualTo(com.actiongraph.runtime.RunStatus.COMPLETED);
+        assertThat(result.reviewWaitMillis()).isGreaterThan(1.0);
+        assertThat(
+                result.businessActionNanos() + result.frameworkNanos() + result.reviewWaitNanos()
+        ).isLessThanOrEqualTo(result.elapsedNanos());
+
+        String report = Files.readString(tempDir.resolve(ClaimsPrecheckBatchReportWriter.MARKDOWN_REPORT));
+        assertThat(report)
+                .contains("Review Mode: suspend-resume")
+                .contains("Simulated Review Wait Ms: 5")
+                .contains("Average Review Wait Ms")
+                .contains("CLM300");
     }
 
     private Path bundledCsv() throws URISyntaxException {

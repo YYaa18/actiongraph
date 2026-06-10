@@ -61,11 +61,14 @@ traceEvents=21
 
 ## Batch Metrics
 
-第三刀已把样板域扩成可读取样本文件、可交付报告的准真实批量指标；第四刀补上 JDBC 输入，方便接近真实数据源：
+第三刀已把样板域扩成可读取样本文件、可交付报告的准真实批量指标；第四刀补上 JDBC 输入；第五刀补上 suspend/resume 审批等待统计，方便接近真实数据源和真实审批链路：
 
 ```bash
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
   --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-001 --environment local"
+
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
+  --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-REVIEW-001 --environment local --review-mode suspend-resume --simulate-review-wait-ms 5"
 
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
   --args='--jdbc-url jdbc:postgresql://db.example/claims --jdbc-user actiongraph_reader --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-JDBC-001 --environment staging'
@@ -73,30 +76,32 @@ traceEvents=21
 
 JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_amount`、`missing_invoice`、`closed`、`approval_fails`、`expected_intercept`；也可以通过 `--jdbc-query` 传入自定义 SQL，只要结果列可映射到这些字段即可。`--jdbc-password` 可用于本地验证，报告里的 sample source 会对 URL 中的 password/pwd 参数脱敏。连接真实数据库时，需要把对应 JDBC 驱动加入样例运行 classpath。
 
+`--review-mode suspend-resume` 会使用 `RepositoryBackedHumanReviewPolicy` 和 `SuspendedRunRepository` 跑真实的挂起/恢复路径；`--simulate-review-wait-ms` 用于在 demo 或压测中注入审批等待时间，等待时间会计入 `reviewWaitMs`。
+
 实跑结果摘要：
 
 ```text
 claimsPrecheckBatch totalRuns=5, completed=1, intercepted=3, failed=1, auditComplete=5
-interceptRate=60.00%, auditCompletenessRate=100.00%, averageRuntimeMs=8.936, averageBusinessActionMs=0.692, averageFrameworkMs=8.196, averageReviewWaitMs=0.048
-case claimId=CLM100, status=COMPLETED, intercepted=false, auditComplete=true, businessActionMs=2.730, frameworkMs=31.673, reviewWaitMs=0.238
-case claimId=CLM101, status=HALTED_UNREACHABLE, intercepted=true, auditComplete=true, businessActionMs=0.050, frameworkMs=2.976, reviewWaitMs=0.000
-case claimId=CLM102, status=HALTED_UNREACHABLE, intercepted=true, auditComplete=true, businessActionMs=0.044, frameworkMs=2.343, reviewWaitMs=0.000
-case claimId=CLM103, status=DENIED_BY_POLICY, intercepted=true, auditComplete=true, businessActionMs=0.559, frameworkMs=2.027, reviewWaitMs=0.000
-case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete=true, businessActionMs=0.077, frameworkMs=1.963, reviewWaitMs=0.001
+interceptRate=60.00%, auditCompletenessRate=100.00%, averageRuntimeMs=14.683, averageBusinessActionMs=0.835, averageFrameworkMs=10.489, averageReviewWaitMs=3.359
+case claimId=CLM100, status=COMPLETED, intercepted=false, auditComplete=true, businessActionMs=3.289, frameworkMs=40.224, reviewWaitMs=9.253
+case claimId=CLM101, status=HALTED_UNREACHABLE, intercepted=true, auditComplete=true, businessActionMs=0.049, frameworkMs=3.196, reviewWaitMs=0.000
+case claimId=CLM102, status=HALTED_UNREACHABLE, intercepted=true, auditComplete=true, businessActionMs=0.038, frameworkMs=3.185, reviewWaitMs=0.000
+case claimId=CLM103, status=DENIED_BY_POLICY, intercepted=true, auditComplete=true, businessActionMs=0.712, frameworkMs=2.742, reviewWaitMs=0.000
+case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete=true, businessActionMs=0.087, frameworkMs=3.100, reviewWaitMs=7.542
 ```
 
 报告产物：
 
 - `claims-precheck-report.md`：业务可读指标摘要与明细表
 - `claims-precheck-results.csv`：每个样本的状态、是否拦截、审计完整性、trace 事件数、运行耗时与耗时拆分
-- 报告头包含 batch id、environment、sample source 和当前限额参数；sample source 可以来自 CSV 路径或 JDBC URL
+- 报告头包含 batch id、environment、sample source、review mode、模拟审批等待和当前限额参数；sample source 可以来自 CSV 路径或 JDBC URL
 
 当前指标口径：
 
-- 单均处理时长：批量运行 N 个理赔案，记录当前 auto-approve 模式下的端到端运行耗时
+- 单均处理时长：批量运行 N 个理赔案，记录当前审批模式下的端到端运行耗时
 - 业务 Action 耗时：样例 Action 的 `execute` / `compensate` 调用耗时，代表业务服务调用成本
 - 框架调度耗时：端到端耗时扣除业务 Action 耗时和审批等待耗时后的剩余时间
-- 审批等待耗时：human review policy 决策耗时；当前 auto-approve 样例接近 0，真实挂起审批需结合 resume 时间线继续扩展
+- 审批等待耗时：auto-approve 模式下统计 human review policy 决策耗时；suspend-resume 模式下额外统计挂起到审批决定再恢复之间的等待时间
 - 拦截率：资料缺失、已结案、超硬限额等被 guard/policy 拦截的比例
 - 审计完整率：每个 run 的 TraceChainVerifier 通过率与缺失事件率
 
@@ -105,4 +110,4 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 下一刀应继续把报告推进到更贴近生产的数据资产：
 
 - 接入真实数据库表或视图，并沉淀脱敏抽样脚本
-- 将真实 suspend/resume 审批等待时间并入批量报告，而不只统计 auto-approve policy 决策耗时
+- 接入真实审批系统回调时间，替代当前 demo 用的 `--simulate-review-wait-ms`

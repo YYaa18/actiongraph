@@ -14,12 +14,18 @@ import com.actiongraph.policy.AmountLimitPolicy;
 import com.actiongraph.policy.AmountLimitRule;
 import com.actiongraph.policy.AutoApproveHumanReviewPolicy;
 import com.actiongraph.policy.DefaultPolicyGuard;
+import com.actiongraph.policy.HumanReviewDecision;
 import com.actiongraph.policy.HumanReviewPolicy;
+import com.actiongraph.policy.HumanReviewTask;
+import com.actiongraph.policy.InMemoryHumanReviewRepository;
 import com.actiongraph.policy.MonetaryAmount;
+import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;
+import com.actiongraph.runtime.InMemorySuspendedRunRepository;
 import com.actiongraph.runtime.RunResult;
+import com.actiongraph.runtime.RunStatus;
 import com.actiongraph.samples.claimsprecheck.ClaimsPrecheckActionFactory;
 import com.actiongraph.samples.claimsprecheck.ClaimsPrecheckConditions;
 import com.actiongraph.samples.claimsprecheck.ClaimsPrecheckGoals;
@@ -44,17 +50,30 @@ public final class ClaimsPrecheckBatchRunner {
     private static final ActionId APPROVAL_ACTION_ID = new ActionId("claim.approval.request");
 
     private final List<AmountLimitRule> limitRules;
+    private final ClaimsPrecheckBatchReviewOptions reviewOptions;
 
     public ClaimsPrecheckBatchRunner() {
-        this(defaultLimitRules());
+        this(defaultLimitRules(), ClaimsPrecheckBatchReviewOptions.autoApprove());
     }
 
     public ClaimsPrecheckBatchRunner(List<AmountLimitRule> limitRules) {
+        this(limitRules, ClaimsPrecheckBatchReviewOptions.autoApprove());
+    }
+
+    public ClaimsPrecheckBatchRunner(
+            List<AmountLimitRule> limitRules,
+            ClaimsPrecheckBatchReviewOptions reviewOptions
+    ) {
         this.limitRules = List.copyOf(limitRules);
+        this.reviewOptions = reviewOptions == null ? ClaimsPrecheckBatchReviewOptions.autoApprove() : reviewOptions;
     }
 
     public List<AmountLimitRule> limitRules() {
         return limitRules;
+    }
+
+    public ClaimsPrecheckBatchReviewOptions reviewOptions() {
+        return reviewOptions;
     }
 
     public static List<AmountLimitRule> defaultLimitRules() {
@@ -101,16 +120,20 @@ public final class ClaimsPrecheckBatchRunner {
         DefaultActionRegistry registry = ClaimsPrecheckActionFactory.registry(actions);
         InMemoryTraceRepository traceRepository = new InMemoryTraceRepository();
         AmountExtractor amountExtractor = claimPayoutAmountExtractor();
+        InMemorySuspendedRunRepository suspendedRuns = new InMemorySuspendedRunRepository();
+        InMemoryHumanReviewRepository reviewRepository = new InMemoryHumanReviewRepository();
         GoapExecutor executor = GoapExecutor.builder()
                 .policyGuard(new DefaultPolicyGuard(new AmountLimitPolicy(amountExtractor, limitRules)))
-                .humanReviewPolicy(timing.wrapHumanReviewPolicy(new AutoApproveHumanReviewPolicy()))
+                .humanReviewPolicy(timing.wrapHumanReviewPolicy(reviewPolicy(reviewRepository)))
                 .traceRepository(traceRepository)
+                .suspendedRunRepository(suspendedRuns)
                 .reviewAttributeContributor(new AmountAttributeContributor(amountExtractor, limitRules))
                 .build();
 
         long start = System.nanoTime();
         RunResult result = executor.run(ClaimsPrecheckGoals.prepareClaimPayoutApplication(),
                 blackboard, actions, registry);
+        result = resumeApprovedReviews(result, executor, actions, registry, reviewRepository, timing);
         long elapsed = System.nanoTime() - start;
 
         var traceEvents = traceRepository.findByRun(result.runId());
@@ -145,6 +168,57 @@ public final class ClaimsPrecheckBatchRunner {
         };
     }
 
+    private HumanReviewPolicy reviewPolicy(InMemoryHumanReviewRepository reviewRepository) {
+        if (reviewOptions.suspendResume()) {
+            return new RepositoryBackedHumanReviewPolicy(reviewRepository);
+        }
+        return new AutoApproveHumanReviewPolicy();
+    }
+
+    private RunResult resumeApprovedReviews(
+            RunResult result,
+            GoapExecutor executor,
+            List<Action> actions,
+            DefaultActionRegistry registry,
+            InMemoryHumanReviewRepository reviewRepository,
+            TimingRecorder timing
+    ) {
+        RunResult current = result;
+        while (reviewOptions.suspendResume() && current.status() == RunStatus.SUSPENDED_PENDING_REVIEW) {
+            String runId = current.runId();
+            HumanReviewTask task = reviewRepository.findByRun(runId).stream()
+                    .filter(candidate -> candidate.decision() == HumanReviewDecision.PENDING)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException(
+                            "No pending review task found for suspended run " + runId));
+            waitForSimulatedReview(timing);
+            reviewRepository.decideStage(
+                    task.runId(),
+                    task.actionId(),
+                    task.currentStageIndex(),
+                    HumanReviewDecision.APPROVED,
+                    "batch-simulated-reviewer",
+                    "Approved by claims precheck batch simulation"
+            );
+            current = executor.resume(current.runId(), actions, registry);
+        }
+        return current;
+    }
+
+    private void waitForSimulatedReview(TimingRecorder timing) {
+        long start = System.nanoTime();
+        try {
+            if (reviewOptions.simulatedReviewWaitMillis() > 0) {
+                Thread.sleep(reviewOptions.simulatedReviewWaitMillis());
+            }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while simulating human review wait", ex);
+        } finally {
+            timing.recordReviewWait(System.nanoTime() - start);
+        }
+    }
+
     private static final class TimingRecorder {
         private final AtomicLong businessActionNanos = new AtomicLong();
         private final AtomicLong reviewWaitNanos = new AtomicLong();
@@ -176,6 +250,10 @@ public final class ClaimsPrecheckBatchRunner {
 
         private void recordBusinessAction(long nanos) {
             businessActionNanos.addAndGet(nanos);
+        }
+
+        private void recordReviewWait(long nanos) {
+            reviewWaitNanos.addAndGet(nanos);
         }
     }
 
