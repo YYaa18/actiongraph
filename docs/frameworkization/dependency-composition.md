@@ -245,9 +245,9 @@ dependencies {
 
 `actiongraph-llm-deepseek` brings `actiongraph-llm` transitively and adds only the DeepSeek-compatible HTTP client. The LLM interpreter produces goals and parameters only; it does not generate plans or execute actions.
 
-## Spring Repository-Backed Human Review And Callback Receiver
+## Spring Repository-Backed Human Review
 
-Use this in the same business service, or in a separate approval integration service, to create review tasks and optionally receive external review decisions.
+Use this when a Spring Boot service needs repository-backed review tasks and a `RepositoryBackedHumanReviewPolicy`.
 
 ```kotlin
 dependencies {
@@ -256,7 +256,21 @@ dependencies {
 }
 ```
 
-The human-review starter brings `actiongraph-human-review` transitively. It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`; production services add `actiongraph-human-review-jdbc-spring-boot-starter` when review tasks and callback decisions must be durable. The HTTP callback endpoint is disabled until `actiongraph.human-review.callback-endpoint.enabled=true`.
+The human-review starter brings `actiongraph-human-review` transitively. It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`; production services add `actiongraph-human-review-jdbc-spring-boot-starter` when review tasks and callback decisions must be durable. It does not expose HTTP endpoints.
+
+## Spring MVC Human Review Callback Receiver
+
+Use this in the same business service, or in a separate approval integration service, to receive external review decisions over HTTP.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
+}
+```
+
+The callback starter brings `actiongraph-human-review` transitively, but it does not create `HumanReviewRepository` or `HumanReviewPolicy` beans. It only creates `HumanReviewCallbackHandler` and the Spring MVC controller when `actiongraph.human-review.callback-endpoint.enabled=true`, a servlet web application is present, and a `HumanReviewRepository` bean already exists.
 
 ## Custom Read-Only Monitoring Service
 
@@ -328,6 +342,7 @@ dependencies {
     implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }

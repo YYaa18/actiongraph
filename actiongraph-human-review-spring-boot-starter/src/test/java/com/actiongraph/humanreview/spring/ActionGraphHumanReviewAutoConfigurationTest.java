@@ -1,6 +1,7 @@
 package com.actiongraph.humanreview.spring;
 
 import com.actiongraph.policy.ApprovalChainResolver;
+import com.actiongraph.policy.HumanReviewCallbackHandler;
 import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.policy.InMemoryHumanReviewRepository;
@@ -61,5 +62,12 @@ class ActionGraphHumanReviewAutoConfigurationTest {
             assertThat(context.getBean(HumanReviewPolicy.class))
                     .isInstanceOf(RepositoryBackedHumanReviewPolicy.class);
         });
+    }
+
+    @Test
+    void callbackEndpointPropertiesDoNotCreateWebCallbackBeans() {
+        contextRunner
+                .withPropertyValues("actiongraph.human-review.callback-endpoint.enabled=true")
+                .run(context -> assertThat(context).doesNotHaveBean(HumanReviewCallbackHandler.class));
     }
 }

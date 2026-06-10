@@ -22,6 +22,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph core JDBC repositories.",
     "actiongraph-memory-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC memory repository.",
     "actiongraph-human-review-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC human-review repository.",
+    "actiongraph-human-review-callback-spring-boot-starter" to "Optional Spring MVC callback endpoint for ActionGraph human-review decisions.",
     "actiongraph-spring-boot-starter" to "Spring Boot auto-configuration for annotation-driven ActionGraph action registration.",
     "actiongraph-governance" to "Optional governance policies for masking, amount limits, and rule-based permissions.",
     "actiongraph-governance-human-review" to "Optional governance policies that enrich human-review approval chains and review attributes.",
@@ -30,7 +31,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-console-core" to "Reusable ActionGraph console query service and response model.",
     "actiongraph-console-jdbc" to "JDBC adapter for the ActionGraph console query port.",
     "actiongraph-console-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC console read model.",
-    "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot repository-backed human-review policy and callback endpoint support for ActionGraph.",
+    "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot repository-backed human-review policy support for ActionGraph.",
     "actiongraph-console-spring-boot-starter" to "Optional Spring Boot read-only console UI and query endpoints for ActionGraph."
 )
 

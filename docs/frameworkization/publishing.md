@@ -26,7 +26,8 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot auto-configuration for core JDBC repositories |
 | `actiongraph-memory-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC memory repository auto-configuration |
 | `actiongraph-human-review-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC human-review repository auto-configuration |
-| `actiongraph-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0` | Optional Spring Boot repository-backed review policy and Spring MVC approval callback endpoint |
+| `actiongraph-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0` | Optional Spring Boot repository-backed review policy auto-configuration |
+| `actiongraph-human-review-callback-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-callback-spring-boot-starter:0.1.0` | Optional Spring MVC approval callback endpoint |
 | `actiongraph-console-core` | `com.actiongraph:actiongraph-console-core:0.1.0` | Reusable read-only Console query service and response model |
 | `actiongraph-console-jdbc` | `com.actiongraph:actiongraph-console-jdbc:0.1.0` | JDBC adapter for the Console query port |
 | `actiongraph-console-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-console-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC Console repository auto-configuration |
@@ -178,10 +179,16 @@ implementation("com.actiongraph:actiongraph-memory-jdbc")
 implementation("com.actiongraph:actiongraph-human-review-jdbc")
 ```
 
-Spring Boot repository-backed review and external approval callbacks add:
+Spring Boot repository-backed review adds:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+```
+
+Spring MVC external approval callbacks add:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
 ```
 
 Custom read-only operational monitoring adds:

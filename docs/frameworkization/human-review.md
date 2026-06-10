@@ -1,6 +1,6 @@
 # Human Review Integration
 
-v2 human review now has a repository-backed integration point for external approval systems. The non-Spring API lives in `actiongraph-human-review`; Spring auto-configuration for repository-backed review policy and the optional MVC callback endpoint lives in `actiongraph-human-review-spring-boot-starter`.
+v2 human review now has a repository-backed integration point for external approval systems. The non-Spring API lives in `actiongraph-human-review`; Spring auto-configuration for repository-backed review policy lives in `actiongraph-human-review-spring-boot-starter`; the optional MVC callback endpoint lives in `actiongraph-human-review-callback-spring-boot-starter`.
 
 ## Dependency
 
@@ -124,6 +124,7 @@ Spring MVC applications can enable the optional callback endpoint without writin
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+implementation("com.actiongraph:actiongraph-human-review-callback-spring-boot-starter")
 ```
 
 ```yaml
