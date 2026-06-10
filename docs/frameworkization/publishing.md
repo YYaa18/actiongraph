@@ -126,7 +126,7 @@ Control-plane response contracts, lightweight Runtime HTTP client, and shared-se
 implementation("com.actiongraph:actiongraph-control-plane-api")
 ```
 
-This artifact is compiled with `--release 8` and has no runtime dependencies, so legacy Java 8 systems can use `ActionGraphRuntimeHttpClient` to call a deployed Runtime API and custom gateways can use `ControlPlaneTokenVerifier` without importing Spring Boot, JDBC, LLM providers, or JSON libraries.
+This artifact is compiled with `--release 8` and has no runtime dependencies, so legacy Java 8 systems can use `ActionGraphRuntimeHttpClient` to call a deployed Runtime API and custom gateways can use `ControlPlaneTokenVerifier` without importing Spring Boot, JDBC, LLM providers, or JSON libraries. The root build runs `verifyJava8Compatibility` for Java 8 compatible modules during `check`; it verifies no main runtime dependencies are resolved and no produced class file exceeds Java 8 bytecode major version `52`.
 
 Repository-backed human review adds:
 

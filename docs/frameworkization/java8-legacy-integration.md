@@ -65,3 +65,10 @@ Today, `actiongraph-control-plane-api` is the only `java8-client` module. `actio
 ## Release Gate
 
 Every public module must keep an explicit compatibility label in the component catalog. Automated tests compare `settings.gradle.kts`, `actiongraph-bom`, and the default component catalog so new modules cannot silently bypass compatibility classification. Any new module requires PRD-level approval and an explicit label before it can be published.
+
+Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Compatibility` during `check`. The task fails the build if a Java 8 artifact:
+
+- resolves any main `runtimeClasspath` dependency
+- produces a `.class` file with major version greater than `52`
+
+This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.

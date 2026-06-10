@@ -1,3 +1,6 @@
+import java.io.DataInputStream
+import java.io.FileInputStream
+
 plugins {
     java
 }
@@ -44,6 +47,17 @@ val libraryModuleDescriptions = mapOf(
 val publishableModuleDescriptions = mapOf(
     platformModuleName to "Bill of materials for aligning ActionGraph module versions."
 ) + libraryModuleDescriptions
+
+fun classFileMajorVersion(file: File): Int {
+    DataInputStream(FileInputStream(file)).use { input ->
+        val magic = input.readInt()
+        if (magic != 0xCAFEBABE.toInt()) {
+            throw GradleException("Not a class file: ${file.path}")
+        }
+        input.readUnsignedShort()
+        return input.readUnsignedShort()
+    }
+}
 
 allprojects {
     repositories {
@@ -119,6 +133,45 @@ subprojects {
         tasks.named<JavaCompile>("compileJava") {
             if (project.name in java8CompatibleModules) {
                 options.release.set(8)
+            }
+        }
+
+        if (name in java8CompatibleModules) {
+            val verifyJava8Compatibility = tasks.register("verifyJava8Compatibility") {
+                group = "verification"
+                description = "Verifies Java 8 compatible artifacts keep Java 8 bytecode and no runtime dependencies."
+                dependsOn(tasks.named("classes"))
+
+                doLast {
+                    val runtimeArtifacts = configurations.named("runtimeClasspath").get()
+                            .resolvedConfiguration
+                            .resolvedArtifacts
+                    if (runtimeArtifacts.isNotEmpty()) {
+                        val dependencies = runtimeArtifacts.joinToString(", ") {
+                            "${it.moduleVersion.id.group}:${it.name}:${it.moduleVersion.id.version}"
+                        }
+                        throw GradleException("${project.name} must not have runtime dependencies: $dependencies")
+                    }
+
+                    val classesDir = layout.buildDirectory.dir("classes/java/main").get().asFile
+                    if (classesDir.exists()) {
+                        classesDir.walkTopDown()
+                                .filter { it.isFile && it.extension == "class" }
+                                .forEach { classFile ->
+                                    val majorVersion = classFileMajorVersion(classFile)
+                                    if (majorVersion > 52) {
+                                        throw GradleException(
+                                                "${project.name} produced non-Java-8 bytecode: " +
+                                                        "${classFile.relativeTo(classesDir).path} has major version $majorVersion"
+                                        )
+                                    }
+                                }
+                    }
+                }
+            }
+
+            tasks.named("check") {
+                dependsOn(verifyJava8Compatibility)
             }
         }
 

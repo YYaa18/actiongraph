@@ -101,6 +101,7 @@ The catalog is part of the release contract, not only documentation. Tests verif
 - every module in `settings.gradle.kts` appears in the default catalog
 - every non-sample library module appears in the BOM constraints
 - every catalog component uses one of the closed compatibility labels
+- every module listed as Java 8 compatible by the build passes the Java 8 bytecode and dependency guard
 
 Adding a module therefore requires updating the catalog, assigning compatibility, and deciding whether the artifact belongs in the BOM.
 
