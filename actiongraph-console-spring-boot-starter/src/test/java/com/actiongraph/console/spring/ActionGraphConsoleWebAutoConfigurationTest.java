@@ -1,4 +1,4 @@
-package com.actiongraph.spring;
+package com.actiongraph.console.spring;
 
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import com.actiongraph.trace.TraceEvent;

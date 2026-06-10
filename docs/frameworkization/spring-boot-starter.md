@@ -25,7 +25,6 @@ The starter auto-configures:
 - `MemoryContextLoader`
 - `Executor` backed by `GoapExecutor`
 - `ActionRegistry`
-- optional read-only Console page and HTTP query endpoints when enabled with JDBC persistence
 
 The generated `ActionRegistry` includes:
 
@@ -72,29 +71,13 @@ actiongraph:
     max-steps: 64
   actions:
     auto-register-annotated: true
-  console:
-    enabled: false
-    path: /actiongraph/console
-    token-header: X-ActionGraph-Console-Token
-    shared-secret: ${ACTIONGRAPH_CONSOLE_SECRET}
-    default-limit: 50
-    max-limit: 200
 ```
 
 Set `actiongraph.actions.auto-register-annotated=false` to build an `ActionRegistry` only from explicit Spring `Action` beans.
 
-## Read-Only Console Endpoint
+## Optional Ecosystem Components
 
-When `actiongraph.console.enabled=true`, `actiongraph-persistence-jdbc` is on the runtime classpath, and the application has a `DataSource` bean, the starter exposes a read-only run monitoring API:
-
-```text
-GET /actiongraph/console
-GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
-GET /actiongraph/console/runs/{runId}
-GET /actiongraph/console/runs/{runId}/trace
-```
-
-The built-in page renders a compact operational view with filters, run metadata, and a trace timeline. The API returns `TraceRunSummary`-shaped JSON with paging metadata, run status, first/last trace timestamps, event count, trace-chain verification, and trace event details for a selected run. Configure `actiongraph.console.shared-secret` to require the configured token header for API calls. The console does not mutate runtime state and does not resume or approve runs.
+This starter intentionally does not include the read-only Console control layer. Add `actiongraph-console-spring-boot-starter` when an application needs operational run monitoring. Keeping it separate lets services use ActionGraph runtime integration without exposing control-plane endpoints.
 
 ## Current Scope
 

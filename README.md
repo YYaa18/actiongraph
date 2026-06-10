@@ -21,7 +21,8 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional data masking for trace details/data and human-review previews
 - Tamper-evident TraceEvent hash chains with verification support
 - Single-transaction amount limits with hard denial and review escalation
-- Spring Boot starter with annotation-driven Action registration plus optional human-review callback and read-only console UI/endpoints
+- Spring Boot starter with annotation-driven Action registration and optional human-review callback endpoint
+- Optional console Spring Boot starter with read-only run monitoring UI/endpoints
 - DeepSeek-compatible LLM goal interpretation
 - Reference samples for renewal quote and order cancellation flows
 
@@ -33,6 +34,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-llm-deepseek` | DeepSeek-compatible LLM client and GoalCatalog prompt support |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, human review, and memory |
 | `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning |
+| `actiongraph-console-spring-boot-starter` | Optional read-only Console UI and Spring MVC query endpoints |
 | `actiongraph-samples` | Pure Java sample applications |
 
 ## Quick Start
@@ -42,6 +44,8 @@ dependencies {
     implementation("com.actiongraph:actiongraph-spring-boot-starter:0.1.0")
     implementation("com.actiongraph:actiongraph-llm-deepseek:0.1.0")
     implementation("com.actiongraph:actiongraph-persistence-jdbc:0.1.0")
+    // Optional control-plane component:
+    implementation("com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0")
 }
 ```
 
@@ -96,7 +100,7 @@ When the callback endpoint is enabled in a Spring MVC application, approval syst
 
 If `shared-secret` is configured, the request must include the configured token header with the same value. Missing or invalid callback tokens return `401 UNAUTHORIZED`.
 
-When `actiongraph.console.enabled=true`, a Spring MVC application that also has `actiongraph-persistence-jdbc` and a `DataSource` exposes read-only run monitoring endpoints:
+When `actiongraph-console-spring-boot-starter` is on the classpath and `actiongraph.console.enabled=true`, a Spring MVC application with a `DataSource` exposes read-only run monitoring endpoints:
 
 ```text
 GET /actiongraph/console
@@ -138,6 +142,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Claims precheck PostgreSQL mapping](docs/frameworkization/claims-precheck-postgresql.md)
 - [Claims precheck review callbacks](docs/frameworkization/claims-precheck-review-callbacks.md)
 - [Claims precheck read-only console](docs/frameworkization/claims-precheck-console.md)
+- [Ecosystem modularity](docs/frameworkization/ecosystem-modularity.md)
 - [Framework notes](docs/frameworkization/)
 - [Original PRD](docs/PRD-v0.md)
 - [F0 financialization PRD](docs/PRD-F0-finance.md)

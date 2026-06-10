@@ -10,6 +10,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | DeepSeek-compatible LLM goal interpretation |
 | `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace and suspended-run repositories |
 | `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Spring Boot auto-configuration and annotation-driven action registration |
+| `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Optional read-only Console UI and Spring MVC query endpoints |
 
 `actiongraph-samples` remains an application/sample module and is intentionally not published.
 
@@ -66,6 +67,12 @@ Durable trace and suspend/resume persistence adds:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-persistence-jdbc:0.1.0")
+```
+
+Read-only operational monitoring adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0")
 ```
 
 ## Private Repository Publishing

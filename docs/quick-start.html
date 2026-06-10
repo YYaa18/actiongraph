@@ -183,6 +183,7 @@
   <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、审批、记忆</td><td>非 Spring 应用直接依赖它</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>DeepSeek 客户端 + GoalCatalog prompt 渲染</td><td>需要自然语言入口时</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-persistence-jdbc</code></td><td>Trace / 挂起 / 审批 / 记忆的 JDBC 仓储</td><td><b>生产环境必选</b></td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-console-spring-boot-starter</code></td><td>只读 Console 页面 + 查询端点</td><td>需要控制层/监管台时按需引入</td></tr>
 </table>
 
 <h2 id="step1"><span class="step-no">1</span>引入依赖</h2>
@@ -191,6 +192,7 @@ dependencies {
     implementation(<span class="s">"com.actiongraph:actiongraph-spring-boot-starter:0.1.0"</span>)
     implementation(<span class="s">"com.actiongraph:actiongraph-llm-deepseek:0.1.0"</span>)
     implementation(<span class="s">"com.actiongraph:actiongraph-persistence-jdbc:0.1.0"</span>)  <span class="c">// 生产持久化</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0"</span>)  <span class="c">// 可选控制层</span>
 }</code></pre>
 <p>starter 引入后无需任何注解开关，自动装配以下 Bean（全部 <code>@ConditionalOnMissingBean</code>，你随时可以用自己的 <code>@Bean</code> 覆盖）：<code>Planner</code>、<code>GoapExecutor</code>、<code>ActionRegistry</code>、<code>ExecutionPolicyGuard</code>、<code>HumanReviewPolicy</code>、<code>TraceRepository</code>、<code>SuspendedRunRepository</code>、<code>MemoryContextLoader</code> 等。</p>
 
@@ -460,7 +462,7 @@ AmountExtractor amountExtractor() {
   <tr><td><code>actiongraph.human-review.callback-endpoint.path</code></td><td><code>/actiongraph/human-review/callbacks</code></td><td>审批回调 HTTP 端点路径</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.token-header</code></td><td><code>X-ActionGraph-Review-Token</code></td><td>启用共享密钥后用于传递回调 token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.shared-secret</code></td><td>空</td><td>审批回调共享密钥；为空时不校验，生产环境建议通过环境变量或密钥系统注入</td></tr>
-  <tr><td><code>actiongraph.console.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露只读运行监控 HTTP 端点；需要 <code>actiongraph-persistence-jdbc</code> 与 <code>DataSource</code></td></tr>
+  <tr><td><code>actiongraph.console.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露只读运行监控 HTTP 端点；需要 <code>actiongraph-console-spring-boot-starter</code>、<code>actiongraph-persistence-jdbc</code> 与 <code>DataSource</code></td></tr>
   <tr><td><code>actiongraph.console.path</code></td><td><code>/actiongraph/console</code></td><td>只读 Console 页面与 HTTP 端点前缀，提供内置页面、<code>GET /runs</code>、<code>GET /runs/{runId}</code> 与 <code>GET /runs/{runId}/trace</code>；列表支持 <code>limit</code>、<code>offset</code>、<code>status</code>、<code>auditComplete</code></td></tr>
   <tr><td><code>actiongraph.console.token-header</code></td><td><code>X-ActionGraph-Console-Token</code></td><td>启用共享密钥后用于传递 Console token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.console.shared-secret</code></td><td>空</td><td>Console 共享密钥；为空时不校验，生产环境建议接入企业网关或密钥系统</td></tr>

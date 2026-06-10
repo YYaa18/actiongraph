@@ -9,7 +9,8 @@ val publishableModuleDescriptions = mapOf(
     "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, trace, and interpretation APIs.",
     "actiongraph-llm-deepseek" to "DeepSeek-compatible LLM goal interpretation support for ActionGraph.",
     "actiongraph-persistence-jdbc" to "JDBC persistence repositories for ActionGraph trace events and suspended runs.",
-    "actiongraph-spring-boot-starter" to "Spring Boot auto-configuration for annotation-driven ActionGraph action registration and human-review callbacks."
+    "actiongraph-spring-boot-starter" to "Spring Boot auto-configuration for annotation-driven ActionGraph action registration and human-review callbacks.",
+    "actiongraph-console-spring-boot-starter" to "Optional Spring Boot read-only console UI and query endpoints for ActionGraph JDBC trace runs."
 )
 
 allprojects {

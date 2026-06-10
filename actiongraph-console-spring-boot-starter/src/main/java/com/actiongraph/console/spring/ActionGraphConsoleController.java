@@ -1,4 +1,4 @@
-package com.actiongraph.spring;
+package com.actiongraph.console.spring;
 
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
 import com.actiongraph.persistence.jdbc.TraceRunPage;
@@ -32,12 +32,12 @@ public final class ActionGraphConsoleController {
     private static final String CONSOLE_PAGE_RESOURCE = "/actiongraph/console/index.html";
 
     private final JdbcTraceRunRepository runRepository;
-    private final ActionGraphProperties.ConsoleProperties properties;
+    private final ActionGraphConsoleProperties properties;
     private final String consolePage;
 
     public ActionGraphConsoleController(
             JdbcTraceRunRepository runRepository,
-            ActionGraphProperties.ConsoleProperties properties
+            ActionGraphConsoleProperties properties
     ) {
         this.runRepository = Objects.requireNonNull(runRepository, "runRepository");
         this.properties = Objects.requireNonNull(properties, "properties");
@@ -153,7 +153,7 @@ public final class ActionGraphConsoleController {
         }
     }
 
-    private String renderConsolePage(String template, ActionGraphProperties.ConsoleProperties consoleProperties) {
+    private String renderConsolePage(String template, ActionGraphConsoleProperties consoleProperties) {
         return template
                 .replace("__ACTIONGRAPH_CONSOLE_TOKEN_HEADER__", jsString(consoleProperties.getTokenHeader()))
                 .replace("__ACTIONGRAPH_CONSOLE_DEFAULT_LIMIT__", Integer.toString(consoleProperties.getDefaultLimit()))

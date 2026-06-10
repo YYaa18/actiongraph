@@ -71,9 +71,10 @@ This lets a future console list runs directly from the JDBC trace table, page/fi
 
 ## Spring Boot Read-Only Endpoint
 
-`actiongraph-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
+`actiongraph-console-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
 
 - `actiongraph.console.enabled=true`
+- `actiongraph-console-spring-boot-starter` is on the runtime classpath
 - `actiongraph-persistence-jdbc` is on the runtime classpath
 - a `DataSource` bean is available
 

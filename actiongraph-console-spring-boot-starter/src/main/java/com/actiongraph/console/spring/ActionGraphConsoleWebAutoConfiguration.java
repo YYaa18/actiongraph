@@ -1,4 +1,4 @@
-package com.actiongraph.spring;
+package com.actiongraph.console.spring;
 
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Bean;
 import javax.sql.DataSource;
 
 @AutoConfiguration(
-        after = ActionGraphAutoConfiguration.class,
         afterName = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration"
 )
 @ConditionalOnClass(name = {
@@ -28,7 +27,7 @@ import javax.sql.DataSource;
         name = "enabled",
         havingValue = "true"
 )
-@EnableConfigurationProperties(ActionGraphProperties.class)
+@EnableConfigurationProperties(ActionGraphConsoleProperties.class)
 public class ActionGraphConsoleWebAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
@@ -40,8 +39,8 @@ public class ActionGraphConsoleWebAutoConfiguration {
     @ConditionalOnMissingBean(name = "actionGraphConsoleController")
     public ActionGraphConsoleController actionGraphConsoleController(
             JdbcTraceRunRepository traceRunRepository,
-            ActionGraphProperties properties
+            ActionGraphConsoleProperties properties
     ) {
-        return new ActionGraphConsoleController(traceRunRepository, properties.getConsole());
+        return new ActionGraphConsoleController(traceRunRepository, properties);
     }
 }

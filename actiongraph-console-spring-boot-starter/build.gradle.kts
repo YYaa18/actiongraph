@@ -5,7 +5,7 @@ plugins {
 val springBootVersion = "3.3.5"
 
 dependencies {
-    api(project(":actiongraph-core"))
+    api(project(":actiongraph-persistence-jdbc"))
     api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
     compileOnly("org.springframework:spring-web:6.1.14")
@@ -14,4 +14,5 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+    testImplementation("com.h2database:h2:2.2.224")
 }
