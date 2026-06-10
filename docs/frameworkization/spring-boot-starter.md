@@ -18,10 +18,12 @@ The starter auto-configures:
 - `Planner` backed by `GoapPlanner`
 - `TraceRepository` backed by `InMemoryTraceRepository`
 - `SuspendedRunRepository` backed by `InMemorySuspendedRunRepository`
-- `PermissionPolicy`
+- neutral `PermissionPolicy`
 - `ExecutionPolicyGuard`
-- `HumanReviewPolicy`
+- single-stage `HumanReviewPolicy`
 - `HumanReviewRepository`
+- no-op `DataMaskingPolicy`
+- no-op `ReviewAttributeContributor`
 - `MemoryRepository`
 - `MemoryContextLoader`
 - `Executor` backed by `GoapExecutor`
@@ -78,11 +80,13 @@ Set `actiongraph.actions.auto-register-annotated=false` to build an `ActionRegis
 
 ## Optional Ecosystem Components
 
-This starter intentionally does not include durable persistence or HTTP control-plane endpoints. Add `actiongraph-jdbc-spring-boot-starter` when a Spring Boot application needs JDBC-backed repositories, add `actiongraph-human-review-spring-boot-starter` when it needs approval callbacks, add `actiongraph-console-core` for custom read-only monitoring integrations, and add `actiongraph-console-spring-boot-starter` when it needs the built-in Spring MVC operational run monitoring endpoint/page. Keeping these separate lets services use ActionGraph runtime integration without pulling in infrastructure or endpoint surfaces they do not need.
+This starter intentionally does not include durable persistence, optional governance policies, or HTTP control-plane endpoints. Add `actiongraph-governance-spring-boot-starter` when a Spring Boot application needs masking, amount limits, or risk-based approval routing; add `actiongraph-jdbc-spring-boot-starter` when it needs JDBC-backed repositories; add `actiongraph-human-review-spring-boot-starter` when it needs approval callbacks; add `actiongraph-console-core` for custom read-only monitoring integrations; and add `actiongraph-console-spring-boot-starter` when it needs the built-in Spring MVC operational run monitoring endpoint/page. Keeping these separate lets services use ActionGraph runtime integration without pulling in infrastructure, governance, or endpoint surfaces they do not need.
 
 ## Current Scope
 
-This starter intentionally keeps persistence and policy defaults in-memory/simple. Production applications should add the optional JDBC starter or replace `TraceRepository`, `SuspendedRunRepository`, `PermissionPolicy`, and `HumanReviewPolicy` with application-specific beans.
+This starter intentionally keeps persistence in-memory and policy defaults neutral/simple. Production applications should add the optional governance/JDBC starters or replace `TraceRepository`, `SuspendedRunRepository`, `PermissionPolicy`, and `HumanReviewPolicy` with application-specific beans.
+
+For packaged governance policies, add `actiongraph-governance-spring-boot-starter`. It activates the `actiongraph.masking.*`, `actiongraph.limits.*`, and `actiongraph.human-review.risk-based-approval-chain` configuration trees. Without that module, those properties are intentionally ignored by the base runtime starter.
 
 For rule-based permissions and tenant checks:
 

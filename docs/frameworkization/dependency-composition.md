@@ -63,6 +63,26 @@ actiongraph:
 
 Non-Spring services, or applications that want complete manual control, can depend on `actiongraph-persistence-jdbc` directly and instantiate the repositories themselves.
 
+## Governance Policies
+
+Add governance policies when a Spring Boot service needs data masking, amount-limit rules, or risk-based approval routing.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
+}
+```
+
+The governance starter uses the same `actiongraph.*` property namespace as the runtime starter, but it is the component that activates:
+
+- `actiongraph.masking.*`
+- `actiongraph.limits.*`
+- `actiongraph.human-review.risk-based-approval-chain`
+
+Without this module, the base Spring runtime remains neutral: no masking, default permission allow, no amount escalation, and single-stage review.
+
 ## Natural-Language Entry
 
 Add the DeepSeek-compatible adapter when the service needs LLM goal interpretation.
@@ -124,6 +144,7 @@ Use this for a single deployment that runs the business workflow, receives appro
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")

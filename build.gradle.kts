@@ -13,6 +13,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-persistence-jdbc" to "JDBC persistence repositories for ActionGraph trace, suspended runs, review tasks, and memory.",
     "actiongraph-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph JDBC repositories.",
     "actiongraph-spring-boot-starter" to "Spring Boot auto-configuration for annotation-driven ActionGraph action registration.",
+    "actiongraph-governance-spring-boot-starter" to "Optional Spring Boot governance policies for masking, approval routing, and amount limits.",
     "actiongraph-console-core" to "Reusable ActionGraph console query service and response model.",
     "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot human-review callback endpoint support for ActionGraph.",
     "actiongraph-console-spring-boot-starter" to "Optional Spring Boot read-only console UI and query endpoints for ActionGraph JDBC trace runs."

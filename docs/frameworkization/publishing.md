@@ -11,6 +11,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | DeepSeek-compatible LLM goal interpretation |
 | `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace, suspended-run, review-task, and memory repositories |
 | `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Spring Boot auto-configuration and annotation-driven action registration |
+| `actiongraph-governance-spring-boot-starter` | `com.actiongraph:actiongraph-governance-spring-boot-starter:0.1.0` | Optional Spring Boot governance policies for masking, amount limits, and approval routing |
 | `actiongraph-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot auto-configuration for JDBC repositories |
 | `actiongraph-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0` | Optional Spring MVC approval callback endpoint |
 | `actiongraph-console-core` | `com.actiongraph:actiongraph-console-core:0.1.0` | Reusable read-only Console query service and response model |
@@ -69,6 +70,12 @@ LLM-backed goal interpretation adds:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-llm-deepseek")
+```
+
+Spring Boot governance policies add:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
 ```
 
 Spring Boot durable trace and suspend/resume persistence adds:

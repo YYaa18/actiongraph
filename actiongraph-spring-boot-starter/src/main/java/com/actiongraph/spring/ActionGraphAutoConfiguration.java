@@ -8,10 +8,6 @@ import com.actiongraph.memory.MemoryContextLoader;
 import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.planning.Planner;
-import com.actiongraph.policy.AmountAttributeContributor;
-import com.actiongraph.policy.AmountExtractor;
-import com.actiongraph.policy.AmountLimitPolicy;
-import com.actiongraph.policy.AmountLimitRule;
 import com.actiongraph.policy.ApprovalChainResolver;
 import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.DefaultPermissionPolicy;
@@ -20,14 +16,11 @@ import com.actiongraph.policy.ExecutionPolicyGuard;
 import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.policy.InMemoryHumanReviewRepository;
-import com.actiongraph.policy.NoopAmountExtractor;
 import com.actiongraph.policy.NoopMaskingPolicy;
 import com.actiongraph.policy.NoopReviewAttributeContributor;
 import com.actiongraph.policy.PermissionPolicy;
-import com.actiongraph.policy.RegexMaskingPolicy;
 import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
 import com.actiongraph.policy.ReviewAttributeContributor;
-import com.actiongraph.policy.RiskBasedChainResolver;
 import com.actiongraph.policy.SingleStageApprovalChainResolver;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.GoapExecutor;
@@ -41,8 +34,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-
-import java.util.List;
 
 @AutoConfiguration
 @EnableConfigurationProperties(ActionGraphProperties.class)
@@ -70,21 +61,8 @@ public class ActionGraphAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public AmountExtractor actionGraphAmountExtractor() {
-        return NoopAmountExtractor.INSTANCE;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public PermissionPolicy actionGraphPermissionPolicy(
-            ActionGraphProperties properties,
-            AmountExtractor amountExtractor
-    ) {
-        List<AmountLimitRule> rules = properties.getLimits().toAmountLimitRules();
-        if (rules.isEmpty()) {
-            return new DefaultPermissionPolicy();
-        }
-        return new AmountLimitPolicy(amountExtractor, rules);
+    public PermissionPolicy actionGraphPermissionPolicy() {
+        return new DefaultPermissionPolicy();
     }
 
     @Bean
@@ -95,15 +73,8 @@ public class ActionGraphAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ReviewAttributeContributor actionGraphReviewAttributeContributor(
-            ActionGraphProperties properties,
-            AmountExtractor amountExtractor
-    ) {
-        List<AmountLimitRule> rules = properties.getLimits().toAmountLimitRules();
-        if (rules.isEmpty()) {
-            return NoopReviewAttributeContributor.INSTANCE;
-        }
-        return new AmountAttributeContributor(amountExtractor, rules);
+    public ReviewAttributeContributor actionGraphReviewAttributeContributor() {
+        return NoopReviewAttributeContributor.INSTANCE;
     }
 
     @Bean
@@ -114,10 +85,8 @@ public class ActionGraphAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ApprovalChainResolver actionGraphApprovalChainResolver(ActionGraphProperties properties) {
-        return properties.getHumanReview().isRiskBasedApprovalChain()
-                ? new RiskBasedChainResolver()
-                : SingleStageApprovalChainResolver.INSTANCE;
+    public ApprovalChainResolver actionGraphApprovalChainResolver() {
+        return SingleStageApprovalChainResolver.INSTANCE;
     }
 
     @Bean
@@ -143,14 +112,8 @@ public class ActionGraphAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public DataMaskingPolicy actionGraphDataMaskingPolicy(ActionGraphProperties properties) {
-        if (!properties.getMasking().isEnabled()) {
-            return NoopMaskingPolicy.INSTANCE;
-        }
-        return RegexMaskingPolicy.builder()
-                .addFinancialDefaults()
-                .addBlockedKeys(properties.getMasking().getBlockedKeys())
-                .build();
+    public DataMaskingPolicy actionGraphDataMaskingPolicy() {
+        return NoopMaskingPolicy.INSTANCE;
     }
 
     @Bean
