@@ -1,11 +1,11 @@
 package com.actiongraph.console.spring;
 
 import com.actiongraph.console.ActionGraphConsoleService;
-import com.actiongraph.console.ConsoleErrorResponse;
 import com.actiongraph.console.ConsoleRunNotFoundException;
 import com.actiongraph.console.ConsoleRunSummaryResponse;
 import com.actiongraph.console.ConsoleRunsResponse;
 import com.actiongraph.console.ConsoleTraceResponse;
+import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
 import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import org.springframework.http.HttpHeaders;
@@ -74,20 +74,20 @@ public final class ActionGraphConsoleApiController {
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ConsoleErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
-        return new ConsoleErrorResponse("UNAUTHORIZED", exception.getMessage());
+    public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ConsoleErrorResponse handleBadRequest(IllegalArgumentException exception) {
-        return new ConsoleErrorResponse("BAD_REQUEST", exception.getMessage());
+    public ControlPlaneErrorResponse handleBadRequest(IllegalArgumentException exception) {
+        return ControlPlaneErrorResponse.badRequest(exception.getMessage());
     }
 
     @ExceptionHandler(ConsoleRunNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ConsoleErrorResponse handleNotFound(ConsoleRunNotFoundException exception) {
-        return new ConsoleErrorResponse("NOT_FOUND", exception.getMessage());
+    public ControlPlaneErrorResponse handleNotFound(ConsoleRunNotFoundException exception) {
+        return ControlPlaneErrorResponse.notFound(exception.getMessage());
     }
 
 }

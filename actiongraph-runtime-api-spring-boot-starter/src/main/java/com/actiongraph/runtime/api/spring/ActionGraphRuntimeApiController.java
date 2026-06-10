@@ -1,5 +1,6 @@
 package com.actiongraph.runtime.api.spring;
 
+import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
 import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import com.actiongraph.runtime.SuspendedRunNotClaimableException;
@@ -71,20 +72,20 @@ public final class ActionGraphRuntimeApiController {
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public RuntimeApiErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
-        return new RuntimeApiErrorResponse("UNAUTHORIZED", exception.getMessage());
+    public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public RuntimeApiErrorResponse handleBadRequest(IllegalArgumentException exception) {
-        return new RuntimeApiErrorResponse("BAD_REQUEST", exception.getMessage());
+    public ControlPlaneErrorResponse handleBadRequest(IllegalArgumentException exception) {
+        return ControlPlaneErrorResponse.badRequest(exception.getMessage());
     }
 
     @ExceptionHandler(SuspendedRunNotClaimableException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public RuntimeApiErrorResponse handleNotClaimable(SuspendedRunNotClaimableException exception) {
-        return new RuntimeApiErrorResponse("NOT_CLAIMABLE", exception.getMessage());
+    public ControlPlaneErrorResponse handleNotClaimable(SuspendedRunNotClaimableException exception) {
+        return ControlPlaneErrorResponse.notClaimable(exception.getMessage());
     }
 
     public record RuntimeGoalRequest(
@@ -96,9 +97,4 @@ public final class ActionGraphRuntimeApiController {
         }
     }
 
-    public record RuntimeApiErrorResponse(
-            String error,
-            String message
-    ) {
-    }
 }

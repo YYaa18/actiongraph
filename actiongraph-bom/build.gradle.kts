@@ -11,6 +11,7 @@ dependencies {
         api(project(":actiongraph-interpretation"))
         api(project(":actiongraph-runtime-api"))
         api(project(":actiongraph-component-catalog"))
+        api(project(":actiongraph-control-plane-api"))
         api(project(":actiongraph-control-plane-auth"))
         api(project(":actiongraph-human-review"))
         api(project(":actiongraph-human-review-api"))

@@ -4,6 +4,7 @@ import com.actiongraph.catalog.ActionGraphComponent;
 import com.actiongraph.catalog.ActionGraphComponentCatalog;
 import com.actiongraph.catalog.ActionGraphComponentCatalogService;
 import com.actiongraph.catalog.ActionGraphCompositionProfile;
+import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
 import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import org.springframework.http.HttpHeaders;
@@ -80,25 +81,19 @@ public final class ActionGraphComponentCatalogController {
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ComponentCatalogErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
-        return new ComponentCatalogErrorResponse("UNAUTHORIZED", exception.getMessage());
+    public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ComponentCatalogErrorResponse handleBadRequest(IllegalArgumentException exception) {
-        return new ComponentCatalogErrorResponse("BAD_REQUEST", exception.getMessage());
+    public ControlPlaneErrorResponse handleBadRequest(IllegalArgumentException exception) {
+        return ControlPlaneErrorResponse.badRequest(exception.getMessage());
     }
 
     @ExceptionHandler(ComponentCatalogEntryNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ComponentCatalogErrorResponse handleNotFound(ComponentCatalogEntryNotFoundException exception) {
-        return new ComponentCatalogErrorResponse("NOT_FOUND", exception.getMessage());
-    }
-
-    public record ComponentCatalogErrorResponse(
-            String error,
-            String message
-    ) {
+    public ControlPlaneErrorResponse handleNotFound(ComponentCatalogEntryNotFoundException exception) {
+        return ControlPlaneErrorResponse.notFound(exception.getMessage());
     }
 }

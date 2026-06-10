@@ -14,6 +14,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-interpretation` | `com.actiongraph:actiongraph-interpretation:0.1.0` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
 | `actiongraph-runtime-api` | `com.actiongraph:actiongraph-runtime-api:0.1.0` | Reusable goal interpretation, start, and resume service |
 | `actiongraph-component-catalog` | `com.actiongraph:actiongraph-component-catalog:0.1.0` | Reusable component catalog and composition profile metadata |
+| `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Shared response contracts for control-plane adapters |
 | `actiongraph-control-plane-auth` | `com.actiongraph:actiongraph-control-plane-auth:0.1.0` | Shared-secret token verification support for control-plane adapters |
 | `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
 | `actiongraph-human-review-api` | `com.actiongraph:actiongraph-human-review-api:0.1.0` | Reusable human-review task query and decision service |
@@ -129,6 +130,12 @@ Component catalog metadata adds:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-component-catalog")
+```
+
+Control-plane response contracts add:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-control-plane-api")
 ```
 
 Control-plane shared-secret token verification adds:

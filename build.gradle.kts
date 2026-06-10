@@ -15,6 +15,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-interpretation" to "Optional goal interpretation contracts and GoalCatalog support for ActionGraph.",
     "actiongraph-runtime-api" to "Reusable ActionGraph goal interpretation, start, and resume API service.",
     "actiongraph-component-catalog" to "Reusable machine-readable ActionGraph component catalog and composition profile service.",
+    "actiongraph-control-plane-api" to "Reusable control-plane response contracts for endpoint adapters.",
     "actiongraph-control-plane-auth" to "Reusable control-plane shared-secret token verification support.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, and approval chains for ActionGraph.",
     "actiongraph-human-review-api" to "Reusable ActionGraph human-review task query and decision API service.",

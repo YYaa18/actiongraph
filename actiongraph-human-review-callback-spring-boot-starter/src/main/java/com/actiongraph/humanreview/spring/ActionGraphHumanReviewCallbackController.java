@@ -1,6 +1,7 @@
 package com.actiongraph.humanreview.spring;
 
 import com.actiongraph.action.ActionId;
+import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
 import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import com.actiongraph.policy.HumanReviewCallback;
@@ -68,26 +69,26 @@ public final class ActionGraphHumanReviewCallbackController {
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public HumanReviewCallbackErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
-        return new HumanReviewCallbackErrorResponse("UNAUTHORIZED", exception.getMessage());
+    public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public HumanReviewCallbackErrorResponse handleBadRequest(IllegalArgumentException exception) {
-        return new HumanReviewCallbackErrorResponse("BAD_REQUEST", exception.getMessage());
+    public ControlPlaneErrorResponse handleBadRequest(IllegalArgumentException exception) {
+        return ControlPlaneErrorResponse.badRequest(exception.getMessage());
     }
 
     @ExceptionHandler(StageAlreadyDecidedException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public HumanReviewCallbackErrorResponse handleConflict(StageAlreadyDecidedException exception) {
-        return new HumanReviewCallbackErrorResponse("CONFLICT", exception.getMessage());
+    public ControlPlaneErrorResponse handleConflict(StageAlreadyDecidedException exception) {
+        return ControlPlaneErrorResponse.conflict(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public HumanReviewCallbackErrorResponse handleNotFound(IllegalStateException exception) {
-        return new HumanReviewCallbackErrorResponse("NOT_FOUND", exception.getMessage());
+    public ControlPlaneErrorResponse handleNotFound(IllegalStateException exception) {
+        return ControlPlaneErrorResponse.notFound(exception.getMessage());
     }
 
     public record HumanReviewCallbackRequest(
@@ -111,9 +112,4 @@ public final class ActionGraphHumanReviewCallbackController {
     ) {
     }
 
-    public record HumanReviewCallbackErrorResponse(
-            String error,
-            String message
-    ) {
-    }
 }

@@ -28,6 +28,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional Spring Boot starter for structured memory
 - Reusable runtime API service for goal interpretation, start, and resume gateways
 - Reusable machine-readable component catalog and composition profiles
+- Reusable control-plane error response contracts
 - Reusable control-plane shared-secret token verification component
 - Optional non-Spring human review tasks, callback handling, and approval chains
 - Reusable human-review task API service for approval inboxes and gateways
@@ -63,6 +64,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-interpretation` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
 | `actiongraph-runtime-api` | Reusable goal interpretation, start, and resume service |
 | `actiongraph-component-catalog` | Reusable machine-readable component catalog and composition profiles |
+| `actiongraph-control-plane-api` | Reusable error response contracts for control-plane adapters |
 | `actiongraph-control-plane-auth` | Reusable shared-secret token verification support for control-plane endpoints |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, and approval-chain support |
 | `actiongraph-human-review-api` | Reusable human-review task query and decision service |
@@ -215,6 +217,8 @@ Catalog starter: GET /actiongraph/components/profiles
 Catalog starter: GET /actiongraph/components/profiles/{profile}
 ```
 
+Custom gateways or endpoint adapters can use `actiongraph-control-plane-api` when they need ActionGraph's standard `{ "error", "message" }` error response contract without depending on Spring Web. Built-in runtime, component catalog, human-review, callback, Console API, and Console export endpoint starters depend on it transitively.
+
 Custom gateways or Spring MVC endpoint starters can use `actiongraph-control-plane-auth` when they need the same shared-secret token semantics without depending on Spring Web. The module validates configured header names, skips token lookup when no shared secret is configured, and uses constant-time token comparison. Built-in runtime, component catalog, human-review, callback, Console API, and Console export endpoint starters depend on it transitively; it is not an enterprise IAM or RBAC layer.
 
 Non-Spring services can use `actiongraph-human-review` directly when they need external approval task storage, callback handling, or multi-stage approval chains without Spring MVC.
@@ -291,6 +295,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Human review integration](docs/frameworkization/human-review.md)
 - [Runtime API](docs/frameworkization/runtime-api.md)
 - [Component catalog](docs/frameworkization/component-catalog.md)
+- [Control-plane API contracts](docs/frameworkization/control-plane-api.md)
 - [Control-plane shared auth](docs/frameworkization/control-plane-auth.md)
 - [Control-plane starter](docs/frameworkization/control-plane-starter.md)
 - [Governance Spring Boot starter](docs/frameworkization/governance-spring-boot-starter.md)

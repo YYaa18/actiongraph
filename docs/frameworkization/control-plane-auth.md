@@ -68,6 +68,8 @@ These Spring MVC endpoint starters depend on this module transitively:
 
 The aggregate `actiongraph-control-plane-spring-boot-starter` brings those endpoint starters together, so it also receives the shared auth behavior transitively.
 
+For the matching error response DTO used by those endpoints, see [Control-Plane API Contracts](control-plane-api.md).
+
 ## Boundary
 
 This component only standardizes ActionGraph's simple shared-secret endpoint guard. It is not enterprise IAM, OAuth, SSO, RBAC, tenant authorization, auditing, rate limiting, or gateway policy.

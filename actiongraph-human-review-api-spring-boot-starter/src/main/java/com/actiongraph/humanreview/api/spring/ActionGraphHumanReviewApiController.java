@@ -1,5 +1,6 @@
 package com.actiongraph.humanreview.api.spring;
 
+import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
 import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import com.actiongraph.humanreview.api.HumanReviewApiService;
@@ -88,26 +89,26 @@ public final class ActionGraphHumanReviewApiController {
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public HumanReviewApiErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
-        return new HumanReviewApiErrorResponse("UNAUTHORIZED", exception.getMessage());
+    public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public HumanReviewApiErrorResponse handleBadRequest(IllegalArgumentException exception) {
-        return new HumanReviewApiErrorResponse("BAD_REQUEST", exception.getMessage());
+    public ControlPlaneErrorResponse handleBadRequest(IllegalArgumentException exception) {
+        return ControlPlaneErrorResponse.badRequest(exception.getMessage());
     }
 
     @ExceptionHandler(StageAlreadyDecidedException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public HumanReviewApiErrorResponse handleConflict(StageAlreadyDecidedException exception) {
-        return new HumanReviewApiErrorResponse("CONFLICT", exception.getMessage());
+    public ControlPlaneErrorResponse handleConflict(StageAlreadyDecidedException exception) {
+        return ControlPlaneErrorResponse.conflict(exception.getMessage());
     }
 
     @ExceptionHandler(HumanReviewTaskNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public HumanReviewApiErrorResponse handleNotFound(HumanReviewTaskNotFoundException exception) {
-        return new HumanReviewApiErrorResponse("NOT_FOUND", exception.getMessage());
+    public ControlPlaneErrorResponse handleNotFound(HumanReviewTaskNotFoundException exception) {
+        return ControlPlaneErrorResponse.notFound(exception.getMessage());
     }
 
     public record HumanReviewDecisionRequest(
@@ -118,9 +119,4 @@ public final class ActionGraphHumanReviewApiController {
     ) {
     }
 
-    public record HumanReviewApiErrorResponse(
-            String error,
-            String message
-    ) {
-    }
 }

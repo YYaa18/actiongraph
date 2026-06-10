@@ -18,6 +18,7 @@ class ActionGraphComponentCatalogServiceTest {
                         "actiongraph-human-review-api",
                         "actiongraph-control-plane-spring-boot-starter",
                         "actiongraph-component-catalog",
+                        "actiongraph-control-plane-api",
                         "actiongraph-control-plane-auth",
                         "actiongraph-component-catalog-spring-boot-starter"
                 );
@@ -38,12 +39,14 @@ class ActionGraphComponentCatalogServiceTest {
                 .isPresent()
                 .get()
                 .satisfies(component -> assertThat(component.requires())
-                        .contains("actiongraph-control-plane-auth"));
+                        .contains("actiongraph-control-plane-api",
+                                "actiongraph-control-plane-auth"));
         assertThat(service.component("actiongraph-component-catalog-spring-boot-starter"))
                 .isPresent()
                 .get()
                 .satisfies(component -> assertThat(component.requires())
-                        .contains("actiongraph-control-plane-auth"));
+                        .contains("actiongraph-control-plane-api",
+                                "actiongraph-control-plane-auth"));
     }
 
     @Test
@@ -59,8 +62,14 @@ class ActionGraphComponentCatalogServiceTest {
                 .isPresent()
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())
-                        .contains("actiongraph-control-plane-auth",
+                        .contains("actiongraph-control-plane-api",
+                                "actiongraph-control-plane-auth",
                                 "actiongraph-component-catalog-spring-boot-starter"));
+        assertThat(service.profile("control-plane-response-contracts"))
+                .isPresent()
+                .get()
+                .satisfies(profile -> assertThat(profile.modules())
+                        .containsExactly("actiongraph-control-plane-api"));
         assertThat(service.profile("control-plane-shared-auth"))
                 .isPresent()
                 .get()

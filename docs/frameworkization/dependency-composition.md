@@ -126,6 +126,19 @@ dependencies {
 
 `actiongraph-component-catalog` has no Spring, JDBC, LLM, or runtime dependency. It provides `ActionGraphComponentCatalogService`, component records, and composition profile records that can be reused outside HTTP.
 
+## Control-Plane API Contracts
+
+Use this when a custom gateway or endpoint adapter wants ActionGraph's standard error response contract without depending on Spring MVC.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-control-plane-api")
+}
+```
+
+`actiongraph-control-plane-api` provides `ControlPlaneErrorResponse` and standard error-code factories such as `unauthorized`, `badRequest`, `notFound`, `conflict`, and `notClaimable`. It has no Spring, JDBC, LLM, runtime, or auth dependency. Built-in Spring MVC endpoint starters bring it transitively.
+
 ## Control-Plane Shared Auth
 
 Use this when a custom gateway or endpoint adapter wants ActionGraph's shared-secret token semantics without depending on Spring MVC.
