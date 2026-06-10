@@ -76,7 +76,10 @@ Run the sample apps:
 ./gradlew :actiongraph-samples:runOrderCancellationSample --args="--approve-human-review Cancel order O100"
 ./gradlew :actiongraph-samples:runClaimsPrecheckSample --args="--approve-human-review Prepare payout application for claim CLM100"
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-001 --environment local"
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args='--jdbc-url jdbc:postgresql://db.example/claims --jdbc-user actiongraph_reader --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-JDBC-001 --environment staging'
 ```
+
+The JDBC batch input path uses standard `DriverManager`; add the target database driver to the sample runtime classpath before running against a real database.
 
 ## Documentation
 

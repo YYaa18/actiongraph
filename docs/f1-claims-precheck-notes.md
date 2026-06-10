@@ -61,12 +61,17 @@ traceEvents=21
 
 ## Batch Metrics
 
-第三刀已把样板域扩成可读取样本文件、可交付报告的准真实批量指标：
+第三刀已把样板域扩成可读取样本文件、可交付报告的准真实批量指标；第四刀补上 JDBC 输入，方便接近真实数据源：
 
 ```bash
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
   --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-001 --environment local"
+
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
+  --args='--jdbc-url jdbc:postgresql://db.example/claims --jdbc-user actiongraph_reader --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-JDBC-001 --environment staging'
 ```
+
+JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_amount`、`missing_invoice`、`closed`、`approval_fails`、`expected_intercept`；也可以通过 `--jdbc-query` 传入自定义 SQL，只要结果列可映射到这些字段即可。`--jdbc-password` 可用于本地验证，报告里的 sample source 会对 URL 中的 password/pwd 参数脱敏。连接真实数据库时，需要把对应 JDBC 驱动加入样例运行 classpath。
 
 实跑结果摘要：
 
@@ -84,7 +89,7 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 - `claims-precheck-report.md`：业务可读指标摘要与明细表
 - `claims-precheck-results.csv`：每个样本的状态、是否拦截、审计完整性、trace 事件数、运行耗时
-- 报告头包含 batch id、environment、sample source 和当前限额参数
+- 报告头包含 batch id、environment、sample source 和当前限额参数；sample source 可以来自 CSV 路径或 JDBC URL
 
 当前指标口径：
 
@@ -96,5 +101,5 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 下一刀应继续把报告推进到更贴近生产的数据资产：
 
-- 支持从数据库读取理赔样本，而不只读取 CSV 文件
+- 接入真实数据库表或视图，并沉淀脱敏抽样脚本
 - 将业务服务耗时、框架耗时、审批等待耗时从当前端到端耗时中拆成独立字段

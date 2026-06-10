@@ -6,6 +6,8 @@ dependencies {
     implementation(project(":actiongraph-core"))
     implementation(project(":actiongraph-llm-deepseek"))
     implementation("org.apache.commons:commons-csv:1.14.1")
+
+    testImplementation("com.h2database:h2:2.2.224")
 }
 
 application {

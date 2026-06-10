@@ -14,9 +14,7 @@ public final class ClaimsPrecheckBatchMetricsApp {
 
     public static void main(String[] args) {
         AppArgs appArgs = AppArgs.parse(args);
-        List<ClaimsPrecheckBatchCase> cases = appArgs.input() == null
-                ? ClaimsPrecheckBatchRunner.defaultCases()
-                : ClaimsPrecheckBatchCsv.readCases(appArgs.input());
+        List<ClaimsPrecheckBatchCase> cases = appArgs.loadCases();
         ClaimsPrecheckBatchRunner runner = new ClaimsPrecheckBatchRunner();
         ClaimsPrecheckBatchMetrics metrics = runner.run(cases);
         ClaimsPrecheckBatchReportMetadata metadata = new ClaimsPrecheckBatchReportMetadata(
@@ -52,13 +50,39 @@ public final class ClaimsPrecheckBatchMetricsApp {
         return String.format(Locale.ROOT, "%.2f%%", value);
     }
 
-    private record AppArgs(Path input, Path reportDir, String batchId, String environment) {
+    private record AppArgs(
+            Path input,
+            ClaimsPrecheckBatchJdbcInput jdbcInput,
+            Path reportDir,
+            String batchId,
+            String environment
+    ) {
+        List<ClaimsPrecheckBatchCase> loadCases() {
+            if (input != null) {
+                return ClaimsPrecheckBatchCsv.readCases(input);
+            }
+            if (jdbcInput != null) {
+                return ClaimsPrecheckBatchJdbc.readCases(jdbcInput);
+            }
+            return ClaimsPrecheckBatchRunner.defaultCases();
+        }
+
         String sampleSource() {
-            return input == null ? "built-in-default-cases" : input.toString();
+            if (input != null) {
+                return input.toString();
+            }
+            if (jdbcInput != null) {
+                return jdbcInput.sourceDescription();
+            }
+            return "built-in-default-cases";
         }
 
         static AppArgs parse(String[] args) {
             Path input = null;
+            String jdbcUrl = null;
+            String jdbcUser = "";
+            String jdbcPassword = "";
+            String jdbcQuery = null;
             Path reportDir = DEFAULT_REPORT_DIR;
             String batchId = "claims-precheck-" + Instant.now().toEpochMilli();
             String environment = System.getenv().getOrDefault("ACTIONGRAPH_ENV", "local");
@@ -69,6 +93,14 @@ public final class ClaimsPrecheckBatchMetricsApp {
                     input = Path.of(nextValue(tokens, ++i, "--input"));
                 } else if ("--report-dir".equals(token)) {
                     reportDir = Path.of(nextValue(tokens, ++i, "--report-dir"));
+                } else if ("--jdbc-url".equals(token)) {
+                    jdbcUrl = nextValue(tokens, ++i, "--jdbc-url");
+                } else if ("--jdbc-user".equals(token)) {
+                    jdbcUser = nextValue(tokens, ++i, "--jdbc-user");
+                } else if ("--jdbc-password".equals(token)) {
+                    jdbcPassword = nextValue(tokens, ++i, "--jdbc-password");
+                } else if ("--jdbc-query".equals(token)) {
+                    jdbcQuery = nextValue(tokens, ++i, "--jdbc-query");
                 } else if ("--batch-id".equals(token)) {
                     batchId = nextValue(tokens, ++i, "--batch-id");
                 } else if ("--environment".equals(token)) {
@@ -77,7 +109,16 @@ public final class ClaimsPrecheckBatchMetricsApp {
                     throw new IllegalArgumentException("Unknown argument: " + token);
                 }
             }
-            return new AppArgs(input, reportDir, batchId, environment);
+            if (input != null && jdbcUrl != null) {
+                throw new IllegalArgumentException("--input and --jdbc-url are mutually exclusive");
+            }
+            if (jdbcUrl == null && (!jdbcUser.isBlank() || !jdbcPassword.isBlank() || jdbcQuery != null)) {
+                throw new IllegalArgumentException("--jdbc-url is required when JDBC options are provided");
+            }
+            ClaimsPrecheckBatchJdbcInput jdbcInput = jdbcUrl == null
+                    ? null
+                    : new ClaimsPrecheckBatchJdbcInput(jdbcUrl, jdbcUser, jdbcPassword, jdbcQuery);
+            return new AppArgs(input, jdbcInput, reportDir, batchId, environment);
         }
 
         private static String nextValue(List<String> tokens, int index, String option) {

@@ -118,7 +118,10 @@ public void voidDraft(CancellationRequestDraft draft) {
 ```bash
 ./gradlew :actiongraph-samples:runClaimsPrecheckSample --args="--approve-human-review 帮我预审理赔 CLM100 并准备赔付申请"
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-001 --environment local"
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args='--jdbc-url jdbc:postgresql://db.example/claims --jdbc-user actiongraph_reader --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-JDBC-001 --environment staging'
 ```
+
+JDBC 批量输入使用标准 `DriverManager`；连接真实数据库前，需要把目标数据库驱动加入样例运行 classpath。
 
 ## 设计边界
 
@@ -141,7 +144,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - 支持 Spring Boot 注解式接入。
 - 支持 suspend / resume、JDBC persistence、human review、structured memory。
 - F0 内核金融化完成：Trace/审批预览敏感数据脱敏、审计链防篡改、多级审批链、单笔额度策略。
-- F1 已进入场景打穿：理赔资料预审 + 赔付申请草稿样板域已跑通，可从 CSV 样本输出带批次、环境、样本来源和限额参数的 Markdown/CSV 指标报告。
+- F1 已进入场景打穿：理赔资料预审 + 赔付申请草稿样板域已跑通，可从 CSV 或 JDBC 样本输出带批次、环境、样本来源和限额参数的 Markdown/CSV 指标报告。
 
 ## 文档
 
