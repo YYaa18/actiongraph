@@ -124,7 +124,7 @@ actiongraph:
 
 The core JDBC starter creates `TraceRepository`, `SuspendedRunRepository`, and the trace run read model when a `DataSource` is available. If the application defines any of those beans itself, the auto-configured default backs off.
 
-For Spring Boot structured memory without JDBC, add `actiongraph-memory-spring-boot-starter`:
+For Spring Boot structured memory, add `actiongraph-memory-spring-boot-starter`:
 
 ```kotlin
 dependencies {
@@ -132,7 +132,7 @@ dependencies {
 }
 ```
 
-It creates an in-memory `MemoryRepository` and `MemoryContextLoader`. If `actiongraph-memory-jdbc-spring-boot-starter` is also enabled, the memory starter backs off to the JDBC `MemoryRepository`.
+It creates an in-memory `MemoryRepository` and `MemoryContextLoader`. If `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available, the starter backs off to the JDBC `MemoryRepository`.
 
 For Spring Boot repository-backed human review, add `actiongraph-human-review-spring-boot-starter`:
 

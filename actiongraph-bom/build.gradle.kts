@@ -20,7 +20,6 @@ dependencies {
         api(project(":actiongraph-memory-jdbc"))
         api(project(":actiongraph-human-review-jdbc"))
         api(project(":actiongraph-jdbc-spring-boot-starter"))
-        api(project(":actiongraph-memory-jdbc-spring-boot-starter"))
         api(project(":actiongraph-runtime-api-spring-boot-starter"))
         api(project(":actiongraph-component-catalog-spring-boot-starter"))
         api(project(":actiongraph-human-review-api-spring-boot-starter"))

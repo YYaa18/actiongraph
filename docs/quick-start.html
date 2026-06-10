@@ -184,7 +184,7 @@
   <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、审批契约、Trace</td><td>非 Spring 应用需要最小运行内核时直接依赖它</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-annotations</code></td><td>纯 Java 注解 + AnnotatedActionFactory</td><td>非 Spring 服务希望用注解注册普通方法时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-memory</code></td><td>结构化记忆记录 / 仓储 / 上下文加载器</td><td>需要把长期业务记忆加载进 Blackboard 时引入</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-memory-spring-boot-starter</code></td><td>结构化记忆 Spring 自动装配</td><td>Spring 服务需要内存 Memory 默认实现和上下文加载器时引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-memory-spring-boot-starter</code></td><td>结构化记忆 Spring 自动装配与 JDBC 仓储装配</td><td>Spring 服务需要 Memory 默认实现和上下文加载器时引入；JDBC 实现按配置启用</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-interpretation</code></td><td>GoalCatalog / GoalInterpreter / 解释结果 / Blackboard seeder</td><td>需要规则解释器、目标目录或解释参数装配桥时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-runtime-api</code></td><td>目标解释 / 启动运行 / 恢复运行入口服务</td><td>企业网关、CLI 或自研控制器需要稳定入口 DTO 时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-component-catalog</code></td><td>组件目录 / 能力标签 / 组合方案元数据</td><td>CLI、企业网关、部署检查或自研控制台需要结构化读取框架生态时引入</td></tr>
@@ -201,7 +201,6 @@
   <tr><td><code>com.actiongraph:actiongraph-memory-jdbc</code></td><td>结构化记忆 JDBC 仓储</td><td>非 Spring 服务需要持久化 Memory 时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-jdbc</code></td><td>审批任务 JDBC 仓储</td><td>非 Spring 服务需要持久化审批任务时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-jdbc-spring-boot-starter</code></td><td>核心 JDBC 仓储自动装配</td><td><b>Spring Boot 生产持久化基础组件</b>，按配置启用</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter</code></td><td>结构化记忆 JDBC 自动装配</td><td>Spring 服务需要持久化 Memory 时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-spring-boot-starter</code></td><td>仓储型审批策略与审批任务 JDBC 自动装配</td><td>Spring 服务需要审批任务仓储和 repository-backed policy 时引入；JDBC 实现按配置启用</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-runtime-api-spring-boot-starter</code></td><td>运行入口 HTTP 端点</td><td>Spring MVC 控制层需要解释目标、启动运行和恢复挂起运行时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-api-spring-boot-starter</code></td><td>审批任务查询、决策与回调 HTTP 端点</td><td>Spring MVC 控制层需要审批任务 API 或审批回调时引入；各端点仍由配置开关控制</td></tr>
@@ -223,7 +222,6 @@ dependencies {
     implementation(<span class="s">"com.actiongraph:actiongraph-governance-spring-boot-starter"</span>)  <span class="c">// 可选治理策略</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-governance-human-review-spring-boot-starter"</span>)  <span class="c">// 可选人审治理</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-jdbc-spring-boot-starter"</span>)  <span class="c">// Spring Boot 生产持久化</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选 Memory 持久化</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-boot-starter"</span>)  <span class="c">// 可选仓储型审批 / 审批持久化</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-console-spring-boot-starter"</span>)  <span class="c">// 可选只读 Console 控制面</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-control-plane-spring-boot-starter"</span>)  <span class="c">// 可选内置控制面聚合包</span>
@@ -457,10 +455,10 @@ AmountExtractor amountExtractor() {
 <p>有金额但币种没有配置时会保守拒绝；没有配置 <code>AmountExtractor</code> 的系统保持现有行为。审批任务会保存 <code>amount</code>、<code>currency</code>、<code>amountEscalated</code> 等 attributes，方便审批系统展示升级原因。</p>
 
 <h2 id="persistence">持久化（生产必读）</h2>
-<p>基础 starter 默认只提供内存 Trace 与挂起快照；<code>actiongraph-memory-spring-boot-starter</code> 和 <code>actiongraph-human-review-spring-boot-starter</code> 也会提供对应内存仓储，<b>重启即丢</b>，仅适合开发联调。Spring Boot 生产应用推荐先引入核心 <code>actiongraph-jdbc-spring-boot-starter</code>；如果 Memory 也要持久化，再按需引入 <code>actiongraph-memory-jdbc-spring-boot-starter</code>。审批任务的 JDBC 自动装配已经收敛进 <code>actiongraph-human-review-spring-boot-starter</code>：</p>
+<p>基础 starter 默认只提供内存 Trace 与挂起快照；<code>actiongraph-memory-spring-boot-starter</code> 和 <code>actiongraph-human-review-spring-boot-starter</code> 也会提供对应内存仓储，<b>重启即丢</b>，仅适合开发联调。Spring Boot 生产应用推荐先引入核心 <code>actiongraph-jdbc-spring-boot-starter</code>；Memory 与审批任务的 JDBC 自动装配分别收敛进 <code>actiongraph-memory-spring-boot-starter</code> 和 <code>actiongraph-human-review-spring-boot-starter</code>：</p>
 <pre><code><span class="c">// build.gradle.kts</span>
 implementation(<span class="s">"com.actiongraph:actiongraph-jdbc-spring-boot-starter"</span>)
-implementation(<span class="s">"com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter"</span>)
+implementation(<span class="s">"com.actiongraph:actiongraph-memory-spring-boot-starter"</span>)
 implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-boot-starter"</span>)</code></pre>
 <pre><code>actiongraph:
   persistence:
@@ -475,7 +473,7 @@ implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-
       blackboard:
         allowed-packages:
           - com.example.business</code></pre>
-<p>核心 JDBC starter 启用后会自动提供 <code>TraceRepository</code>、<code>SuspendedRunRepository</code> 和 <code>JdbcTraceRunRepository</code>；Memory JDBC starter 提供 <code>MemoryRepository</code>，Human Review Spring starter 在同一 JDBC 开关下提供 <code>HumanReviewRepository</code>。所有 Bean 都是 <code>@ConditionalOnMissingBean</code>：你只覆盖一个仓储，其余仍可继续自动装配。</p>
+<p>核心 JDBC starter 启用后会自动提供 <code>TraceRepository</code>、<code>SuspendedRunRepository</code> 和 <code>JdbcTraceRunRepository</code>；Memory Spring starter 在同一 JDBC 开关下提供 <code>MemoryRepository</code>，Human Review Spring starter 在同一 JDBC 开关下提供 <code>HumanReviewRepository</code>。所有 Bean 都是 <code>@ConditionalOnMissingBean</code>：你只覆盖一个仓储，其余仍可继续自动装配。</p>
 <p>非 Spring 服务或需要完全手工控制时，分别使用底层 <code>actiongraph-persistence-jdbc</code>、<code>actiongraph-human-review-jdbc</code>、<code>actiongraph-memory-jdbc</code>：</p>
 <pre><code>BlackboardTypeRegistry blackboardTypes = BlackboardTypeRegistry.builder()
         .allowPackage(<span class="s">"com.example.business"</span>)

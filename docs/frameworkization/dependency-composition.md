@@ -177,7 +177,7 @@ It requires `actiongraph.component-catalog.enabled=true` and a servlet web appli
 
 ## Spring Structured Memory
 
-Use this when a Spring Boot service wants in-memory structured memory defaults and `MemoryContextLoader`.
+Use this when a Spring Boot service wants structured memory defaults, `MemoryContextLoader`, and optional JDBC memory storage behind the shared JDBC switch.
 
 ```kotlin
 dependencies {
@@ -186,7 +186,7 @@ dependencies {
 }
 ```
 
-The memory starter brings `actiongraph-memory` transitively. It backs off if the application or `actiongraph-memory-jdbc-spring-boot-starter` provides a `MemoryRepository`.
+The memory starter brings `actiongraph-memory` and `actiongraph-memory-jdbc` transitively. It creates an in-memory `MemoryRepository` by default and creates a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available. It backs off if the application provides its own `MemoryRepository`.
 
 ## Repository-Backed Human Review
 
@@ -236,11 +236,11 @@ Add JDBC memory only when structured memory must survive process restarts.
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")
 }
 ```
 
-Non-Spring services can depend on `actiongraph-memory-jdbc` directly and instantiate `JdbcMemoryRepository`.
+Spring Boot applications enable the JDBC implementation with `actiongraph.persistence.jdbc.enabled=true` and a `DataSource`. Non-Spring services can depend on `actiongraph-memory-jdbc` directly and instantiate `JdbcMemoryRepository`.
 
 ## Durable Human Review
 
@@ -441,7 +441,6 @@ dependencies {
     implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-governance-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")

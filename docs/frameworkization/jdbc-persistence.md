@@ -11,7 +11,7 @@ dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")        // optional
+    implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")             // optional
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")       // optional
 }
 ```
@@ -39,7 +39,7 @@ When enabled and a `DataSource` exists, the starter creates:
 - `JdbcTraceRunRepository`
 - `BlackboardTypeRegistry`
 
-The optional memory JDBC starter creates `MemoryRepository`; the optional human-review Spring starter creates a JDBC `HumanReviewRepository` when the shared JDBC switch is enabled. Every bean uses `@ConditionalOnMissingBean`, so applications can override one repository without losing auto-configuration for the others.
+The optional memory Spring starter creates a JDBC `MemoryRepository` when the shared JDBC switch is enabled; the optional human-review Spring starter creates a JDBC `HumanReviewRepository` under the same switch. Every bean uses `@ConditionalOnMissingBean`, so applications can override one repository without losing auto-configuration for the others.
 
 ## Low-Level Artifact
 
