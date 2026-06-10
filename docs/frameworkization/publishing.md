@@ -16,10 +16,14 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm` | `com.actiongraph:actiongraph-llm:0.1.0` | Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional DeepSeek-compatible LLM client |
-| `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace, suspended-run, review-task, and memory repositories |
+| `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | Core JDBC trace, suspended-run, and trace read-model repositories |
+| `actiongraph-memory-jdbc` | `com.actiongraph:actiongraph-memory-jdbc:0.1.0` | Optional JDBC structured-memory repository |
+| `actiongraph-human-review-jdbc` | `com.actiongraph:actiongraph-human-review-jdbc:0.1.0` | Optional JDBC human-review task repository |
 | `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Spring Boot auto-configuration and annotation-driven action registration |
 | `actiongraph-governance-spring-boot-starter` | `com.actiongraph:actiongraph-governance-spring-boot-starter:0.1.0` | Optional Spring Boot governance policies for masking, amount limits, and approval routing |
-| `actiongraph-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot auto-configuration for JDBC repositories |
+| `actiongraph-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot auto-configuration for core JDBC repositories |
+| `actiongraph-memory-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC memory repository auto-configuration |
+| `actiongraph-human-review-jdbc-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter:0.1.0` | Optional Spring Boot JDBC human-review repository auto-configuration |
 | `actiongraph-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0` | Optional Spring Boot repository-backed review policy and Spring MVC approval callback endpoint |
 | `actiongraph-console-core` | `com.actiongraph:actiongraph-console-core:0.1.0` | Reusable read-only Console query service and response model |
 | `actiongraph-console-jdbc` | `com.actiongraph:actiongraph-console-jdbc:0.1.0` | JDBC adapter for the Console query port |
@@ -134,10 +138,29 @@ Spring Boot durable trace and suspend/resume persistence adds:
 implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
 ```
 
-Low-level non-Spring/manual persistence adds:
+Spring Boot durable memory persistence adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
+```
+
+Spring Boot durable human-review task persistence adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
+```
+
+Low-level non-Spring/manual core persistence adds:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-persistence-jdbc")
+```
+
+Low-level non-Spring/manual optional persistence adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-memory-jdbc")
+implementation("com.actiongraph:actiongraph-human-review-jdbc")
 ```
 
 Spring Boot repository-backed review and external approval callbacks add:

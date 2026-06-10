@@ -1,13 +1,9 @@
 package com.actiongraph.jdbc.spring;
 
-import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.persistence.jdbc.BlackboardTypeRegistry;
-import com.actiongraph.persistence.jdbc.JdbcHumanReviewRepository;
-import com.actiongraph.persistence.jdbc.JdbcMemoryRepository;
 import com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
-import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.runtime.SuspendedRunRepository;
 import com.actiongraph.trace.TraceRepository;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -67,24 +63,6 @@ public class ActionGraphJdbcAutoConfiguration {
                 properties.getSuspendedRunClaimTimeout(),
                 blackboardTypeRegistry
         );
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public HumanReviewRepository actionGraphJdbcHumanReviewRepository(
-            DataSource dataSource,
-            ActionGraphJdbcProperties properties
-    ) {
-        return new JdbcHumanReviewRepository(dataSource, properties.getTables().getHumanReview());
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public MemoryRepository actionGraphJdbcMemoryRepository(
-            DataSource dataSource,
-            ActionGraphJdbcProperties properties
-    ) {
-        return new JdbcMemoryRepository(dataSource, properties.getTables().getMemory());
     }
 
     @Bean

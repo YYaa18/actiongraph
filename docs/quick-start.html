@@ -191,8 +191,12 @@
   <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>DeepSeek 兼容客户端</td><td>使用 DeepSeek 兼容接口时，会传递引入 actiongraph-llm</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-governance</code></td><td>脱敏 / 额度 / 多级审批路由 / 规则权限策略库</td><td>非 Spring 服务需要复用框架治理策略时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-governance-spring-boot-starter</code></td><td>脱敏 / 额度 / 多级审批路由自动装配</td><td>需要金融治理策略时按需引入</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-persistence-jdbc</code></td><td>Trace / 挂起 / 审批 / 记忆的 JDBC 仓储</td><td>非 Spring 或完全手工接线时使用</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-jdbc-spring-boot-starter</code></td><td>JDBC 仓储自动装配</td><td><b>Spring Boot 生产持久化推荐</b>，按配置启用</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-persistence-jdbc</code></td><td>Trace / 挂起 / Trace read model 的核心 JDBC 仓储</td><td>非 Spring 或完全手工接线时使用</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-memory-jdbc</code></td><td>结构化记忆 JDBC 仓储</td><td>非 Spring 服务需要持久化 Memory 时按需引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-human-review-jdbc</code></td><td>审批任务 JDBC 仓储</td><td>非 Spring 服务需要持久化审批任务时按需引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-jdbc-spring-boot-starter</code></td><td>核心 JDBC 仓储自动装配</td><td><b>Spring Boot 生产持久化基础组件</b>，按配置启用</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter</code></td><td>结构化记忆 JDBC 自动装配</td><td>Spring 服务需要持久化 Memory 时按需引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter</code></td><td>审批任务 JDBC 自动装配</td><td>Spring 服务需要持久化审批任务时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-spring-boot-starter</code></td><td>仓储型审批策略 + 审批回调 HTTP 端点</td><td>Spring 服务需要审批任务仓储或外部审批系统回写决策时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-core</code></td><td>只读 Console 查询服务 + 响应模型</td><td>自研控制台、CLI 或网关适配时使用，不引入 Spring MVC endpoint</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-jdbc</code></td><td>ConsoleRunRepository 的 JDBC read model 适配器</td><td>非 Spring 控制层需要直接读取 ActionGraph trace 表时使用</td></tr>
@@ -209,6 +213,8 @@ dependencies {
     implementation(<span class="s">"com.actiongraph:actiongraph-memory-spring-boot-starter"</span>)  <span class="c">// 可选结构化记忆</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-governance-spring-boot-starter"</span>)  <span class="c">// 可选治理策略</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-jdbc-spring-boot-starter"</span>)  <span class="c">// Spring Boot 生产持久化</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选 Memory 持久化</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter"</span>)  <span class="c">// 可选审批持久化</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-boot-starter"</span>)  <span class="c">// 可选仓储型审批 / 回调</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-console-spring-boot-starter"</span>)  <span class="c">// 可选控制层</span>
 }</code></pre>
@@ -435,9 +441,11 @@ AmountExtractor amountExtractor() {
 <p>有金额但币种没有配置时会保守拒绝；没有配置 <code>AmountExtractor</code> 的系统保持现有行为。审批任务会保存 <code>amount</code>、<code>currency</code>、<code>amountEscalated</code> 等 attributes，方便审批系统展示升级原因。</p>
 
 <h2 id="persistence">持久化（生产必读）</h2>
-<p>基础 starter 默认只提供内存 Trace 与挂起快照；<code>actiongraph-memory-spring-boot-starter</code> 和 <code>actiongraph-human-review-spring-boot-starter</code> 也会提供对应内存仓储，<b>重启即丢</b>，仅适合开发联调。Spring Boot 生产应用推荐引入 <code>actiongraph-jdbc-spring-boot-starter</code>，提供 <code>DataSource</code> 后用配置启用：</p>
+<p>基础 starter 默认只提供内存 Trace 与挂起快照；<code>actiongraph-memory-spring-boot-starter</code> 和 <code>actiongraph-human-review-spring-boot-starter</code> 也会提供对应内存仓储，<b>重启即丢</b>，仅适合开发联调。Spring Boot 生产应用推荐先引入核心 <code>actiongraph-jdbc-spring-boot-starter</code>；如果 Memory 或审批任务也要持久化，再按需引入 <code>actiongraph-memory-jdbc-spring-boot-starter</code> / <code>actiongraph-human-review-jdbc-spring-boot-starter</code>：</p>
 <pre><code><span class="c">// build.gradle.kts</span>
-implementation(<span class="s">"com.actiongraph:actiongraph-jdbc-spring-boot-starter"</span>)</code></pre>
+implementation(<span class="s">"com.actiongraph:actiongraph-jdbc-spring-boot-starter"</span>)
+implementation(<span class="s">"com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter"</span>)
+implementation(<span class="s">"com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter"</span>)</code></pre>
 <pre><code>actiongraph:
   persistence:
     jdbc:
@@ -451,8 +459,8 @@ implementation(<span class="s">"com.actiongraph:actiongraph-jdbc-spring-boot-sta
       blackboard:
         allowed-packages:
           - com.example.business</code></pre>
-<p>启用后会自动提供 <code>TraceRepository</code>、<code>SuspendedRunRepository</code>、<code>HumanReviewRepository</code>、<code>MemoryRepository</code> 和 <code>JdbcTraceRunRepository</code>。所有 Bean 都是 <code>@ConditionalOnMissingBean</code>：你只覆盖一个仓储，其余仍可继续自动装配。</p>
-<p>非 Spring 服务或需要完全手工控制时，直接使用底层 <code>actiongraph-persistence-jdbc</code>：</p>
+<p>核心 JDBC starter 启用后会自动提供 <code>TraceRepository</code>、<code>SuspendedRunRepository</code> 和 <code>JdbcTraceRunRepository</code>；Memory / Human Review 的 JDBC starter 分别提供 <code>MemoryRepository</code> 和 <code>HumanReviewRepository</code>。所有 Bean 都是 <code>@ConditionalOnMissingBean</code>：你只覆盖一个仓储，其余仍可继续自动装配。</p>
+<p>非 Spring 服务或需要完全手工控制时，分别使用底层 <code>actiongraph-persistence-jdbc</code>、<code>actiongraph-human-review-jdbc</code>、<code>actiongraph-memory-jdbc</code>：</p>
 <pre><code>BlackboardTypeRegistry blackboardTypes = BlackboardTypeRegistry.builder()
         .allowPackage(<span class="s">"com.example.business"</span>)
         .build();
@@ -478,7 +486,7 @@ MemoryRepository memoryRepository =
   <tr><td><code>actiongraph.executor.max-steps</code></td><td>64</td><td>单次运行最大执行步数</td></tr>
   <tr><td><code>actiongraph.actions.auto-register-annotated</code></td><td>true</td><td>是否自动扫描注解 Bean 注册 Action</td></tr>
   <tr><td><code>actiongraph.human-review.risk-based-approval-chain</code></td><td>false</td><td>是否启用 HIGH 风险动作两级审批链；需要 <code>actiongraph-governance-spring-boot-starter</code></td></tr>
-  <tr><td><code>actiongraph.human-review.callback-endpoint.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露审批回调 HTTP 端点；需要 <code>actiongraph-human-review-spring-boot-starter</code>，审批仓储由该 starter 默认提供或由 JDBC starter 替换</td></tr>
+  <tr><td><code>actiongraph.human-review.callback-endpoint.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露审批回调 HTTP 端点；需要 <code>actiongraph-human-review-spring-boot-starter</code>，审批仓储由该 starter 默认提供或由 <code>actiongraph-human-review-jdbc-spring-boot-starter</code> 替换</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.path</code></td><td><code>/actiongraph/human-review/callbacks</code></td><td>审批回调 HTTP 端点路径</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.token-header</code></td><td><code>X-ActionGraph-Review-Token</code></td><td>启用共享密钥后用于传递回调 token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.human-review.callback-endpoint.shared-secret</code></td><td>空</td><td>审批回调共享密钥；为空时不校验，生产环境建议通过环境变量或密钥系统注入</td></tr>
@@ -494,9 +502,9 @@ MemoryRepository memoryRepository =
   <tr><td><code>actiongraph.limits.rules[].currency</code></td><td>无</td><td>币种；有金额但币种无规则时保守拒绝</td></tr>
   <tr><td><code>actiongraph.limits.rules[].hard-limit</code></td><td>无</td><td>单笔硬限额，超过后拒绝执行</td></tr>
   <tr><td><code>actiongraph.limits.rules[].review-limit</code></td><td>无</td><td>单笔审批阈值，超过后升级审批链</td></tr>
-  <tr><td><code>actiongraph.persistence.jdbc.enabled</code></td><td>false</td><td>是否启用 <code>actiongraph-jdbc-spring-boot-starter</code> 的 JDBC 仓储自动装配</td></tr>
+  <tr><td><code>actiongraph.persistence.jdbc.enabled</code></td><td>false</td><td>是否启用 JDBC 仓储自动装配；核心、Memory、Human Review JDBC starter 共用该开关</td></tr>
   <tr><td><code>actiongraph.persistence.jdbc.suspended-run-claim-timeout</code></td><td>15m</td><td>JDBC resume 认领后进程崩溃时，RESUMING 快照多久后可被重新认领</td></tr>
-  <tr><td><code>actiongraph.persistence.jdbc.tables.*</code></td><td>actiongraph_* 默认表名</td><td>Trace、挂起运行、审批任务、记忆四类 JDBC 表名</td></tr>
+  <tr><td><code>actiongraph.persistence.jdbc.tables.*</code></td><td>actiongraph_* 默认表名</td><td>Trace、挂起运行、审批任务、记忆四类 JDBC 表名；审批和记忆表名只有对应 JDBC starter 引入后才会使用</td></tr>
   <tr><td><code>actiongraph.persistence.jdbc.blackboard.allowed-packages</code></td><td>空</td><td>挂起快照恢复时允许反序列化的业务包名前缀；生产环境建议配置</td></tr>
   <tr><td><code>actiongraph.persistence.jdbc.blackboard.allowed-classes</code></td><td>空</td><td>挂起快照恢复时允许反序列化的具体类名</td></tr>
 </table>

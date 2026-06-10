@@ -1,4 +1,4 @@
-package com.actiongraph.persistence.jdbc;
+package com.actiongraph.humanreview.jdbc;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRiskLevel;

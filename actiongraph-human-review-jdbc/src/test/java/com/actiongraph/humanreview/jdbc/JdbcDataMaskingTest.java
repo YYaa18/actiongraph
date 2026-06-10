@@ -1,4 +1,4 @@
-package com.actiongraph.persistence.jdbc;
+package com.actiongraph.humanreview.jdbc;
 
 import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionId;
@@ -10,6 +10,8 @@ import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.planning.GoapPlanner;
+import com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository;
+import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import com.actiongraph.policy.DefaultPolicyGuard;
 import com.actiongraph.policy.HumanReviewTask;
 import com.actiongraph.governance.RegexMaskingPolicy;

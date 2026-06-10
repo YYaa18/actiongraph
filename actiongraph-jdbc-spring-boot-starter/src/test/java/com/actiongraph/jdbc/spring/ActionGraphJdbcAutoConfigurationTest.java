@@ -1,13 +1,9 @@
 package com.actiongraph.jdbc.spring;
 
-import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.persistence.jdbc.BlackboardTypeRegistry;
-import com.actiongraph.persistence.jdbc.JdbcHumanReviewRepository;
-import com.actiongraph.persistence.jdbc.JdbcMemoryRepository;
 import com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
-import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.SuspendedRunRepository;
 import com.actiongraph.spring.ActionGraphAutoConfiguration;
@@ -43,8 +39,6 @@ class ActionGraphJdbcAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).doesNotHaveBean(TraceRepository.class);
                     assertThat(context).doesNotHaveBean(SuspendedRunRepository.class);
-                    assertThat(context).doesNotHaveBean(HumanReviewRepository.class);
-                    assertThat(context).doesNotHaveBean(MemoryRepository.class);
                     assertThat(context).doesNotHaveBean(JdbcTraceRunRepository.class);
                 });
     }
@@ -56,8 +50,6 @@ class ActionGraphJdbcAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).doesNotHaveBean(TraceRepository.class);
                     assertThat(context).doesNotHaveBean(SuspendedRunRepository.class);
-                    assertThat(context).doesNotHaveBean(HumanReviewRepository.class);
-                    assertThat(context).doesNotHaveBean(MemoryRepository.class);
                     assertThat(context).doesNotHaveBean(JdbcTraceRunRepository.class);
                 });
     }
@@ -72,10 +64,6 @@ class ActionGraphJdbcAutoConfigurationTest {
                             .isInstanceOf(JdbcTraceRepository.class);
                     assertThat(context.getBean(SuspendedRunRepository.class))
                             .isInstanceOf(JdbcSuspendedRunRepository.class);
-                    assertThat(context.getBean(HumanReviewRepository.class))
-                            .isInstanceOf(JdbcHumanReviewRepository.class);
-                    assertThat(context.getBean(MemoryRepository.class))
-                            .isInstanceOf(JdbcMemoryRepository.class);
                     assertThat(context).hasSingleBean(JdbcTraceRunRepository.class);
                     assertThat(context.getBean(BlackboardTypeRegistry.class).allowAllTypes()).isTrue();
                 });
@@ -89,8 +77,6 @@ class ActionGraphJdbcAutoConfigurationTest {
                         "actiongraph.persistence.jdbc.enabled=true",
                         "actiongraph.persistence.jdbc.tables.trace-event=ag_trace",
                         "actiongraph.persistence.jdbc.tables.suspended-run=ag_suspended",
-                        "actiongraph.persistence.jdbc.tables.human-review=ag_review",
-                        "actiongraph.persistence.jdbc.tables.memory=ag_memory",
                         "actiongraph.persistence.jdbc.blackboard.allowed-classes=java.lang.String",
                         "actiongraph.persistence.jdbc.blackboard.allowed-packages=com.example.domain"
                 )
@@ -148,10 +134,6 @@ class ActionGraphJdbcAutoConfigurationTest {
                             .isInstanceOf(JdbcTraceRepository.class);
                     assertThat(context.getBean(SuspendedRunRepository.class))
                             .isInstanceOf(JdbcSuspendedRunRepository.class);
-                    assertThat(context.getBean(HumanReviewRepository.class))
-                            .isInstanceOf(JdbcHumanReviewRepository.class);
-                    assertThat(context.getBean(MemoryRepository.class))
-                            .isInstanceOf(JdbcMemoryRepository.class);
                     assertThat(context).hasSingleBean(Executor.class);
                 });
     }

@@ -1,4 +1,4 @@
-package com.actiongraph.persistence.jdbc;
+package com.actiongraph.memory.jdbc;
 
 import com.actiongraph.memory.MemoryContext;
 import com.actiongraph.memory.MemoryContextLoader;

@@ -753,8 +753,8 @@
         <span>审批申请已创建：APPROVAL-1，对应报价：QUOTE-1</span>
       </div>
       <div class="hud">
-        <div class="hud-item"><b>204</b><span>tests passing</span></div>
-        <div class="hud-item"><b>19</b><span>modules</span></div>
+        <div class="hud-item"><b>212</b><span>tests passing</span></div>
+        <div class="hud-item"><b>23</b><span>modules</span></div>
         <div class="hud-item"><b>3</b><span>reference domains</span></div>
         <div class="hud-item"><b>~6000</b><span>runs/s smoke</span></div>
       </div>
@@ -1003,13 +1003,17 @@
           <div><span class="log-ok">actiongraph-core:test</span> 11 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-annotations:test</span> 7 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-memory:test</span> 2 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-memory-jdbc:test</span> 2 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-memory-spring-boot-starter:test</span> 3 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-memory-jdbc-spring-boot-starter:test</span> 4 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-interpretation:test</span> 3 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-human-review:test</span> 12 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-human-review-jdbc:test</span> 6 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-human-review-jdbc-spring-boot-starter:test</span> 4 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-governance:test</span> 12 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-llm:test</span> 7 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-llm-deepseek:test</span> 1 test, 0 failures</div>
-          <div><span class="log-ok">actiongraph-persistence-jdbc:test</span> 31 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-persistence-jdbc:test</span> 23 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-spring-boot-starter:test</span> 11 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-governance-spring-boot-starter:test</span> 6 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-jdbc-spring-boot-starter:test</span> 6 tests, 0 failures</div>
@@ -1018,13 +1022,13 @@
           <div><span class="log-ok">actiongraph-console-jdbc:test</span> 2 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-console-spring-boot-starter:test</span> 9 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-samples:test</span> 61 tests, 1 gated smoke skipped</div>
-          <div><span class="log-ok">BUILD SUCCESSFUL</span> 204 tests, 0 failures, 1 skipped</div>
+          <div><span class="log-ok">BUILD SUCCESSFUL</span> 212 tests, 0 failures, 1 skipped</div>
         </div>
       </div>
       <div class="layout-3" style="grid-template-columns:1fr;">
-        <div class="panel ok"><div class="metric green">204</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、Spring starter、Memory starter、Human Review starter、Governance starter、JDBC starter、Console core、Console JDBC adapter、审批回调端点与鉴权、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
+        <div class="panel ok"><div class="metric green">212</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、Spring starter、Memory starter、Human Review starter、Governance starter、核心 JDBC starter、Memory JDBC starter、Human Review JDBC starter、Console core、Console JDBC adapter、审批回调端点与鉴权、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
         <div class="panel ok"><div class="metric green">~6000</div><h3>并发冒烟</h3><p>200 虚拟线程并发 1 万次运行；重复 resume 只产生一次业务副作用。</p></div>
-        <div class="panel ok"><div class="metric green">19</div><h3>工程模块</h3><p>bom / core / annotations / memory / memory-spring-boot-starter / interpretation / human-review / governance / llm / llm-deepseek / persistence-jdbc / spring-boot-starter / governance-spring-boot-starter / jdbc-spring-boot-starter / human-review-spring-boot-starter / console-core / console-jdbc / console-spring-boot-starter / samples；公共内核、注解适配、结构化记忆、目标解释、审批生态、治理策略、LLM provider、基础设施适配和控制层生态组件可独立组合。</p></div>
+        <div class="panel ok"><div class="metric green">23</div><h3>工程模块</h3><p>bom / core / annotations / memory / memory-jdbc / memory-spring-boot-starter / memory-jdbc-spring-boot-starter / interpretation / human-review / human-review-jdbc / human-review-spring-boot-starter / human-review-jdbc-spring-boot-starter / governance / governance-spring-boot-starter / llm / llm-deepseek / persistence-jdbc / spring-boot-starter / jdbc-spring-boot-starter / console-core / console-jdbc / console-spring-boot-starter / samples；公共内核、注解适配、结构化记忆、目标解释、审批生态、治理策略、LLM provider、基础设施适配和控制层生态组件可独立组合。</p></div>
         <div class="panel ok"><div class="metric green">3</div><h3>参考业务域</h3><p>续约报价、订单取消、理赔资料预审三个不同领域接入，证明核心可复用并开始进入保险场景打穿。</p></div>
       </div>
     </div>

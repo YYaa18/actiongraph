@@ -1,7 +1,9 @@
-package com.actiongraph.persistence.jdbc;
+package com.actiongraph.humanreview.jdbc;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRiskLevel;
+import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
+import com.actiongraph.persistence.jdbc.PersistenceJsonCodec;
 import com.actiongraph.policy.ApprovalChain;
 import com.actiongraph.policy.ApprovalStage;
 import com.actiongraph.policy.HumanReviewDecision;
@@ -9,6 +11,9 @@ import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.policy.HumanReviewTask;
 import com.actiongraph.policy.StageAlreadyDecidedException;
 import com.actiongraph.policy.StageDecision;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -30,6 +35,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
 
     private final DataSource dataSource;
     private final PersistenceJsonCodec codec;
+    private final ObjectMapper objectMapper;
     private final String table;
 
     public JdbcHumanReviewRepository(DataSource dataSource) {
@@ -44,6 +50,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
         this.dataSource = Objects.requireNonNull(dataSource, "dataSource");
         this.table = JdbcTraceRepository.validateIdentifier(table);
         this.codec = Objects.requireNonNull(codec, "codec");
+        this.objectMapper = PersistenceJsonCodec.defaultObjectMapper();
         initializeSchema();
     }
 
@@ -195,7 +202,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             statement.setString(3, decided.message());
             statement.setString(4, decided.updatedAt().toString());
             statement.setInt(5, decided.currentStageIndex());
-            statement.setString(6, codec.writeStageDecisions(decided.stageDecisions()));
+            statement.setString(6, writeStageDecisions(decided.stageDecisions()));
             statement.setString(7, runId);
             statement.setString(8, actionId.value());
             statement.setInt(9, expectedStageIndex);
@@ -263,9 +270,9 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
         statement.setString(11, task.message());
         statement.setString(12, task.createdAt().toString());
         statement.setString(13, task.updatedAt().toString());
-        statement.setString(14, codec.writeApprovalStages(task.stages()));
+        statement.setString(14, writeApprovalStages(task.stages()));
         statement.setInt(15, task.currentStageIndex());
-        statement.setString(16, codec.writeStageDecisions(task.stageDecisions()));
+        statement.setString(16, writeStageDecisions(task.stageDecisions()));
     }
 
     private Map<String, String> readAttributes(String json) {
@@ -279,14 +286,40 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
         if (json == null || json.isBlank()) {
             return ApprovalChain.single().stages();
         }
-        return codec.readApprovalStages(json);
+        return read(json, new TypeReference<List<ApprovalStage>>() {
+        });
     }
 
     private List<StageDecision> readStageDecisions(String json) {
         if (json == null || json.isBlank()) {
             return List.of();
         }
-        return codec.readStageDecisions(json);
+        return read(json, new TypeReference<List<StageDecision>>() {
+        });
+    }
+
+    private String writeApprovalStages(List<ApprovalStage> stages) {
+        return write(Objects.requireNonNull(stages, "stages"));
+    }
+
+    private String writeStageDecisions(List<StageDecision> decisions) {
+        return write(Objects.requireNonNull(decisions, "decisions"));
+    }
+
+    private String write(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Cannot serialize human-review persistence payload", ex);
+        }
+    }
+
+    private <T> T read(String json, TypeReference<T> type) {
+        try {
+            return objectMapper.readValue(json, type);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Cannot deserialize human-review persistence payload", ex);
+        }
     }
 
     private int readCurrentStageIndex(

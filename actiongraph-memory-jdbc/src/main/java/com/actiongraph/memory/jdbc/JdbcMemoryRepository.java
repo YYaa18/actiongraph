@@ -1,8 +1,10 @@
-package com.actiongraph.persistence.jdbc;
+package com.actiongraph.memory.jdbc;
 
 import com.actiongraph.memory.MemoryRecord;
 import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.memory.MemoryScope;
+import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
+import com.actiongraph.persistence.jdbc.PersistenceJsonCodec;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

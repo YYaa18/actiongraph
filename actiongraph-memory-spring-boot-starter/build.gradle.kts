@@ -10,7 +10,7 @@ dependencies {
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
 
-    testImplementation(project(":actiongraph-jdbc-spring-boot-starter"))
+    testImplementation(project(":actiongraph-memory-jdbc-spring-boot-starter"))
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("com.h2database:h2:2.2.224")
 }

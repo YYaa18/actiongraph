@@ -67,6 +67,10 @@ The claims precheck sample includes a JSONL callback replay fixture for local in
 
 ## JDBC Usage
 
+```kotlin
+implementation("com.actiongraph:actiongraph-human-review-jdbc")
+```
+
 ```java
 HumanReviewRepository reviewRepository =
         new JdbcHumanReviewRepository(dataSource);
@@ -105,7 +109,7 @@ The human-review starter provides these defaults:
 - `HumanReviewPolicy` -> `RepositoryBackedHumanReviewPolicy`
 - `ApprovalChainResolver` -> `SingleStageApprovalChainResolver`
 
-Applications can replace these beans. For durable review tasks:
+Applications can replace these beans. For durable review tasks, use `actiongraph-human-review-jdbc` directly or add `actiongraph-human-review-jdbc-spring-boot-starter` in Spring Boot services:
 
 ```java
 @Bean

@@ -89,7 +89,7 @@ dependencies {
 }
 ```
 
-The memory starter brings `actiongraph-memory` transitively. It backs off if the application or JDBC starter provides a `MemoryRepository`.
+The memory starter brings `actiongraph-memory` transitively. It backs off if the application or `actiongraph-memory-jdbc-spring-boot-starter` provides a `MemoryRepository`.
 
 ## Repository-Backed Human Review
 
@@ -105,9 +105,9 @@ dependencies {
 
 `actiongraph-human-review` depends only on `actiongraph-core`. It provides `HumanReviewRepository`, `HumanReviewTask`, `InMemoryHumanReviewRepository`, `RepositoryBackedHumanReviewPolicy`, `HumanReviewCallbackHandler`, and approval-chain support.
 
-## Durable Production Runtime
+## Durable Core Runtime
 
-Add JDBC repositories when traces, suspended runs, review tasks, and memory must survive process restarts.
+Add core JDBC repositories when traces and suspended runs must survive process restarts.
 
 ```kotlin
 dependencies {
@@ -130,7 +130,33 @@ actiongraph:
           - com.example.business
 ```
 
-Non-Spring services, or applications that want complete manual control, can depend on `actiongraph-persistence-jdbc` directly and instantiate the repositories themselves.
+Non-Spring services, or applications that want complete manual control, can depend on `actiongraph-persistence-jdbc` directly and instantiate the core repositories themselves.
+
+## Durable Memory
+
+Add JDBC memory only when structured memory must survive process restarts.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
+}
+```
+
+Non-Spring services can depend on `actiongraph-memory-jdbc` directly and instantiate `JdbcMemoryRepository`.
+
+## Durable Human Review
+
+Add JDBC human-review tasks only when approval tasks and callback decisions must survive process restarts.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
+}
+```
+
+Non-Spring services can depend on `actiongraph-human-review-jdbc` directly and instantiate `JdbcHumanReviewRepository`.
 
 ## Non-Spring Governance Policies
 
@@ -204,7 +230,7 @@ dependencies {
 }
 ```
 
-The human-review starter brings `actiongraph-human-review` transitively. It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`; production services normally add `actiongraph-jdbc-spring-boot-starter` so review tasks and callback decisions are durable. The HTTP callback endpoint is disabled until `actiongraph.human-review.callback-endpoint.enabled=true`.
+The human-review starter brings `actiongraph-human-review` transitively. It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`; production services add `actiongraph-human-review-jdbc-spring-boot-starter` when review tasks and callback decisions must be durable. The HTTP callback endpoint is disabled until `actiongraph.human-review.callback-endpoint.enabled=true`.
 
 ## Custom Read-Only Monitoring Service
 
@@ -257,6 +283,8 @@ dependencies {
     implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-spring-boot-starter")

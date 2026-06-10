@@ -77,7 +77,7 @@ Set `actiongraph.actions.auto-register-annotated=false` to build an `ActionRegis
 
 ## Optional Ecosystem Components
 
-This starter intentionally does not include durable persistence, structured memory defaults, repository-backed review tasks, optional governance policies, or HTTP control-plane endpoints. Add `actiongraph-memory-spring-boot-starter` when a Spring Boot application needs structured memory defaults; add `actiongraph-human-review-spring-boot-starter` when it needs repository-backed review tasks or approval callbacks; add `actiongraph-governance-spring-boot-starter` when it needs masking, amount limits, or risk-based approval routing; add `actiongraph-jdbc-spring-boot-starter` when it needs JDBC-backed repositories; add `actiongraph-console-core` for custom read-only monitoring integrations; add `actiongraph-console-jdbc` when that custom monitor should read JDBC trace tables; and add `actiongraph-console-spring-boot-starter` when it needs the built-in Spring MVC operational run monitoring endpoint/page. Keeping these separate lets services use ActionGraph runtime integration without pulling in infrastructure, governance, review storage, memory, or endpoint surfaces they do not need.
+This starter intentionally does not include durable persistence, structured memory defaults, repository-backed review tasks, optional governance policies, or HTTP control-plane endpoints. Add `actiongraph-memory-spring-boot-starter` when a Spring Boot application needs structured memory defaults; add `actiongraph-human-review-spring-boot-starter` when it needs repository-backed review tasks or approval callbacks; add `actiongraph-governance-spring-boot-starter` when it needs masking, amount limits, or risk-based approval routing; add `actiongraph-jdbc-spring-boot-starter` when it needs JDBC-backed trace/suspend repositories; add `actiongraph-memory-jdbc-spring-boot-starter` or `actiongraph-human-review-jdbc-spring-boot-starter` when those optional stores need JDBC durability; add `actiongraph-console-core` for custom read-only monitoring integrations; add `actiongraph-console-jdbc` when that custom monitor should read JDBC trace tables; and add `actiongraph-console-spring-boot-starter` when it needs the built-in Spring MVC operational run monitoring endpoint/page. Keeping these separate lets services use ActionGraph runtime integration without pulling in infrastructure, governance, review storage, memory, or endpoint surfaces they do not need.
 
 ## Current Scope
 
@@ -122,7 +122,7 @@ actiongraph:
           - com.example.business
 ```
 
-The JDBC starter creates `TraceRepository`, `SuspendedRunRepository`, `HumanReviewRepository`, `MemoryRepository`, and the console read model when a `DataSource` is available. If the application defines any of those beans itself, the auto-configured default backs off.
+The core JDBC starter creates `TraceRepository`, `SuspendedRunRepository`, and the trace run read model when a `DataSource` is available. If the application defines any of those beans itself, the auto-configured default backs off.
 
 For Spring Boot structured memory without JDBC, add `actiongraph-memory-spring-boot-starter`:
 
@@ -132,7 +132,7 @@ dependencies {
 }
 ```
 
-It creates an in-memory `MemoryRepository` and `MemoryContextLoader`. If the JDBC starter is also enabled, the memory starter backs off to the JDBC `MemoryRepository`.
+It creates an in-memory `MemoryRepository` and `MemoryContextLoader`. If `actiongraph-memory-jdbc-spring-boot-starter` is also enabled, the memory starter backs off to the JDBC `MemoryRepository`.
 
 For Spring Boot repository-backed human review, add `actiongraph-human-review-spring-boot-starter`:
 
@@ -142,9 +142,9 @@ dependencies {
 }
 ```
 
-It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`. If the JDBC starter is enabled, the human-review starter backs off to the JDBC `HumanReviewRepository`. Enable the callback endpoint separately with `actiongraph.human-review.callback-endpoint.enabled=true`.
+It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`. If `actiongraph-human-review-jdbc-spring-boot-starter` is enabled, the human-review starter backs off to the JDBC `HumanReviewRepository`. Enable the callback endpoint separately with `actiongraph.human-review.callback-endpoint.enabled=true`.
 
-For non-Spring services or fully manual wiring, add `actiongraph-persistence-jdbc` and expose repository beans:
+For non-Spring services or fully manual wiring, add only the JDBC modules needed and expose repository beans:
 
 ```java
 @Bean

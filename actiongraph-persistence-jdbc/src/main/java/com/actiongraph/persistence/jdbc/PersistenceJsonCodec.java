@@ -1,8 +1,6 @@
 package com.actiongraph.persistence.jdbc;
 
 import com.actiongraph.action.ActionId;
-import com.actiongraph.policy.ApprovalStage;
-import com.actiongraph.policy.StageDecision;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.runtime.Blackboard;
@@ -23,7 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-final class PersistenceJsonCodec {
+public final class PersistenceJsonCodec {
     private static final TypeReference<Map<String, String>> STRING_MAP = new TypeReference<>() {
     };
     private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
@@ -32,35 +30,35 @@ final class PersistenceJsonCodec {
     private final ObjectMapper objectMapper;
     private final BlackboardTypeRegistry blackboardTypeRegistry;
 
-    PersistenceJsonCodec() {
+    public PersistenceJsonCodec() {
         this(defaultObjectMapper(), BlackboardTypeRegistry.allowAll());
     }
 
-    PersistenceJsonCodec(ObjectMapper objectMapper) {
+    public PersistenceJsonCodec(ObjectMapper objectMapper) {
         this(objectMapper, BlackboardTypeRegistry.allowAll());
     }
 
-    PersistenceJsonCodec(BlackboardTypeRegistry blackboardTypeRegistry) {
+    public PersistenceJsonCodec(BlackboardTypeRegistry blackboardTypeRegistry) {
         this(defaultObjectMapper(), blackboardTypeRegistry);
     }
 
-    PersistenceJsonCodec(ObjectMapper objectMapper, BlackboardTypeRegistry blackboardTypeRegistry) {
+    public PersistenceJsonCodec(ObjectMapper objectMapper, BlackboardTypeRegistry blackboardTypeRegistry) {
         this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
         this.blackboardTypeRegistry = Objects.requireNonNull(blackboardTypeRegistry, "blackboardTypeRegistry");
     }
 
-    static ObjectMapper defaultObjectMapper() {
+    public static ObjectMapper defaultObjectMapper() {
         return JsonMapper.builder()
                 .addModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .build();
     }
 
-    String writeTraceData(Map<String, String> data) {
+    public String writeTraceData(Map<String, String> data) {
         return write(data == null ? Map.of() : data);
     }
 
-    Map<String, String> readTraceData(String json) {
+    public Map<String, String> readTraceData(String json) {
         return read(json, STRING_MAP);
     }
 
@@ -114,43 +112,23 @@ final class PersistenceJsonCodec {
         return blackboard;
     }
 
-    String writeActionIds(List<ActionId> actionIds) {
+    public String writeActionIds(List<ActionId> actionIds) {
         Objects.requireNonNull(actionIds, "actionIds");
         return write(actionIds.stream().map(ActionId::value).toList());
     }
 
-    List<ActionId> readActionIds(String json) {
+    public List<ActionId> readActionIds(String json) {
         return read(json, STRING_LIST).stream()
                 .map(ActionId::new)
                 .toList();
     }
 
-    String writeApprovalStages(List<ApprovalStage> stages) {
-        Objects.requireNonNull(stages, "stages");
-        return write(stages);
-    }
-
-    List<ApprovalStage> readApprovalStages(String json) {
-        return read(json, new TypeReference<List<ApprovalStage>>() {
-        });
-    }
-
-    String writeStageDecisions(List<StageDecision> decisions) {
-        Objects.requireNonNull(decisions, "decisions");
-        return write(decisions);
-    }
-
-    List<StageDecision> readStageDecisions(String json) {
-        return read(json, new TypeReference<List<StageDecision>>() {
-        });
-    }
-
-    String writeConditions(Set<Condition> conditions) {
+    public String writeConditions(Set<Condition> conditions) {
         Objects.requireNonNull(conditions, "conditions");
         return write(conditions.stream().map(Condition::key).sorted().toList());
     }
 
-    Set<Condition> readConditions(String json) {
+    public Set<Condition> readConditions(String json) {
         return read(json, STRING_LIST).stream()
                 .map(Condition::of)
                 .collect(Collectors.toSet());

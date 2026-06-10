@@ -157,7 +157,7 @@ public final class JdbcTraceRepository implements TraceRepository {
         return false;
     }
 
-    static String validateIdentifier(String identifier) {
+    public static String validateIdentifier(String identifier) {
         if (identifier == null || !identifier.matches("[A-Za-z][A-Za-z0-9_]*")) {
             throw new IllegalArgumentException("SQL identifier must contain only letters, numbers, and underscores");
         }

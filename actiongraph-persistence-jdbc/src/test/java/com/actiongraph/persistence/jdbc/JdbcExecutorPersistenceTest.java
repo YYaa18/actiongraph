@@ -8,6 +8,7 @@ import com.actiongraph.action.ActionRiskLevel;
 import com.actiongraph.action.CompensationResult;
 import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.action.ExecutionContext;
+import com.actiongraph.humanreview.jdbc.JdbcHumanReviewRepository;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.planning.GoapPlanner;

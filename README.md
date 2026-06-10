@@ -52,10 +52,14 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
-| `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, human review, and memory |
+| `actiongraph-persistence-jdbc` | Core JDBC repositories for trace, suspended runs, and trace read model |
+| `actiongraph-memory-jdbc` | Optional JDBC repository for structured memory |
+| `actiongraph-human-review-jdbc` | Optional JDBC repository for human-review tasks |
 | `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning; brings `actiongraph-annotations` transitively |
 | `actiongraph-governance-spring-boot-starter` | Optional Spring Boot governance policies for masking, amount limits, and approval routing |
-| `actiongraph-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC repositories |
+| `actiongraph-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for core JDBC repositories |
+| `actiongraph-memory-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC memory repository |
+| `actiongraph-human-review-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC human-review repository |
 | `actiongraph-human-review-spring-boot-starter` | Optional repository-backed review policy and approval callback endpoint for external review systems |
 | `actiongraph-console-core` | Reusable read-only console query service and response model |
 | `actiongraph-console-jdbc` | Optional JDBC adapter for the console query port |
@@ -70,6 +74,8 @@ dependencies {
 
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     // Optional ecosystem/control-plane components:
     implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")
@@ -122,13 +128,13 @@ actiongraph:
     max-limit: 200
 ```
 
-When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, review-task, memory, and console read-model repositories. Non-Spring services can still use `actiongraph-persistence-jdbc` directly and wire repositories by hand.
+When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, and trace read-model repositories. Add `actiongraph-memory-jdbc-spring-boot-starter` and/or `actiongraph-human-review-jdbc-spring-boot-starter` when structured memory or review tasks also need JDBC durability. Non-Spring services can still use `actiongraph-persistence-jdbc`, `actiongraph-memory-jdbc`, and `actiongraph-human-review-jdbc` directly and wire repositories by hand.
 
 Non-Spring services can use `actiongraph-governance` directly when they want the packaged masking, amount-limit, approval-chain, or rule-based permission policies without Spring auto-configuration.
 
 Non-Spring services can use `actiongraph-memory` directly when they want structured long-term memory without adopting Spring, JDBC, or LLM modules.
 
-Spring services can add `actiongraph-memory-spring-boot-starter` when they want in-memory structured memory defaults and `MemoryContextLoader`. If the JDBC starter is enabled, the memory starter backs off to the JDBC `MemoryRepository`.
+Spring services can add `actiongraph-memory-spring-boot-starter` when they want in-memory structured memory defaults and `MemoryContextLoader`. If `actiongraph-memory-jdbc-spring-boot-starter` is also enabled, the memory starter backs off to the JDBC `MemoryRepository`.
 
 Non-Spring services can use `actiongraph-interpretation` directly when they want GoalCatalog metadata, rule-based goal interpreters, or Goal-to-Blackboard seeding without adopting an LLM provider.
 
@@ -136,7 +142,7 @@ Non-Spring services can use `actiongraph-human-review` directly when they need e
 
 When `actiongraph-governance-spring-boot-starter` is on the classpath, masking, amount-limit rules, and risk-based approval-chain properties are activated. Without it, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and safe pending human review.
 
-When `actiongraph-human-review-spring-boot-starter` is on the classpath, Spring services get repository-backed human review defaults. Enable `actiongraph.human-review.callback-endpoint.enabled=true` in a Spring MVC application to let approval systems post decisions directly. The starter supplies an in-memory `HumanReviewRepository` by default, and the JDBC starter supplies a durable production bean when enabled.
+When `actiongraph-human-review-spring-boot-starter` is on the classpath, Spring services get repository-backed human review defaults. Enable `actiongraph.human-review.callback-endpoint.enabled=true` in a Spring MVC application to let approval systems post decisions directly. The starter supplies an in-memory `HumanReviewRepository` by default, and `actiongraph-human-review-jdbc-spring-boot-starter` supplies a durable production bean when enabled.
 
 ```json
 {

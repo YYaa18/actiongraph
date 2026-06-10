@@ -76,7 +76,7 @@ Actions can then consume `MemoryContext` just like any other Blackboard object.
 
 ## JDBC Persistence
 
-`actiongraph-persistence-jdbc` includes `JdbcMemoryRepository`.
+`actiongraph-memory-jdbc` includes `JdbcMemoryRepository`.
 
 Default table:
 

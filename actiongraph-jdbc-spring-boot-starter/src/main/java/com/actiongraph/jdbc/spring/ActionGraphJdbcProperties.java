@@ -1,8 +1,6 @@
 package com.actiongraph.jdbc.spring;
 
 import com.actiongraph.persistence.jdbc.BlackboardTypeRegistry;
-import com.actiongraph.persistence.jdbc.JdbcHumanReviewRepository;
-import com.actiongraph.persistence.jdbc.JdbcMemoryRepository;
 import com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -60,8 +58,8 @@ public class ActionGraphJdbcProperties {
     public static final class Tables {
         private String traceEvent = JdbcTraceRepository.DEFAULT_TABLE;
         private String suspendedRun = JdbcSuspendedRunRepository.DEFAULT_TABLE;
-        private String humanReview = JdbcHumanReviewRepository.DEFAULT_TABLE;
-        private String memory = JdbcMemoryRepository.DEFAULT_TABLE;
+        private String humanReview = "actiongraph_human_review_task";
+        private String memory = "actiongraph_memory_record";
 
         public String getTraceEvent() {
             return traceEvent;

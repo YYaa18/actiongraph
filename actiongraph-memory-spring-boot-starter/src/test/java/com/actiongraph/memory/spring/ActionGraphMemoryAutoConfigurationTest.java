@@ -1,10 +1,11 @@
 package com.actiongraph.memory.spring;
 
 import com.actiongraph.jdbc.spring.ActionGraphJdbcAutoConfiguration;
+import com.actiongraph.memory.jdbc.spring.ActionGraphMemoryJdbcAutoConfiguration;
 import com.actiongraph.memory.InMemoryMemoryRepository;
 import com.actiongraph.memory.MemoryContextLoader;
 import com.actiongraph.memory.MemoryRepository;
-import com.actiongraph.persistence.jdbc.JdbcMemoryRepository;
+import com.actiongraph.memory.jdbc.JdbcMemoryRepository;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -21,6 +22,7 @@ class ActionGraphMemoryAutoConfigurationTest {
     private final ApplicationContextRunner jdbcCompositionRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
                     ActionGraphJdbcAutoConfiguration.class,
+                    ActionGraphMemoryJdbcAutoConfiguration.class,
                     ActionGraphMemoryAutoConfiguration.class
             ));
 

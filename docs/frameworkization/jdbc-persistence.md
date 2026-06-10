@@ -1,6 +1,6 @@
 # JDBC Persistence
 
-`actiongraph-persistence-jdbc` provides durable repository implementations for v2 suspend/resume, audit trace, external human review tasks, and v4 structured memory.
+`actiongraph-persistence-jdbc` provides the core durable repository implementations for v2 suspend/resume and audit trace. Optional JDBC modules add human-review task and structured-memory persistence without forcing every runtime service to depend on those ecosystem contracts.
 
 ## Spring Boot Auto-Configuration
 
@@ -11,6 +11,8 @@ dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")        // optional
+    implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")  // optional
 }
 ```
 
@@ -34,12 +36,10 @@ When enabled and a `DataSource` exists, the starter creates:
 
 - `TraceRepository`
 - `SuspendedRunRepository`
-- `HumanReviewRepository`
-- `MemoryRepository`
 - `JdbcTraceRunRepository`
 - `BlackboardTypeRegistry`
 
-Every bean uses `@ConditionalOnMissingBean`, so applications can override one repository without losing auto-configuration for the others.
+The optional memory JDBC starter creates `MemoryRepository`; the optional human-review JDBC starter creates `HumanReviewRepository`. Every bean uses `@ConditionalOnMissingBean`, so applications can override one repository without losing auto-configuration for the others.
 
 ## Low-Level Artifact
 
@@ -47,10 +47,12 @@ Every bean uses `@ConditionalOnMissingBean`, so applications can override one re
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-persistence-jdbc")
+    implementation("com.actiongraph:actiongraph-memory-jdbc")        // optional
+    implementation("com.actiongraph:actiongraph-human-review-jdbc")  // optional
 }
 ```
 
-The low-level module depends on `actiongraph-core`, `actiongraph-memory`, `actiongraph-human-review`, Jackson, and standard JDBC APIs. Applications provide the JDBC driver and `DataSource`. Use this artifact directly for non-Spring services or when repository construction needs full manual control.
+The low-level core module depends on `actiongraph-core`, Jackson, and standard JDBC APIs. `actiongraph-memory-jdbc` depends on `actiongraph-memory`; `actiongraph-human-review-jdbc` depends on `actiongraph-human-review`. Applications provide the JDBC driver and `DataSource`. Use these artifacts directly for non-Spring services or when repository construction needs full manual control.
 
 ## Repositories
 
