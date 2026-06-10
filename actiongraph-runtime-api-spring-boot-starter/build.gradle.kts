@@ -6,7 +6,6 @@ val springBootVersion = "3.3.5"
 
 dependencies {
     api(project(":actiongraph-control-plane-api"))
-    api(project(":actiongraph-control-plane-auth"))
     api(project(":actiongraph-runtime-api"))
     api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 

@@ -7,7 +7,6 @@ val springBootVersion = "3.3.5"
 dependencies {
     api(project(":actiongraph-console"))
     api(project(":actiongraph-control-plane-api"))
-    api(project(":actiongraph-control-plane-auth"))
     api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
     compileOnly("org.springframework:spring-web:6.1.14")

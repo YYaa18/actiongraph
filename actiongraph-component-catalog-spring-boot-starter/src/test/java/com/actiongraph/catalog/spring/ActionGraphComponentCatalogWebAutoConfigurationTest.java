@@ -69,16 +69,14 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.modules[0]").value("actiongraph-component-catalog"))
                             .andExpect(jsonPath("$.modules[1]").value("actiongraph-control-plane-api"))
-                            .andExpect(jsonPath("$.modules[2]").value("actiongraph-control-plane-auth"))
-                            .andExpect(jsonPath("$.modules[3]").value("actiongraph-component-catalog-spring-boot-starter"));
+                            .andExpect(jsonPath("$.modules[2]").value("actiongraph-component-catalog-spring-boot-starter"));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/control-plane-response-contracts"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-api"));
 
-                    mockMvc.perform(get("/internal/actiongraph/components/profiles/control-plane-shared-auth"))
-                            .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-auth"));
+                    mockMvc.perform(get("/internal/actiongraph/components/profiles/control-plane-shared" + "-auth"))
+                            .andExpect(status().isNotFound());
                 });
     }
 

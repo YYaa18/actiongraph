@@ -137,20 +137,7 @@ dependencies {
 }
 ```
 
-`actiongraph-control-plane-api` provides `ControlPlaneErrorResponse`, standard error-code factories such as `unauthorized`, `badRequest`, `notFound`, `conflict`, and `notClaimable`, plus a zero-dependency `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`. It is compiled with `--release 8` and has no Spring, JDBC, LLM, runtime, auth, or JSON-library dependency. Built-in Spring MVC endpoint starters bring it transitively.
-
-## Control-Plane Shared Auth
-
-Use this when a custom gateway or endpoint adapter wants ActionGraph's shared-secret token semantics without depending on Spring MVC.
-
-```kotlin
-dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-control-plane-auth")
-}
-```
-
-`actiongraph-control-plane-auth` validates token-header configuration, treats blank shared secrets as disabled, and uses constant-time token comparison. It has no Spring, JDBC, LLM, or runtime dependency. Built-in Spring MVC endpoint starters bring it transitively, so applications usually add it directly only for custom control-plane adapters.
+`actiongraph-control-plane-api` provides `ControlPlaneErrorResponse`, standard error-code factories such as `unauthorized`, `badRequest`, `notFound`, `conflict`, and `notClaimable`, plus a zero-dependency `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`. It also provides shared-secret token verification through `ControlPlaneTokenVerifier`, `SharedSecretTokenProperties`, and `SharedSecretTokenProtection`. It is compiled with `--release 8` and has no Spring, JDBC, LLM, runtime, or JSON-library dependency. Built-in Spring MVC endpoint starters bring it transitively.
 
 ## Spring MVC Component Catalog API
 

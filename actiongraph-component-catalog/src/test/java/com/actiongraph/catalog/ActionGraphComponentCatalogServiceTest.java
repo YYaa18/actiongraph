@@ -19,7 +19,6 @@ class ActionGraphComponentCatalogServiceTest {
                         "actiongraph-control-plane-spring-boot-starter",
                         "actiongraph-component-catalog",
                         "actiongraph-control-plane-api",
-                        "actiongraph-control-plane-auth",
                         "actiongraph-component-catalog-spring-boot-starter",
                         "actiongraph-console",
                         "actiongraph-console-spring-boot-starter"
@@ -42,26 +41,25 @@ class ActionGraphComponentCatalogServiceTest {
                 .isPresent()
                 .get()
                 .satisfies(component -> assertThat(component.requires())
-                        .contains("actiongraph-control-plane-api",
-                                "actiongraph-control-plane-auth"));
+                        .containsExactly("actiongraph-runtime-api", "actiongraph-control-plane-api"));
         assertThat(service.component("actiongraph-component-catalog-spring-boot-starter"))
                 .isPresent()
                 .get()
                 .satisfies(component -> assertThat(component.requires())
-                        .contains("actiongraph-control-plane-api",
-                                "actiongraph-control-plane-auth"));
+                        .containsExactly("actiongraph-component-catalog", "actiongraph-control-plane-api"));
         assertThat(service.component("actiongraph-control-plane-api"))
                 .isPresent()
                 .get()
                 .satisfies(component -> assertThat(component.capabilities())
-                        .contains("java8-runtime-client"));
+                        .contains("java8-runtime-client", "shared-secret-token-verification"));
+        assertThat(service.component("actiongraph-control-plane" + "-auth"))
+                .isEmpty();
         assertThat(service.component("actiongraph-console-spring-boot-starter"))
                 .isPresent()
                 .get()
                 .satisfies(component -> {
                     assertThat(component.requires())
-                            .containsExactly("actiongraph-console", "actiongraph-control-plane-api",
-                                    "actiongraph-control-plane-auth");
+                            .containsExactly("actiongraph-console", "actiongraph-control-plane-api");
                     assertThat(component.capabilities())
                             .contains("console-json-http-api", "console-html-ui", "console-export-http-api");
                 });
@@ -82,8 +80,7 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(component -> {
                     assertThat(component.requires())
-                            .containsExactly("actiongraph-human-review", "actiongraph-control-plane-api",
-                                    "actiongraph-control-plane-auth");
+                            .containsExactly("actiongraph-human-review", "actiongraph-control-plane-api");
                     assertThat(component.capabilities())
                             .contains("human-review-http-api", "human-review-callback-http-api");
                 });
@@ -103,18 +100,14 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())
                         .contains("actiongraph-control-plane-api",
-                                "actiongraph-control-plane-auth",
                                 "actiongraph-component-catalog-spring-boot-starter"));
         assertThat(service.profile("control-plane-response-contracts"))
                 .isPresent()
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())
                         .containsExactly("actiongraph-control-plane-api"));
-        assertThat(service.profile("control-plane-shared-auth"))
-                .isPresent()
-                .get()
-                .satisfies(profile -> assertThat(profile.modules())
-                        .containsExactly("actiongraph-control-plane-auth"));
+        assertThat(service.profile("control-plane-shared" + "-auth"))
+                .isEmpty();
         assertThat(service.profile("console-control-plane"))
                 .isPresent()
                 .get()
