@@ -226,9 +226,10 @@ class PolicyExecutionTest {
         assertThat(results).singleElement()
                 .satisfies(result -> assertThat(result.status()).isEqualTo(RunStatus.COMPLETED));
         assertThat(errors).singleElement()
-                .satisfies(error -> assertThat(error)
-                        .isInstanceOf(IllegalStateException.class)
-                        .hasMessageContaining("No resumable suspended run found"));
+                .satisfies(error -> {
+                    assertThat(error).isInstanceOf(SuspendedRunNotClaimableException.class);
+                    assertThat(((SuspendedRunNotClaimableException) error).runId()).isEqualTo(suspended.runId());
+                });
         assertThat(fixture.approvalService().requests())
                 .containsExactly(new ApprovalRequest("APPROVAL-1", "QUOTE-1"));
         assertThat(events(fixture, suspended, TraceEventType.RUN_RESUMED)).hasSize(1);

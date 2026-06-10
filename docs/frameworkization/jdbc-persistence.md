@@ -58,6 +58,13 @@ new JdbcMemoryRepository(dataSource, "my_memory_record");
 
 Table names are restricted to letters, numbers, and underscores.
 
+Suspended run claim timeout is configurable. The default is 15 minutes; after this window, a `RESUMING` row can be claimed again to recover from a process crash during `resume`.
+
+```java
+new JdbcSuspendedRunRepository(dataSource, Duration.ofMinutes(30));
+new JdbcSuspendedRunRepository(dataSource, "my_suspended_run", Duration.ofMinutes(30));
+```
+
 ## What Is Persisted
 
 Trace repository:
@@ -107,7 +114,7 @@ Memory repository:
 - structured attributes JSON
 - created/updated timestamps
 
-On resume, the executor atomically claims the suspended run before restoring the Blackboard. JDBC uses a status transition from `SUSPENDED` to `RESUMING`; duplicate resume attempts for the same `runId` receive no snapshot and stop before business side effects. After a successful claim, the executor rehydrates the compensation stack from the supplied `ActionRegistry`, continues the same trace sequence, and deletes the suspended run when the resumed run reaches a terminal non-suspended state.
+On resume, the executor atomically claims the suspended run before restoring the Blackboard. JDBC uses a status transition from `SUSPENDED` to `RESUMING`; duplicate resume attempts for the same `runId` receive no snapshot, surface as `SuspendedRunNotClaimableException`, and stop before business side effects. After a successful claim, the executor rehydrates the compensation stack from the supplied `ActionRegistry`, continues the same trace sequence, and deletes the suspended run when the resumed run reaches a terminal non-suspended state.
 
 ## Serialization Boundary
 

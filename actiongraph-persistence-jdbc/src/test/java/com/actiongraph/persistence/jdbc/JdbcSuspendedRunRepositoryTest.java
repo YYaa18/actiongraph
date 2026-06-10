@@ -8,10 +8,12 @@ import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.SuspendedRun;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JdbcSuspendedRunRepositoryTest {
     private static final Condition INPUT_PRESENT = Condition.of("jdbc-test:INPUT_PRESENT");
@@ -95,6 +97,23 @@ class JdbcSuspendedRunRepositoryTest {
 
         assertThat(repository.claimForResume("RUN-CLAIM")).isPresent();
         assertThat(repository.claimForResume("RUN-CLAIM")).isEmpty();
+    }
+
+    @Test
+    void exposesAndValidatesClaimTimeout() {
+        assertThat(JdbcSuspendedRunRepository.DEFAULT_CLAIM_TIMEOUT).isEqualTo(Duration.ofMinutes(15));
+
+        assertThatThrownBy(() -> new JdbcSuspendedRunRepository(JdbcTestDataSources.h2(), Duration.ZERO))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("claimTimeout must be positive");
+
+        assertThatThrownBy(() -> new JdbcSuspendedRunRepository(
+                JdbcTestDataSources.h2(),
+                "actiongraph_suspended_run_custom_timeout",
+                Duration.ofSeconds(-1)
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("claimTimeout must be positive");
     }
 
     public record PersistedInput(String value) {

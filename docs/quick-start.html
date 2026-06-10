@@ -367,8 +367,14 @@ RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pr
     <span class="a">@Bean</span> TraceRepository traceRepository(DataSource ds) {
         <span class="k">return new</span> JdbcTraceRepository(ds);            <span class="c">// 审计链</span>
     }
-    <span class="a">@Bean</span> SuspendedRunRepository suspendedRunRepository(DataSource ds) {
-        <span class="k">return new</span> JdbcSuspendedRunRepository(ds);     <span class="c">// 挂起快照，跨重启可恢复</span>
+    <span class="a">@Bean</span> SuspendedRunRepository suspendedRunRepository(
+            DataSource ds,
+            ActionGraphProperties properties
+    ) {
+        <span class="k">return new</span> JdbcSuspendedRunRepository(
+                ds,
+                properties.getPersistence().getSuspendedRunClaimTimeout()
+        );                                                  <span class="c">// 挂起快照，跨重启可恢复</span>
     }
     <span class="a">@Bean</span> HumanReviewRepository humanReviewRepository(DataSource ds) {
         <span class="k">return new</span> JdbcHumanReviewRepository(ds);      <span class="c">// 审批任务</span>
@@ -389,6 +395,7 @@ RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pr
   <tr><td><code>actiongraph.planner.max-expansions</code></td><td>10000</td><td>规划搜索最大展开数（防爆）</td></tr>
   <tr><td><code>actiongraph.executor.max-steps</code></td><td>64</td><td>单次运行最大执行步数</td></tr>
   <tr><td><code>actiongraph.actions.auto-register-annotated</code></td><td>true</td><td>是否自动扫描注解 Bean 注册 Action</td></tr>
+  <tr><td><code>actiongraph.persistence.suspended-run-claim-timeout</code></td><td>15m</td><td>JDBC resume 认领后进程崩溃时，RESUMING 快照多久后可被重新认领</td></tr>
 </table>
 
 <h2 id="design">Action 设计规范</h2>

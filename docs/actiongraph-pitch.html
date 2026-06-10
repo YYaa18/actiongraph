@@ -753,10 +753,10 @@
         <span>审批申请已创建：APPROVAL-1，对应报价：QUOTE-1</span>
       </div>
       <div class="hud">
-        <div class="hud-item"><b>87</b><span>tests passing</span></div>
+        <div class="hud-item"><b>89</b><span>tests passing</span></div>
         <div class="hud-item"><b>5</b><span>modules</span></div>
         <div class="hud-item"><b>2</b><span>reference domains</span></div>
-        <div class="hud-item"><b>0</b><span>LLM-generated plans</span></div>
+        <div class="hud-item"><b>~6000</b><span>runs/s smoke</span></div>
       </div>
     </div>
   </div>
@@ -1002,14 +1002,15 @@
           <div><span class="log-muted">$</span> ./gradlew build --rerun-tasks</div>
           <div><span class="log-ok">actiongraph-core:test</span> 21 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-llm-deepseek:test</span> 8 tests, 0 failures</div>
-          <div><span class="log-ok">actiongraph-persistence-jdbc:test</span> 12 tests, 0 failures</div>
-          <div><span class="log-ok">actiongraph-spring-boot-starter:test</span> 8 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-persistence-jdbc:test</span> 13 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-spring-boot-starter:test</span> 9 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-samples:test</span> 38 tests, 1 gated smoke skipped</div>
-          <div><span class="log-ok">BUILD SUCCESSFUL</span> 87 tests, 0 failures, 1 skipped</div>
+          <div><span class="log-ok">BUILD SUCCESSFUL</span> 89 tests, 0 failures, 1 skipped</div>
         </div>
       </div>
       <div class="layout-3" style="grid-template-columns:1fr;">
-        <div class="panel ok"><div class="metric green">87</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、Spring starter、中文注解值。</p></div>
+        <div class="panel ok"><div class="metric green">89</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、Spring starter、中文注解值。</p></div>
+        <div class="panel ok"><div class="metric green">~6000</div><h3>并发冒烟</h3><p>200 虚拟线程并发 1 万次运行；重复 resume 只产生一次业务副作用。</p></div>
         <div class="panel ok"><div class="metric green">5</div><h3>工程模块</h3><p>core / llm-deepseek / persistence-jdbc / spring-boot-starter / samples，可发内部 Maven。</p></div>
         <div class="panel ok"><div class="metric green">2</div><h3>参考业务域</h3><p>续约报价、订单取消两个不同领域接入，证明核心可复用。</p></div>
       </div>
@@ -1023,6 +1024,7 @@
       <span class="pill green">结构化记忆</span>
       <span class="pill green">Spring Boot Starter</span>
       <span class="pill green">注解式接入</span>
+      <span class="pill green">0 LLM 生成 Plan</span>
     </div>
     <div class="quote" style="margin-top:30px;">关键验证：第二个业务域接入时没有改动框架核心领域逻辑。同一套 runtime 支撑续约报价和订单取消，复用性已有工程证据。</div>
   </div>

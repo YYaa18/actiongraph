@@ -28,7 +28,7 @@ Resume through:
 executor.resume(runId, actions, registry)
 ```
 
-Resume first atomically claims the suspended snapshot from `SuspendedRunRepository`. If the same `runId` is resumed concurrently by duplicate callbacks, retrying consumers, or multiple application instances, only one caller receives the snapshot and continues business execution. Other callers fail before side effects.
+Resume first atomically claims the suspended snapshot from `SuspendedRunRepository`. If the same `runId` is resumed concurrently by duplicate callbacks, retrying consumers, or multiple application instances, only one caller receives the snapshot and continues business execution. Other callers fail with `SuspendedRunNotClaimableException` before side effects.
 
 Resume uses the same `runId` and continues trace sequence numbering for the same run. The planner starts from the suspended Blackboard conditions, so it naturally skips already-satisfied steps.
 
@@ -43,6 +43,6 @@ Concurrent resume safety is covered by `PolicyExecutionTest.concurrentResumeOfSa
 ## Current Limits
 
 - `InMemorySuspendedRunRepository` keeps object references, not serialized state.
-- Durable suspend/resume still needs a serializer for Blackboard objects and registered compensation action ids.
+- JDBC suspend/resume serializes Blackboard objects by class name, so application package names and persisted payload shapes need migration discipline across deployments.
 - Resuming requires the caller to provide compatible `actions` and `registry`.
 - Pending human review uses `SUSPENDED_PENDING_REVIEW`; there is no separate waiting status.

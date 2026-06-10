@@ -6,39 +6,58 @@ import com.actiongraph.runtime.SuspendedRunRepository;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.DatabaseMetaData;
 import java.sql.Types;
-import java.time.Instant;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
 public final class JdbcSuspendedRunRepository implements SuspendedRunRepository {
     public static final String DEFAULT_TABLE = "actiongraph_suspended_run";
+    public static final Duration DEFAULT_CLAIM_TIMEOUT = Duration.ofMinutes(15);
     private static final String STATUS_SUSPENDED = "SUSPENDED";
     private static final String STATUS_RESUMING = "RESUMING";
-    private static final Duration CLAIM_TIMEOUT = Duration.ofMinutes(15);
 
     private final DataSource dataSource;
     private final PersistenceJsonCodec codec;
     private final String table;
+    private final Duration claimTimeout;
 
     public JdbcSuspendedRunRepository(DataSource dataSource) {
         this(dataSource, DEFAULT_TABLE);
     }
 
+    public JdbcSuspendedRunRepository(DataSource dataSource, Duration claimTimeout) {
+        this(dataSource, DEFAULT_TABLE, claimTimeout);
+    }
+
     public JdbcSuspendedRunRepository(DataSource dataSource, String table) {
-        this(dataSource, table, new PersistenceJsonCodec());
+        this(dataSource, table, DEFAULT_CLAIM_TIMEOUT);
+    }
+
+    public JdbcSuspendedRunRepository(DataSource dataSource, String table, Duration claimTimeout) {
+        this(dataSource, table, claimTimeout, new PersistenceJsonCodec());
     }
 
     JdbcSuspendedRunRepository(DataSource dataSource, String table, PersistenceJsonCodec codec) {
+        this(dataSource, table, DEFAULT_CLAIM_TIMEOUT, codec);
+    }
+
+    JdbcSuspendedRunRepository(
+            DataSource dataSource,
+            String table,
+            Duration claimTimeout,
+            PersistenceJsonCodec codec
+    ) {
         this.dataSource = Objects.requireNonNull(dataSource, "dataSource");
         this.table = JdbcTraceRepository.validateIdentifier(table);
+        this.claimTimeout = validateClaimTimeout(claimTimeout);
         this.codec = Objects.requireNonNull(codec, "codec");
         initializeSchema();
     }
@@ -105,7 +124,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
     public Optional<SuspendedRun> claimForResume(String runId) {
         Objects.requireNonNull(runId, "runId");
         Instant now = Instant.now();
-        Instant staleBefore = now.minus(CLAIM_TIMEOUT);
+        Instant staleBefore = now.minus(claimTimeout);
         String sql = "update " + table + " set status = ?, claimed_at = ?, updated_at = ? "
                 + "where run_id = ? and (status is null or status = ? or (status = ? and claimed_at < ?))";
         try (Connection connection = dataSource.getConnection()) {
@@ -223,5 +242,13 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
             }
         }
         return false;
+    }
+
+    private static Duration validateClaimTimeout(Duration claimTimeout) {
+        Duration value = Objects.requireNonNull(claimTimeout, "claimTimeout");
+        if (value.isZero() || value.isNegative()) {
+            throw new IllegalArgumentException("claimTimeout must be positive");
+        }
+        return value;
     }
 }

@@ -148,7 +148,7 @@ public final class GoapExecutor implements Executor {
         Objects.requireNonNull(registry, "registry");
 
         SuspendedRun suspendedRun = suspendedRunRepository.claimForResume(runId)
-                .orElseThrow(() -> new IllegalStateException("No resumable suspended run found for runId: " + runId));
+                .orElseThrow(() -> new SuspendedRunNotClaimableException(runId));
         RunTrace trace = new RunTrace(traceRepository, runId);
         trace.append(TraceEventType.RUN_RESUMED, suspendedRun.pendingActionId(), "Run resumed", Map.of(
                 "pendingActionId", suspendedRun.pendingActionId().value()

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+import java.time.Duration;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -146,6 +147,15 @@ class ActionGraphAutoConfigurationTest {
                     .isInstanceOf(InMemoryMemoryRepository.class);
             assertThat(context.getBean(MemoryContextLoader.class)).isNotNull();
         });
+    }
+
+    @Test
+    void bindsPersistenceClaimTimeoutProperty() {
+        contextRunner
+                .withPropertyValues("actiongraph.persistence.suspended-run-claim-timeout=2m")
+                .run(context -> assertThat(context.getBean(ActionGraphProperties.class)
+                        .getPersistence()
+                        .getSuspendedRunClaimTimeout()).isEqualTo(Duration.ofMinutes(2)));
     }
 
     static final class AnnotatedWorkflow {
