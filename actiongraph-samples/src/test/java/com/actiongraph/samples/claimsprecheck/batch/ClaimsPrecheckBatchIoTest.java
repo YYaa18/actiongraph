@@ -1,5 +1,6 @@
 package com.actiongraph.samples.claimsprecheck.batch;
 
+import com.actiongraph.action.ActionId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ClaimsPrecheckBatchIoTest {
     @TempDir
@@ -91,9 +93,76 @@ class ClaimsPrecheckBatchIoTest {
                 .contains("CLM300");
     }
 
+    @Test
+    void externalReviewDecisionsDriveSuspendResumeApprovals() throws Exception {
+        Path input = bundledCsv();
+        Path reviewDecisions = bundledReviewDecisionsCsv();
+        ClaimsPrecheckBatchRunner runner = new ClaimsPrecheckBatchRunner(
+                ClaimsPrecheckBatchRunner.defaultLimitRules(),
+                ClaimsPrecheckBatchReviewOptions.externalDecisions(
+                        ClaimsPrecheckBatchReviewDecisionCsv.read(reviewDecisions)
+                )
+        );
+        ClaimsPrecheckBatchMetrics metrics = runner.run(ClaimsPrecheckBatchCsv.readCases(input));
+        ClaimsPrecheckBatchReportMetadata metadata = new ClaimsPrecheckBatchReportMetadata(
+                "BATCH-EXTERNAL-REVIEWS",
+                input.toString(),
+                "test",
+                runner.limitRules(),
+                runner.reviewOptions().modeName(),
+                runner.reviewOptions().simulatedReviewWaitMillis(),
+                runner.reviewOptions().externalDecisions().size()
+        );
+
+        new ClaimsPrecheckBatchReportWriter().write(tempDir, metrics, metadata);
+
+        assertThat(metrics.totalRuns()).isEqualTo(5);
+        assertThat(metrics.completedRuns()).isEqualTo(1);
+        assertThat(metrics.failedRuns()).isEqualTo(1);
+        assertThat(metrics.averageReviewWaitMillis()).isGreaterThan(1.0);
+        assertThat(runner.reviewOptions().externalDecisions())
+                .extracting(ClaimsPrecheckBatchReviewDecision::claimId)
+                .containsExactly("CLM100", "CLM104");
+
+        String report = Files.readString(tempDir.resolve(ClaimsPrecheckBatchReportWriter.MARKDOWN_REPORT));
+        assertThat(report)
+                .contains("Review Mode: external-decisions")
+                .contains("External Review Decisions: 2")
+                .contains("Average Review Wait Ms")
+                .contains("CLM100")
+                .contains("CLM104");
+    }
+
+    @Test
+    void externalReviewDecisionsFailFastWhenPendingReviewIsNotMapped() {
+        ClaimsPrecheckBatchRunner runner = new ClaimsPrecheckBatchRunner(
+                ClaimsPrecheckBatchRunner.defaultLimitRules(),
+                ClaimsPrecheckBatchReviewOptions.externalDecisions(List.of(
+                        ClaimsPrecheckBatchReviewDecision.approve(
+                                "CLM999",
+                                new ActionId("claim.approval.request"),
+                                0,
+                                0
+                        )
+                ))
+        );
+
+        assertThatThrownBy(() -> runner.run(List.of(
+                ClaimsPrecheckBatchCase.normal("CLM301", "260000")
+        )))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("No external review decision found for CLM301/claim.approval.request/stage-0");
+    }
+
     private Path bundledCsv() throws URISyntaxException {
         return Path.of(Objects.requireNonNull(
                 getClass().getResource("/claims-precheck-cases.csv")
+        ).toURI());
+    }
+
+    private Path bundledReviewDecisionsCsv() throws URISyntaxException {
+        return Path.of(Objects.requireNonNull(
+                getClass().getResource("/claims-precheck-review-decisions.csv")
         ).toURI());
     }
 }

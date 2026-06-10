@@ -11,7 +11,8 @@ public record ClaimsPrecheckBatchReportMetadata(
         String environment,
         List<AmountLimitRule> limitRules,
         String reviewMode,
-        long simulatedReviewWaitMillis
+        long simulatedReviewWaitMillis,
+        int externalReviewDecisionCount
 ) {
     public ClaimsPrecheckBatchReportMetadata(
             String batchId,
@@ -19,7 +20,18 @@ public record ClaimsPrecheckBatchReportMetadata(
             String environment,
             List<AmountLimitRule> limitRules
     ) {
-        this(batchId, sampleSource, environment, limitRules, "auto-approve", 0);
+        this(batchId, sampleSource, environment, limitRules, "auto-approve", 0, 0);
+    }
+
+    public ClaimsPrecheckBatchReportMetadata(
+            String batchId,
+            String sampleSource,
+            String environment,
+            List<AmountLimitRule> limitRules,
+            String reviewMode,
+            long simulatedReviewWaitMillis
+    ) {
+        this(batchId, sampleSource, environment, limitRules, reviewMode, simulatedReviewWaitMillis, 0);
     }
 
     public ClaimsPrecheckBatchReportMetadata {
@@ -38,6 +50,9 @@ public record ClaimsPrecheckBatchReportMetadata(
         if (simulatedReviewWaitMillis < 0) {
             throw new IllegalArgumentException("simulatedReviewWaitMillis must not be negative");
         }
+        if (externalReviewDecisionCount < 0) {
+            throw new IllegalArgumentException("externalReviewDecisionCount must not be negative");
+        }
         limitRules = List.copyOf(Objects.requireNonNull(limitRules, "limitRules"));
     }
 
@@ -48,6 +63,7 @@ public record ClaimsPrecheckBatchReportMetadata(
                 "local",
                 limitRules,
                 "auto-approve",
+                0,
                 0
         );
     }

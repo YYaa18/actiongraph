@@ -1,0 +1,3 @@
+claimId,actionId,stageIndex,decision,reviewer,comment,decisionDelayMs
+CLM100,claim.approval.request,0,APPROVED,claims-checker,资料完整，同意提交审批,5
+CLM104,claim.approval.request,0,APPROVED,claims-checker,资料完整，同意提交审批,5

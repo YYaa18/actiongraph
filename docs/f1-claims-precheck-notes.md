@@ -61,7 +61,7 @@ traceEvents=21
 
 ## Batch Metrics
 
-第三刀已把样板域扩成可读取样本文件、可交付报告的准真实批量指标；第四刀补上 JDBC 输入；第五刀补上 suspend/resume 审批等待统计，方便接近真实数据源和真实审批链路：
+第三刀已把样板域扩成可读取样本文件、可交付报告的准真实批量指标；第四刀补上 JDBC 输入；第五刀补上 suspend/resume 审批等待统计；第六刀支持从外部审批决策文件驱动 resume，方便接近真实数据源和真实审批链路：
 
 ```bash
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
@@ -71,12 +71,17 @@ traceEvents=21
   --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-REVIEW-001 --environment local --review-mode suspend-resume --simulate-review-wait-ms 5"
 
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
+  --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --review-decisions actiongraph-samples/src/main/resources/claims-precheck-review-decisions.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-EXTERNAL-REVIEWS --environment local"
+
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
   --args='--jdbc-url jdbc:postgresql://db.example/claims --jdbc-user actiongraph_reader --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-JDBC-001 --environment staging'
 ```
 
 JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_amount`、`missing_invoice`、`closed`、`approval_fails`、`expected_intercept`；也可以通过 `--jdbc-query` 传入自定义 SQL，只要结果列可映射到这些字段即可。`--jdbc-password` 可用于本地验证，报告里的 sample source 会对 URL 中的 password/pwd 参数脱敏。连接真实数据库时，需要把对应 JDBC 驱动加入样例运行 classpath。
 
 `--review-mode suspend-resume` 会使用 `RepositoryBackedHumanReviewPolicy` 和 `SuspendedRunRepository` 跑真实的挂起/恢复路径；`--simulate-review-wait-ms` 用于在 demo 或压测中模拟审批系统回调延迟，`reviewWaitMs` 从 `HumanReviewTask.updatedAt` 时间线计算，接真实审批回调时可以复用同一口径。
+
+`--review-decisions` 读取审批决策 CSV，字段为 `claimId`、`actionId`、`stageIndex`、`decision`、`reviewer`、`comment`、`decisionDelayMs`。运行时按 `claimId + actionId + stageIndex` 匹配 pending task，找不到匹配项会 fail-fast，避免审批样本静默漏配。
 
 实跑结果摘要：
 
@@ -94,7 +99,7 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 - `claims-precheck-report.md`：业务可读指标摘要与明细表
 - `claims-precheck-results.csv`：每个样本的状态、是否拦截、审计完整性、trace 事件数、运行耗时与耗时拆分
-- 报告头包含 batch id、environment、sample source、review mode、模拟审批等待和当前限额参数；sample source 可以来自 CSV 路径或 JDBC URL
+- 报告头包含 batch id、environment、sample source、review mode、模拟审批等待、外部审批决策数量和当前限额参数；sample source 可以来自 CSV 路径或 JDBC URL
 
 当前指标口径：
 
@@ -110,4 +115,4 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 下一刀应继续把报告推进到更贴近生产的数据资产：
 
 - 接入真实数据库表或视图，并沉淀脱敏抽样脚本
-- 接入真实审批系统回调时间，替代当前 demo 用的 `--simulate-review-wait-ms`
+- 把 `--review-decisions` 替换为真实审批系统回调消费者，并将回调结果写入 `HumanReviewRepository`

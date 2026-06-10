@@ -26,7 +26,8 @@ public final class ClaimsPrecheckBatchMetricsApp {
                 appArgs.environment(),
                 runner.limitRules(),
                 runner.reviewOptions().modeName(),
-                runner.reviewOptions().simulatedReviewWaitMillis()
+                runner.reviewOptions().simulatedReviewWaitMillis(),
+                runner.reviewOptions().externalDecisions().size()
         );
         new ClaimsPrecheckBatchReportWriter().write(appArgs.reportDir(), metrics, metadata);
         System.out.println("claimsPrecheckBatch totalRuns=" + metrics.totalRuns()
@@ -57,7 +58,8 @@ public final class ClaimsPrecheckBatchMetricsApp {
                 + ", environment=" + metadata.environment()
                 + ", sampleSource=" + metadata.sampleSource()
                 + ", reviewMode=" + metadata.reviewMode()
-                + ", simulatedReviewWaitMs=" + metadata.simulatedReviewWaitMillis());
+                + ", simulatedReviewWaitMs=" + metadata.simulatedReviewWaitMillis()
+                + ", externalReviewDecisions=" + metadata.externalReviewDecisionCount());
         System.out.println("reportDir=" + appArgs.reportDir().toAbsolutePath());
     }
 
@@ -99,6 +101,7 @@ public final class ClaimsPrecheckBatchMetricsApp {
             String jdbcUser = "";
             String jdbcPassword = "";
             String jdbcQuery = null;
+            Path reviewDecisions = null;
             Path reportDir = DEFAULT_REPORT_DIR;
             String batchId = "claims-precheck-" + Instant.now().toEpochMilli();
             String environment = System.getenv().getOrDefault("ACTIONGRAPH_ENV", "local");
@@ -128,6 +131,8 @@ public final class ClaimsPrecheckBatchMetricsApp {
                 } else if ("--simulate-review-wait-ms".equals(token)) {
                     simulatedReviewWaitMillis = Long.parseLong(
                             nextValue(tokens, ++i, "--simulate-review-wait-ms"));
+                } else if ("--review-decisions".equals(token)) {
+                    reviewDecisions = Path.of(nextValue(tokens, ++i, "--review-decisions"));
                 } else {
                     throw new IllegalArgumentException("Unknown argument: " + token);
                 }
@@ -141,14 +146,24 @@ public final class ClaimsPrecheckBatchMetricsApp {
             ClaimsPrecheckBatchJdbcInput jdbcInput = jdbcUrl == null
                     ? null
                     : new ClaimsPrecheckBatchJdbcInput(jdbcUrl, jdbcUser, jdbcPassword, jdbcQuery);
-            ClaimsPrecheckBatchReviewOptions reviewOptions = reviewOptions(reviewMode, simulatedReviewWaitMillis);
+            ClaimsPrecheckBatchReviewOptions reviewOptions = reviewOptions(
+                    reviewMode,
+                    simulatedReviewWaitMillis,
+                    reviewDecisions
+            );
             return new AppArgs(input, jdbcInput, reportDir, batchId, environment, reviewOptions);
         }
 
         private static ClaimsPrecheckBatchReviewOptions reviewOptions(
                 String reviewMode,
-                long simulatedReviewWaitMillis
+                long simulatedReviewWaitMillis,
+                Path reviewDecisions
         ) {
+            if (reviewDecisions != null) {
+                return ClaimsPrecheckBatchReviewOptions.externalDecisions(
+                        ClaimsPrecheckBatchReviewDecisionCsv.read(reviewDecisions)
+                );
+            }
             if ("auto-approve".equals(reviewMode)) {
                 if (simulatedReviewWaitMillis > 0) {
                     return ClaimsPrecheckBatchReviewOptions.suspendResume(simulatedReviewWaitMillis);

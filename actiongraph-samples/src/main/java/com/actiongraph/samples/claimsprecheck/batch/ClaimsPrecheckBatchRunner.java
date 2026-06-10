@@ -137,7 +137,7 @@ public final class ClaimsPrecheckBatchRunner {
         long start = System.nanoTime();
         RunResult result = executor.run(ClaimsPrecheckGoals.prepareClaimPayoutApplication(),
                 blackboard, actions, registry);
-        result = resumeApprovedReviews(result, executor, actions, registry, reviewRepository, timing);
+        result = resumeApprovedReviews(batchCase.claimId(), result, executor, actions, registry, reviewRepository, timing);
         long elapsed = System.nanoTime() - start;
 
         var traceEvents = traceRepository.findByRun(result.runId());
@@ -180,6 +180,7 @@ public final class ClaimsPrecheckBatchRunner {
     }
 
     private RunResult resumeApprovedReviews(
+            String claimId,
             RunResult result,
             GoapExecutor executor,
             List<Action> actions,
@@ -195,14 +196,15 @@ public final class ClaimsPrecheckBatchRunner {
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException(
                             "No pending review task found for suspended run " + runId));
-            waitForSimulatedReview();
+            ClaimsPrecheckBatchReviewDecision reviewDecision = reviewDecision(claimId, task);
+            waitForExternalReview(reviewDecision.decisionDelayMillis());
             reviewRepository.decideStage(
                     task.runId(),
                     task.actionId(),
                     task.currentStageIndex(),
-                    HumanReviewDecision.APPROVED,
-                    "batch-simulated-reviewer",
-                    "Approved by claims precheck batch simulation"
+                    reviewDecision.decision(),
+                    reviewDecision.reviewer(),
+                    reviewDecision.comment()
             );
             HumanReviewTask decidedTask = reviewRepository.find(task.runId(), task.actionId())
                     .orElseThrow(() -> new IllegalStateException(
@@ -213,10 +215,27 @@ public final class ClaimsPrecheckBatchRunner {
         return current;
     }
 
-    private void waitForSimulatedReview() {
+    private ClaimsPrecheckBatchReviewDecision reviewDecision(String claimId, HumanReviewTask task) {
+        return reviewOptions.decisionFor(claimId, task.actionId(), task.currentStageIndex())
+                .orElseGet(() -> {
+                    if (reviewOptions.hasExternalDecisions()) {
+                        throw new IllegalStateException("No external review decision found for "
+                                + claimId + "/" + task.actionId().value()
+                                + "/stage-" + task.currentStageIndex());
+                    }
+                    return ClaimsPrecheckBatchReviewDecision.approve(
+                            claimId,
+                            task.actionId(),
+                            task.currentStageIndex(),
+                            reviewOptions.simulatedReviewWaitMillis()
+                    );
+                });
+    }
+
+    private void waitForExternalReview(long delayMillis) {
         try {
-            if (reviewOptions.simulatedReviewWaitMillis() > 0) {
-                Thread.sleep(reviewOptions.simulatedReviewWaitMillis());
+            if (delayMillis > 0) {
+                Thread.sleep(delayMillis);
             }
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
