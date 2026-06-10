@@ -124,7 +124,7 @@ public void voidDraft(CancellationRequestDraft draft) {
 ```
 
 JDBC 批量输入使用标准 `DriverManager`；连接真实数据库前，需要把目标数据库驱动加入样例运行 classpath。脱敏视图契约见 `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql`。
-批量报告会按样本拆出总耗时、业务 Action 耗时、框架调度耗时和审批等待耗时；`suspend-resume` / `external-decisions` 审批模式会走真实挂起/恢复路径，并从审批任务时间戳计算等待。
+批量报告会按样本拆出总耗时、业务 Action 耗时、框架调度耗时和审批等待耗时；`suspend-resume` / `external-decisions` 审批模式会走真实挂起/恢复路径，并从审批任务时间戳计算等待。生产审批系统应通过 `HumanReviewCallbackHandler` 写入审批结果。
 
 ## 设计边界
 
@@ -139,7 +139,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 ## 当前成熟度
 
-- 141 个自动化测试通过。
+- 145 个自动化测试通过。
 - 并发冒烟约 6000 runs/s；重复 resume 只产生一次业务副作用。
 - 5 个 Gradle 模块完成拆分。
 - 3 个参考业务域完整跑通。

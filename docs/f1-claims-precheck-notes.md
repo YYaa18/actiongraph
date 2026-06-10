@@ -89,6 +89,8 @@ JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_
 
 `--review-decisions` 读取审批决策 CSV，字段为 `claimId`、`actionId`、`stageIndex`、`decision`、`reviewer`、`comment`、`decisionDelayMs`。运行时按 `claimId + actionId + stageIndex` 匹配 pending task，找不到匹配项会 fail-fast，避免审批样本静默漏配。
 
+正式接审批系统时，CSV 只是演示输入源；审批回调入口应构造成 `HumanReviewCallback` 并交给 `HumanReviewCallbackHandler` 写入 `HumanReviewRepository`。handler 会校验 runId/actionId/stageIndex，并复用 repository 的重复审批防护。
+
 实跑结果摘要：
 
 ```text
@@ -121,4 +123,4 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 下一刀应继续把报告推进到更贴近生产的数据资产：
 
 - 将脱敏视图契约映射到一家真实业务库，并补充对应数据库方言版本
-- 把 `--review-decisions` 替换为真实审批系统回调消费者，并将回调结果写入 `HumanReviewRepository`
+- 把 `--review-decisions` 替换为真实审批系统回调消费者，并通过 `HumanReviewCallbackHandler` 写入 `HumanReviewRepository`

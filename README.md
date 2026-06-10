@@ -82,7 +82,7 @@ Run the sample apps:
 ```
 
 The JDBC batch input path uses standard `DriverManager`; add the target database driver to the sample runtime classpath before running against a real database. See `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql` for the anonymized view contract.
-Batch reports include total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume` and `external-decisions` review modes use the real suspended-run resume path and derive approval latency from review task timestamps.
+Batch reports include total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume` and `external-decisions` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations should write decisions through `HumanReviewCallbackHandler`.
 
 ## Documentation
 

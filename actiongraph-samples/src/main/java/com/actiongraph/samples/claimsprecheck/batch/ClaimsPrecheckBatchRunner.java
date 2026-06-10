@@ -14,6 +14,8 @@ import com.actiongraph.policy.AmountLimitPolicy;
 import com.actiongraph.policy.AmountLimitRule;
 import com.actiongraph.policy.AutoApproveHumanReviewPolicy;
 import com.actiongraph.policy.DefaultPolicyGuard;
+import com.actiongraph.policy.HumanReviewCallback;
+import com.actiongraph.policy.HumanReviewCallbackHandler;
 import com.actiongraph.policy.HumanReviewDecision;
 import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewTask;
@@ -123,6 +125,7 @@ public final class ClaimsPrecheckBatchRunner {
         AmountExtractor amountExtractor = claimPayoutAmountExtractor();
         InMemorySuspendedRunRepository suspendedRuns = new InMemorySuspendedRunRepository();
         InMemoryHumanReviewRepository reviewRepository = new InMemoryHumanReviewRepository();
+        HumanReviewCallbackHandler callbackHandler = new HumanReviewCallbackHandler(reviewRepository);
         GoapExecutor executor = GoapExecutor.builder()
                 .policyGuard(new DefaultPolicyGuard(new AmountLimitPolicy(amountExtractor, limitRules)))
                 .humanReviewPolicy(timing.wrapHumanReviewPolicy(
@@ -137,7 +140,16 @@ public final class ClaimsPrecheckBatchRunner {
         long start = System.nanoTime();
         RunResult result = executor.run(ClaimsPrecheckGoals.prepareClaimPayoutApplication(),
                 blackboard, actions, registry);
-        result = resumeApprovedReviews(batchCase.claimId(), result, executor, actions, registry, reviewRepository, timing);
+        result = resumeApprovedReviews(
+                batchCase.claimId(),
+                result,
+                executor,
+                actions,
+                registry,
+                reviewRepository,
+                callbackHandler,
+                timing
+        );
         long elapsed = System.nanoTime() - start;
 
         var traceEvents = traceRepository.findByRun(result.runId());
@@ -186,6 +198,7 @@ public final class ClaimsPrecheckBatchRunner {
             List<Action> actions,
             DefaultActionRegistry registry,
             InMemoryHumanReviewRepository reviewRepository,
+            HumanReviewCallbackHandler callbackHandler,
             TimingRecorder timing
     ) {
         RunResult current = result;
@@ -198,17 +211,14 @@ public final class ClaimsPrecheckBatchRunner {
                             "No pending review task found for suspended run " + runId));
             ClaimsPrecheckBatchReviewDecision reviewDecision = reviewDecision(claimId, task);
             waitForExternalReview(reviewDecision.decisionDelayMillis());
-            reviewRepository.decideStage(
-                    task.runId(),
+            HumanReviewTask decidedTask = callbackHandler.handle(new HumanReviewCallback(
+                    runId,
                     task.actionId(),
                     task.currentStageIndex(),
                     reviewDecision.decision(),
                     reviewDecision.reviewer(),
                     reviewDecision.comment()
-            );
-            HumanReviewTask decidedTask = reviewRepository.find(task.runId(), task.actionId())
-                    .orElseThrow(() -> new IllegalStateException(
-                            "No decided review task found for " + task.runId() + "/" + task.actionId().value()));
+            ));
             timing.recordReviewTaskWait(task, decidedTask);
             current = executor.resume(current.runId(), actions, registry);
         }
