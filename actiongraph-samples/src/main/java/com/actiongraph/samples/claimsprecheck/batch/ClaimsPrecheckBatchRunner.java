@@ -37,16 +37,24 @@ public final class ClaimsPrecheckBatchRunner {
     private final List<AmountLimitRule> limitRules;
 
     public ClaimsPrecheckBatchRunner() {
-        this(List.of(new AmountLimitRule(
-                APPROVAL_ACTION_ID.value(),
-                "CNY",
-                new BigDecimal("1000000"),
-                new BigDecimal("100000")
-        )));
+        this(defaultLimitRules());
     }
 
     public ClaimsPrecheckBatchRunner(List<AmountLimitRule> limitRules) {
         this.limitRules = List.copyOf(limitRules);
+    }
+
+    public List<AmountLimitRule> limitRules() {
+        return limitRules;
+    }
+
+    public static List<AmountLimitRule> defaultLimitRules() {
+        return List.of(new AmountLimitRule(
+                APPROVAL_ACTION_ID.value(),
+                "CNY",
+                new BigDecimal("1000000"),
+                new BigDecimal("100000")
+        ));
     }
 
     public ClaimsPrecheckBatchMetrics run(List<ClaimsPrecheckBatchCase> cases) {

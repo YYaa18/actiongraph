@@ -65,7 +65,7 @@ traceEvents=21
 
 ```bash
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
-  --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck"
+  --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-001 --environment local"
 ```
 
 实跑结果摘要：
@@ -84,6 +84,7 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 - `claims-precheck-report.md`：业务可读指标摘要与明细表
 - `claims-precheck-results.csv`：每个样本的状态、是否拦截、审计完整性、trace 事件数、运行耗时
+- 报告头包含 batch id、environment、sample source 和当前限额参数
 
 当前指标口径：
 
@@ -93,8 +94,7 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 ## F1 Next
 
-下一刀应把报告从样例输出推进到业务方可复用的数据资产：
+下一刀应继续把报告推进到更贴近生产的数据资产：
 
 - 支持从数据库读取理赔样本，而不只读取 CSV 文件
-- 给报告增加批次号、样本来源、环境信息和参数配置
 - 将业务服务耗时、框架耗时、审批等待耗时从当前端到端耗时中拆成独立字段

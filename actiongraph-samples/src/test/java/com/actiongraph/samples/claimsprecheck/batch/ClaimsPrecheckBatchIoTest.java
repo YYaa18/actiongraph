@@ -19,13 +19,24 @@ class ClaimsPrecheckBatchIoTest {
         Path input = bundledCsv();
         var cases = ClaimsPrecheckBatchCsv.readCases(input);
         ClaimsPrecheckBatchMetrics metrics = new ClaimsPrecheckBatchRunner().run(cases);
+        ClaimsPrecheckBatchReportMetadata metadata = new ClaimsPrecheckBatchReportMetadata(
+                "BATCH-20260610",
+                input.toString(),
+                "test",
+                ClaimsPrecheckBatchRunner.defaultLimitRules()
+        );
 
-        new ClaimsPrecheckBatchReportWriter().write(tempDir, metrics);
+        new ClaimsPrecheckBatchReportWriter().write(tempDir, metrics, metadata);
 
         Path markdown = tempDir.resolve(ClaimsPrecheckBatchReportWriter.MARKDOWN_REPORT);
         Path csv = tempDir.resolve(ClaimsPrecheckBatchReportWriter.CSV_RESULTS);
         assertThat(Files.readString(markdown))
                 .contains("Total Runs: 5")
+                .contains("Batch ID: BATCH-20260610")
+                .contains("Environment: test")
+                .contains("Sample Source: " + input)
+                .contains("claim.approval.request")
+                .contains("1000000")
                 .contains("Intercept Rate: 60.00%")
                 .contains("Audit Completeness Rate: 100.00%");
         assertThat(Files.readString(csv))

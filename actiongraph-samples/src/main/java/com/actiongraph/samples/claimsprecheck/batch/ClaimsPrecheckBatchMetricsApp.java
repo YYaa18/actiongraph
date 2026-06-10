@@ -1,6 +1,7 @@
 package com.actiongraph.samples.claimsprecheck.batch;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -16,9 +17,15 @@ public final class ClaimsPrecheckBatchMetricsApp {
         List<ClaimsPrecheckBatchCase> cases = appArgs.input() == null
                 ? ClaimsPrecheckBatchRunner.defaultCases()
                 : ClaimsPrecheckBatchCsv.readCases(appArgs.input());
-        ClaimsPrecheckBatchMetrics metrics = new ClaimsPrecheckBatchRunner()
-                .run(cases);
-        new ClaimsPrecheckBatchReportWriter().write(appArgs.reportDir(), metrics);
+        ClaimsPrecheckBatchRunner runner = new ClaimsPrecheckBatchRunner();
+        ClaimsPrecheckBatchMetrics metrics = runner.run(cases);
+        ClaimsPrecheckBatchReportMetadata metadata = new ClaimsPrecheckBatchReportMetadata(
+                appArgs.batchId(),
+                appArgs.sampleSource(),
+                appArgs.environment(),
+                runner.limitRules()
+        );
+        new ClaimsPrecheckBatchReportWriter().write(appArgs.reportDir(), metrics, metadata);
         System.out.println("claimsPrecheckBatch totalRuns=" + metrics.totalRuns()
                 + ", completed=" + metrics.completedRuns()
                 + ", intercepted=" + metrics.interceptedRuns()
@@ -35,6 +42,9 @@ public final class ClaimsPrecheckBatchMetricsApp {
                         + ", traceEvents=" + result.traceEventCount()
                         + ", elapsedMs=" + String.format(Locale.ROOT, "%.3f", result.elapsedMillis())
         ));
+        System.out.println("batchId=" + metadata.batchId()
+                + ", environment=" + metadata.environment()
+                + ", sampleSource=" + metadata.sampleSource());
         System.out.println("reportDir=" + appArgs.reportDir().toAbsolutePath());
     }
 
@@ -42,10 +52,16 @@ public final class ClaimsPrecheckBatchMetricsApp {
         return String.format(Locale.ROOT, "%.2f%%", value);
     }
 
-    private record AppArgs(Path input, Path reportDir) {
+    private record AppArgs(Path input, Path reportDir, String batchId, String environment) {
+        String sampleSource() {
+            return input == null ? "built-in-default-cases" : input.toString();
+        }
+
         static AppArgs parse(String[] args) {
             Path input = null;
             Path reportDir = DEFAULT_REPORT_DIR;
+            String batchId = "claims-precheck-" + Instant.now().toEpochMilli();
+            String environment = System.getenv().getOrDefault("ACTIONGRAPH_ENV", "local");
             List<String> tokens = new ArrayList<>(List.of(args));
             for (int i = 0; i < tokens.size(); i++) {
                 String token = tokens.get(i);
@@ -53,11 +69,15 @@ public final class ClaimsPrecheckBatchMetricsApp {
                     input = Path.of(nextValue(tokens, ++i, "--input"));
                 } else if ("--report-dir".equals(token)) {
                     reportDir = Path.of(nextValue(tokens, ++i, "--report-dir"));
+                } else if ("--batch-id".equals(token)) {
+                    batchId = nextValue(tokens, ++i, "--batch-id");
+                } else if ("--environment".equals(token)) {
+                    environment = nextValue(tokens, ++i, "--environment");
                 } else {
                     throw new IllegalArgumentException("Unknown argument: " + token);
                 }
             }
-            return new AppArgs(input, reportDir);
+            return new AppArgs(input, reportDir, batchId, environment);
         }
 
         private static String nextValue(List<String> tokens, int index, String option) {

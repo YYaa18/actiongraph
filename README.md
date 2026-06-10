@@ -75,7 +75,7 @@ Run the sample apps:
 ./gradlew :actiongraph-samples:run --args="--approve-human-review Prepare renewal quote for C123"
 ./gradlew :actiongraph-samples:runOrderCancellationSample --args="--approve-human-review Cancel order O100"
 ./gradlew :actiongraph-samples:runClaimsPrecheckSample --args="--approve-human-review Prepare payout application for claim CLM100"
-./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck"
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-001 --environment local"
 ```
 
 ## Documentation

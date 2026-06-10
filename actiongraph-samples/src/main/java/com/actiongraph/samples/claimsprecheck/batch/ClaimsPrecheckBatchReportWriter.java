@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -13,21 +14,33 @@ public final class ClaimsPrecheckBatchReportWriter {
     public static final String CSV_RESULTS = "claims-precheck-results.csv";
 
     public void write(Path reportDir, ClaimsPrecheckBatchMetrics metrics) {
+        write(reportDir, metrics, ClaimsPrecheckBatchReportMetadata.defaults(List.of()));
+    }
+
+    public void write(
+            Path reportDir,
+            ClaimsPrecheckBatchMetrics metrics,
+            ClaimsPrecheckBatchReportMetadata metadata
+    ) {
         Objects.requireNonNull(reportDir, "reportDir");
         Objects.requireNonNull(metrics, "metrics");
+        Objects.requireNonNull(metadata, "metadata");
         try {
             Files.createDirectories(reportDir);
-            Files.writeString(reportDir.resolve(MARKDOWN_REPORT), markdown(metrics), StandardCharsets.UTF_8);
+            Files.writeString(reportDir.resolve(MARKDOWN_REPORT), markdown(metrics, metadata), StandardCharsets.UTF_8);
             ClaimsPrecheckBatchCsv.writeResults(reportDir.resolve(CSV_RESULTS), metrics);
         } catch (IOException ex) {
             throw new IllegalStateException("Cannot write claims precheck report to " + reportDir, ex);
         }
     }
 
-    private String markdown(ClaimsPrecheckBatchMetrics metrics) {
+    private String markdown(ClaimsPrecheckBatchMetrics metrics, ClaimsPrecheckBatchReportMetadata metadata) {
         StringBuilder builder = new StringBuilder();
         builder.append("# Claims Precheck Batch Metrics\n\n");
         builder.append("- Generated At: ").append(Instant.now()).append("\n");
+        builder.append("- Batch ID: ").append(metadata.batchId()).append("\n");
+        builder.append("- Environment: ").append(metadata.environment()).append("\n");
+        builder.append("- Sample Source: ").append(metadata.sampleSource()).append("\n");
         builder.append("- Total Runs: ").append(metrics.totalRuns()).append("\n");
         builder.append("- Completed: ").append(metrics.completedRuns()).append("\n");
         builder.append("- Intercepted: ").append(metrics.interceptedRuns()).append("\n");
@@ -38,6 +51,22 @@ public final class ClaimsPrecheckBatchReportWriter {
         builder.append("- Average Runtime Ms: ")
                 .append(String.format(Locale.ROOT, "%.3f", metrics.averageRuntimeMillis()))
                 .append("\n\n");
+        if (!metadata.limitRules().isEmpty()) {
+            builder.append("## Limit Rules\n\n");
+            builder.append("| Action ID | Currency | Review Limit | Hard Limit |\n");
+            builder.append("|---|---:|---:|---:|\n");
+            metadata.limitRules().forEach(rule -> builder.append("| ")
+                    .append(rule.actionId())
+                    .append(" | ")
+                    .append(rule.currency())
+                    .append(" | ")
+                    .append(rule.reviewLimit().toPlainString())
+                    .append(" | ")
+                    .append(rule.hardLimit().toPlainString())
+                    .append(" |\n"));
+            builder.append("\n");
+        }
+        builder.append("## Case Results\n\n");
         builder.append("| Claim ID | Status | Intercepted | Audit Complete | Trace Events | Runtime Ms |\n");
         builder.append("|---|---:|---:|---:|---:|---:|\n");
         for (ClaimsPrecheckCaseResult result : metrics.caseResults()) {
