@@ -6,6 +6,8 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.DriverManager;
+import java.sql.Statement;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,6 +72,31 @@ class ClaimsPrecheckBatchJdbcTest {
                 .isEqualTo("jdbc:postgresql://db.example/claims?user=demo&password=***");
     }
 
+    @Test
+    void readsAnonymizedClaimsPrecheckViewContract() throws Exception {
+        String url = "jdbc:h2:mem:claims_precheck_contract_" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1";
+        runScript(url, "/sql/claims-precheck-source-contract.sql");
+
+        var cases = ClaimsPrecheckBatchJdbc.readCases(new ClaimsPrecheckBatchJdbcInput(url, "", "", null));
+
+        assertThat(cases)
+                .extracting(ClaimsPrecheckBatchCase::claimId)
+                .containsExactly("CLM901", "CLM902", "CLM903", "CLM904", "CLM905");
+        assertThat(cases)
+                .extracting(ClaimsPrecheckBatchCase::claimedAmount)
+                .allSatisfy(amount -> assertThat(amount.remainder(new java.math.BigDecimal("1000")))
+                        .isEqualByComparingTo("0"));
+        assertThat(cases.get(1).missingInvoice()).isTrue();
+        assertThat(cases.get(2).closed()).isTrue();
+        assertThat(cases.get(3).expectedIntercept()).isTrue();
+
+        ClaimsPrecheckBatchMetrics metrics = new ClaimsPrecheckBatchRunner().run(cases);
+        assertThat(metrics.totalRuns()).isEqualTo(5);
+        assertThat(metrics.completedRuns()).isEqualTo(1);
+        assertThat(metrics.interceptedRuns()).isEqualTo(3);
+        assertThat(metrics.auditCompletenessRate()).isEqualTo(100.0);
+    }
+
     private String seededDatabase() throws Exception {
         String url = "jdbc:h2:mem:claims_precheck_" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1";
         try (var connection = DriverManager.getConnection(url);
@@ -94,5 +121,13 @@ class ClaimsPrecheckBatchJdbcTest {
                     """);
         }
         return url;
+    }
+
+    private void runScript(String url, String resource) throws Exception {
+        Path script = Path.of(Objects.requireNonNull(getClass().getResource(resource)).toURI());
+        try (var connection = DriverManager.getConnection(url);
+             Statement statement = connection.createStatement()) {
+            statement.execute("RUNSCRIPT FROM '" + script.toAbsolutePath().toString().replace("\\", "/") + "'");
+        }
     }
 }

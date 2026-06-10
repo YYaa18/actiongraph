@@ -79,6 +79,12 @@ traceEvents=21
 
 JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_amount`、`missing_invoice`、`closed`、`approval_fails`、`expected_intercept`；也可以通过 `--jdbc-query` 传入自定义 SQL，只要结果列可映射到这些字段即可。`--jdbc-password` 可用于本地验证，报告里的 sample source 会对 URL 中的 password/pwd 参数脱敏。连接真实数据库时，需要把对应 JDBC 驱动加入样例运行 classpath。
 
+真实库接入时推荐暴露一个脱敏视图而不是让 ActionGraph 直接读业务原表。参考脚本：
+
+- `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql`
+
+这个脚本给出源表字段、脱敏视图 `claims_precheck_cases`、金额千元取整和敏感字段隔离示例；测试会用 H2 执行脚本并通过默认 JDBC reader 读取视图，保证契约可运行。
+
 `--review-mode suspend-resume` 会使用 `RepositoryBackedHumanReviewPolicy` 和 `SuspendedRunRepository` 跑真实的挂起/恢复路径；`--simulate-review-wait-ms` 用于在 demo 或压测中模拟审批系统回调延迟，`reviewWaitMs` 从 `HumanReviewTask.updatedAt` 时间线计算，接真实审批回调时可以复用同一口径。
 
 `--review-decisions` 读取审批决策 CSV，字段为 `claimId`、`actionId`、`stageIndex`、`decision`、`reviewer`、`comment`、`decisionDelayMs`。运行时按 `claimId + actionId + stageIndex` 匹配 pending task，找不到匹配项会 fail-fast，避免审批样本静默漏配。
@@ -114,5 +120,5 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 下一刀应继续把报告推进到更贴近生产的数据资产：
 
-- 接入真实数据库表或视图，并沉淀脱敏抽样脚本
+- 将脱敏视图契约映射到一家真实业务库，并补充对应数据库方言版本
 - 把 `--review-decisions` 替换为真实审批系统回调消费者，并将回调结果写入 `HumanReviewRepository`
