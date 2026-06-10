@@ -113,6 +113,7 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 - `claims-precheck-report.md`：业务可读指标摘要与明细表
 - `claims-precheck-results.csv`：每个样本的状态、是否拦截、审计完整性、trace 事件数、运行耗时与耗时拆分
+- `claims-precheck-console.html`：只读运行监控 console，展示批次元数据、核心指标、审计完整率、耗时拆分和逐案明细
 - 报告头包含 batch id、environment、sample source、review mode、模拟审批等待、外部审批输入数量和当前限额参数；sample source 可以来自 CSV 路径或 JDBC URL
 
 当前指标口径：
@@ -130,3 +131,4 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 - 基于 PostgreSQL 方言契约连接真实/准真实保险库，记录字段映射差异和数据库权限验收结果
 - 将 JSONL 审批回调样板替换为真实/准真实审批系统回调源，记录联调环境的 Header 鉴权、重复投递、乱序/过期 stage 和消息重试验收结果
+- 把静态 HTML console 替换为读取 JDBC repository 的只读服务，补充鉴权、分页、筛选、审计留痕查询和保留期策略

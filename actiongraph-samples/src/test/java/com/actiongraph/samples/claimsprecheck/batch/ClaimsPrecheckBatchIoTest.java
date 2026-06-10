@@ -40,6 +40,7 @@ class ClaimsPrecheckBatchIoTest {
 
         Path markdown = tempDir.resolve(ClaimsPrecheckBatchReportWriter.MARKDOWN_REPORT);
         Path csv = tempDir.resolve(ClaimsPrecheckBatchReportWriter.CSV_RESULTS);
+        Path html = tempDir.resolve(ClaimsPrecheckBatchReportWriter.HTML_CONSOLE);
         assertThat(Files.readString(markdown))
                 .contains("Total Runs: 5")
                 .contains("Batch ID: BATCH-20260610")
@@ -56,6 +57,15 @@ class ClaimsPrecheckBatchIoTest {
         assertThat(Files.readString(csv))
                 .contains("claimId,status,businessIntercepted,auditComplete,elapsedMs,businessActionMs,frameworkMs,reviewWaitMs")
                 .contains("CLM103,DENIED_BY_POLICY,true,true");
+        assertThat(Files.readString(html))
+                .contains("<title>ActionGraph Claims Precheck Console</title>")
+                .contains("Claims Precheck Read-Only Console")
+                .contains("Batch: BATCH-20260610")
+                .contains("Audit Complete")
+                .contains("Case Results")
+                .contains("CLM100")
+                .contains("DENIED_BY_POLICY")
+                .contains("External review inputs: 0");
     }
 
     @Test

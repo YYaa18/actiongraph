@@ -109,7 +109,7 @@ Run the sample apps:
 
 The JDBC batch input path uses standard `DriverManager`; add the target database driver to the sample runtime classpath before running against a real database. See `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql` for the anonymized view contract.
 For PostgreSQL staging connections, see the dialect mapping in `actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql` and [Claims Precheck PostgreSQL Mapping](docs/frameworkization/claims-precheck-postgresql.md).
-Batch reports include total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` or enable the Spring Boot callback endpoint above.
+Batch reports include Markdown, CSV, and a read-only HTML console with total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` or enable the Spring Boot callback endpoint above.
 The `external-callbacks` mode replays JSONL approval callback deliveries through `HumanReviewCallbackHandler`, including shared-secret checks and duplicate-delivery idempotency.
 
 ## Documentation
@@ -118,6 +118,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Real LLM smoke test](docs/frameworkization/llm-smoke.md)
 - [Claims precheck PostgreSQL mapping](docs/frameworkization/claims-precheck-postgresql.md)
 - [Claims precheck review callbacks](docs/frameworkization/claims-precheck-review-callbacks.md)
+- [Claims precheck read-only console](docs/frameworkization/claims-precheck-console.md)
 - [Framework notes](docs/frameworkization/)
 - [Original PRD](docs/PRD-v0.md)
 - [F0 financialization PRD](docs/PRD-F0-finance.md)

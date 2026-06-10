@@ -148,7 +148,7 @@ public void voidDraft(CancellationRequestDraft draft) {
 ```
 
 JDBC 批量输入使用标准 `DriverManager`；连接真实数据库前，需要把目标数据库驱动加入样例运行 classpath。脱敏视图契约见 `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql`，PostgreSQL 方言映射见 `actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql` 和 [Claims Precheck PostgreSQL Mapping](docs/frameworkization/claims-precheck-postgresql.md)。
-批量报告会按样本拆出总耗时、业务 Action 耗时、框架调度耗时和审批等待耗时；`suspend-resume` / `external-decisions` / `external-callbacks` 审批模式会走真实挂起/恢复路径，并从审批任务时间戳计算等待。`external-callbacks` 会把 JSONL 审批回调投递交给 `HumanReviewCallbackHandler`，覆盖共享密钥校验和重复投递幂等。生产审批系统可以通过 `HumanReviewCallbackHandler` 写入审批结果，也可以启用 Spring Boot 回调端点接收 HTTP 回调。
+批量报告会输出 Markdown、CSV 和只读 HTML console，按样本拆出总耗时、业务 Action 耗时、框架调度耗时和审批等待耗时；`suspend-resume` / `external-decisions` / `external-callbacks` 审批模式会走真实挂起/恢复路径，并从审批任务时间戳计算等待。`external-callbacks` 会把 JSONL 审批回调投递交给 `HumanReviewCallbackHandler`，覆盖共享密钥校验和重复投递幂等。生产审批系统可以通过 `HumanReviewCallbackHandler` 写入审批结果，也可以启用 Spring Boot 回调端点接收 HTTP 回调。
 
 ## 设计边界
 
@@ -171,7 +171,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - 支持 Spring Boot 注解式接入。
 - 支持 suspend / resume、JDBC persistence、human review、structured memory。
 - F0 内核金融化完成：Trace/审批预览敏感数据脱敏、审计链防篡改、多级审批链、单笔额度策略。
-- F1 已进入场景打穿：理赔资料预审 + 赔付申请草稿样板域已跑通，可从 CSV 或 JDBC 样本、PostgreSQL 脱敏视图映射、外部审批决策或 JSONL 回调输出带批次、环境、样本来源、限额参数、审批模式和耗时拆分的 Markdown/CSV 指标报告。
+- F1 已进入场景打穿：理赔资料预审 + 赔付申请草稿样板域已跑通，可从 CSV 或 JDBC 样本、PostgreSQL 脱敏视图映射、外部审批决策或 JSONL 回调输出带批次、环境、样本来源、限额参数、审批模式和耗时拆分的 Markdown/CSV/HTML 指标报告。
 
 ## 文档
 
@@ -179,6 +179,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - [真实 LLM 冒烟测试](docs/frameworkization/llm-smoke.md)
 - [理赔预审 PostgreSQL 映射](docs/frameworkization/claims-precheck-postgresql.md)
 - [理赔预审审批回调重放](docs/frameworkization/claims-precheck-review-callbacks.md)
+- [理赔预审只读 Console](docs/frameworkization/claims-precheck-console.md)
 - [技术汇报演示文档](docs/actiongraph-pitch.html)
 - [框架化笔记](docs/frameworkization/)
 - [原始 PRD](docs/PRD-v0.md)
