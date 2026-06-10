@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -55,6 +56,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
                 + "plan_preview_json clob not null,"
                 + "current_state_json clob not null,"
                 + "blackboard_preview_json clob not null,"
+                + "attributes_json clob,"
                 + "decision varchar(64) not null,"
                 + "reviewer varchar(256) not null,"
                 + "message clob not null,"
@@ -71,6 +73,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             ensureColumn(connection, "stages_json", "clob");
             ensureColumn(connection, "current_stage_index", "int");
             ensureColumn(connection, "stage_decisions_json", "clob");
+            ensureColumn(connection, "attributes_json", "clob");
         } catch (SQLException ex) {
             throw new IllegalStateException("Cannot initialize human review repository schema", ex);
         }
@@ -87,9 +90,9 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
         }
         String sql = "insert into " + table
                 + " (run_id, action_id, risk_level, required_by_action, plan_preview_json, current_state_json, "
-                + "blackboard_preview_json, decision, reviewer, message, created_at, updated_at, "
+                + "blackboard_preview_json, attributes_json, decision, reviewer, message, created_at, updated_at, "
                 + "stages_json, current_stage_index, stage_decisions_json) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             bindTask(statement, task);
@@ -208,7 +211,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
 
     private String selectSql() {
         return "select run_id, action_id, risk_level, required_by_action, plan_preview_json, current_state_json, "
-                + "blackboard_preview_json, decision, reviewer, message, created_at, updated_at, "
+                + "blackboard_preview_json, attributes_json, decision, reviewer, message, created_at, updated_at, "
                 + "stages_json, current_stage_index, stage_decisions_json from " + table;
     }
 
@@ -234,6 +237,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
                 codec.readActionIds(resultSet.getString("plan_preview_json")),
                 codec.readConditions(resultSet.getString("current_state_json")),
                 codec.readTraceData(resultSet.getString("blackboard_preview_json")),
+                readAttributes(resultSet.getString("attributes_json")),
                 decision,
                 resultSet.getString("reviewer"),
                 resultSet.getString("message"),
@@ -253,14 +257,22 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
         statement.setString(5, codec.writeActionIds(task.planPreview()));
         statement.setString(6, codec.writeConditions(task.currentState()));
         statement.setString(7, codec.writeTraceData(task.blackboardPreview()));
-        statement.setString(8, task.decision().name());
-        statement.setString(9, task.reviewer());
-        statement.setString(10, task.message());
-        statement.setString(11, task.createdAt().toString());
-        statement.setString(12, task.updatedAt().toString());
-        statement.setString(13, codec.writeApprovalStages(task.stages()));
-        statement.setInt(14, task.currentStageIndex());
-        statement.setString(15, codec.writeStageDecisions(task.stageDecisions()));
+        statement.setString(8, codec.writeTraceData(task.attributes()));
+        statement.setString(9, task.decision().name());
+        statement.setString(10, task.reviewer());
+        statement.setString(11, task.message());
+        statement.setString(12, task.createdAt().toString());
+        statement.setString(13, task.updatedAt().toString());
+        statement.setString(14, codec.writeApprovalStages(task.stages()));
+        statement.setInt(15, task.currentStageIndex());
+        statement.setString(16, codec.writeStageDecisions(task.stageDecisions()));
+    }
+
+    private Map<String, String> readAttributes(String json) {
+        if (json == null || json.isBlank()) {
+            return Map.of();
+        }
+        return codec.readTraceData(json);
     }
 
     private List<ApprovalStage> readStages(String json) {

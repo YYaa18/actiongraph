@@ -15,11 +15,16 @@ import com.actiongraph.samples.renewal.service.InMemoryCustomerService;
 import com.actiongraph.samples.renewal.service.InMemoryQuoteService;
 import com.actiongraph.samples.renewal.service.InMemoryRenewalPolicyService;
 import com.actiongraph.planning.GoapPlanner;
+import com.actiongraph.policy.AmountAttributeContributor;
+import com.actiongraph.policy.AmountExtractor;
+import com.actiongraph.policy.AmountLimitPolicy;
+import com.actiongraph.policy.AmountLimitRule;
 import com.actiongraph.policy.AutoApproveHumanReviewPolicy;
 import com.actiongraph.policy.DefaultPolicyGuard;
 import com.actiongraph.policy.DenyingHumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewDecision;
 import com.actiongraph.policy.InMemoryHumanReviewRepository;
+import com.actiongraph.policy.MonetaryAmount;
 import com.actiongraph.policy.PendingHumanReviewPolicy;
 import com.actiongraph.policy.PermissionPolicy;
 import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
@@ -29,9 +34,12 @@ import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceEventType;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CyclicBarrier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -239,6 +247,94 @@ class PolicyExecutionTest {
     }
 
     @Test
+    void amountHardLimitDeniesReviewedActionAndCompensatesDraft() {
+        Fixture fixture = fixture(new DefaultPolicyGuard(), null);
+        AmountExtractor amountExtractor = renewalQuoteAmountExtractor();
+        List<AmountLimitRule> rules = List.of(amountRule("sales.approval.request", "100000", "50000"));
+        DefaultPolicyGuard policyGuard = new DefaultPolicyGuard(new AmountLimitPolicy(amountExtractor, rules));
+        GoapExecutor executor = new GoapExecutor(
+                new GoapPlanner(),
+                policyGuard,
+                new AutoApproveHumanReviewPolicy(),
+                fixture.traceRepository()
+        );
+
+        RunResult result = executor.run(RenewalGoals.prepareRenewalQuote(),
+                fixture.blackboard(), fixture.actions(), fixture.registry());
+
+        assertThat(result.status()).isEqualTo(RunStatus.DENIED_BY_POLICY);
+        assertThat(fixture.blackboard().get(ApprovalRequest.class)).isEmpty();
+        assertThat(fixture.quoteService().voidedQuoteIds()).containsExactly("QUOTE-1");
+        assertThat(events(fixture, result, TraceEventType.POLICY_DENIED))
+                .extracting(TraceEvent::actionId)
+                .containsExactly("sales.approval.request");
+    }
+
+    @Test
+    void amountReviewLimitAddsEscalationAttributesAndApprovalStage() {
+        Fixture fixture = fixture(new DefaultPolicyGuard(), null);
+        InMemorySuspendedRunRepository suspendedRuns = new InMemorySuspendedRunRepository();
+        InMemoryHumanReviewRepository reviewRepository = new InMemoryHumanReviewRepository();
+        RepositoryBackedHumanReviewPolicy reviewPolicy = new RepositoryBackedHumanReviewPolicy(
+                reviewRepository,
+                new RiskBasedChainResolver()
+        );
+        AmountExtractor amountExtractor = renewalQuoteAmountExtractor();
+        List<AmountLimitRule> rules = List.of(amountRule("sales.approval.request", "1000000", "100000"));
+        GoapExecutor executor = GoapExecutor.builder()
+                .planner(new GoapPlanner())
+                .policyGuard(new DefaultPolicyGuard(new AmountLimitPolicy(amountExtractor, rules)))
+                .humanReviewPolicy(reviewPolicy)
+                .traceRepository(fixture.traceRepository())
+                .suspendedRunRepository(suspendedRuns)
+                .reviewAttributeContributor(new AmountAttributeContributor(amountExtractor, rules))
+                .build();
+
+        RunResult suspended = executor.run(RenewalGoals.prepareRenewalQuote(),
+                fixture.blackboard(), fixture.actions(), fixture.registry());
+
+        assertThat(suspended.status()).isEqualTo(RunStatus.SUSPENDED_PENDING_REVIEW);
+        assertThat(reviewRepository.findPending()).singleElement().satisfies(task -> {
+            assertThat(task.attributes()).containsExactlyInAnyOrderEntriesOf(Map.of(
+                    "amount", "120000",
+                    "currency", "CNY",
+                    "amountEscalated", "true"
+            ));
+            assertThat(task.stages()).extracting(stage -> stage.name())
+                    .containsExactly("checker-review", "authorization", "amount-authorization");
+        });
+    }
+
+    @Test
+    void amountBelowReviewLimitKeepsExistingApprovalChain() {
+        Fixture fixture = fixture(new DefaultPolicyGuard(), null);
+        InMemoryHumanReviewRepository reviewRepository = new InMemoryHumanReviewRepository();
+        RepositoryBackedHumanReviewPolicy reviewPolicy = new RepositoryBackedHumanReviewPolicy(
+                reviewRepository,
+                new RiskBasedChainResolver()
+        );
+        AmountExtractor amountExtractor = renewalQuoteAmountExtractor();
+        List<AmountLimitRule> rules = List.of(amountRule("sales.approval.request", "1000000", "200000"));
+        GoapExecutor executor = GoapExecutor.builder()
+                .planner(new GoapPlanner())
+                .policyGuard(new DefaultPolicyGuard(new AmountLimitPolicy(amountExtractor, rules)))
+                .humanReviewPolicy(reviewPolicy)
+                .traceRepository(fixture.traceRepository())
+                .reviewAttributeContributor(new AmountAttributeContributor(amountExtractor, rules))
+                .build();
+
+        RunResult suspended = executor.run(RenewalGoals.prepareRenewalQuote(),
+                fixture.blackboard(), fixture.actions(), fixture.registry());
+
+        assertThat(suspended.status()).isEqualTo(RunStatus.SUSPENDED_PENDING_REVIEW);
+        assertThat(reviewRepository.findPending()).singleElement().satisfies(task -> {
+            assertThat(task.attributes()).isEmpty();
+            assertThat(task.stages()).extracting(stage -> stage.name())
+                    .containsExactly("checker-review", "authorization");
+        });
+    }
+
+    @Test
     void resumedRunFailureCompensatesActionsFromBeforeSuspension() {
         Fixture fixture = fixture(new DefaultPolicyGuard(), null, true);
         InMemorySuspendedRunRepository suspendedRuns = new InMemorySuspendedRunRepository();
@@ -357,6 +453,25 @@ class PolicyExecutionTest {
         return fixture.traceRepository().findByRun(result.runId()).stream()
                 .filter(event -> event.type() == type)
                 .toList();
+    }
+
+    private AmountExtractor renewalQuoteAmountExtractor() {
+        return (action, blackboard) -> {
+            if (!action.id().equals(SALES_APPROVAL_REQUEST)) {
+                return Optional.empty();
+            }
+            return blackboard.get(QuoteDraft.class)
+                    .map(draft -> new MonetaryAmount(draft.premium(), draft.currency()));
+        };
+    }
+
+    private AmountLimitRule amountRule(String actionId, String hardLimit, String reviewLimit) {
+        return new AmountLimitRule(
+                actionId,
+                "CNY",
+                new BigDecimal(hardLimit),
+                new BigDecimal(reviewLimit)
+        );
     }
 
     private record Fixture(

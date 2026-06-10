@@ -1,11 +1,15 @@
 package com.actiongraph.spring;
 
 import com.actiongraph.planning.GoapPlanner;
+import com.actiongraph.policy.AmountLimitRule;
 import com.actiongraph.runtime.GoapExecutor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -17,6 +21,7 @@ public class ActionGraphProperties {
     private final PersistenceProperties persistence = new PersistenceProperties();
     private final MaskingProperties masking = new MaskingProperties();
     private final HumanReviewProperties humanReview = new HumanReviewProperties();
+    private final LimitsProperties limits = new LimitsProperties();
 
     public PlannerProperties getPlanner() {
         return planner;
@@ -40,6 +45,10 @@ public class ActionGraphProperties {
 
     public HumanReviewProperties getHumanReview() {
         return humanReview;
+    }
+
+    public LimitsProperties getLimits() {
+        return limits;
     }
 
     public static final class PlannerProperties {
@@ -133,6 +142,67 @@ public class ActionGraphProperties {
 
         public void setRiskBasedApprovalChain(boolean riskBasedApprovalChain) {
             this.riskBasedApprovalChain = riskBasedApprovalChain;
+        }
+    }
+
+    public static final class LimitsProperties {
+        private List<LimitRuleProperties> rules = new ArrayList<>();
+
+        public List<LimitRuleProperties> getRules() {
+            return rules;
+        }
+
+        public void setRules(List<LimitRuleProperties> rules) {
+            this.rules = rules == null ? new ArrayList<>() : new ArrayList<>(rules);
+        }
+
+        List<AmountLimitRule> toAmountLimitRules() {
+            return rules.stream()
+                    .map(LimitRuleProperties::toAmountLimitRule)
+                    .toList();
+        }
+    }
+
+    public static final class LimitRuleProperties {
+        private String actionId = AmountLimitRule.ANY_ACTION;
+        private String currency;
+        private BigDecimal hardLimit;
+        private BigDecimal reviewLimit;
+
+        public String getActionId() {
+            return actionId;
+        }
+
+        public void setActionId(String actionId) {
+            this.actionId = actionId;
+        }
+
+        public String getCurrency() {
+            return currency;
+        }
+
+        public void setCurrency(String currency) {
+            this.currency = currency;
+        }
+
+        public BigDecimal getHardLimit() {
+            return hardLimit;
+        }
+
+        public void setHardLimit(BigDecimal hardLimit) {
+            this.hardLimit = hardLimit;
+        }
+
+        public BigDecimal getReviewLimit() {
+            return reviewLimit;
+        }
+
+        public void setReviewLimit(BigDecimal reviewLimit) {
+            this.reviewLimit = reviewLimit;
+        }
+
+        AmountLimitRule toAmountLimitRule() {
+            return new AmountLimitRule(actionId, currency, hardLimit, reviewLimit);
         }
     }
 }

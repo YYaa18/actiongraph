@@ -59,7 +59,7 @@
 ### 裁决 E：核心 record 的 additive 变更清单（仅限以下四处，不得再多）
 1. `TraceEvent` + `String prevHash` + `String hash`（带默认空值的兼容构造器保留）；
 2. `HumanReviewRequest` + `Map<String,String> attributes`（默认空 map）;
-3. `HumanReviewTask` + 审批链字段（见 §5）；
+3. `HumanReviewTask` + 审批链字段与 review attributes 副本（见 §5/§6）；
 4. `GoapExecutor` 新增 Builder（构造参数已达 6 个，本期再加 2 个注入点；旧构造器全部保留并委托 Builder 默认值）。
 
 ---
@@ -150,6 +150,7 @@ List<ApprovalStage> stages,            // 本任务的审批链
 int currentStageIndex,                 // 0-based，当前待审级
 List<StageDecision> stageDecisions     // record StageDecision(String stage, HumanReviewDecision d,
                                        //        String reviewer, String comment, Instant at)
+Map<String,String> attributes           // 金额升级等审批展示/审计元数据
 ```
 `RepositoryBackedHumanReviewPolicy.review(request)` 语义：
 - 无任务 → resolve 链、建任务（currentStageIndex=0）→ 返回 PENDING；

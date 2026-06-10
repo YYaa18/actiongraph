@@ -36,6 +36,7 @@ class JdbcHumanReviewRepositoryTest {
             assertThat(restored.planPreview()).containsExactly(ACTION_ID);
             assertThat(restored.currentState()).containsExactly(Condition.of("risk:READY"));
             assertThat(restored.blackboardPreview()).containsEntry("customerId", "C001");
+            assertThat(restored.attributes()).isEmpty();
             assertThat(restored.decision()).isEqualTo(HumanReviewDecision.PENDING);
         });
 
@@ -99,6 +100,28 @@ class JdbcHumanReviewRepositoryTest {
     }
 
     @Test
+    void persistsReviewAttributes() {
+        JdbcHumanReviewRepository repository = new JdbcHumanReviewRepository(JdbcTestDataSources.h2());
+        HumanReviewTask task = HumanReviewTask.pending(request(
+                "RUN-AMOUNT",
+                Map.of(
+                        "amount", "120000",
+                        "currency", "CNY",
+                        "amountEscalated", "true"
+                )
+        ), "amount review");
+
+        repository.savePending(task);
+
+        assertThat(repository.find("RUN-AMOUNT", ACTION_ID)).get()
+                .satisfies(restored -> assertThat(restored.attributes()).containsExactlyInAnyOrderEntriesOf(Map.of(
+                        "amount", "120000",
+                        "currency", "CNY",
+                        "amountEscalated", "true"
+                )));
+    }
+
+    @Test
     void migratesLegacyReviewTableWithSingleStageDefaults() throws Exception {
         var dataSource = JdbcTestDataSources.h2();
         try (var connection = dataSource.getConnection();
@@ -134,6 +157,7 @@ class JdbcHumanReviewRepositoryTest {
                     .containsExactly("review");
             assertThat(restored.currentStageIndex()).isZero();
             assertThat(restored.stageDecisions()).isEmpty();
+            assertThat(restored.attributes()).isEmpty();
         });
     }
 
@@ -159,6 +183,10 @@ class JdbcHumanReviewRepositoryTest {
     }
 
     private HumanReviewRequest request(String runId) {
+        return request(runId, Map.of());
+    }
+
+    private HumanReviewRequest request(String runId, Map<String, String> attributes) {
         return new HumanReviewRequest(
                 runId,
                 ACTION_ID,
@@ -166,7 +194,8 @@ class JdbcHumanReviewRepositoryTest {
                 true,
                 new Plan(List.of(new PlanStep(ACTION_ID))),
                 Set.of(Condition.of("risk:READY")),
-                Map.of("customerId", "C001")
+                Map.of("customerId", "C001"),
+                attributes
         );
     }
 }

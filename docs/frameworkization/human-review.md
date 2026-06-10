@@ -81,7 +81,7 @@ HumanReviewRepository humanReviewRepository(DataSource dataSource) {
 }
 ```
 
-Set `actiongraph.human-review.risk-based-approval-chain=true` to use `RiskBasedChainResolver`: HIGH risk actions require checker review and authorization; other actions remain single-stage unless request attributes ask for amount escalation.
+Set `actiongraph.human-review.risk-based-approval-chain=true` to use `RiskBasedChainResolver`: HIGH risk actions require checker review and authorization; other actions remain single-stage unless request attributes ask for amount escalation. Review attributes are copied onto `HumanReviewTask`, so external approval systems can show why a task was escalated without recomputing business amounts.
 
 ## Semantics
 

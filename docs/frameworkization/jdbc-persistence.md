@@ -105,6 +105,7 @@ Human review repository:
 - plan preview action ids
 - current condition state
 - blackboard preview
+- review attributes such as amount escalation metadata
 - approval stages
 - current stage index
 - stage decisions

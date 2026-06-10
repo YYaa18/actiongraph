@@ -19,8 +19,10 @@ import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRequest;
 import com.actiongraph.policy.HumanReviewResult;
 import com.actiongraph.policy.NoopMaskingPolicy;
+import com.actiongraph.policy.NoopReviewAttributeContributor;
 import com.actiongraph.policy.PendingHumanReviewPolicy;
 import com.actiongraph.policy.PolicyDecision;
+import com.actiongraph.policy.ReviewAttributeContributor;
 import com.actiongraph.trace.InMemoryTraceRepository;
 import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceEventType;
@@ -52,6 +54,7 @@ public final class GoapExecutor implements Executor {
     private final TraceRepository traceRepository;
     private final SuspendedRunRepository suspendedRunRepository;
     private final DataMaskingPolicy maskingPolicy;
+    private final ReviewAttributeContributor reviewAttributeContributor;
     private final int maxSteps;
 
     public GoapExecutor() {
@@ -103,7 +106,7 @@ public final class GoapExecutor implements Executor {
             int maxSteps
     ) {
         this(planner, policyGuard, humanReviewPolicy, traceRepository, suspendedRunRepository,
-                NoopMaskingPolicy.INSTANCE, maxSteps);
+                NoopMaskingPolicy.INSTANCE, NoopReviewAttributeContributor.INSTANCE, maxSteps);
     }
 
     private GoapExecutor(
@@ -113,6 +116,7 @@ public final class GoapExecutor implements Executor {
             TraceRepository traceRepository,
             SuspendedRunRepository suspendedRunRepository,
             DataMaskingPolicy maskingPolicy,
+            ReviewAttributeContributor reviewAttributeContributor,
             int maxSteps
     ) {
         if (maxSteps <= 0) {
@@ -124,6 +128,7 @@ public final class GoapExecutor implements Executor {
         this.traceRepository = Objects.requireNonNull(traceRepository, "traceRepository");
         this.suspendedRunRepository = Objects.requireNonNull(suspendedRunRepository, "suspendedRunRepository");
         this.maskingPolicy = Objects.requireNonNull(maskingPolicy, "maskingPolicy");
+        this.reviewAttributeContributor = Objects.requireNonNull(reviewAttributeContributor, "reviewAttributeContributor");
         this.maxSteps = maxSteps;
     }
 
@@ -330,6 +335,9 @@ public final class GoapExecutor implements Executor {
                                         .collect(Collectors.joining(","))
                         ));
                 trace.flush();
+                Map<String, String> attributes = maskingPolicy.maskData(
+                        reviewAttributeContributor.contribute(action, blackboard)
+                );
                 HumanReviewResult review = humanReviewPolicy.review(new HumanReviewRequest(
                         runId,
                         action.id(),
@@ -337,7 +345,8 @@ public final class GoapExecutor implements Executor {
                         action.requiresHumanReview(),
                         plan,
                         state,
-                        maskingPolicy.maskData(objectPreview(blackboard.snapshotEntries()))
+                        maskingPolicy.maskData(objectPreview(blackboard.snapshotEntries())),
+                        attributes
                 ));
                 trace.append(TraceEventType.HUMAN_REVIEW_DECIDED, action.id(),
                         review.message(), Map.of(
@@ -583,6 +592,7 @@ public final class GoapExecutor implements Executor {
         private TraceRepository traceRepository = new InMemoryTraceRepository();
         private SuspendedRunRepository suspendedRunRepository = new InMemorySuspendedRunRepository();
         private DataMaskingPolicy maskingPolicy = NoopMaskingPolicy.INSTANCE;
+        private ReviewAttributeContributor reviewAttributeContributor = NoopReviewAttributeContributor.INSTANCE;
         private int maxSteps = DEFAULT_MAX_STEPS;
 
         public Builder planner(Planner planner) {
@@ -615,6 +625,11 @@ public final class GoapExecutor implements Executor {
             return this;
         }
 
+        public Builder reviewAttributeContributor(ReviewAttributeContributor reviewAttributeContributor) {
+            this.reviewAttributeContributor = Objects.requireNonNull(reviewAttributeContributor, "reviewAttributeContributor");
+            return this;
+        }
+
         public Builder maxSteps(int maxSteps) {
             this.maxSteps = maxSteps;
             return this;
@@ -628,6 +643,7 @@ public final class GoapExecutor implements Executor {
                     traceRepository,
                     suspendedRunRepository,
                     maskingPolicy,
+                    reviewAttributeContributor,
                     maxSteps
             );
         }

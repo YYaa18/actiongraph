@@ -14,13 +14,21 @@ import com.actiongraph.memory.MemoryContextLoader;
 import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
+import com.actiongraph.policy.AmountAttributeContributor;
+import com.actiongraph.policy.AmountExtractor;
+import com.actiongraph.policy.AmountLimitPolicy;
 import com.actiongraph.policy.ApprovalChainResolver;
 import com.actiongraph.policy.DataMaskingPolicy;
+import com.actiongraph.policy.DefaultPermissionPolicy;
 import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.policy.InMemoryHumanReviewRepository;
+import com.actiongraph.policy.NoopAmountExtractor;
 import com.actiongraph.policy.NoopMaskingPolicy;
+import com.actiongraph.policy.NoopReviewAttributeContributor;
+import com.actiongraph.policy.PermissionPolicy;
 import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
+import com.actiongraph.policy.ReviewAttributeContributor;
 import com.actiongraph.policy.RiskBasedChainResolver;
 import com.actiongraph.policy.SingleStageApprovalChainResolver;
 import com.actiongraph.runtime.Executor;
@@ -173,6 +181,18 @@ class ActionGraphAutoConfigurationTest {
     }
 
     @Test
+    void createsNoopAmountLimitBeansByDefault() {
+        contextRunner.run(context -> {
+            assertThat(context.getBean(AmountExtractor.class))
+                    .isInstanceOf(NoopAmountExtractor.class);
+            assertThat(context.getBean(PermissionPolicy.class))
+                    .isInstanceOf(DefaultPermissionPolicy.class);
+            assertThat(context.getBean(ReviewAttributeContributor.class))
+                    .isInstanceOf(NoopReviewAttributeContributor.class);
+        });
+    }
+
+    @Test
     void createsRegexMaskingPolicyWhenEnabled() {
         contextRunner
                 .withPropertyValues(
@@ -194,6 +214,28 @@ class ActionGraphAutoConfigurationTest {
                 .withPropertyValues("actiongraph.human-review.risk-based-approval-chain=true")
                 .run(context -> assertThat(context.getBean(ApprovalChainResolver.class))
                         .isInstanceOf(RiskBasedChainResolver.class));
+    }
+
+    @Test
+    void canEnableAmountLimitPolicyFromProperties() {
+        contextRunner
+                .withPropertyValues(
+                        "actiongraph.limits.rules[0].action-id=sales.approval.request",
+                        "actiongraph.limits.rules[0].currency=cny",
+                        "actiongraph.limits.rules[0].hard-limit=1000000",
+                        "actiongraph.limits.rules[0].review-limit=100000"
+                )
+                .run(context -> {
+                    assertThat(context.getBean(PermissionPolicy.class))
+                            .isInstanceOf(AmountLimitPolicy.class);
+                    assertThat(context.getBean(ReviewAttributeContributor.class))
+                            .isInstanceOf(AmountAttributeContributor.class);
+                    assertThat(context.getBean(ActionGraphProperties.class)
+                            .getLimits()
+                            .getRules()
+                            .getFirst()
+                            .getCurrency()).isEqualTo("cny");
+                });
     }
 
     static final class AnnotatedWorkflow {

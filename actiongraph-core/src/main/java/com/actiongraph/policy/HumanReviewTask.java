@@ -19,6 +19,7 @@ public record HumanReviewTask(
         List<ActionId> planPreview,
         Set<Condition> currentState,
         Map<String, String> blackboardPreview,
+        Map<String, String> attributes,
         HumanReviewDecision decision,
         String reviewer,
         String message,
@@ -43,7 +44,7 @@ public record HumanReviewTask(
             Instant updatedAt
     ) {
         this(runId, actionId, riskLevel, requiredByAction, planPreview, currentState, blackboardPreview,
-                decision, reviewer, message, createdAt, updatedAt, ApprovalChain.single().stages(),
+                Map.of(), decision, reviewer, message, createdAt, updatedAt, ApprovalChain.single().stages(),
                 defaultStageIndex(decision, ApprovalChain.single().stages()), List.of());
     }
 
@@ -56,6 +57,7 @@ public record HumanReviewTask(
         planPreview = List.copyOf(Objects.requireNonNull(planPreview, "planPreview"));
         currentState = Set.copyOf(Objects.requireNonNull(currentState, "currentState"));
         blackboardPreview = Map.copyOf(Objects.requireNonNull(blackboardPreview, "blackboardPreview"));
+        attributes = Map.copyOf(Objects.requireNonNull(attributes, "attributes"));
         Objects.requireNonNull(decision, "decision");
         reviewer = reviewer == null ? "" : reviewer;
         message = message == null ? "" : message;
@@ -94,6 +96,7 @@ public record HumanReviewTask(
                         .toList(),
                 request.currentState(),
                 request.blackboardPreview(),
+                request.attributes(),
                 HumanReviewDecision.PENDING,
                 "",
                 message,
@@ -142,6 +145,7 @@ public record HumanReviewTask(
                 planPreview,
                 currentState,
                 blackboardPreview,
+                attributes,
                 taskDecision,
                 newReviewer,
                 newMessage,
