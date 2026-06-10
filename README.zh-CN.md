@@ -123,7 +123,7 @@ public void voidDraft(CancellationRequestDraft draft) {
 ```
 
 JDBC 批量输入使用标准 `DriverManager`；连接真实数据库前，需要把目标数据库驱动加入样例运行 classpath。
-批量报告会按样本拆出总耗时、业务 Action 耗时、框架调度耗时和审批等待耗时；`suspend-resume` 审批模式会走真实挂起/恢复路径，并把模拟审批等待写入报告。
+批量报告会按样本拆出总耗时、业务 Action 耗时、框架调度耗时和审批等待耗时；`suspend-resume` 审批模式会走真实挂起/恢复路径，并从审批任务时间戳计算等待。
 
 ## 设计边界
 

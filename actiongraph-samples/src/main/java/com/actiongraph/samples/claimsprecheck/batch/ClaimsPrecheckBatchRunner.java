@@ -40,6 +40,7 @@ import com.actiongraph.trace.InMemoryTraceRepository;
 import com.actiongraph.trace.TraceChainVerifier;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -124,7 +125,10 @@ public final class ClaimsPrecheckBatchRunner {
         InMemoryHumanReviewRepository reviewRepository = new InMemoryHumanReviewRepository();
         GoapExecutor executor = GoapExecutor.builder()
                 .policyGuard(new DefaultPolicyGuard(new AmountLimitPolicy(amountExtractor, limitRules)))
-                .humanReviewPolicy(timing.wrapHumanReviewPolicy(reviewPolicy(reviewRepository)))
+                .humanReviewPolicy(timing.wrapHumanReviewPolicy(
+                        reviewPolicy(reviewRepository),
+                        !reviewOptions.suspendResume()
+                ))
                 .traceRepository(traceRepository)
                 .suspendedRunRepository(suspendedRuns)
                 .reviewAttributeContributor(new AmountAttributeContributor(amountExtractor, limitRules))
@@ -191,7 +195,7 @@ public final class ClaimsPrecheckBatchRunner {
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException(
                             "No pending review task found for suspended run " + runId));
-            waitForSimulatedReview(timing);
+            waitForSimulatedReview();
             reviewRepository.decideStage(
                     task.runId(),
                     task.actionId(),
@@ -200,13 +204,16 @@ public final class ClaimsPrecheckBatchRunner {
                     "batch-simulated-reviewer",
                     "Approved by claims precheck batch simulation"
             );
+            HumanReviewTask decidedTask = reviewRepository.find(task.runId(), task.actionId())
+                    .orElseThrow(() -> new IllegalStateException(
+                            "No decided review task found for " + task.runId() + "/" + task.actionId().value()));
+            timing.recordReviewTaskWait(task, decidedTask);
             current = executor.resume(current.runId(), actions, registry);
         }
         return current;
     }
 
-    private void waitForSimulatedReview(TimingRecorder timing) {
-        long start = System.nanoTime();
+    private void waitForSimulatedReview() {
         try {
             if (reviewOptions.simulatedReviewWaitMillis() > 0) {
                 Thread.sleep(reviewOptions.simulatedReviewWaitMillis());
@@ -214,8 +221,6 @@ public final class ClaimsPrecheckBatchRunner {
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Interrupted while simulating human review wait", ex);
-        } finally {
-            timing.recordReviewWait(System.nanoTime() - start);
         }
     }
 
@@ -229,13 +234,15 @@ public final class ClaimsPrecheckBatchRunner {
                     .toList();
         }
 
-        HumanReviewPolicy wrapHumanReviewPolicy(HumanReviewPolicy delegate) {
+        HumanReviewPolicy wrapHumanReviewPolicy(HumanReviewPolicy delegate, boolean recordAsReviewWait) {
             return request -> {
                 long start = System.nanoTime();
                 try {
                     return delegate.review(request);
                 } finally {
-                    reviewWaitNanos.addAndGet(System.nanoTime() - start);
+                    if (recordAsReviewWait) {
+                        reviewWaitNanos.addAndGet(System.nanoTime() - start);
+                    }
                 }
             };
         }
@@ -254,6 +261,13 @@ public final class ClaimsPrecheckBatchRunner {
 
         private void recordReviewWait(long nanos) {
             reviewWaitNanos.addAndGet(nanos);
+        }
+
+        private void recordReviewTaskWait(HumanReviewTask beforeDecision, HumanReviewTask afterDecision) {
+            long nanos = Duration.between(beforeDecision.updatedAt(), afterDecision.updatedAt()).toNanos();
+            if (nanos > 0) {
+                recordReviewWait(nanos);
+            }
         }
     }
 

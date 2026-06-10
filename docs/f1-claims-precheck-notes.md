@@ -76,7 +76,7 @@ traceEvents=21
 
 JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_amount`、`missing_invoice`、`closed`、`approval_fails`、`expected_intercept`；也可以通过 `--jdbc-query` 传入自定义 SQL，只要结果列可映射到这些字段即可。`--jdbc-password` 可用于本地验证，报告里的 sample source 会对 URL 中的 password/pwd 参数脱敏。连接真实数据库时，需要把对应 JDBC 驱动加入样例运行 classpath。
 
-`--review-mode suspend-resume` 会使用 `RepositoryBackedHumanReviewPolicy` 和 `SuspendedRunRepository` 跑真实的挂起/恢复路径；`--simulate-review-wait-ms` 用于在 demo 或压测中注入审批等待时间，等待时间会计入 `reviewWaitMs`。
+`--review-mode suspend-resume` 会使用 `RepositoryBackedHumanReviewPolicy` 和 `SuspendedRunRepository` 跑真实的挂起/恢复路径；`--simulate-review-wait-ms` 用于在 demo 或压测中模拟审批系统回调延迟，`reviewWaitMs` 从 `HumanReviewTask.updatedAt` 时间线计算，接真实审批回调时可以复用同一口径。
 
 实跑结果摘要：
 
@@ -101,7 +101,7 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 - 单均处理时长：批量运行 N 个理赔案，记录当前审批模式下的端到端运行耗时
 - 业务 Action 耗时：样例 Action 的 `execute` / `compensate` 调用耗时，代表业务服务调用成本
 - 框架调度耗时：端到端耗时扣除业务 Action 耗时和审批等待耗时后的剩余时间
-- 审批等待耗时：auto-approve 模式下统计 human review policy 决策耗时；suspend-resume 模式下额外统计挂起到审批决定再恢复之间的等待时间
+- 审批等待耗时：auto-approve 模式下统计 human review policy 决策耗时；suspend-resume 模式下按 `HumanReviewTask` 的阶段更新时间线统计挂起到审批决定之间的等待
 - 拦截率：资料缺失、已结案、超硬限额等被 guard/policy 拦截的比例
 - 审计完整率：每个 run 的 TraceChainVerifier 通过率与缺失事件率
 

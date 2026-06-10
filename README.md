@@ -81,7 +81,7 @@ Run the sample apps:
 ```
 
 The JDBC batch input path uses standard `DriverManager`; add the target database driver to the sample runtime classpath before running against a real database.
-Batch reports include total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume` review mode uses the real suspended-run resume path and adds simulated approval latency to the report.
+Batch reports include total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume` review mode uses the real suspended-run resume path and derives approval latency from review task timestamps.
 
 ## Documentation
 
