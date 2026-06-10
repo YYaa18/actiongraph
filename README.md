@@ -22,6 +22,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Tamper-evident TraceEvent hash chains with verification support
 - Single-transaction amount limits with hard denial and review escalation
 - Reusable non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions
+- Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Spring Boot starter with annotation-driven Action registration and runtime defaults
 - Optional governance Spring Boot starter for masking, amount limits, and approval routing
 - Optional human-review Spring Boot starter with approval callback endpoint support
@@ -39,11 +40,12 @@ It lets application teams expose ordinary business methods as typed Actions, the
 |---|---|
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
 | `actiongraph-core` | Core action, planning, runtime, policy, trace, memory, and interpretation APIs |
+| `actiongraph-annotations` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, human review, and memory |
-| `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning |
+| `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning; brings `actiongraph-annotations` transitively |
 | `actiongraph-governance-spring-boot-starter` | Optional Spring Boot governance policies for masking, amount limits, and approval routing |
 | `actiongraph-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for JDBC repositories |
 | `actiongraph-human-review-spring-boot-starter` | Optional approval callback endpoint for external review systems |

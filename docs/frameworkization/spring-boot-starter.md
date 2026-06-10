@@ -1,6 +1,6 @@
 # Spring Boot Starter
 
-`actiongraph-spring-boot-starter` lets application code register runtime actions with annotations on ordinary Spring beans. Business classes do not need to implement `Action` or build an `ActionRegistry` manually.
+`actiongraph-spring-boot-starter` lets application code register runtime actions with annotations on ordinary Spring beans. It brings `actiongraph-annotations` transitively and scans container beans, so business classes do not need to implement `Action` or build an `ActionRegistry` manually.
 
 ## Dependency
 

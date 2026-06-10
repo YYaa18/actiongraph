@@ -9,7 +9,14 @@ Business teams should not need to implement the runtime `Action` interface for e
 - `@ActionGraphCompensation`
 - `AnnotatedActionFactory`
 
-This is pure Java and does not depend on Spring. A future Spring Boot starter can reuse the same annotations and scan container beans.
+This lives in `actiongraph-annotations`. It is pure Java and does not depend on Spring. `actiongraph-spring-boot-starter` reuses the same annotations and scans container beans.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-annotations")
+}
+```
 
 ## Minimal Example
 
@@ -73,7 +80,7 @@ ActionRegistry registry = AnnotatedActionFactory.registry(new OrderCancellationA
 ## Current Limits
 
 - Annotation scanning is explicit, not classpath-wide.
-- Spring auto-configuration lives in `actiongraph-spring-boot-starter`.
+- Spring auto-configuration lives in `actiongraph-spring-boot-starter`, which brings `actiongraph-annotations` transitively.
 - Blackboard supports multiple values per runtime class through `BlackboardKey`; unannotated parameters still use the default/single-value lookup.
 
 These limits are intentional for the first non-invasive SPI pass.

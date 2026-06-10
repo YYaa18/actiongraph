@@ -8,6 +8,7 @@ The runtime is split into publishable library modules plus a non-published actio
 |---|---|---|
 | `actiongraph-bom` | `com.actiongraph:actiongraph-bom:0.1.0` | BOM for aligning ActionGraph module versions |
 | `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, trace, and interpretation APIs |
+| `actiongraph-annotations` | `com.actiongraph:actiongraph-annotations:0.1.0` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm` | `com.actiongraph:actiongraph-llm:0.1.0` | Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional DeepSeek-compatible LLM client |
@@ -67,6 +68,12 @@ Pure Java/non-Spring consumers can depend on:
 ```kotlin
 implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
 implementation("com.actiongraph:actiongraph-core")
+```
+
+Pure Java annotation-based action registration adds:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-annotations")
 ```
 
 Provider-neutral LLM-backed goal interpretation adds:

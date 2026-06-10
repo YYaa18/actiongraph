@@ -3,13 +3,6 @@ package com.actiongraph.action.annotation;
 import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionRiskLevel;
 import com.actiongraph.action.DefaultActionRegistry;
-import com.actiongraph.samples.ordercancellation.OrderCancellationConditions;
-import com.actiongraph.samples.ordercancellation.OrderCancellationGoals;
-import com.actiongraph.samples.ordercancellation.domain.CancellationEligibility;
-import com.actiongraph.samples.ordercancellation.domain.CancellationRequestDraft;
-import com.actiongraph.samples.ordercancellation.domain.OperationsApprovalRequest;
-import com.actiongraph.samples.ordercancellation.domain.OrderId;
-import com.actiongraph.samples.ordercancellation.domain.OrderRecord;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.planning.GoapPlanner;
@@ -32,6 +25,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AnnotatedActionFactoryTest {
+    private static final Condition ORDER_ID_PRESENT = Condition.of("order-cancellation", "ORDER_ID_PRESENT");
+    private static final Condition OPERATIONS_APPROVAL_REQUESTED =
+            Condition.of("order-cancellation", "OPERATIONS_APPROVAL_REQUESTED");
+    private static final Goal REQUEST_ORDER_CANCELLATION =
+            new Goal("requestOrderCancellation", Set.of(OPERATIONS_APPROVAL_REQUESTED));
+
     @Test
     void annotatedBusinessObjectRunsWithoutImplementingAction() {
         AnnotatedOrderCancellationAdapter adapter = new AnnotatedOrderCancellationAdapter(false);
@@ -44,7 +43,7 @@ class AnnotatedActionFactoryTest {
                 new DefaultPolicyGuard(),
                 new AutoApproveHumanReviewPolicy(),
                 traceRepository
-        ).run(OrderCancellationGoals.requestOrderCancellation(),
+        ).run(REQUEST_ORDER_CANCELLATION,
                 blackboard,
                 actions,
                 registry(actions));
@@ -72,7 +71,7 @@ class AnnotatedActionFactoryTest {
                 new DefaultPolicyGuard(),
                 new AutoApproveHumanReviewPolicy(),
                 new InMemoryTraceRepository()
-        ).run(OrderCancellationGoals.requestOrderCancellation(), blackboard(), actions, registry(actions));
+        ).run(REQUEST_ORDER_CANCELLATION, blackboard(), actions, registry(actions));
 
         assertThat(result.status()).isEqualTo(RunStatus.HALTED_UNREACHABLE);
         assertThat(adapter.drafts()).isEmpty();
@@ -89,7 +88,7 @@ class AnnotatedActionFactoryTest {
                 new DefaultPolicyGuard(),
                 new DenyingHumanReviewPolicy(),
                 traceRepository
-        ).run(OrderCancellationGoals.requestOrderCancellation(), blackboard(), actions, registry(actions));
+        ).run(REQUEST_ORDER_CANCELLATION, blackboard(), actions, registry(actions));
 
         assertThat(result.status()).isEqualTo(RunStatus.DENIED_BY_POLICY);
         assertThat(adapter.drafts()).containsExactly("CANCEL-1");
@@ -165,7 +164,7 @@ class AnnotatedActionFactoryTest {
     private InMemoryBlackboard blackboard() {
         InMemoryBlackboard blackboard = new InMemoryBlackboard();
         blackboard.put(new OrderId("O100"));
-        blackboard.addCondition(OrderCancellationConditions.ORDER_ID_PRESENT);
+        blackboard.addCondition(ORDER_ID_PRESENT);
         return blackboard;
     }
 
@@ -327,5 +326,25 @@ class AnnotatedActionFactoryTest {
         OperationsApprovalRequest 发起运营审批(CancellationRequestDraft draft) {
             return new OperationsApprovalRequest("OPS-APPROVAL-1", draft.requestId());
         }
+    }
+
+    private record OrderId(String value) {
+        OrderId {
+            if (value == null || value.isBlank()) {
+                throw new IllegalArgumentException("OrderId value must not be blank");
+            }
+        }
+    }
+
+    private record OrderRecord(OrderId orderId, String status, boolean shipped) {
+    }
+
+    private record CancellationEligibility(boolean eligible, String reason) {
+    }
+
+    private record CancellationRequestDraft(String requestId, OrderId orderId) {
+    }
+
+    private record OperationsApprovalRequest(String approvalId, String requestId) {
     }
 }

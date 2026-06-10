@@ -52,7 +52,7 @@ Trace previews and JDBC persistence now use `snapshotEntries()`, so multiple sam
 
 ## Annotation SPI
 
-Annotated actions can read/write keyed Blackboard values with `@BlackboardValue`.
+Annotated actions can read/write keyed Blackboard values with `@BlackboardValue` from `actiongraph-annotations`.
 
 ```java
 @ActionGraphAction(id = "contract.renewal.prepare")

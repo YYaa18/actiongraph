@@ -23,6 +23,20 @@ dependencies {
 }
 ```
 
+## Pure Java Annotation Adapter
+
+Use this when a non-Spring service wants to register ordinary Java methods as Actions without implementing the `Action` interface.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-core")
+    implementation("com.actiongraph:actiongraph-annotations")
+}
+```
+
+`actiongraph-annotations` depends only on `actiongraph-core`. It provides `@ActionGraphAction`, `@ActionGraphGuard`, `@ActionGraphCompensation`, `@BlackboardValue`, and `AnnotatedActionFactory`.
+
 ## Spring Business Runtime
 
 Use this for a business service that executes ActionGraph runs and registers ordinary Spring bean methods as actions.
@@ -34,7 +48,7 @@ dependencies {
 }
 ```
 
-This does not expose HTTP control-plane endpoints.
+The Spring starter brings `actiongraph-annotations` transitively and scans Spring beans for those annotations. It does not expose HTTP control-plane endpoints.
 
 ## Durable Production Runtime
 

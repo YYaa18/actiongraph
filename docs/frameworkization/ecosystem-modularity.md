@@ -8,7 +8,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 |---|---|---|
 | Version platform | `actiongraph-bom` | Aligns all ActionGraph module versions for mix-and-match adoption |
 | Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace, memory, interpretation contracts |
-| Optional adapters | `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Spring runtime wiring, reusable governance policies, Spring governance wiring, Spring JDBC repository wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
+| Optional adapters | `actiongraph-annotations`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, Spring runtime wiring, reusable governance policies, Spring governance wiring, Spring JDBC repository wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
 | Control-plane ecosystem | `actiongraph-human-review-spring-boot-starter`, `actiongraph-console-core`, `actiongraph-console-jdbc`, `actiongraph-console-spring-boot-starter` | Approval callback endpoints, read-only Console query service, JDBC Console adapter, operational Console UI and query endpoints |
 | Samples | `actiongraph-samples` | Reference domains and batch demos; not published as a library |
 
@@ -16,6 +16,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 
 - Consumers should import `actiongraph-bom` first, then choose the modules they need without repeating versions.
 - A pure Java service can depend only on `actiongraph-core`.
+- Pure Java annotation-based registration adds `actiongraph-annotations`.
 - A Spring Boot business service can depend on `actiongraph-spring-boot-starter` without exposing any HTTP control-plane endpoint.
 - Non-Spring masking, amount-limit, approval routing, and rule-based permission policies add `actiongraph-governance`.
 - Spring Boot masking, amount-limit, and risk-based approval governance add `actiongraph-governance-spring-boot-starter`.
@@ -38,6 +39,8 @@ The Console core defines the read-only monitoring service, response models, pagi
 ## Boundary
 
 `actiongraph-bom` is a version alignment platform. It has no runtime code and must not introduce transitive application dependencies.
+
+`actiongraph-annotations` is an optional public framework adapter: it maps ordinary Java methods into core `Action` implementations. It must depend only on core contracts and must not depend on Spring, persistence, providers, or endpoints.
 
 `actiongraph-spring-boot-starter` is part of the public framework integration surface: it registers actions, runtime defaults, policies, and repositories.
 
