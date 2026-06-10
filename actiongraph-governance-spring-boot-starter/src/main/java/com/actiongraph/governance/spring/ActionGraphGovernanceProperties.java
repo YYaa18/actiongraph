@@ -71,7 +71,7 @@ public class ActionGraphGovernanceProperties {
             this.rules = rules == null ? new ArrayList<>() : new ArrayList<>(rules);
         }
 
-        List<AmountLimitRule> toAmountLimitRules() {
+        public List<AmountLimitRule> toAmountLimitRules() {
             return rules.stream()
                     .map(LimitRuleProperties::toAmountLimitRule)
                     .toList();
@@ -116,7 +116,7 @@ public class ActionGraphGovernanceProperties {
             this.reviewLimit = reviewLimit;
         }
 
-        AmountLimitRule toAmountLimitRule() {
+        public AmountLimitRule toAmountLimitRule() {
             return new AmountLimitRule(actionId, currency, hardLimit, reviewLimit);
         }
     }

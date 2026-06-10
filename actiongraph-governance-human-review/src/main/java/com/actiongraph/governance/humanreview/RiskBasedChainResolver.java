@@ -1,4 +1,4 @@
-package com.actiongraph.governance;
+package com.actiongraph.governance.humanreview;
 
 import com.actiongraph.action.ActionRiskLevel;
 import com.actiongraph.policy.ApprovalChain;

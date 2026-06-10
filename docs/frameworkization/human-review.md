@@ -118,7 +118,7 @@ HumanReviewRepository humanReviewRepository(DataSource dataSource) {
 }
 ```
 
-Set `actiongraph.human-review.risk-based-approval-chain=true` from `actiongraph-governance-spring-boot-starter` to use `RiskBasedChainResolver`: HIGH risk actions require checker review and authorization; other actions remain single-stage unless request attributes ask for amount escalation. Review attributes are copied onto `HumanReviewTask`, so external approval systems can show why a task was escalated without recomputing business amounts.
+Set `actiongraph.human-review.risk-based-approval-chain=true` with `actiongraph-governance-human-review-spring-boot-starter` to use `RiskBasedChainResolver`: HIGH risk actions require checker review and authorization; other actions remain single-stage unless request attributes ask for amount escalation. Review attributes are copied onto `HumanReviewTask`, so external approval systems can show why a task was escalated without recomputing business amounts.
 
 Spring MVC applications can enable the optional callback endpoint without writing a controller:
 

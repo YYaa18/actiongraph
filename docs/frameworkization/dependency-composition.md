@@ -160,7 +160,7 @@ Non-Spring services can depend on `actiongraph-human-review-jdbc` directly and i
 
 ## Non-Spring Governance Policies
 
-Use this when a non-Spring service wants ActionGraph's packaged masking, amount-limit, approval-chain, or rule-based permission policies without auto-configuration.
+Use this when a non-Spring service wants ActionGraph's packaged masking, amount-limit, or rule-based permission policies without auto-configuration.
 
 ```kotlin
 dependencies {
@@ -170,11 +170,24 @@ dependencies {
 }
 ```
 
-`actiongraph-governance` depends on `actiongraph-core` and `actiongraph-human-review`. It provides reusable policy implementations such as `RegexMaskingPolicy`, `AmountLimitPolicy`, `RiskBasedChainResolver`, and `RuleBasedPermissionPolicy`, but it does not register actions, persist state, or expose endpoints.
+`actiongraph-governance` depends only on `actiongraph-core`. It provides reusable policy implementations such as `RegexMaskingPolicy`, `AmountLimitPolicy`, and `RuleBasedPermissionPolicy`, but it does not register actions, persist state, route approval chains, or expose endpoints.
+
+## Non-Spring Human-Review Governance
+
+Use this when a non-Spring service already uses `actiongraph-human-review` and wants amount review attributes or risk-based approval-chain routing.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-governance-human-review")
+}
+```
+
+`actiongraph-governance-human-review` depends on `actiongraph-governance` and `actiongraph-human-review`. It provides `AmountAttributeContributor` and `RiskBasedChainResolver` without forcing those human-review contracts into the base governance library.
 
 ## Spring Boot Governance Policies
 
-Add governance policies when a Spring Boot service needs data masking, amount-limit rules, or risk-based approval routing.
+Add governance policies when a Spring Boot service needs data masking, amount-limit rules, or rule-based permission wiring.
 
 ```kotlin
 dependencies {
@@ -188,9 +201,22 @@ The governance starter wraps `actiongraph-governance` with Spring Boot auto-conf
 
 - `actiongraph.masking.*`
 - `actiongraph.limits.*`
-- `actiongraph.human-review.risk-based-approval-chain`
 
 Without this module, the base Spring runtime remains neutral: no masking, default permission allow, no amount escalation, and safe pending human review.
+
+## Spring Boot Human-Review Governance
+
+Add this only when Spring Boot human-review flows should receive amount review attributes or risk-based approval-chain routing.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-governance-human-review-spring-boot-starter")
+}
+```
+
+The human-review governance starter activates `actiongraph.human-review.risk-based-approval-chain` and converts configured amount-limit review thresholds into `HumanReviewRequest.attributes`.
 
 ## Provider-Neutral Natural-Language Entry
 
@@ -296,6 +322,7 @@ dependencies {
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-governance-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-memory-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-human-review-jdbc-spring-boot-starter")

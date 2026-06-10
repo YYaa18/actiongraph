@@ -1,8 +1,10 @@
-# Governance Spring Boot Starter
+# Governance Spring Boot Starters
 
-`actiongraph-governance-spring-boot-starter` packages optional governance policies for Spring Boot services. It wraps the non-Spring `actiongraph-governance` policy library with auto-configuration and is separate from the base runtime starter so teams can adopt ActionGraph execution without automatically enabling financial governance behavior.
+ActionGraph separates base governance from human-review governance so services can adopt only the policies they need.
 
-## Dependency
+## Base Governance Starter
+
+`actiongraph-governance-spring-boot-starter` wraps the non-Spring `actiongraph-governance` policy library. It is separate from the base runtime starter so teams can adopt ActionGraph execution without automatically enabling financial governance behavior.
 
 ```kotlin
 dependencies {
@@ -12,19 +14,13 @@ dependencies {
 }
 ```
 
-## What It Configures
-
-The starter auto-configures these beans before the base runtime starter:
+It auto-configures these beans before the base runtime starter:
 
 - `DataMaskingPolicy`
 - `AmountExtractor`
 - `PermissionPolicy`
-- `ReviewAttributeContributor`
-- `ApprovalChainResolver`
 
-Every bean uses `@ConditionalOnMissingBean`, so application-provided policies always win.
-
-## Properties
+Every bean uses `@ConditionalOnMissingBean`, so application-provided policies always win. The starter activates:
 
 ```yaml
 actiongraph:
@@ -40,14 +36,39 @@ actiongraph:
         currency: CNY
         hard-limit: 1000000
         review-limit: 100000
+```
+
+The base governance starter does not create `ReviewAttributeContributor` or `ApprovalChainResolver` beans. Without the human-review extension, amount limits can deny above the hard limit, but they do not enrich approval tasks.
+
+## Human-Review Governance Starter
+
+`actiongraph-governance-human-review-spring-boot-starter` is an optional extension for approval flows. Add it only when review tasks should receive amount attributes or risk-based approval routing.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-governance-human-review-spring-boot-starter")
+}
+```
+
+It auto-configures:
+
+- `ReviewAttributeContributor`
+- `ApprovalChainResolver`
+
+It reuses the same `actiongraph.limits.*` rules from the base governance starter and activates:
+
+```yaml
+actiongraph:
   human-review:
     risk-based-approval-chain: true
 ```
 
-Without this module, the base `actiongraph-spring-boot-starter` intentionally ignores those governance property trees and keeps neutral defaults: no masking, default permission allow, no amount escalation, and single-stage review.
+With this extension, amounts above `review-limit` are copied into `HumanReviewRequest.attributes` and the risk-based resolver can route HIGH-risk actions through checker and authorizer stages.
 
 ## Boundary
 
-This starter does not register actions, execute runs, persist state, or expose HTTP endpoints. It only contributes policy beans that the base executor already consumes.
+Neither starter registers actions, executes runs, persists state, or exposes HTTP endpoints. They only contribute policy beans that the base executor and human-review components already consume.
 
-Non-Spring services can depend on `actiongraph-governance` directly and wire the same policy implementations by hand.
+Non-Spring services can depend on `actiongraph-governance` and `actiongraph-governance-human-review` directly and wire the same policy implementations by hand.

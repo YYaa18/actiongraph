@@ -8,7 +8,7 @@ import com.actiongraph.action.CompensationResult;
 import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.planning.Condition;
-import com.actiongraph.governance.AmountAttributeContributor;
+import com.actiongraph.governance.humanreview.AmountAttributeContributor;
 import com.actiongraph.governance.AmountExtractor;
 import com.actiongraph.governance.AmountLimitPolicy;
 import com.actiongraph.governance.AmountLimitRule;

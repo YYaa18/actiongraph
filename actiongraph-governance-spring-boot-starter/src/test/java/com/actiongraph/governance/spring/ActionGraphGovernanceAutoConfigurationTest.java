@@ -1,19 +1,13 @@
 package com.actiongraph.governance.spring;
 
-import com.actiongraph.governance.AmountAttributeContributor;
+import com.actiongraph.action.Action;
 import com.actiongraph.governance.AmountExtractor;
 import com.actiongraph.governance.AmountLimitPolicy;
-import com.actiongraph.policy.ApprovalChainResolver;
+import com.actiongraph.governance.NoopAmountExtractor;
 import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.DefaultPermissionPolicy;
-import com.actiongraph.governance.NoopAmountExtractor;
 import com.actiongraph.policy.NoopMaskingPolicy;
-import com.actiongraph.policy.NoopReviewAttributeContributor;
 import com.actiongraph.policy.PermissionPolicy;
-import com.actiongraph.policy.ReviewAttributeContributor;
-import com.actiongraph.governance.RiskBasedChainResolver;
-import com.actiongraph.policy.SingleStageApprovalChainResolver;
-import com.actiongraph.action.Action;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.spring.ActionGraphAutoConfiguration;
@@ -42,12 +36,10 @@ class ActionGraphGovernanceAutoConfigurationTest {
                     .isInstanceOf(NoopAmountExtractor.class);
             assertThat(context.getBean(PermissionPolicy.class))
                     .isInstanceOf(DefaultPermissionPolicy.class);
-            assertThat(context.getBean(ReviewAttributeContributor.class))
-                    .isInstanceOf(NoopReviewAttributeContributor.class);
-            assertThat(context.getBean(ApprovalChainResolver.class))
-                    .isInstanceOf(SingleStageApprovalChainResolver.class);
             assertThat(context.getBean(DataMaskingPolicy.class))
                     .isInstanceOf(NoopMaskingPolicy.class);
+            assertThat(context.containsBean("actionGraphReviewAttributeContributor")).isFalse();
+            assertThat(context.containsBean("actionGraphApprovalChainResolver")).isFalse();
         });
     }
 
@@ -68,14 +60,6 @@ class ActionGraphGovernanceAutoConfigurationTest {
     }
 
     @Test
-    void canEnableRiskBasedApprovalChainResolver() {
-        contextRunner
-                .withPropertyValues("actiongraph.human-review.risk-based-approval-chain=true")
-                .run(context -> assertThat(context.getBean(ApprovalChainResolver.class))
-                        .isInstanceOf(RiskBasedChainResolver.class));
-    }
-
-    @Test
     void canEnableAmountLimitPolicyFromProperties() {
         contextRunner
                 .withPropertyValues(
@@ -87,8 +71,6 @@ class ActionGraphGovernanceAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context.getBean(PermissionPolicy.class))
                             .isInstanceOf(AmountLimitPolicy.class);
-                    assertThat(context.getBean(ReviewAttributeContributor.class))
-                            .isInstanceOf(AmountAttributeContributor.class);
                     assertThat(context.getBean(ActionGraphGovernanceProperties.class)
                             .getLimits()
                             .getRules()
@@ -130,8 +112,6 @@ class ActionGraphGovernanceAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context.getBean(DataMaskingPolicy.class)).isSameAs(maskingPolicy);
                     assertThat(context.getBean(PermissionPolicy.class)).isSameAs(permissionPolicy);
-                    assertThat(context.getBean(ReviewAttributeContributor.class))
-                            .isInstanceOf(AmountAttributeContributor.class);
                 });
     }
 
@@ -140,7 +120,6 @@ class ActionGraphGovernanceAutoConfigurationTest {
         runtimeCompositionRunner
                 .withPropertyValues(
                         "actiongraph.masking.enabled=true",
-                        "actiongraph.human-review.risk-based-approval-chain=true",
                         "actiongraph.limits.rules[0].action-id=sales.approval.request",
                         "actiongraph.limits.rules[0].currency=CNY",
                         "actiongraph.limits.rules[0].hard-limit=1000000",
@@ -149,12 +128,8 @@ class ActionGraphGovernanceAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context.getBean(DataMaskingPolicy.class).maskText("13812345678"))
                             .isEqualTo("138****5678");
-                    assertThat(context.getBean(ApprovalChainResolver.class))
-                            .isInstanceOf(RiskBasedChainResolver.class);
                     assertThat(context.getBean(PermissionPolicy.class))
                             .isInstanceOf(AmountLimitPolicy.class);
-                    assertThat(context.getBean(ReviewAttributeContributor.class))
-                            .isInstanceOf(AmountAttributeContributor.class);
                     assertThat(context).hasSingleBean(Executor.class);
                 });
     }

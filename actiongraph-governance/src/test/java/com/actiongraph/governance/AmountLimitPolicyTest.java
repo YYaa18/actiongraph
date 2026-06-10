@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -71,22 +70,6 @@ class AmountLimitPolicyTest {
         AmountLimitPolicy policy = new AmountLimitPolicy(amount("99", "CNY"), List.of(wildcard));
 
         assertThat(policy.canExecute(action("unconfigured.action"), new InMemoryBlackboard())).isTrue();
-    }
-
-    @Test
-    void amountAttributeContributorMarksReviewEscalationOnlyAboveReviewLimit() {
-        Action action = action("payment.transfer");
-        InMemoryBlackboard blackboard = new InMemoryBlackboard();
-
-        AmountAttributeContributor escalated = new AmountAttributeContributor(amount("100000.01", "CNY"), List.of(RULE));
-        AmountAttributeContributor normal = new AmountAttributeContributor(amount("100000", "CNY"), List.of(RULE));
-
-        assertThat(escalated.contribute(action, blackboard)).containsExactlyInAnyOrderEntriesOf(Map.of(
-                "amount", "100000.01",
-                "currency", "CNY",
-                "amountEscalated", "true"
-        ));
-        assertThat(normal.contribute(action, blackboard)).isEmpty();
     }
 
     @Test

@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":actiongraph-interpretation"))
     implementation(project(":actiongraph-human-review"))
     implementation(project(":actiongraph-governance"))
+    implementation(project(":actiongraph-governance-human-review"))
     implementation(project(":actiongraph-llm-deepseek"))
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
     implementation("org.apache.commons:commons-csv:1.14.1")

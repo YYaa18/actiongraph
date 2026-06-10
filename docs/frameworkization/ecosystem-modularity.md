@@ -8,7 +8,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 |---|---|---|
 | Version platform | `actiongraph-bom` | Aligns all ActionGraph module versions for mix-and-match adoption |
 | Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace |
-| Optional adapters | `actiongraph-annotations`, `actiongraph-memory`, `actiongraph-memory-spring-boot-starter`, `actiongraph-memory-jdbc`, `actiongraph-memory-jdbc-spring-boot-starter`, `actiongraph-interpretation`, `actiongraph-human-review`, `actiongraph-human-review-jdbc`, `actiongraph-human-review-jdbc-spring-boot-starter`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, structured memory context, Spring memory wiring, JDBC memory storage, goal interpretation contracts, repository-backed human review, JDBC review storage, Spring runtime wiring, reusable governance policies, Spring governance wiring, Spring core JDBC wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
+| Optional adapters | `actiongraph-annotations`, `actiongraph-memory`, `actiongraph-memory-spring-boot-starter`, `actiongraph-memory-jdbc`, `actiongraph-memory-jdbc-spring-boot-starter`, `actiongraph-interpretation`, `actiongraph-human-review`, `actiongraph-human-review-jdbc`, `actiongraph-human-review-jdbc-spring-boot-starter`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-human-review`, `actiongraph-governance-spring-boot-starter`, `actiongraph-governance-human-review-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, structured memory context, Spring memory wiring, JDBC memory storage, goal interpretation contracts, repository-backed human review, JDBC review storage, Spring runtime wiring, reusable governance policies, human-review governance extensions, Spring governance wiring, Spring core JDBC wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
 | Control-plane ecosystem | `actiongraph-human-review-spring-boot-starter`, `actiongraph-console-core`, `actiongraph-console-jdbc`, `actiongraph-console-jdbc-spring-boot-starter`, `actiongraph-console-spring-boot-starter` | Repository-backed review wiring, approval callback endpoints, read-only Console query service, JDBC Console adapter, Spring JDBC Console repository auto-configuration, operational Console UI and query endpoints |
 | Samples | `actiongraph-samples` | Reference domains and batch demos; not published as a library |
 
@@ -24,8 +24,8 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 - Repository-backed external review tasks and callback handling add `actiongraph-human-review`.
 - JDBC review task storage adds `actiongraph-human-review-jdbc`; Spring Boot JDBC review task storage adds `actiongraph-human-review-jdbc-spring-boot-starter`.
 - A Spring Boot business service can depend on `actiongraph-spring-boot-starter` without exposing any HTTP control-plane endpoint.
-- Non-Spring masking, amount-limit, approval routing, and rule-based permission policies add `actiongraph-governance`.
-- Spring Boot masking, amount-limit, and risk-based approval governance add `actiongraph-governance-spring-boot-starter`.
+- Non-Spring masking, amount-limit, and rule-based permission policies add `actiongraph-governance`; human-review approval routing or review attributes add `actiongraph-governance-human-review`.
+- Spring Boot masking and amount-limit governance add `actiongraph-governance-spring-boot-starter`; risk-based approval routing and review attributes add `actiongraph-governance-human-review-spring-boot-starter`.
 - Durable Spring Boot production runs add `actiongraph-jdbc-spring-boot-starter`; non-Spring/manual runtimes add `actiongraph-persistence-jdbc`. Memory and review-task durability are opt-in through their own JDBC modules.
 - Provider-neutral natural-language goal interpretation adds `actiongraph-llm`.
 - DeepSeek-compatible model access adds `actiongraph-llm-deepseek`.
@@ -46,7 +46,9 @@ The Interpretation module provides GoalCatalog metadata, GoalInterpreter contrac
 
 The Human Review module provides pending review tasks, approval chains, in-memory review storage, repository-backed review policy, and callback handling. It depends only on core policy/action/planning types and can be used without Spring MVC, JDBC, governance, or console modules.
 
-The Governance Spring Boot starter depends on core policy contracts and Spring auto-configuration. It activates optional policy beans from configuration, but it does not register actions, persist state, or expose endpoints.
+The Governance Spring Boot starter depends on core policy contracts and Spring auto-configuration. It activates optional masking, amount-limit, and permission policy beans from configuration, but it does not register actions, persist state, route approval chains, or expose endpoints.
+
+The Human Review Governance module depends on governance and human-review contracts. It contributes amount review attributes and risk-based approval-chain routing only when those human-review semantics are needed.
 
 The Human Review starter depends on `actiongraph-human-review` instead of the runtime starter. It provides Spring defaults for `HumanReviewRepository`, `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`, and it can also expose the optional callback receiver.
 
@@ -70,9 +72,13 @@ The Console core defines the read-only monitoring service, response models, pagi
 
 `actiongraph-memory-spring-boot-starter` is an optional Spring adapter: it configures structured memory defaults. It must not register actions, execute runs, or expose endpoints.
 
-`actiongraph-governance` is an optional policy library: it provides reusable non-Spring masking, amount-limit, approval routing, and rule-based permission implementations. It must depend only on core contracts and must not register actions, persist state, or expose endpoints.
+`actiongraph-governance` is an optional policy library: it provides reusable non-Spring masking, amount-limit, and rule-based permission implementations. It must depend only on core contracts and must not register actions, persist state, route approval chains, or expose endpoints.
 
-`actiongraph-governance-spring-boot-starter` is an optional policy adapter: it configures the governance policy library through Spring Boot properties. It must not expose HTTP endpoints or write persistence state.
+`actiongraph-governance-human-review` is an optional human-review policy library: it provides review-attribute contribution and risk-based approval routing. It may depend on `actiongraph-human-review`, but base governance must not depend on it.
+
+`actiongraph-governance-spring-boot-starter` is an optional policy adapter: it configures the base governance policy library through Spring Boot properties. It must not expose HTTP endpoints, write persistence state, or create human-review routing beans.
+
+`actiongraph-governance-human-review-spring-boot-starter` is an optional human-review policy adapter: it configures review attributes and approval-chain routing through Spring Boot properties. It must not expose HTTP endpoints or own review-task storage.
 
 `actiongraph-jdbc-spring-boot-starter` is an optional infrastructure adapter: it replaces core trace/suspend in-memory repository defaults with JDBC implementations when enabled. It must not register business actions, configure Memory/Human Review storage, or expose endpoints.
 
