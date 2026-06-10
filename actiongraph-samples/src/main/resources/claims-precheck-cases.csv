@@ -1,0 +1,6 @@
+claimId,claimedAmount,missingInvoice,closed,approvalFails,expectedIntercept
+CLM100,260000,false,false,false,false
+CLM101,180000,true,false,false,true
+CLM102,90000,false,true,false,true
+CLM103,1200000,false,false,false,true
+CLM104,220000,false,false,true,false

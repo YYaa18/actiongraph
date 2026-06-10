@@ -61,10 +61,11 @@ traceEvents=21
 
 ## Batch Metrics
 
-第二刀已把样板域扩成准真实批量指标：
+第三刀已把样板域扩成可读取样本文件、可交付报告的准真实批量指标：
 
 ```bash
-./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics \
+  --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck"
 ```
 
 实跑结果摘要：
@@ -79,6 +80,11 @@ case claimId=CLM103, status=DENIED_BY_POLICY, intercepted=true, auditComplete=tr
 case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete=true
 ```
 
+报告产物：
+
+- `claims-precheck-report.md`：业务可读指标摘要与明细表
+- `claims-precheck-results.csv`：每个样本的状态、是否拦截、审计完整性、trace 事件数、运行耗时
+
 当前指标口径：
 
 - 单均处理时长：批量运行 N 个理赔案，记录当前 auto-approve 模式下的端到端运行耗时
@@ -87,8 +93,8 @@ case claimId=CLM104, status=FAILED_COMPENSATED, intercepted=false, auditComplete
 
 ## F1 Next
 
-下一刀应把批量指标接入更接近真实的样本输入：
+下一刀应把报告从样例输出推进到业务方可复用的数据资产：
 
-- 从 CSV/数据库读取理赔样本，而不是固定 5 个内置 case
-- 输出可交付给业务方的 CSV/Markdown 指标报告
+- 支持从数据库读取理赔样本，而不只读取 CSV 文件
+- 给报告增加批次号、样本来源、环境信息和参数配置
 - 将业务服务耗时、框架耗时、审批等待耗时从当前端到端耗时中拆成独立字段

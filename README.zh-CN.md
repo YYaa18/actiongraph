@@ -117,7 +117,7 @@ public void voidDraft(CancellationRequestDraft draft) {
 
 ```bash
 ./gradlew :actiongraph-samples:runClaimsPrecheckSample --args="--approve-human-review 帮我预审理赔 CLM100 并准备赔付申请"
-./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck"
 ```
 
 ## 设计边界
@@ -133,7 +133,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 ## 当前成熟度
 
-- 133 个自动化测试通过。
+- 134 个自动化测试通过。
 - 并发冒烟约 6000 runs/s；重复 resume 只产生一次业务副作用。
 - 5 个 Gradle 模块完成拆分。
 - 3 个参考业务域完整跑通。
@@ -141,7 +141,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - 支持 Spring Boot 注解式接入。
 - 支持 suspend / resume、JDBC persistence、human review、structured memory。
 - F0 内核金融化完成：Trace/审批预览敏感数据脱敏、审计链防篡改、多级审批链、单笔额度策略。
-- F1 已进入场景打穿：理赔资料预审 + 赔付申请草稿样板域已跑通，并输出批量拦截率、审计完整率、平均耗时指标。
+- F1 已进入场景打穿：理赔资料预审 + 赔付申请草稿样板域已跑通，可从 CSV 样本输出 Markdown/CSV 指标报告。
 
 ## 文档
 

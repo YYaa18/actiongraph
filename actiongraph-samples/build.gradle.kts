@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation(project(":actiongraph-core"))
     implementation(project(":actiongraph-llm-deepseek"))
+    implementation("org.apache.commons:commons-csv:1.14.1")
 }
 
 application {
@@ -30,4 +31,5 @@ tasks.register<JavaExec>("runClaimsPrecheckBatchMetrics") {
     description = "Runs the claims precheck batch metrics sample."
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("com.actiongraph.samples.claimsprecheck.batch.ClaimsPrecheckBatchMetricsApp")
+    workingDir = rootProject.projectDir
 }
