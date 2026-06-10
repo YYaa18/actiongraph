@@ -1,12 +1,17 @@
 # Permission And Tenant Policy
 
-v2 now includes a reusable rule-based permission policy in `actiongraph-core`.
+v2 includes a reusable rule-based permission policy in `actiongraph-governance`. The core module keeps only the `PermissionPolicy` contract.
 
 ## Runtime Inputs
 
 Applications seed the Blackboard with the current subject and target tenant scope:
 
 ```java
+import com.actiongraph.governance.PermissionRule;
+import com.actiongraph.governance.PolicySubject;
+import com.actiongraph.governance.RuleBasedPermissionPolicy;
+import com.actiongraph.governance.TenantScope;
+
 blackboard.put(new PolicySubject(
         "user-123",
         "tenant-a",
@@ -63,7 +68,7 @@ With `allowUnmatchedActions=false`, every executable action must have an explici
 
 ## Spring Boot
 
-The starter still defaults to `DefaultPermissionPolicy`, which allows all actions. Production applications can override it:
+The base starter still defaults to `DefaultPermissionPolicy`, which allows all actions. Production applications can add `actiongraph-governance` or `actiongraph-governance-spring-boot-starter`, then override it:
 
 ```java
 @Bean

@@ -1,4 +1,4 @@
-package com.actiongraph.policy;
+package com.actiongraph.governance;
 
 import java.util.Objects;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package com.actiongraph.policy;
+package com.actiongraph.governance;
 
 import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionId;
@@ -6,6 +6,9 @@ import com.actiongraph.action.ActionResult;
 import com.actiongraph.action.ActionRiskLevel;
 import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.planning.Condition;
+import com.actiongraph.policy.DefaultPolicyGuard;
+import com.actiongraph.policy.PermissionPolicy;
+import com.actiongraph.policy.PolicyDecision;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import org.junit.jupiter.api.Test;
 

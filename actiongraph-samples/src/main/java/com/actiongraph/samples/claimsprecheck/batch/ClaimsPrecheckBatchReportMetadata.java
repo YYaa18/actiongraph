@@ -1,6 +1,6 @@
 package com.actiongraph.samples.claimsprecheck.batch;
 
-import com.actiongraph.policy.AmountLimitRule;
+import com.actiongraph.governance.AmountLimitRule;
 
 import java.util.List;
 import java.util.Objects;

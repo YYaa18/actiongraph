@@ -1,4 +1,4 @@
-package com.actiongraph.policy;
+package com.actiongraph.governance;
 
 public record TenantScope(String tenantId) {
     public TenantScope {

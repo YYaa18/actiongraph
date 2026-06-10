@@ -1,4 +1,4 @@
-package com.actiongraph.policy;
+package com.actiongraph.governance;
 
 import java.math.BigDecimal;
 import java.util.Locale;

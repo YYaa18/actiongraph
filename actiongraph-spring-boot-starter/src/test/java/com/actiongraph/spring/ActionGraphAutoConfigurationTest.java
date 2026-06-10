@@ -167,7 +167,7 @@ class ActionGraphAutoConfigurationTest {
     @Test
     void createsDefaultGovernanceBeansByDefault() {
         contextRunner.run(context -> {
-            assertThat(context).doesNotHaveBean(com.actiongraph.policy.AmountExtractor.class);
+            assertThat(context.containsBean("actionGraphAmountExtractor")).isFalse();
             assertThat(context.getBean(PermissionPolicy.class))
                     .isInstanceOf(DefaultPermissionPolicy.class);
             assertThat(context.getBean(ReviewAttributeContributor.class))
@@ -195,7 +195,7 @@ class ActionGraphAutoConfigurationTest {
                             .isInstanceOf(DefaultPermissionPolicy.class);
                     assertThat(context.getBean(ReviewAttributeContributor.class))
                             .isInstanceOf(NoopReviewAttributeContributor.class);
-                    assertThat(context).doesNotHaveBean(com.actiongraph.policy.AmountExtractor.class);
+                    assertThat(context.containsBean("actionGraphAmountExtractor")).isFalse();
                 });
     }
 

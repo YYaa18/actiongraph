@@ -1,6 +1,6 @@
 # Governance Spring Boot Starter
 
-`actiongraph-governance-spring-boot-starter` packages optional governance policies for Spring Boot services. It is separate from the base runtime starter so teams can adopt ActionGraph execution without automatically enabling financial governance behavior.
+`actiongraph-governance-spring-boot-starter` packages optional governance policies for Spring Boot services. It wraps the non-Spring `actiongraph-governance` policy library with auto-configuration and is separate from the base runtime starter so teams can adopt ActionGraph execution without automatically enabling financial governance behavior.
 
 ## Dependency
 
@@ -49,3 +49,5 @@ Without this module, the base `actiongraph-spring-boot-starter` intentionally ig
 ## Boundary
 
 This starter does not register actions, execute runs, persist state, or expose HTTP endpoints. It only contributes policy beans that the base executor already consumes.
+
+Non-Spring services can depend on `actiongraph-governance` directly and wire the same policy implementations by hand.

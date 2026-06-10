@@ -1,6 +1,6 @@
 package com.actiongraph.governance.spring;
 
-import com.actiongraph.policy.AmountLimitRule;
+import com.actiongraph.governance.AmountLimitRule;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.math.BigDecimal;

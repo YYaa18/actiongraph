@@ -8,6 +8,7 @@ The runtime is split into publishable library modules plus a non-published actio
 |---|---|---|
 | `actiongraph-bom` | `com.actiongraph:actiongraph-bom:0.1.0` | BOM for aligning ActionGraph module versions |
 | `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, trace, and interpretation APIs |
+| `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | DeepSeek-compatible LLM goal interpretation |
 | `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace, suspended-run, review-task, and memory repositories |
 | `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Spring Boot auto-configuration and annotation-driven action registration |
@@ -73,7 +74,13 @@ LLM-backed goal interpretation adds:
 implementation("com.actiongraph:actiongraph-llm-deepseek")
 ```
 
-Spring Boot governance policies add:
+Non-Spring governance policies add:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-governance")
+```
+
+Spring Boot governance auto-configuration adds:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")

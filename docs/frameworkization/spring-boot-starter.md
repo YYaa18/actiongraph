@@ -86,11 +86,14 @@ This starter intentionally does not include durable persistence, optional govern
 
 This starter intentionally keeps persistence in-memory and policy defaults neutral/simple. Production applications should add the optional governance/JDBC starters or replace `TraceRepository`, `SuspendedRunRepository`, `PermissionPolicy`, and `HumanReviewPolicy` with application-specific beans.
 
-For packaged governance policies, add `actiongraph-governance-spring-boot-starter`. It activates the `actiongraph.masking.*`, `actiongraph.limits.*`, and `actiongraph.human-review.risk-based-approval-chain` configuration trees. Without that module, those properties are intentionally ignored by the base runtime starter.
+For packaged governance policies, add `actiongraph-governance` in non-Spring services or `actiongraph-governance-spring-boot-starter` in Spring Boot services. The starter activates the `actiongraph.masking.*`, `actiongraph.limits.*`, and `actiongraph.human-review.risk-based-approval-chain` configuration trees. Without that module, those properties are intentionally ignored by the base runtime starter.
 
 For rule-based permissions and tenant checks:
 
 ```java
+import com.actiongraph.governance.PermissionRule;
+import com.actiongraph.governance.RuleBasedPermissionPolicy;
+
 @Bean
 PermissionPolicy permissionPolicy() {
     return new RuleBasedPermissionPolicy(List.of(

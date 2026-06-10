@@ -183,6 +183,7 @@
   <tr><td><code>com.actiongraph:actiongraph-spring-boot-starter</code></td><td>自动装配 + 注解 Bean 扫描</td><td><b>业务执行型 Spring Boot 应用常用</b>，自带 core</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、审批、记忆</td><td>非 Spring 应用直接依赖它</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>DeepSeek 客户端 + GoalCatalog prompt 渲染</td><td>需要自然语言入口时</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-governance</code></td><td>脱敏 / 额度 / 多级审批路由 / 规则权限策略库</td><td>非 Spring 服务需要复用框架治理策略时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-governance-spring-boot-starter</code></td><td>脱敏 / 额度 / 多级审批路由自动装配</td><td>需要金融治理策略时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-persistence-jdbc</code></td><td>Trace / 挂起 / 审批 / 记忆的 JDBC 仓储</td><td>非 Spring 或完全手工接线时使用</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-jdbc-spring-boot-starter</code></td><td>JDBC 仓储自动装配</td><td><b>Spring Boot 生产持久化推荐</b>，按配置启用</td></tr>
@@ -382,7 +383,7 @@ RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pr
     risk-based-approval-chain: true   <span class="c"># HIGH 两级；默认 false 保持单级</span></code></pre>
 
 <h2 id="masking">敏感数据脱敏</h2>
-<p>金融场景建议引入 <code>actiongraph-governance-spring-boot-starter</code> 并开启默认正则脱敏。它只作用于两个人类可读面：<code>TraceEvent.detail/data</code> 与 <code>HumanReviewRequest.blackboardPreview</code>；<code>SuspendedRun</code> 的 Blackboard 快照不会脱敏，确保 resume 可无损恢复。</p>
+<p>金融场景建议引入 <code>actiongraph-governance</code> 复用内置策略库；Spring Boot 应用通常直接引入 <code>actiongraph-governance-spring-boot-starter</code> 并开启默认正则脱敏。它只作用于两个人类可读面：<code>TraceEvent.detail/data</code> 与 <code>HumanReviewRequest.blackboardPreview</code>；<code>SuspendedRun</code> 的 Blackboard 快照不会脱敏，确保 resume 可无损恢复。</p>
 <pre><code>actiongraph:
   masking:
     enabled: true

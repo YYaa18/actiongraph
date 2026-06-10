@@ -12,7 +12,7 @@ import com.actiongraph.planning.Goal;
 import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.policy.DefaultPolicyGuard;
 import com.actiongraph.policy.HumanReviewTask;
-import com.actiongraph.policy.RegexMaskingPolicy;
+import com.actiongraph.governance.RegexMaskingPolicy;
 import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;

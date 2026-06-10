@@ -72,7 +72,7 @@ class RepositoryBackedHumanReviewPolicyTest {
         InMemoryHumanReviewRepository repository = new InMemoryHumanReviewRepository();
         RepositoryBackedHumanReviewPolicy policy = new RepositoryBackedHumanReviewPolicy(
                 repository,
-                new RiskBasedChainResolver()
+                multiStageResolver()
         );
         policy.review(request("RUN-1"));
         HumanReviewTask task = repository.findPending().getFirst();
@@ -111,7 +111,7 @@ class RepositoryBackedHumanReviewPolicyTest {
         InMemoryHumanReviewRepository repository = new InMemoryHumanReviewRepository();
         RepositoryBackedHumanReviewPolicy policy = new RepositoryBackedHumanReviewPolicy(
                 repository,
-                new RiskBasedChainResolver()
+                multiStageResolver()
         );
         policy.review(request("RUN-1"));
 
@@ -133,7 +133,7 @@ class RepositoryBackedHumanReviewPolicyTest {
         InMemoryHumanReviewRepository repository = new InMemoryHumanReviewRepository();
         RepositoryBackedHumanReviewPolicy policy = new RepositoryBackedHumanReviewPolicy(
                 repository,
-                new RiskBasedChainResolver()
+                multiStageResolver()
         );
         policy.review(request("RUN-1"));
 
@@ -151,11 +151,19 @@ class RepositoryBackedHumanReviewPolicyTest {
     }
 
     @Test
-    void amountEscalationAddsAuthorizationStage() {
+    void customChainResolverCanUseRequestAttributes() {
         InMemoryHumanReviewRepository repository = new InMemoryHumanReviewRepository();
         RepositoryBackedHumanReviewPolicy policy = new RepositoryBackedHumanReviewPolicy(
                 repository,
-                new RiskBasedChainResolver()
+                request -> {
+                    if ("true".equalsIgnoreCase(request.attributes().get("amountEscalated"))) {
+                        return new ApprovalChain(List.of(
+                                new ApprovalStage("review", "reviewer"),
+                                new ApprovalStage("amount-authorization", "authorizer")
+                        ));
+                    }
+                    return ApprovalChain.single();
+                }
         );
 
         policy.review(new HumanReviewRequest(
@@ -206,5 +214,12 @@ class RepositoryBackedHumanReviewPolicyTest {
                 Set.of(Condition.of("risk:READY")),
                 Map.of("customerId", "C001")
         );
+    }
+
+    private ApprovalChainResolver multiStageResolver() {
+        return request -> new ApprovalChain(List.of(
+                new ApprovalStage("checker-review", "checker"),
+                new ApprovalStage("authorization", "authorizer")
+        ));
     }
 }

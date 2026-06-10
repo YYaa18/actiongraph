@@ -63,7 +63,21 @@ actiongraph:
 
 Non-Spring services, or applications that want complete manual control, can depend on `actiongraph-persistence-jdbc` directly and instantiate the repositories themselves.
 
-## Governance Policies
+## Non-Spring Governance Policies
+
+Use this when a non-Spring service wants ActionGraph's packaged masking, amount-limit, approval-chain, or rule-based permission policies without auto-configuration.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-core")
+    implementation("com.actiongraph:actiongraph-governance")
+}
+```
+
+`actiongraph-governance` depends only on `actiongraph-core`. It provides reusable policy implementations such as `RegexMaskingPolicy`, `AmountLimitPolicy`, `RiskBasedChainResolver`, and `RuleBasedPermissionPolicy`, but it does not register actions, persist state, or expose endpoints.
+
+## Spring Boot Governance Policies
 
 Add governance policies when a Spring Boot service needs data masking, amount-limit rules, or risk-based approval routing.
 
@@ -75,7 +89,7 @@ dependencies {
 }
 ```
 
-The governance starter uses the same `actiongraph.*` property namespace as the runtime starter, but it is the component that activates:
+The governance starter wraps `actiongraph-governance` with Spring Boot auto-configuration. It uses the same `actiongraph.*` property namespace as the runtime starter, but it is the component that activates:
 
 - `actiongraph.masking.*`
 - `actiongraph.limits.*`

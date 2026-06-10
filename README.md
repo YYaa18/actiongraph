@@ -21,6 +21,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional data masking for trace details/data and human-review previews
 - Tamper-evident TraceEvent hash chains with verification support
 - Single-transaction amount limits with hard denial and review escalation
+- Reusable non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions
 - Spring Boot starter with annotation-driven Action registration and runtime defaults
 - Optional governance Spring Boot starter for masking, amount limits, and approval routing
 - Optional human-review Spring Boot starter with approval callback endpoint support
@@ -37,6 +38,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 |---|---|
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
 | `actiongraph-core` | Core action, planning, runtime, policy, trace, memory, and interpretation APIs |
+| `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
 | `actiongraph-llm-deepseek` | DeepSeek-compatible LLM client and GoalCatalog prompt support |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, human review, and memory |
 | `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning |
@@ -108,6 +110,8 @@ actiongraph:
 ```
 
 When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, review-task, memory, and console read-model repositories. Non-Spring services can still use `actiongraph-persistence-jdbc` directly and wire repositories by hand.
+
+Non-Spring services can use `actiongraph-governance` directly when they want the packaged masking, amount-limit, approval-chain, or rule-based permission policies without Spring auto-configuration.
 
 When `actiongraph-governance-spring-boot-starter` is on the classpath, masking, amount-limit rules, and risk-based approval-chain properties are activated. Without it, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and single-stage review.
 

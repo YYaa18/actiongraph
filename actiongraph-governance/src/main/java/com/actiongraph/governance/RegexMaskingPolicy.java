@@ -1,4 +1,6 @@
-package com.actiongraph.policy;
+package com.actiongraph.governance;
+
+import com.actiongraph.policy.DataMaskingPolicy;
 
 import java.util.ArrayList;
 import java.util.Collection;

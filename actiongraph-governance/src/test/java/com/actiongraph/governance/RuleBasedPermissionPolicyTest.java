@@ -1,4 +1,4 @@
-package com.actiongraph.policy;
+package com.actiongraph.governance;
 
 import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionId;

@@ -1,17 +1,17 @@
 package com.actiongraph.governance.spring;
 
-import com.actiongraph.policy.AmountAttributeContributor;
-import com.actiongraph.policy.AmountExtractor;
-import com.actiongraph.policy.AmountLimitPolicy;
+import com.actiongraph.governance.AmountAttributeContributor;
+import com.actiongraph.governance.AmountExtractor;
+import com.actiongraph.governance.AmountLimitPolicy;
 import com.actiongraph.policy.ApprovalChainResolver;
 import com.actiongraph.policy.DataMaskingPolicy;
 import com.actiongraph.policy.DefaultPermissionPolicy;
-import com.actiongraph.policy.NoopAmountExtractor;
+import com.actiongraph.governance.NoopAmountExtractor;
 import com.actiongraph.policy.NoopMaskingPolicy;
 import com.actiongraph.policy.NoopReviewAttributeContributor;
 import com.actiongraph.policy.PermissionPolicy;
 import com.actiongraph.policy.ReviewAttributeContributor;
-import com.actiongraph.policy.RiskBasedChainResolver;
+import com.actiongraph.governance.RiskBasedChainResolver;
 import com.actiongraph.policy.SingleStageApprovalChainResolver;
 import com.actiongraph.action.Action;
 import com.actiongraph.runtime.Blackboard;

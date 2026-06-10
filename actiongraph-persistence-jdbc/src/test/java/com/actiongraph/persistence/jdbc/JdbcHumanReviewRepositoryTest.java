@@ -8,7 +8,7 @@ import com.actiongraph.planning.PlanStep;
 import com.actiongraph.policy.HumanReviewDecision;
 import com.actiongraph.policy.HumanReviewRequest;
 import com.actiongraph.policy.HumanReviewTask;
-import com.actiongraph.policy.RiskBasedChainResolver;
+import com.actiongraph.governance.RiskBasedChainResolver;
 import com.actiongraph.policy.StageAlreadyDecidedException;
 import org.junit.jupiter.api.Test;
 
