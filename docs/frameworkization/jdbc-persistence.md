@@ -102,6 +102,13 @@ Trace repository:
 
 Trace hashes are calculated in core before persistence, after `DataMaskingPolicy` has processed detail/data. The JDBC table stores `prev_hash` and `hash`; existing tables are migrated with nullable columns, and pre-F0 rows with empty hashes are reported invalid by `TraceChainVerifier` rather than backfilled.
 
+`JdbcTraceRunRepository` is a read-only query helper for console and audit screens. It lists recent run ids from the trace table and returns `TraceRunSummary` with first/last timestamps, latest terminal or suspended status, event count, and trace-chain verification result:
+
+```java
+JdbcTraceRunRepository runs = new JdbcTraceRunRepository(dataSource);
+List<TraceRunSummary> recent = runs.findRecentRuns(50);
+```
+
 Suspended run repository:
 
 - run id

@@ -42,3 +42,25 @@ actiongraph-samples/build/reports/claims-precheck-console/claims-precheck-consol
 ## Boundary
 
 This is a productization seed, not the final console service. It proves the information architecture for run monitoring and audit inspection while keeping the runtime unchanged. A production console should read from JDBC repositories directly and add authentication, authorization, paging, filters, and deployment-specific retention controls.
+
+## JDBC Read Model
+
+`actiongraph-persistence-jdbc` provides `JdbcTraceRunRepository` as the first read-only building block for a service-backed console:
+
+```java
+JdbcTraceRunRepository runs =
+        new JdbcTraceRunRepository(dataSource);
+
+List<TraceRunSummary> recentRuns = runs.findRecentRuns(50);
+TraceRunSummary run = runs.findRun("RUN-1").orElseThrow();
+```
+
+Each `TraceRunSummary` includes:
+
+- run id
+- first and last trace timestamps
+- latest terminal/suspended status from trace data
+- trace event count
+- trace-chain verification result, including first broken sequence and message
+
+This lets a future console list recent runs directly from the JDBC trace table and flag tampered or legacy audit chains without replaying business code.
