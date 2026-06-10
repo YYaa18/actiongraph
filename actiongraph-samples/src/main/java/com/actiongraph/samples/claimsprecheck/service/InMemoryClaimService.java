@@ -7,13 +7,19 @@ import java.math.BigDecimal;
 
 public final class InMemoryClaimService implements ClaimService {
     private final boolean closed;
+    private final BigDecimal claimedAmount;
 
     public InMemoryClaimService() {
         this(false);
     }
 
     public InMemoryClaimService(boolean closed) {
+        this(closed, new BigDecimal("260000"));
+    }
+
+    public InMemoryClaimService(boolean closed, BigDecimal claimedAmount) {
         this.closed = closed;
+        this.claimedAmount = claimedAmount;
     }
 
     @Override
@@ -22,7 +28,7 @@ public final class InMemoryClaimService implements ClaimService {
                 claimId,
                 "POLICY-2026-001",
                 "Zhang San",
-                new BigDecimal("260000"),
+                claimedAmount,
                 "CNY",
                 closed
         );
