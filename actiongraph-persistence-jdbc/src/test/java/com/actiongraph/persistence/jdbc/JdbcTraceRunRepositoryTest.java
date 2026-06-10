@@ -71,6 +71,65 @@ class JdbcTraceRunRepositoryTest {
     }
 
     @Test
+    void queriesRunsWithPaginationStatusAndAuditFilters() {
+        DataSource dataSource = JdbcTestDataSources.h2();
+        JdbcTraceRepository traceRepository = new JdbcTraceRepository(dataSource);
+        JdbcTraceRunRepository runRepository = new JdbcTraceRunRepository(dataSource);
+
+        appendHashedRun(traceRepository, "RUN-OLDER", "2026-06-10T10:00:00Z",
+                TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
+        appendHashedRun(traceRepository, "RUN-SUSPENDED", "2026-06-10T10:05:00Z",
+                TraceEventType.RUN_SUSPENDED, Map.of("status", "SUSPENDED_PENDING_REVIEW"));
+        appendHashedRun(traceRepository, "RUN-NEWER", "2026-06-10T10:10:00Z",
+                TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
+        traceRepository.append(new TraceEvent(
+                "RUN-LEGACY",
+                1,
+                Instant.parse("2026-06-10T10:15:00Z"),
+                TraceEventType.RUN_ENDED,
+                null,
+                "legacy",
+                Map.of("status", "COMPLETED")
+        ));
+
+        TraceRunPage page = runRepository.findRuns(new TraceRunQuery(1, 1, null, null));
+
+        assertThat(page.total()).isEqualTo(4);
+        assertThat(page.hasMore()).isTrue();
+        assertThat(page.runs())
+                .extracting(TraceRunSummary::runId)
+                .containsExactly("RUN-NEWER");
+
+        TraceRunPage completedAudited = runRepository.findRuns(new TraceRunQuery(10, 0, "COMPLETED", true));
+        assertThat(completedAudited.total()).isEqualTo(2);
+        assertThat(completedAudited.hasMore()).isFalse();
+        assertThat(completedAudited.runs())
+                .extracting(TraceRunSummary::runId)
+                .containsExactly("RUN-NEWER", "RUN-OLDER");
+
+        TraceRunPage brokenAudit = runRepository.findRuns(new TraceRunQuery(10, 0, null, false));
+        assertThat(brokenAudit.total()).isEqualTo(1);
+        assertThat(brokenAudit.runs().getFirst().runId()).isEqualTo("RUN-LEGACY");
+    }
+
+    @Test
+    void returnsTraceEventsForRunDetails() {
+        DataSource dataSource = JdbcTestDataSources.h2();
+        JdbcTraceRepository traceRepository = new JdbcTraceRepository(dataSource);
+        JdbcTraceRunRepository runRepository = new JdbcTraceRunRepository(dataSource);
+        appendHashedRun(traceRepository, "RUN-COMPLETED", "2026-06-10T10:00:00Z",
+                TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
+
+        List<TraceEvent> events = runRepository.findTraceEvents("RUN-COMPLETED");
+
+        assertThat(events)
+                .extracting(TraceEvent::seq)
+                .containsExactly(1L, 2L);
+        assertThat(events.get(1).type()).isEqualTo(TraceEventType.RUN_ENDED);
+        assertThat(runRepository.findTraceEvents("MISSING")).isEmpty();
+    }
+
+    @Test
     void returnsEmptyForMissingRunAndRejectsInvalidLimitsAndTables() {
         DataSource dataSource = JdbcTestDataSources.h2();
         JdbcTraceRunRepository repository = new JdbcTraceRunRepository(dataSource);
@@ -79,6 +138,9 @@ class JdbcTraceRunRepositoryTest {
         assertThatThrownBy(() -> repository.findRecentRuns(0))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("limit");
+        assertThatThrownBy(() -> new TraceRunQuery(10, -1, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("offset");
         assertThatThrownBy(() -> new JdbcTraceRunRepository(dataSource, "trace;drop table x"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("SQL identifier");

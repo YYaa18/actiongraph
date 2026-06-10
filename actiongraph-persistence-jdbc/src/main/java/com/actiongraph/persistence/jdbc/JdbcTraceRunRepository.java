@@ -31,23 +31,23 @@ public final class JdbcTraceRunRepository {
     }
 
     public List<TraceRunSummary> findRecentRuns(int limit) {
-        if (limit <= 0) {
-            throw new IllegalArgumentException("limit must be positive");
-        }
-        String sql = "select run_id from " + table + " group by run_id order by max(at) desc";
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setMaxRows(limit);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                List<TraceRunSummary> summaries = new ArrayList<>();
-                while (resultSet.next()) {
-                    findRun(resultSet.getString("run_id")).ifPresent(summaries::add);
+        return findRuns(TraceRunQuery.recent(limit)).runs();
+    }
+
+    public TraceRunPage findRuns(TraceRunQuery query) {
+        Objects.requireNonNull(query, "query");
+        List<TraceRunSummary> matching = new ArrayList<>();
+        for (String runId : orderedRunIds()) {
+            findRun(runId).ifPresent(summary -> {
+                if (matches(summary, query)) {
+                    matching.add(summary);
                 }
-                return List.copyOf(summaries);
-            }
-        } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot query recent trace runs", ex);
+            });
         }
+        int total = matching.size();
+        int from = Math.min(query.offset(), total);
+        int to = (int) Math.min((long) total, (long) from + query.limit());
+        return new TraceRunPage(query.limit(), query.offset(), total, matching.subList(from, to));
     }
 
     public Optional<TraceRunSummary> findRun(String runId) {
@@ -57,6 +57,34 @@ public final class JdbcTraceRunRepository {
             return Optional.empty();
         }
         return Optional.of(summary(events));
+    }
+
+    public List<TraceEvent> findTraceEvents(String runId) {
+        Objects.requireNonNull(runId, "runId");
+        return traceRepository.findByRun(runId);
+    }
+
+    private List<String> orderedRunIds() {
+        String sql = "select run_id from " + table + " group by run_id order by max(at) desc";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (ResultSet resultSet = statement.executeQuery()) {
+                List<String> runIds = new ArrayList<>();
+                while (resultSet.next()) {
+                    runIds.add(resultSet.getString("run_id"));
+                }
+                return List.copyOf(runIds);
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Cannot query recent trace runs", ex);
+        }
+    }
+
+    private boolean matches(TraceRunSummary summary, TraceRunQuery query) {
+        if (query.status() != null && !query.status().equals(summary.status())) {
+            return false;
+        }
+        return query.auditComplete() == null || query.auditComplete() == summary.auditComplete();
     }
 
     private TraceRunSummary summary(List<TraceEvent> events) {

@@ -87,11 +87,12 @@ Set `actiongraph.actions.auto-register-annotated=false` to build an `ActionRegis
 When `actiongraph.console.enabled=true`, `actiongraph-persistence-jdbc` is on the runtime classpath, and the application has a `DataSource` bean, the starter exposes a read-only run monitoring API:
 
 ```text
-GET /actiongraph/console/runs?limit=50
+GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
 GET /actiongraph/console/runs/{runId}
+GET /actiongraph/console/runs/{runId}/trace
 ```
 
-The endpoint returns `TraceRunSummary`-shaped JSON with run status, first/last trace timestamps, event count, and trace-chain verification. Configure `actiongraph.console.shared-secret` to require the configured token header. The endpoint does not mutate runtime state and does not resume or approve runs.
+The endpoint returns `TraceRunSummary`-shaped JSON with paging metadata, run status, first/last trace timestamps, event count, trace-chain verification, and trace event details for a selected run. Configure `actiongraph.console.shared-secret` to require the configured token header. The endpoint does not mutate runtime state and does not resume or approve runs.
 
 ## Current Scope
 

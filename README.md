@@ -15,7 +15,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Multi-stage human review with atomic suspend/resume claiming
 - Saga-style compensation for failed or denied runs
 - Trace, suspended-run, review-task, and memory repositories, including batched JDBC trace writes
-- JDBC read model for recent run summaries and trace-chain verification in read-only consoles
+- JDBC read model for paged and filtered run summaries, trace details, and trace-chain verification in read-only consoles
 - Suspended-run Blackboard type allowlists for safer JDBC resume
 - Suspended-run snapshot format version checks for deployment discipline
 - Optional data masking for trace details/data and human-review previews
@@ -99,11 +99,12 @@ If `shared-secret` is configured, the request must include the configured token 
 When `actiongraph.console.enabled=true`, a Spring MVC application that also has `actiongraph-persistence-jdbc` and a `DataSource` exposes read-only run monitoring endpoints:
 
 ```text
-GET /actiongraph/console/runs?limit=50
+GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
 GET /actiongraph/console/runs/{runId}
+GET /actiongraph/console/runs/{runId}/trace
 ```
 
-The console responses include run status, first/last trace timestamps, trace event count, and trace-chain verification results. Configure `actiongraph.console.shared-secret` to require the console token header.
+The console responses include paging metadata, run status, first/last trace timestamps, trace event count, trace details, and trace-chain verification results. Configure `actiongraph.console.shared-secret` to require the console token header.
 
 ## Build And Test
 

@@ -76,13 +76,73 @@ class ActionGraphConsoleWebAutoConfigurationTest {
                                     .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.limit").value(1))
+                            .andExpect(jsonPath("$.offset").value(0))
+                            .andExpect(jsonPath("$.total").value(2))
                             .andExpect(jsonPath("$.count").value(1))
+                            .andExpect(jsonPath("$.hasMore").value(true))
                             .andExpect(jsonPath("$.runs[0].runId").value("RUN-SUSPENDED"))
                             .andExpect(jsonPath("$.runs[0].status").value("SUSPENDED_PENDING_REVIEW"))
                             .andExpect(jsonPath("$.runs[0].traceEventCount").value(2))
                             .andExpect(jsonPath("$.runs[0].auditComplete").value(true))
                             .andExpect(jsonPath("$.runs[0].firstBrokenSeq").value(0))
                             .andExpect(jsonPath("$.runs[0].auditMessage").value("Trace chain is valid"));
+                });
+    }
+
+    @Test
+    void consoleFiltersRunsAndReturnsTraceEvents() {
+        contextRunner
+                .withBean(DataSource.class, ActionGraphConsoleWebAutoConfigurationTest::h2)
+                .withPropertyValues("actiongraph.console.enabled=true")
+                .run(context -> {
+                    seed(context.getBean(DataSource.class), "RUN-OLDER", "2026-06-10T10:00:00Z",
+                            TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
+                    seed(context.getBean(DataSource.class), "RUN-SUSPENDED", "2026-06-10T10:05:00Z",
+                            TraceEventType.RUN_SUSPENDED, Map.of("status", "SUSPENDED_PENDING_REVIEW"));
+                    seed(context.getBean(DataSource.class), "RUN-NEWER", "2026-06-10T10:10:00Z",
+                            TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
+                    seedLegacy(context.getBean(DataSource.class), "RUN-LEGACY", "2026-06-10T10:15:00Z",
+                            TraceEventType.RUN_ENDED, Map.of("status", "COMPLETED"));
+
+                    MockMvc mockMvc = mockMvc(context);
+                    mockMvc.perform(get("/actiongraph/console/runs")
+                                    .queryParam("status", "COMPLETED")
+                                    .queryParam("auditComplete", "true")
+                                    .queryParam("limit", "1")
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.limit").value(1))
+                            .andExpect(jsonPath("$.offset").value(0))
+                            .andExpect(jsonPath("$.total").value(2))
+                            .andExpect(jsonPath("$.count").value(1))
+                            .andExpect(jsonPath("$.hasMore").value(true))
+                            .andExpect(jsonPath("$.status").value("COMPLETED"))
+                            .andExpect(jsonPath("$.auditComplete").value(true))
+                            .andExpect(jsonPath("$.runs[0].runId").value("RUN-NEWER"));
+
+                    mockMvc.perform(get("/actiongraph/console/runs")
+                                    .queryParam("auditComplete", "false")
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.total").value(1))
+                            .andExpect(jsonPath("$.runs[0].runId").value("RUN-LEGACY"))
+                            .andExpect(jsonPath("$.runs[0].auditComplete").value(false));
+
+                    mockMvc.perform(get("/actiongraph/console/runs/RUN-NEWER/trace")
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.runId").value("RUN-NEWER"))
+                            .andExpect(jsonPath("$.count").value(2))
+                            .andExpect(jsonPath("$.events[0].seq").value(1))
+                            .andExpect(jsonPath("$.events[0].type").value("RUN_STARTED"))
+                            .andExpect(jsonPath("$.events[1].type").value("RUN_ENDED"))
+                            .andExpect(jsonPath("$.events[1].data.status").value("COMPLETED"))
+                            .andExpect(jsonPath("$.events[1].hash").isNotEmpty());
+
+                    mockMvc.perform(get("/actiongraph/console/runs/MISSING/trace")
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isNotFound())
+                            .andExpect(jsonPath("$.error").value("NOT_FOUND"));
                 });
     }
 
@@ -171,6 +231,24 @@ class ActionGraphConsoleWebAutoConfigurationTest {
         TraceEvent ended = hashed(runId, 2, started.hash(), Instant.parse(startedAt).plusSeconds(1),
                 terminalType, terminalData);
         repository.appendAll(List.of(started, ended));
+    }
+
+    private static void seedLegacy(
+            DataSource dataSource,
+            String runId,
+            String at,
+            TraceEventType type,
+            Map<String, String> data
+    ) {
+        new JdbcTraceRepository(dataSource).append(new TraceEvent(
+                runId,
+                1,
+                Instant.parse(at),
+                type,
+                null,
+                "legacy",
+                data
+        ));
     }
 
     private static TraceEvent hashed(

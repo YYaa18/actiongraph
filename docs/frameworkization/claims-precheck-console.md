@@ -52,7 +52,10 @@ JdbcTraceRunRepository runs =
         new JdbcTraceRunRepository(dataSource);
 
 List<TraceRunSummary> recentRuns = runs.findRecentRuns(50);
+TraceRunPage completedRuns = runs.findRuns(
+        new TraceRunQuery(50, 0, "COMPLETED", true));
 TraceRunSummary run = runs.findRun("RUN-1").orElseThrow();
+List<TraceEvent> trace = runs.findTraceEvents("RUN-1");
 ```
 
 Each `TraceRunSummary` includes:
@@ -62,8 +65,9 @@ Each `TraceRunSummary` includes:
 - latest terminal/suspended status from trace data
 - trace event count
 - trace-chain verification result, including first broken sequence and message
+- trace event details for a selected run
 
-This lets a future console list recent runs directly from the JDBC trace table and flag tampered or legacy audit chains without replaying business code.
+This lets a future console list runs directly from the JDBC trace table, page/filter operational views, inspect trace details, and flag tampered or legacy audit chains without replaying business code.
 
 ## Spring Boot Read-Only Endpoint
 
@@ -87,8 +91,9 @@ actiongraph:
 Endpoints:
 
 ```text
-GET /actiongraph/console/runs?limit=50
+GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
 GET /actiongraph/console/runs/{runId}
+GET /actiongraph/console/runs/{runId}/trace
 ```
 
-The responses are read-only summaries: run id, first/last trace timestamps, terminal or suspended status, trace event count, and audit-chain verification fields. Missing or invalid console tokens return `401 UNAUTHORIZED` when `shared-secret` is configured. This is still a backend query API; a production console should add enterprise authentication/authorization, richer paging and filters, retention controls, and a front-end review surface.
+The responses are read-only summaries and trace details: run id, first/last trace timestamps, terminal or suspended status, trace event count, audit-chain verification fields, and individual trace event rows. Missing or invalid console tokens return `401 UNAUTHORIZED` when `shared-secret` is configured. This is still a backend query API; a production console should add enterprise authentication/authorization, retention controls, and a front-end review surface.
