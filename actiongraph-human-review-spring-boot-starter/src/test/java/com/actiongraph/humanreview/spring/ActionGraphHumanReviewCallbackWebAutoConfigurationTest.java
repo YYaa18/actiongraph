@@ -1,4 +1,4 @@
-package com.actiongraph.spring;
+package com.actiongraph.humanreview.spring;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRiskLevel;
@@ -7,9 +7,11 @@ import com.actiongraph.planning.Plan;
 import com.actiongraph.planning.PlanStep;
 import com.actiongraph.policy.HumanReviewCallbackHandler;
 import com.actiongraph.policy.HumanReviewDecision;
-import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRepository;
 import com.actiongraph.policy.HumanReviewRequest;
+import com.actiongraph.policy.HumanReviewTask;
+import com.actiongraph.policy.InMemoryHumanReviewRepository;
+import com.actiongraph.spring.ActionGraphAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
@@ -38,12 +40,29 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
                     JacksonAutoConfiguration.class,
                     HttpMessageConvertersAutoConfiguration.class,
                     WebMvcAutoConfiguration.class,
-                    ActionGraphAutoConfiguration.class,
+                    ActionGraphHumanReviewCallbackWebAutoConfiguration.class
+            ))
+            .withBean(HumanReviewRepository.class, InMemoryHumanReviewRepository::new);
+
+    private final WebApplicationContextRunner contextRunnerWithoutRepository = new WebApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(
+                    JacksonAutoConfiguration.class,
+                    HttpMessageConvertersAutoConfiguration.class,
+                    WebMvcAutoConfiguration.class,
                     ActionGraphHumanReviewCallbackWebAutoConfiguration.class
             ));
 
     private final ApplicationContextRunner nonWebContextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
+                    ActionGraphHumanReviewCallbackWebAutoConfiguration.class
+            ))
+            .withBean(HumanReviewRepository.class, InMemoryHumanReviewRepository::new);
+
+    private final WebApplicationContextRunner runtimeStarterCompositionRunner = new WebApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(
+                    JacksonAutoConfiguration.class,
+                    HttpMessageConvertersAutoConfiguration.class,
+                    WebMvcAutoConfiguration.class,
                     ActionGraphAutoConfiguration.class,
                     ActionGraphHumanReviewCallbackWebAutoConfiguration.class
             ));
@@ -63,7 +82,7 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasSingleBean(ActionGraphHumanReviewCallbackController.class);
 
-                    context.getBean(HumanReviewPolicy.class).review(request());
+                    savePending(context.getBean(HumanReviewRepository.class));
 
                     mockMvc(context).perform(post("/actiongraph/human-review/callbacks")
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -101,6 +120,27 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
     }
 
     @Test
+    void callbackEndpointIsNotCreatedWithoutHumanReviewRepository() {
+        contextRunnerWithoutRepository
+                .withPropertyValues("actiongraph.human-review.callback-endpoint.enabled=true")
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean(HumanReviewCallbackHandler.class);
+                    assertThat(context).doesNotHaveBean(ActionGraphHumanReviewCallbackController.class);
+                });
+    }
+
+    @Test
+    void callbackEndpointComposesWithRuntimeStarterRepository() {
+        runtimeStarterCompositionRunner
+                .withPropertyValues("actiongraph.human-review.callback-endpoint.enabled=true")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(HumanReviewRepository.class);
+                    assertThat(context).hasSingleBean(HumanReviewCallbackHandler.class);
+                    assertThat(context).hasSingleBean(ActionGraphHumanReviewCallbackController.class);
+                });
+    }
+
+    @Test
     void callbackEndpointCanUseCustomPath() {
         contextRunner
                 .withPropertyValues(
@@ -108,7 +148,7 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
                         "actiongraph.human-review.callback-endpoint.path=/internal/reviews"
                 )
                 .run(context -> {
-                    context.getBean(HumanReviewPolicy.class).review(request());
+                    savePending(context.getBean(HumanReviewRepository.class));
 
                     mockMvc(context).perform(post("/internal/reviews")
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -133,7 +173,7 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
         contextRunner
                 .withPropertyValues("actiongraph.human-review.callback-endpoint.enabled=true")
                 .run(context -> {
-                    context.getBean(HumanReviewPolicy.class).review(request());
+                    savePending(context.getBean(HumanReviewRepository.class));
 
                     mockMvc(context).perform(post("/actiongraph/human-review/callbacks")
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -164,7 +204,7 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
         contextRunner
                 .withPropertyValues("actiongraph.human-review.callback-endpoint.enabled=true")
                 .run(context -> {
-                    context.getBean(HumanReviewPolicy.class).review(request());
+                    savePending(context.getBean(HumanReviewRepository.class));
 
                     mockMvc(context).perform(post("/actiongraph/human-review/callbacks")
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -191,7 +231,7 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
                         "actiongraph.human-review.callback-endpoint.shared-secret=review-secret"
                 )
                 .run(context -> {
-                    context.getBean(HumanReviewPolicy.class).review(request());
+                    savePending(context.getBean(HumanReviewRepository.class));
 
                     mockMvc(context).perform(post("/actiongraph/human-review/callbacks")
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -213,7 +253,7 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
                         "actiongraph.human-review.callback-endpoint.shared-secret=review-secret"
                 )
                 .run(context -> {
-                    context.getBean(HumanReviewPolicy.class).review(request());
+                    savePending(context.getBean(HumanReviewRepository.class));
 
                     mockMvc(context).perform(post("/actiongraph/human-review/callbacks")
                                     .header("X-ActionGraph-Review-Token", "wrong-secret")
@@ -237,7 +277,7 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
                         "actiongraph.human-review.callback-endpoint.shared-secret=review-secret"
                 )
                 .run(context -> {
-                    context.getBean(HumanReviewPolicy.class).review(request());
+                    savePending(context.getBean(HumanReviewRepository.class));
 
                     mockMvc(context).perform(post("/actiongraph/human-review/callbacks")
                                     .header("X-Claims-Review-Token", "review-secret")
@@ -251,6 +291,10 @@ class ActionGraphHumanReviewCallbackWebAutoConfigurationTest {
 
     private MockMvc mockMvc(org.springframework.web.context.WebApplicationContext context) {
         return MockMvcBuilders.webAppContextSetup(context).build();
+    }
+
+    private void savePending(HumanReviewRepository repository) {
+        repository.savePending(HumanReviewTask.pending(request(), "Review required"));
     }
 
     private HumanReviewRequest request() {

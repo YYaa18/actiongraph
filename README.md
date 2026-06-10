@@ -21,10 +21,11 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional data masking for trace details/data and human-review previews
 - Tamper-evident TraceEvent hash chains with verification support
 - Single-transaction amount limits with hard denial and review escalation
-- Spring Boot starter with annotation-driven Action registration and optional human-review callback endpoint
+- Spring Boot starter with annotation-driven Action registration and runtime defaults
+- Optional human-review Spring Boot starter with approval callback endpoint support
 - Optional console Spring Boot starter with read-only run monitoring UI/endpoints
 - DeepSeek-compatible LLM goal interpretation
-- Reference samples for renewal quote and order cancellation flows
+- Reference samples for renewal quote, order cancellation, and claims precheck flows
 
 ## Modules
 
@@ -34,6 +35,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-llm-deepseek` | DeepSeek-compatible LLM client and GoalCatalog prompt support |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, human review, and memory |
 | `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning |
+| `actiongraph-human-review-spring-boot-starter` | Optional approval callback endpoint for external review systems |
 | `actiongraph-console-spring-boot-starter` | Optional read-only Console UI and Spring MVC query endpoints |
 | `actiongraph-samples` | Pure Java sample applications |
 
@@ -44,7 +46,8 @@ dependencies {
     implementation("com.actiongraph:actiongraph-spring-boot-starter:0.1.0")
     implementation("com.actiongraph:actiongraph-llm-deepseek:0.1.0")
     implementation("com.actiongraph:actiongraph-persistence-jdbc:0.1.0")
-    // Optional control-plane component:
+    // Optional ecosystem/control-plane components:
+    implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0")
     implementation("com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0")
 }
 ```
@@ -85,7 +88,7 @@ actiongraph:
     max-limit: 200
 ```
 
-When the callback endpoint is enabled in a Spring MVC application, approval systems can post decisions directly:
+When `actiongraph-human-review-spring-boot-starter` is on the classpath and the callback endpoint is enabled in a Spring MVC application, approval systems can post decisions directly. The endpoint requires a `HumanReviewRepository` bean; `actiongraph-spring-boot-starter` supplies an in-memory default, and production systems can provide a JDBC-backed bean.
 
 ```json
 {
@@ -132,13 +135,14 @@ Run the sample apps:
 
 The JDBC batch input path uses standard `DriverManager`; add the target database driver to the sample runtime classpath before running against a real database. See `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql` for the anonymized view contract.
 For PostgreSQL staging connections, see the dialect mapping in `actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql` and [Claims Precheck PostgreSQL Mapping](docs/frameworkization/claims-precheck-postgresql.md).
-Batch reports include Markdown, CSV, and a read-only HTML console with total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` or enable the Spring Boot callback endpoint above.
+Batch reports include Markdown, CSV, and a read-only HTML console with total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` or enable the optional Spring Boot callback endpoint above.
 The `external-callbacks` mode replays JSONL approval callback deliveries through `HumanReviewCallbackHandler`, including shared-secret checks and duplicate-delivery idempotency.
 
 ## Documentation
 
 - [Quick start guide](docs/quick-start.html)
 - [Real LLM smoke test](docs/frameworkization/llm-smoke.md)
+- [Human review integration](docs/frameworkization/human-review.md)
 - [Claims precheck PostgreSQL mapping](docs/frameworkization/claims-precheck-postgresql.md)
 - [Claims precheck review callbacks](docs/frameworkization/claims-precheck-review-callbacks.md)
 - [Claims precheck read-only console](docs/frameworkization/claims-precheck-console.md)

@@ -77,7 +77,7 @@ Set `actiongraph.actions.auto-register-annotated=false` to build an `ActionRegis
 
 ## Optional Ecosystem Components
 
-This starter intentionally does not include the read-only Console control layer. Add `actiongraph-console-spring-boot-starter` when an application needs operational run monitoring. Keeping it separate lets services use ActionGraph runtime integration without exposing control-plane endpoints.
+This starter intentionally does not include HTTP control-plane endpoints. Add `actiongraph-human-review-spring-boot-starter` when an application needs approval callbacks, and add `actiongraph-console-spring-boot-starter` when it needs operational run monitoring. Keeping these separate lets services use ActionGraph runtime integration without exposing review or console endpoints.
 
 ## Current Scope
 

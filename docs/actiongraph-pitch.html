@@ -753,7 +753,7 @@
         <span>审批申请已创建：APPROVAL-1，对应报价：QUOTE-1</span>
       </div>
       <div class="hud">
-        <div class="hud-item"><b>178</b><span>tests passing</span></div>
+        <div class="hud-item"><b>180</b><span>tests passing</span></div>
         <div class="hud-item"><b>5</b><span>modules</span></div>
         <div class="hud-item"><b>3</b><span>reference domains</span></div>
         <div class="hud-item"><b>~6000</b><span>runs/s smoke</span></div>
@@ -1003,16 +1003,17 @@
           <div><span class="log-ok">actiongraph-core:test</span> 40 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-llm-deepseek:test</span> 8 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-persistence-jdbc:test</span> 31 tests, 0 failures</div>
-          <div><span class="log-ok">actiongraph-spring-boot-starter:test</span> 24 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-spring-boot-starter:test</span> 14 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-human-review-spring-boot-starter:test</span> 12 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-console-spring-boot-starter:test</span> 7 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-samples:test</span> 68 tests, 1 gated smoke skipped</div>
-          <div><span class="log-ok">BUILD SUCCESSFUL</span> 178 tests, 0 failures, 1 skipped</div>
+          <div><span class="log-ok">BUILD SUCCESSFUL</span> 180 tests, 0 failures, 1 skipped</div>
         </div>
       </div>
       <div class="layout-3" style="grid-template-columns:1fr;">
-        <div class="panel ok"><div class="metric green">178</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、Spring starter、审批回调端点与鉴权、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
+        <div class="panel ok"><div class="metric green">180</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、Spring starter、审批回调端点与鉴权、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
         <div class="panel ok"><div class="metric green">~6000</div><h3>并发冒烟</h3><p>200 虚拟线程并发 1 万次运行；重复 resume 只产生一次业务副作用。</p></div>
-        <div class="panel ok"><div class="metric green">6</div><h3>工程模块</h3><p>core / llm-deepseek / persistence-jdbc / spring-boot-starter / console-spring-boot-starter / samples；公共框架和控制层生态组件可独立组合。</p></div>
+        <div class="panel ok"><div class="metric green">7</div><h3>工程模块</h3><p>core / llm-deepseek / persistence-jdbc / spring-boot-starter / human-review-spring-boot-starter / console-spring-boot-starter / samples；公共框架和控制层生态组件可独立组合。</p></div>
         <div class="panel ok"><div class="metric green">3</div><h3>参考业务域</h3><p>续约报价、订单取消、理赔资料预审三个不同领域接入，证明核心可复用并开始进入保险场景打穿。</p></div>
       </div>
     </div>

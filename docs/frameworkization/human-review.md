@@ -83,12 +83,11 @@ The JDBC repository stores:
 
 ## Spring Boot
 
-The Spring Boot starter now provides these defaults:
+The Spring Boot runtime starter provides these defaults:
 
 - `HumanReviewRepository` -> `InMemoryHumanReviewRepository`
 - `HumanReviewPolicy` -> `RepositoryBackedHumanReviewPolicy`
 - `ApprovalChainResolver` -> `SingleStageApprovalChainResolver`
-- `HumanReviewCallbackHandler` when the optional callback endpoint is enabled
 
 Applications can replace these beans. For durable review tasks:
 
@@ -101,7 +100,11 @@ HumanReviewRepository humanReviewRepository(DataSource dataSource) {
 
 Set `actiongraph.human-review.risk-based-approval-chain=true` to use `RiskBasedChainResolver`: HIGH risk actions require checker review and authorization; other actions remain single-stage unless request attributes ask for amount escalation. Review attributes are copied onto `HumanReviewTask`, so external approval systems can show why a task was escalated without recomputing business amounts.
 
-Spring MVC applications can expose an approval callback endpoint without writing a controller:
+Spring MVC applications can add the optional callback starter to expose an approval callback endpoint without writing a controller:
+
+```kotlin
+implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter:0.1.0")
+```
 
 ```yaml
 actiongraph:
@@ -126,7 +129,7 @@ The endpoint accepts one stage decision per request:
 }
 ```
 
-It returns the updated `HumanReviewTask` projection, including `currentStageIndex` and `stageDecisionCount`. The endpoint is disabled by default and is only created in Servlet MVC applications.
+It returns the updated `HumanReviewTask` projection, including `currentStageIndex` and `stageDecisionCount`. The endpoint is disabled by default and is only created in Servlet MVC applications that have a `HumanReviewRepository` bean. This means the callback receiver can be the same business service that runs ActionGraph, or a separate approval integration service wired only to the review repository.
 
 If `shared-secret` is configured, requests must include the configured token header. The token check runs before mutating the `HumanReviewRepository`, so rejected callbacks do not accidentally decide review tasks.
 

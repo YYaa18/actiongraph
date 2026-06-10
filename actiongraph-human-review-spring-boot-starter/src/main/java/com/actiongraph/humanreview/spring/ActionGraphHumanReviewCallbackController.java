@@ -1,4 +1,4 @@
-package com.actiongraph.spring;
+package com.actiongraph.humanreview.spring;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.policy.HumanReviewCallback;
@@ -24,11 +24,11 @@ import java.util.Objects;
 @RequestMapping("${actiongraph.human-review.callback-endpoint.path:/actiongraph/human-review/callbacks}")
 public final class ActionGraphHumanReviewCallbackController {
     private final HumanReviewCallbackHandler handler;
-    private final ActionGraphProperties.CallbackEndpointProperties properties;
+    private final ActionGraphHumanReviewCallbackProperties properties;
 
     public ActionGraphHumanReviewCallbackController(
             HumanReviewCallbackHandler handler,
-            ActionGraphProperties.CallbackEndpointProperties properties
+            ActionGraphHumanReviewCallbackProperties properties
     ) {
         this.handler = Objects.requireNonNull(handler, "handler");
         this.properties = Objects.requireNonNull(properties, "properties");
