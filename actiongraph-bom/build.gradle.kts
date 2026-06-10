@@ -5,6 +5,7 @@ javaPlatform {
 dependencies {
     constraints {
         api(project(":actiongraph-core"))
+        api(project(":actiongraph-llm"))
         api(project(":actiongraph-llm-deepseek"))
         api(project(":actiongraph-persistence-jdbc"))
         api(project(":actiongraph-jdbc-spring-boot-starter"))

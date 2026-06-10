@@ -182,7 +182,8 @@
   <tr><td><code>com.actiongraph:actiongraph-bom</code></td><td>版本对齐 BOM</td><td><b>推荐先引入</b>，之后各组件无需重复写版本号</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-spring-boot-starter</code></td><td>自动装配 + 注解 Bean 扫描</td><td><b>业务执行型 Spring Boot 应用常用</b>，自带 core</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、审批、记忆</td><td>非 Spring 应用直接依赖它</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>DeepSeek 客户端 + GoalCatalog prompt 渲染</td><td>需要自然语言入口时</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-llm</code></td><td>通用 LLM 解释器 + GoalCatalog prompt 渲染 + 结构化输出解析</td><td>接入非 DeepSeek 模型或自定义 LLM provider 时</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>DeepSeek 兼容客户端</td><td>使用 DeepSeek 兼容接口时，会传递引入 actiongraph-llm</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-governance</code></td><td>脱敏 / 额度 / 多级审批路由 / 规则权限策略库</td><td>非 Spring 服务需要复用框架治理策略时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-governance-spring-boot-starter</code></td><td>脱敏 / 额度 / 多级审批路由自动装配</td><td>需要金融治理策略时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-persistence-jdbc</code></td><td>Trace / 挂起 / 审批 / 记忆的 JDBC 仓储</td><td>非 Spring 或完全手工接线时使用</td></tr>

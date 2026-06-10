@@ -29,7 +29,8 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional JDBC adapter for the console query port
 - Optional console Spring Boot starter with read-only run monitoring UI/endpoints
 - Optional JDBC Spring Boot starter for durable repository auto-configuration
-- DeepSeek-compatible LLM goal interpretation
+- Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing
+- DeepSeek-compatible LLM client
 - Reference samples for renewal quote, order cancellation, and claims precheck flows
 
 ## Modules
@@ -39,7 +40,8 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
 | `actiongraph-core` | Core action, planning, runtime, policy, trace, memory, and interpretation APIs |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, approval routing, and rule-based permissions |
-| `actiongraph-llm-deepseek` | DeepSeek-compatible LLM client and GoalCatalog prompt support |
+| `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
+| `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, human review, and memory |
 | `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning |
 | `actiongraph-governance-spring-boot-starter` | Optional Spring Boot governance policies for masking, amount limits, and approval routing |

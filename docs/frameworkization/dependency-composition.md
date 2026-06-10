@@ -97,7 +97,20 @@ The governance starter wraps `actiongraph-governance` with Spring Boot auto-conf
 
 Without this module, the base Spring runtime remains neutral: no masking, default permission allow, no amount escalation, and single-stage review.
 
-## Natural-Language Entry
+## Provider-Neutral Natural-Language Entry
+
+Use this when a service wants ActionGraph's LLM goal interpreter, GoalCatalog prompt renderer, and structured output parser, but will provide its own `LlmClient`.
+
+```kotlin
+dependencies {
+    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-llm")
+}
+```
+
+`actiongraph-llm` depends on `actiongraph-core` and does not call any provider by itself.
+
+## DeepSeek Natural-Language Entry
 
 Add the DeepSeek-compatible adapter when the service needs LLM goal interpretation.
 
@@ -109,7 +122,7 @@ dependencies {
 }
 ```
 
-The LLM interpreter produces goals and parameters only; it does not generate plans or execute actions.
+`actiongraph-llm-deepseek` brings `actiongraph-llm` transitively and adds only the DeepSeek-compatible HTTP client. The LLM interpreter produces goals and parameters only; it does not generate plans or execute actions.
 
 ## Approval Callback Receiver
 
