@@ -30,13 +30,23 @@ final class PersistenceJsonCodec {
     };
 
     private final ObjectMapper objectMapper;
+    private final BlackboardTypeRegistry blackboardTypeRegistry;
 
     PersistenceJsonCodec() {
-        this(defaultObjectMapper());
+        this(defaultObjectMapper(), BlackboardTypeRegistry.allowAll());
     }
 
     PersistenceJsonCodec(ObjectMapper objectMapper) {
+        this(objectMapper, BlackboardTypeRegistry.allowAll());
+    }
+
+    PersistenceJsonCodec(BlackboardTypeRegistry blackboardTypeRegistry) {
+        this(defaultObjectMapper(), blackboardTypeRegistry);
+    }
+
+    PersistenceJsonCodec(ObjectMapper objectMapper, BlackboardTypeRegistry blackboardTypeRegistry) {
         this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
+        this.blackboardTypeRegistry = Objects.requireNonNull(blackboardTypeRegistry, "blackboardTypeRegistry");
     }
 
     static ObjectMapper defaultObjectMapper() {
@@ -148,6 +158,7 @@ final class PersistenceJsonCodec {
 
     private void putRestoredObject(InMemoryBlackboard blackboard, ObjectSnapshot snapshot) {
         try {
+            blackboardTypeRegistry.verifyAllowed(snapshot.className());
             Class<?> type = Class.forName(snapshot.className());
             Object value = objectMapper.treeToValue(snapshot.value(), type);
             putTyped(blackboard, type, snapshot.id(), value);

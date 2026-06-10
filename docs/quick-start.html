@@ -423,9 +423,14 @@ AmountExtractor amountExtractor() {
             DataSource ds,
             ActionGraphProperties properties
     ) {
+        BlackboardTypeRegistry blackboardTypes = BlackboardTypeRegistry.builder()
+                .allowPackage(<span class="s">"com.example.business"</span>)
+                .build();
         <span class="k">return new</span> JdbcSuspendedRunRepository(
                 ds,
-                properties.getPersistence().getSuspendedRunClaimTimeout()
+                JdbcSuspendedRunRepository.DEFAULT_TABLE,
+                properties.getPersistence().getSuspendedRunClaimTimeout(),
+                blackboardTypes
         );                                                  <span class="c">// 挂起快照，跨重启可恢复</span>
     }
     <span class="a">@Bean</span> HumanReviewRepository humanReviewRepository(DataSource ds) {
@@ -437,7 +442,7 @@ AmountExtractor amountExtractor() {
 }</code></pre>
 <div class="card callout danger">
   <div class="title">安全边界</div>
-  挂起快照按类名 + JSON 恢复 Blackboard 对象，且为了无损 resume 不做脱敏。<b>挂起表必须视为高敏可信输入</b>：仅 runtime 服务账号可读写，严格控制库表权限，不要与低信任系统共库。
+  挂起快照按类名 + JSON 恢复 Blackboard 对象，且为了无损 resume 不做脱敏。<b>挂起表必须视为高敏可信输入</b>：仅 runtime 服务账号可读写，严格控制库表权限，不要与低信任系统共库；生产环境应配置 <code>BlackboardTypeRegistry</code>，只允许业务包下的快照类型恢复。
 </div>
 
 <h2 id="config">配置项</h2>

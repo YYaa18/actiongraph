@@ -73,3 +73,5 @@ Without `@BlackboardValue`, annotation behavior remains the same as before and u
 - JSON value
 
 Older snapshots without a key id are read back as `default`.
+
+For production resume paths, configure `JdbcSuspendedRunRepository` with a `BlackboardTypeRegistry` so only expected domain object classes/packages can be restored from suspended-run JSON.

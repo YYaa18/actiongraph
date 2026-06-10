@@ -65,6 +65,23 @@ new JdbcSuspendedRunRepository(dataSource, Duration.ofMinutes(30));
 new JdbcSuspendedRunRepository(dataSource, "my_suspended_run", Duration.ofMinutes(30));
 ```
 
+Production applications should also constrain which Blackboard object types can be restored from suspended-run JSON. By default the repository allows all types to preserve backward compatibility. Passing a `BlackboardTypeRegistry` makes restore fail fast before `Class.forName(...)` for any class outside the allowlist:
+
+```java
+BlackboardTypeRegistry blackboardTypes = BlackboardTypeRegistry.builder()
+        .allowPackage("com.example.claims")
+        .allowClass(SharedRuntimeContext.class)
+        .build();
+
+SuspendedRunRepository suspendedRunRepository =
+        new JdbcSuspendedRunRepository(
+                dataSource,
+                "actiongraph_suspended_run",
+                Duration.ofMinutes(30),
+                blackboardTypes
+        );
+```
+
 ## What Is Persisted
 
 Trace repository:
@@ -130,6 +147,8 @@ On resume, the executor atomically claims the suspended run before restoring the
 
 Blackboard objects are serialized with Jackson using their concrete runtime class names and Blackboard key ids. This keeps the core runtime free of persistence concerns, but it means persisted domain objects should be Jackson-serializable and class names must remain stable across deployment versions.
 
+If a `BlackboardTypeRegistry` is supplied, every suspended-run object class name must match an allowed exact class or package prefix during restore. A disallowed class raises `DisallowedBlackboardTypeException` and stops resume before any business action executes.
+
 `DataMaskingPolicy` masks trace detail/data and human-review previews before they reach JDBC repositories. It does not mask suspended-run snapshots.
 
 For schema or package migrations, introduce an application-level migration step before calling `resume`.
@@ -145,6 +164,7 @@ The module tests cover:
 - suspended run snapshots restored with Goal, Blackboard, executed actions, and compensation stack
 - suspended run resume claims succeeding only once
 - multiple same-type Blackboard values restored by key
+- suspended run Blackboard type allowlists accepting configured classes/packages and rejecting unlisted class names before restore
 - a run suspended for human review, resumed by a new executor using JDBC repositories, failing after resume, and compensating an action that completed before suspension
 - a pending review task approved externally through JDBC, then consumed by resume to complete the run
 - multi-stage human review progression, stale stage rejection, and legacy single-stage migration

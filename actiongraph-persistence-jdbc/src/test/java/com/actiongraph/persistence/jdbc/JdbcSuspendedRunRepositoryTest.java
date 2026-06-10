@@ -8,6 +8,7 @@ import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.SuspendedRun;
 import org.junit.jupiter.api.Test;
 
+import javax.sql.DataSource;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
@@ -79,6 +80,54 @@ class JdbcSuspendedRunRepositoryTest {
     }
 
     @Test
+    void restoresBlackboardValuesAllowedByExactClassName() {
+        BlackboardTypeRegistry registry = BlackboardTypeRegistry.builder()
+                .allowClass(PersistedInput.class)
+                .build();
+        JdbcSuspendedRunRepository repository = new JdbcSuspendedRunRepository(JdbcTestDataSources.h2(), registry);
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+        blackboard.put(new PersistedInput("C001"));
+
+        repository.save(suspendedRun("RUN-ALLOW-CLASS", blackboard));
+
+        SuspendedRun restored = repository.findByRunId("RUN-ALLOW-CLASS").orElseThrow();
+        assertThat(restored.blackboard().get(PersistedInput.class)).contains(new PersistedInput("C001"));
+    }
+
+    @Test
+    void restoresBlackboardValuesAllowedByPackagePrefix() {
+        BlackboardTypeRegistry registry = BlackboardTypeRegistry.builder()
+                .allowPackage("com.actiongraph.persistence.jdbc")
+                .build();
+        JdbcSuspendedRunRepository repository = new JdbcSuspendedRunRepository(JdbcTestDataSources.h2(), registry);
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+        blackboard.put(new PersistedInput("C001"));
+
+        repository.save(suspendedRun("RUN-ALLOW-PACKAGE", blackboard));
+
+        SuspendedRun restored = repository.findByRunId("RUN-ALLOW-PACKAGE").orElseThrow();
+        assertThat(restored.blackboard().get(PersistedInput.class)).contains(new PersistedInput("C001"));
+    }
+
+    @Test
+    void rejectsBlackboardTypesOutsideAllowlistDuringRestore() {
+        DataSource dataSource = JdbcTestDataSources.h2();
+        JdbcSuspendedRunRepository writer = new JdbcSuspendedRunRepository(dataSource);
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+        blackboard.put(new PersistedInput("C001"));
+        writer.save(suspendedRun("RUN-DISALLOWED", blackboard));
+
+        BlackboardTypeRegistry registry = BlackboardTypeRegistry.builder()
+                .allowClassName("java.lang.String")
+                .build();
+        JdbcSuspendedRunRepository reader = new JdbcSuspendedRunRepository(dataSource, registry);
+
+        assertThatThrownBy(() -> reader.findByRunId("RUN-DISALLOWED"))
+                .isInstanceOf(DisallowedBlackboardTypeException.class)
+                .hasMessageContaining(PersistedInput.class.getName());
+    }
+
+    @Test
     void claimForResumeOnlySucceedsOnce() {
         JdbcSuspendedRunRepository repository = new JdbcSuspendedRunRepository(JdbcTestDataSources.h2());
         InMemoryBlackboard blackboard = new InMemoryBlackboard();
@@ -114,6 +163,18 @@ class JdbcSuspendedRunRepositoryTest {
         ))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("claimTimeout must be positive");
+    }
+
+    private SuspendedRun suspendedRun(String runId, InMemoryBlackboard blackboard) {
+        return new SuspendedRun(
+                runId,
+                new Goal("persistedGoal", Set.of(DRAFTED)),
+                blackboard,
+                List.of(),
+                List.of(),
+                new ActionId("action.two"),
+                "waiting"
+        );
     }
 
     public record PersistedInput(String value) {

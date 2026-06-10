@@ -104,7 +104,10 @@ TraceRepository traceRepository(DataSource dataSource) {
 
 @Bean
 SuspendedRunRepository suspendedRunRepository(DataSource dataSource) {
-    return new JdbcSuspendedRunRepository(dataSource);
+    BlackboardTypeRegistry blackboardTypes = BlackboardTypeRegistry.builder()
+            .allowPackage("com.example.business")
+            .build();
+    return new JdbcSuspendedRunRepository(dataSource, blackboardTypes);
 }
 
 @Bean

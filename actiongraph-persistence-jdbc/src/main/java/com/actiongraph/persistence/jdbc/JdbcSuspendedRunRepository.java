@@ -33,16 +33,45 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
         this(dataSource, DEFAULT_TABLE);
     }
 
+    public JdbcSuspendedRunRepository(DataSource dataSource, BlackboardTypeRegistry blackboardTypeRegistry) {
+        this(dataSource, DEFAULT_TABLE, DEFAULT_CLAIM_TIMEOUT, blackboardTypeRegistry);
+    }
+
     public JdbcSuspendedRunRepository(DataSource dataSource, Duration claimTimeout) {
         this(dataSource, DEFAULT_TABLE, claimTimeout);
+    }
+
+    public JdbcSuspendedRunRepository(
+            DataSource dataSource,
+            Duration claimTimeout,
+            BlackboardTypeRegistry blackboardTypeRegistry
+    ) {
+        this(dataSource, DEFAULT_TABLE, claimTimeout, blackboardTypeRegistry);
     }
 
     public JdbcSuspendedRunRepository(DataSource dataSource, String table) {
         this(dataSource, table, DEFAULT_CLAIM_TIMEOUT);
     }
 
+    public JdbcSuspendedRunRepository(
+            DataSource dataSource,
+            String table,
+            BlackboardTypeRegistry blackboardTypeRegistry
+    ) {
+        this(dataSource, table, DEFAULT_CLAIM_TIMEOUT, blackboardTypeRegistry);
+    }
+
     public JdbcSuspendedRunRepository(DataSource dataSource, String table, Duration claimTimeout) {
         this(dataSource, table, claimTimeout, new PersistenceJsonCodec());
+    }
+
+    public JdbcSuspendedRunRepository(
+            DataSource dataSource,
+            String table,
+            Duration claimTimeout,
+            BlackboardTypeRegistry blackboardTypeRegistry
+    ) {
+        this(dataSource, table, claimTimeout, new PersistenceJsonCodec(blackboardTypeRegistry));
     }
 
     JdbcSuspendedRunRepository(DataSource dataSource, String table, PersistenceJsonCodec codec) {
