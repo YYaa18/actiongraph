@@ -143,6 +143,8 @@ The catalog is part of the release contract, not only documentation. Tests verif
 
 - every module in `settings.gradle.kts` appears in the default catalog
 - every non-sample library module appears in the BOM constraints
+- every component `requires` list matches that module's direct Gradle project dependencies
+- every `requires`, `optionalWith`, and composition profile module reference points to an existing catalog component
 - every catalog component uses one of the closed compatibility labels
 - every module listed as Java 8 compatible by the build passes the Java 8 bytecode and dependency guard
 - the documented Java 8 component catalog example can be consumed from standalone `javac --release 8` source

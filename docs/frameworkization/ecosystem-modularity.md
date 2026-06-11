@@ -26,7 +26,7 @@ The component catalog exposes a machine-readable `compatibility` label for each 
 
 This is intentionally stricter than a vague "supports Java" claim: Java 8 and older financial systems should use the deployed Runtime API over HTTP today. In-process runtime embedding remains a separate compatibility refactor.
 
-The module catalog is checked against `settings.gradle.kts` and the BOM in tests. A new module must be cataloged, classified, and either included in the BOM or explicitly treated as sample-only.
+The module catalog is checked against `settings.gradle.kts`, the BOM, and each module's direct Gradle project dependencies in tests. Catalog `requires`, `optionalWith`, and composition profile references must point to real catalog modules. A new module must be cataloged, classified, and either included in the BOM or explicitly treated as sample-only.
 
 ## Composition Rules
 

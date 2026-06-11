@@ -227,6 +227,51 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void catalogRequiredModulesMatchGradleProjectDependencies() throws IOException {
+        Path root = repositoryRoot();
+        ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
+
+        service.components().stream()
+                .filter(component -> component.kind() != ComponentKind.PLATFORM)
+                .filter(component -> component.kind() != ComponentKind.SAMPLE)
+                .forEach(component -> {
+                    try {
+                        Set<String> gradleDependencies = parseModules(
+                                root.resolve(component.module()).resolve("build.gradle.kts"),
+                                "(?:api|implementation|compileOnly|runtimeOnly)\\(project\\(\":([^\"]+)\"\\)\\)"
+                        );
+                        assertThat(component.requires())
+                                .as(component.module()
+                                        + " catalog requires should match direct Gradle project dependencies")
+                                .containsExactlyInAnyOrderElementsOf(gradleDependencies);
+                    } catch (IOException ex) {
+                        throw new IllegalStateException(
+                                "Cannot inspect Gradle dependencies for " + component.module(), ex);
+                    }
+                });
+    }
+
+    @Test
+    void catalogRelationshipsReferenceExistingModules() {
+        ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
+        Set<String> catalogModules = service.components().stream()
+                .map(ActionGraphComponent::module)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        service.components().forEach(component -> {
+            assertThat(component.requires())
+                    .as(component.module() + " requires should reference catalog modules")
+                    .isSubsetOf(catalogModules);
+            assertThat(component.optionalWith())
+                    .as(component.module() + " optionalWith should reference catalog modules")
+                    .isSubsetOf(catalogModules);
+        });
+        service.profiles().forEach(profile -> assertThat(profile.modules())
+                .as(profile.name() + " profile modules should reference catalog modules")
+                .isSubsetOf(catalogModules));
+    }
+
+    @Test
     void documentedActionGraphModuleReferencesResolveToCatalogEntries() throws IOException {
         Path root = repositoryRoot();
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
