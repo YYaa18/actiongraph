@@ -32,6 +32,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Public API snapshot verification for published module compatibility checks
 - JSpecify null-safety contracts for published API packages with non-null-by-default semantics and explicit optional boundaries
 - Architecture guard tests for module dependency direction, core purity, Spring isolation, and sample dependency bans
+- API stability annotations for distinguishing stable, experimental, and internal public surfaces
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
@@ -252,6 +253,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Public API compatibility check](docs/frameworkization/public-api-compatibility.md)
 - [Null-safety contracts](docs/frameworkization/null-safety.md)
 - [Architecture guardrails](docs/frameworkization/architecture-guardrails.md)
+- [API stability annotations](docs/frameworkization/api-stability-annotations.md)
 - [Component catalog](docs/frameworkization/component-catalog.md)
 - [Control-plane API contracts](docs/frameworkization/control-plane-api.md)
 - [Java 8 legacy integration](docs/frameworkization/java8-legacy-integration.md)

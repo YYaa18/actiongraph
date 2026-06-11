@@ -626,6 +626,51 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void apiStabilityAnnotationsMarkExperimentalAndInternalSurfaces() throws IOException {
+        Path root = repositoryRoot();
+
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/api/Experimental.java"))
+                .contains("@Retention(RetentionPolicy.CLASS)")
+                .contains("ElementType.PACKAGE")
+                .contains("full post-1.0 compatibility promise");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/api/Internal.java"))
+                .contains("@Retention(RetentionPolicy.CLASS)")
+                .contains("not intended for direct")
+                .contains("application use");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/api/package-info.java"))
+                .contains("@NullMarked");
+
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/memory/package-info.java"))
+                .contains("@Experimental")
+                .contains("Structured memory contracts are still being validated");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/runtime/api/batch/package-info.java"))
+                .contains("@Experimental")
+                .contains("Batch interpretation strategy is application-owned");
+        assertThat(readSource(root, "actiongraph-llm-deepseek/src/main/java/com/actiongraph/llm/package-info.java"))
+                .contains("@Experimental")
+                .contains("LLM provider adapters and prompt contracts may evolve");
+
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/runtime/DefaultExecutionContext.java"))
+                .contains("@Internal")
+                .contains("import com.actiongraph.api.Internal");
+        assertThat(readSource(root, "actiongraph-console/src/main/java/com/actiongraph/console/ConsolePageRenderer.java"))
+                .contains("@Internal")
+                .contains("import com.actiongraph.api.Internal");
+        assertThat(readSource(root,
+                "actiongraph-persistence-jdbc/src/main/java/com/actiongraph/persistence/jdbc/PersistenceJsonCodec.java"))
+                .contains("@Internal")
+                .contains("import com.actiongraph.api.Internal");
+
+        assertThat(readSource(root, "STABLE_CONTRACT.md"))
+                .contains("@Experimental")
+                .contains("@Internal");
+        assertThat(readSource(root, "docs/frameworkization/api-stability-annotations.md"))
+                .contains("Experimental")
+                .contains("Internal")
+                .contains("remains independent");
+    }
+
+    @Test
     void strategyDocumentsKeepF1AsRealWorldGateNotSampleCompletion() throws IOException {
         Path root = repositoryRoot();
         String strategy = Files.readString(root.resolve("docs/finance-strategy.md"), StandardCharsets.UTF_8);

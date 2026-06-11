@@ -1,5 +1,6 @@
 package com.actiongraph.runtime;
 
+import com.actiongraph.api.Internal;
 import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.trace.TraceRepository;
 
@@ -10,6 +11,7 @@ import com.actiongraph.trace.TraceRepository;
  * themselves be mutable. Do not retain a context beyond the action invocation
  * that received it.
  */
+@Internal
 public record DefaultExecutionContext(
         Blackboard blackboard,
         TraceRepository trace,

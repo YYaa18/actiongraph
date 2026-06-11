@@ -27,6 +27,7 @@ The following are public API after 1.0 unless documented otherwise:
 - `ObservationSink` remains the provider-neutral runtime observability SPI; Micrometer integration is optional and must not become a core dependency;
 - public APIs must document compatibility-sensitive semantics in Javadoc, including null handling, thread-safety expectations, failure outcomes, compensation behavior, audit ordering, and resume-claim concurrency where applicable;
 - published source packages use JSpecify null-safety annotations. `@NullMarked` means unannotated API parameters and return values are non-null by default; `@Nullable` marks optional inputs or nullable accessors. After 1.0, tightening or loosening nullability in a way that breaks source compatibility is compatibility-sensitive and must be documented;
+- `@Experimental` marks APIs that are available for early adoption but are not yet covered by the full 1.0 compatibility promise. `@Internal` marks public implementation surfaces exposed for wiring or framework mechanics but not intended for direct application use;
 - Spring Boot configuration properties and documented `actiongraph.*` property names;
 - SQL schema expectations documented for JDBC persistence;
 - JSON request and response shapes documented for built-in HTTP endpoints.
@@ -49,6 +50,7 @@ After 1.0, incompatible changes require a major version unless a security fix ma
 - removing or renaming public types, methods, constructors, record components, modules, configuration properties, or documented endpoint fields;
 - changing method semantics in a way that invalidates existing implementations;
 - adding abstract interface methods without defaults;
+- promoting or demoting `@Experimental` / `@Internal` API stability markers without documenting the compatibility impact;
 - changing Java compatibility labels or raising the minimum Java level of a public artifact;
 - changing nullability in a way that rejects values previously accepted by a public API or makes a previously non-null accessor nullable;
 - changing documented exception parent categories for public operational failures;

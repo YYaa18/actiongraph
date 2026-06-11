@@ -1,5 +1,6 @@
 package com.actiongraph.persistence.jdbc;
 
+import com.actiongraph.api.Internal;
 import com.actiongraph.action.ActionId;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Internal
 public final class PersistenceJsonCodec {
     private static final TypeReference<Map<String, String>> STRING_MAP = new TypeReference<>() {
     };

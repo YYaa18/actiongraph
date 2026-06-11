@@ -1,7 +1,10 @@
 package com.actiongraph.console;
 
+import com.actiongraph.api.Internal;
+
 import java.util.Objects;
 
+@Internal
 public final class ConsolePageRenderer {
     private ConsolePageRenderer() {
     }

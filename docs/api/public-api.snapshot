@@ -487,6 +487,10 @@ CLASS public final class com.actiongraph.action.annotation.AnnotatedActionFactor
   METHOD public static com.actiongraph.action.ActionRegistry registry(java.lang.Object[])
 CLASS public abstract annotation com.actiongraph.action.annotation.BlackboardValue
   METHOD public abstract java.lang.String value()
+CLASS public abstract annotation com.actiongraph.api.Experimental
+  METHOD public abstract java.lang.String since()
+  METHOD public abstract java.lang.String value()
+CLASS public abstract annotation com.actiongraph.api.Internal
 CLASS public class com.actiongraph.exception.ActionGraphConfigurationException
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphConfigurationException(java.lang.String)
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphConfigurationException(java.lang.String,java.lang.Throwable)
