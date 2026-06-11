@@ -198,7 +198,7 @@ Catalog starter: GET /actiongraph/components/profiles
 Catalog starter: GET /actiongraph/components/profiles/{profile}
 ```
 
-Custom gateways, endpoint adapters, or Java 8 legacy systems can use `actiongraph-control-plane-api` when they need ActionGraph's standard `{ "error", "message" }` error response contract, zero-dependency `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`, or shared-secret token verification without depending on Spring Web. Built-in runtime, component catalog, human-review, callback, and Console endpoint starters depend on it transitively. The token helper validates configured header names, skips token lookup when no shared secret is configured, and uses constant-time token comparison; it is not an enterprise IAM or RBAC layer.
+Custom gateways, endpoint adapters, or Java 8 legacy systems can use `actiongraph-control-plane-api` when they need ActionGraph's standard `{ "error", "message" }` error response contract, zero-dependency `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`, zero-dependency `ActionGraphComponentCatalogHttpClient` for inspecting deployed component catalog endpoints, or shared-secret token verification without depending on Spring Web. Built-in runtime, component catalog, human-review, callback, and Console endpoint starters depend on it transitively. The token helper validates configured header names, skips token lookup when no shared secret is configured, and uses constant-time token comparison; it is not an enterprise IAM or RBAC layer.
 
 The component catalog exposes a `compatibility` label for each module. Today `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` artifacts; embeddable runtime, Spring, JDBC, governance, LLM, Console, and sample modules are `java21-plus` or `sample-only`.
 
@@ -279,6 +279,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Control-plane API contracts](docs/frameworkization/control-plane-api.md)
 - [Java 8 legacy integration](docs/frameworkization/java8-legacy-integration.md)
 - [Java 8 component catalog client example](docs/examples/java8-component-catalog-client)
+- [Java 8 catalog HTTP client example](docs/examples/java8-catalog-http-client)
 - [Java 8 legacy client example](docs/examples/java8-legacy-client)
 - [Pre-Java-8 raw HTTP gateway example](docs/examples/pre-java8-http-gateway)
 - [Control-plane starter](docs/frameworkization/control-plane-starter.md)

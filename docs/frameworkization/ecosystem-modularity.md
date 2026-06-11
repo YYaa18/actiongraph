@@ -39,7 +39,7 @@ The module catalog is checked against `settings.gradle.kts` and the BOM in tests
 - Goal catalogs, rule-based interpreters, and Goal-to-Blackboard seeding add `actiongraph-interpretation`.
 - Stable non-Spring goal interpretation/start/resume entry services add `actiongraph-runtime-api`; Spring MVC runtime entry endpoints add `actiongraph-runtime-api-spring-boot-starter`.
 - Machine-readable module and composition metadata adds `actiongraph-component-catalog`; Spring MVC catalog endpoints add `actiongraph-component-catalog-spring-boot-starter`.
-- Shared control-plane contracts, Java 8 Runtime API HTTP client, and shared-secret token verification add `actiongraph-control-plane-api`; built-in Spring MVC endpoint starters bring it transitively.
+- Shared control-plane contracts, Java 8 Runtime API and Component Catalog HTTP clients, and shared-secret token verification add `actiongraph-control-plane-api`; built-in Spring MVC endpoint starters bring it transitively.
 - Repository-backed external review tasks, callback handling, and stable task query/decision projections add `actiongraph-human-review`.
 - JDBC review task storage adds `actiongraph-human-review-jdbc`; Spring Boot JDBC review task storage is wired by `actiongraph-human-review-spring-boot-starter` when `actiongraph.persistence.jdbc.enabled=true`.
 - A Spring Boot business service can depend on `actiongraph-spring-boot-starter` without exposing any HTTP control-plane endpoint.
@@ -98,7 +98,7 @@ The Control Plane Spring Boot starter is a convenience aggregate over the Spring
 
 `actiongraph-component-catalog` is an optional ecosystem metadata component: it exposes static module and composition metadata through Java 8 compatible data classes and a service. It must not depend on runtime, Spring, JDBC, LLM providers, governance, repositories, or endpoints.
 
-`actiongraph-control-plane-api` is an optional ecosystem utility: it exposes Java 8 compatible response DTO contracts, a lightweight Runtime API HTTP client, and shared-secret token verification for control-plane adapters and legacy callers. It must not depend on Spring, runtime, persistence, LLM providers, governance, repositories, endpoint modules, or third-party HTTP/JSON libraries.
+`actiongraph-control-plane-api` is an optional ecosystem utility: it exposes Java 8 compatible response DTO contracts, lightweight Runtime API and Component Catalog HTTP clients, and shared-secret token verification for control-plane adapters and legacy callers. It must not depend on Spring, runtime, persistence, LLM providers, governance, repositories, endpoint modules, or third-party HTTP/JSON libraries.
 
 `actiongraph-human-review` is an optional public framework component: it maps high-risk runtime decisions into review tasks, external callbacks, and stable task query/decision service APIs. It must depend only on core contracts and must not expose HTTP endpoints or own durable persistence.
 

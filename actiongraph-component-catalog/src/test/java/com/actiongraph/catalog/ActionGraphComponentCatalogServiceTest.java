@@ -63,7 +63,8 @@ class ActionGraphComponentCatalogServiceTest {
                 .satisfies(component -> {
                     assertThat(component.compatibility()).isEqualTo(ComponentCompatibility.JAVA8_CLIENT.label());
                     assertThat(component.capabilities())
-                            .contains("java8-runtime-client", "shared-secret-token-verification");
+                            .contains("java8-runtime-client", "java8-component-catalog-client",
+                                    "shared-secret-token-verification");
                 });
         assertThat(service.component("actiongraph-component-catalog"))
                 .isPresent()
@@ -148,13 +149,22 @@ class ActionGraphComponentCatalogServiceTest {
         assertThat(service.profile("control-plane-response-contracts"))
                 .isPresent()
                 .get()
-                .satisfies(profile -> assertThat(profile.modules())
-                        .containsExactly("actiongraph-control-plane-api"));
+                .satisfies(profile -> {
+                    assertThat(profile.modules())
+                            .containsExactly("actiongraph-control-plane-api");
+                    assertThat(profile.notes())
+                            .anySatisfy(note -> assertThat(note)
+                                    .contains("ActionGraphComponentCatalogHttpClient"));
+                });
         assertThat(service.profile("java8-legacy-client"))
                 .isPresent()
                 .get()
-                .satisfies(profile -> assertThat(profile.modules())
-                        .containsExactly("actiongraph-component-catalog", "actiongraph-control-plane-api"));
+                .satisfies(profile -> {
+                    assertThat(profile.modules())
+                            .containsExactly("actiongraph-component-catalog", "actiongraph-control-plane-api");
+                    assertThat(profile.notes())
+                            .anySatisfy(note -> assertThat(note).contains("component catalog endpoints"));
+                });
         assertThat(service.profile("control-plane-shared" + "-auth"))
                 .isEmpty();
         assertThat(service.profile("console-control-plane"))
