@@ -92,9 +92,7 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/full-control-plane"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.modules[*]",
-                                    hasItem("actiongraph-spring-boot-starter")))
-                            .andExpect(jsonPath("$.modules[*]",
-                                    hasItem("actiongraph-console-spring-boot-starter")));
+                                    hasItem("actiongraph-spring-boot-starter")));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/java8-legacy-client"))
                             .andExpect(status().isOk())

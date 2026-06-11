@@ -125,10 +125,10 @@ implementation("com.actiongraph:actiongraph-console")
 For the built-in read-only Console API/UI/export endpoints:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
+implementation("com.actiongraph:actiongraph-spring-boot-starter")
 ```
 
-The Console starter is optional and read-only. It can query runs/traces and export CSV/JSONL evidence, but it must not execute, resume, approve, deny, or compensate runs.
+The Console endpoints are property-gated and read-only. They can query runs/traces and export CSV/JSONL evidence, but they must not execute, resume, approve, deny, or compensate runs.
 
 ## Full Pilot Service
 
@@ -138,7 +138,6 @@ A single pilot deployment that runs business workflows, receives approval callba
 implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
 implementation("com.actiongraph:actiongraph-spring-boot-starter")
 implementation("com.actiongraph:actiongraph-llm-deepseek")
-implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 ```
 
 Turn on only the endpoint and persistence properties that deployment owns.

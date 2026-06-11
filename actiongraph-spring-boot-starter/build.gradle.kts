@@ -8,6 +8,7 @@ dependencies {
     api(project(":actiongraph-core"))
     api(project(":actiongraph-annotations"))
     api(project(":actiongraph-control-plane-api"))
+    api(project(":actiongraph-console"))
     api(project(":actiongraph-governance"))
     api(project(":actiongraph-human-review"))
     api(project(":actiongraph-persistence-jdbc"))

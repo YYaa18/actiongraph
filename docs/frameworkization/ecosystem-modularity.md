@@ -10,7 +10,7 @@ ActionGraph keeps the runtime framework, Java 8 client surface, and optional con
 | Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace, goal interpretation contracts, Blackboard seeders, runtime entry service, structured memory contracts |
 | Pure Java adapters | `actiongraph-annotations`, `actiongraph-human-review`, `actiongraph-governance`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Annotation action registration, human-review model/services, governance policies, LLM interpretation, provider access, and low-level durable repositories |
 | Java 8 client surface | `actiongraph-control-plane-api` | Component metadata, composition profiles, Java 8 HTTP clients, shared response DTOs, shared-secret token verification |
-| Spring ecosystem | `actiongraph-spring-boot-starter`, `actiongraph-console-spring-boot-starter` | Main Spring integration, opt-in runtime/catalog/review endpoints, JDBC/memory/human-review/governance wiring, and optional Console UI/API/export endpoints |
+| Spring ecosystem | `actiongraph-spring-boot-starter` | Main Spring integration, opt-in runtime/catalog/review/console endpoints, JDBC/memory/human-review/governance wiring, and optional Console UI/API/export endpoints |
 | Console services | `actiongraph-console` | Read-only run query service, JDBC read model, CSV/JSONL audit export |
 | Samples | `actiongraph-samples` | Reference domains and batch demos; not published as a library |
 
@@ -41,9 +41,9 @@ The module catalog is checked against `settings.gradle.kts`, the module governan
 - Durable non-Spring/manual runtimes add `actiongraph-persistence-jdbc`, which provides trace, suspended-run, trace read-model, memory, and human-review repositories.
 - Provider-neutral natural-language goal interpretation and DeepSeek-compatible model access add `actiongraph-llm-deepseek`.
 - Java 8 gateways, approval portals, audit consoles, and legacy systems add `actiongraph-control-plane-api`.
-- Spring Boot business services add `actiongraph-spring-boot-starter`. It provides runtime defaults, annotation scanning, structured memory defaults, repository-backed human review, governance wiring, JDBC wiring, and runtime/catalog/review HTTP endpoints behind property gates.
-- Spring MVC operational monitoring adds `actiongraph-console-spring-boot-starter`, which exposes Console API, page, export endpoints, and optional JDBC repository auto-configuration behind property gates.
-- A single-deployment control plane should usually use `actiongraph-spring-boot-starter` plus `actiongraph-console-spring-boot-starter`, then enable only the surfaces it owns.
+- Spring Boot business services add `actiongraph-spring-boot-starter`. It provides runtime defaults, annotation scanning, structured memory defaults, repository-backed human review, governance wiring, JDBC wiring, and runtime/catalog/review/console HTTP endpoints behind property gates.
+- Spring MVC operational monitoring enables `actiongraph.console.enabled=true` in the main starter, which exposes Console API, page, export endpoints, and optional JDBC repository auto-configuration behind property gates.
+- A single-deployment control plane should usually use `actiongraph-spring-boot-starter`, then enable only the surfaces it owns.
 
 ## Boundaries
 
@@ -51,10 +51,10 @@ The module catalog is checked against `settings.gradle.kts`, the module governan
 
 `actiongraph-control-plane-api` is a Java 8 compatible ecosystem utility. It exposes component metadata, composition profiles, response DTO contracts, aggregate and split HTTP clients, properties-based aggregate configuration, safe GET retries, and shared-secret token verification. It must not depend on Spring, runtime repositories, LLM providers, governance, endpoint modules, or third-party HTTP/JSON libraries.
 
-`actiongraph-spring-boot-starter` is the main Spring integration surface. It may auto-configure runtime beans, memory, repository-backed human review, governance policies, JDBC repositories, and runtime/catalog/review HTTP endpoints, but every endpoint must remain opt-in through its own `enabled` property. It must not create business actions, LLM clients, or domain-specific interpreters.
+`actiongraph-spring-boot-starter` is the main Spring integration surface. It may auto-configure runtime beans, memory, repository-backed human review, governance policies, JDBC repositories, and runtime/catalog/review/console HTTP endpoints, but every endpoint must remain opt-in through its own `enabled` property. It must not create business actions, LLM clients, or domain-specific interpreters.
 
 `actiongraph-console` is a reusable read-only monitoring library. It must not depend on Spring Web, expose HTTP endpoints, or mutate runtime state.
 
-`actiongraph-console-spring-boot-starter` is the only optional Spring control-plane/UI starter kept for now. It can create `ActionGraphConsoleService`, auto-configure a JDBC-backed `ConsoleRunRepository` from a `DataSource`, serve the built-in page, and expose read-only JSON/export endpoints behind `actiongraph.console.*` gates. It must not execute, resume, approve, deny, or compensate runs.
+Console Spring endpoints live in the main starter. They can create `ActionGraphConsoleService`, auto-configure a JDBC-backed `ConsoleRunRepository` from a `DataSource`, serve the built-in page, and expose read-only JSON/export endpoints behind `actiongraph.console.*` gates. They must not execute, resume, approve, deny, or compensate runs.
 
-There is no separate control-plane aggregate starter. Control-plane behavior is composed from the main Spring starter, the Console starter, and explicit property gates.
+There is no separate control-plane aggregate starter. Control-plane behavior is composed from the main Spring starter and explicit property gates.

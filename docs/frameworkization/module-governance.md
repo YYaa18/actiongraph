@@ -29,10 +29,8 @@ The target module surface is:
 | `actiongraph-persistence-jdbc` | JDBC persistence for runtime, memory, review, and read models |
 | `actiongraph-llm-deepseek` | LLM interpretation and DeepSeek-compatible provider wiring |
 | `actiongraph-console` | Read-only console services and control-plane DTO/client helpers |
-| `actiongraph-spring-boot-starter` | Main Spring Boot integration starter |
+| `actiongraph-spring-boot-starter` | Main Spring Boot integration starter, including property-gated Console endpoints |
 | `actiongraph-samples` | Samples only, not a reusable library |
-
-`actiongraph-console-spring-boot-starter` may remain temporarily as the one optional UI/control-plane starter while the main starter stays business-runtime focused.
 
 ## Current Approval Ledger
 
@@ -44,7 +42,6 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 | `actiongraph-annotations` | keep-target | `actiongraph-annotations` |
 | `actiongraph-bom` | keep-target | `actiongraph-bom` |
 | `actiongraph-console` | keep-target | `actiongraph-console` |
-| `actiongraph-console-spring-boot-starter` | temporary-optional-starter | `actiongraph-console-spring-boot-starter` |
 | `actiongraph-control-plane-api` | keep-java8-client | `actiongraph-control-plane-api` |
 | `actiongraph-core` | keep-target | `actiongraph-core` |
 | `actiongraph-governance` | keep-target | `actiongraph-governance` |
@@ -57,6 +54,6 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 
 ## Freeze Notes
 
-- The ledger does not mean the current 12-module surface is final; it documents the temporary state so growth is visible.
+- The ledger does not mean the current 11-module surface is final; it documents the temporary state so growth is visible.
 - Consolidation should happen by moving implementation into target modules, keeping compatibility shims only when a consumer migration requires them.
 - Sample-domain growth is not a substitute for F1 validation. Claims precheck is frozen except for real/near-real integration fixes and evidence.

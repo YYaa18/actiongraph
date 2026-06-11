@@ -54,9 +54,8 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, rule-based permissions, amount review attributes, and risk-based approval routing |
 | `actiongraph-llm-deepseek` | Optional LLM package with provider-neutral goal interpretation, GoalCatalog prompt rendering, structured output parsing, and a DeepSeek-compatible client |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, trace read model, structured memory, and human-review tasks |
-| `actiongraph-spring-boot-starter` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review HTTP endpoints |
+| `actiongraph-spring-boot-starter` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review/console HTTP endpoints |
 | `actiongraph-console` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
-| `actiongraph-console-spring-boot-starter` | Optional Spring MVC Console API, UI, export endpoints, and JDBC repository auto-configuration |
 | `actiongraph-samples` | Pure Java sample applications |
 
 ## Quick Start
@@ -67,8 +66,6 @@ dependencies {
 
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
-    // Optional read-only Console UI/API:
-    implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```
 
@@ -192,18 +189,18 @@ Human Review Callback: POST /actiongraph/human-review/callbacks
 
 If `shared-secret` is configured, the request must include the configured token header with the same value. Missing or invalid callback tokens return `401 UNAUTHORIZED`.
 
-`actiongraph-console` can be used directly by custom monitoring services, CLIs, or enterprise gateways that want the run query service, response model, `ConsoleRunRepository` port, JDBC trace read model, and CSV/JSONL audit export service without Spring MVC endpoints. Spring MVC control-plane services add `actiongraph-console-spring-boot-starter` when they want the built-in JSON API, HTML page, export endpoints, and optional JDBC `ConsoleRunRepository` auto-configuration from a `DataSource`. With `actiongraph.console.enabled=true`, the read-only surface is:
+`actiongraph-console` can be used directly by custom monitoring services, CLIs, or enterprise gateways that want the run query service, response model, `ConsoleRunRepository` port, JDBC trace read model, and CSV/JSONL audit export service without Spring MVC endpoints. Spring MVC control-plane services use `actiongraph-spring-boot-starter` when they want the built-in JSON API, HTML page, export endpoints, and optional JDBC `ConsoleRunRepository` auto-configuration from a `DataSource`. With `actiongraph.console.enabled=true`, the read-only surface is:
 
-If a single Spring MVC deployment should expose the built-in runtime entry, component catalog, approval task, approval callback, and console endpoints together, add `actiongraph-spring-boot-starter` plus the optional `actiongraph-console-spring-boot-starter`, then enable only the endpoint properties that deployment owns. The starters still do not create business actions, LLM clients, or domain-specific interpreters for you.
+If a single Spring MVC deployment should expose the built-in runtime entry, component catalog, approval task, approval callback, and console endpoints together, add `actiongraph-spring-boot-starter`, then enable only the endpoint properties that deployment owns. The starter still does not create business actions, LLM clients, or domain-specific interpreters for you.
 
 ```text
-Console starter: GET /actiongraph/console
-Console starter: GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
-Console starter: GET /actiongraph/console/runs/{runId}
-Console starter: GET /actiongraph/console/runs/{runId}/trace
-Console starter: GET /actiongraph/console/runs/export.csv
-Console starter: GET /actiongraph/console/runs/{runId}/trace/export.csv
-Console starter: GET /actiongraph/console/runs/{runId}/trace/export.jsonl
+Console API: GET /actiongraph/console
+Console API: GET /actiongraph/console/runs?limit=50&offset=0&status=COMPLETED&auditComplete=true
+Console API: GET /actiongraph/console/runs/{runId}
+Console API: GET /actiongraph/console/runs/{runId}/trace
+Console API: GET /actiongraph/console/runs/export.csv
+Console API: GET /actiongraph/console/runs/{runId}/trace/export.csv
+Console API: GET /actiongraph/console/runs/{runId}/trace/export.jsonl
 ```
 
 The built-in page provides a run list, filters, selected-run metadata, and a trace timeline. API responses include paging metadata, run status, first/last trace timestamps, trace event count, trace details, and trace-chain verification results. Export responses provide attachment-friendly CSV or JSONL audit evidence over the same read-only service. Configure `actiongraph.console.shared-secret` to require the console token header for API and export calls. UI-only deployments can pair the page with a custom API gateway; API-only or export-only deployments can serve enterprise control-plane frontends without exposing the bundled page.

@@ -14,9 +14,8 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional LLM package with provider-neutral goal interpretation, prompt rendering, structured output parsing, and a DeepSeek-compatible client |
 | `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace, suspended-run, trace read-model, structured-memory, and human-review repositories |
-| `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review HTTP endpoints |
+| `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review/console HTTP endpoints |
 | `actiongraph-console` | `com.actiongraph:actiongraph-console:0.1.0` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
-| `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Optional Spring MVC Console API, UI, export endpoints, and JDBC repository auto-configuration |
 
 `actiongraph-samples` remains an application/sample module and is intentionally not published.
 
@@ -115,7 +114,7 @@ Non-Spring governance policies add:
 implementation("com.actiongraph:actiongraph-governance")
 ```
 
-Spring Boot integration, governance auto-configuration, repository-backed human review, durable trace/suspend persistence, structured memory defaults, and runtime/catalog/review HTTP endpoints all use the main starter:
+Spring Boot integration, governance auto-configuration, repository-backed human review, durable trace/suspend persistence, structured memory defaults, and runtime/catalog/review/console HTTP endpoints all use the main starter:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-spring-boot-starter")
@@ -135,17 +134,12 @@ Custom read-only operational monitoring, JDBC-backed trace read models, and CSV/
 implementation("com.actiongraph:actiongraph-console")
 ```
 
-Spring MVC read-only operational monitoring, built-in page, audit export endpoints, and optional JDBC repository auto-configuration add:
+Spring MVC read-only operational monitoring, built-in page, audit export endpoints, and optional JDBC repository auto-configuration are provided by the main starter behind `actiongraph.console.enabled=true`.
 
-```kotlin
-implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
-```
-
-Full built-in Spring MVC control-plane endpoints add the main starter plus the optional Console starter:
+Full built-in Spring MVC control-plane endpoints use the main starter:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-spring-boot-starter")
-implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 ```
 
 ## Private Repository Publishing

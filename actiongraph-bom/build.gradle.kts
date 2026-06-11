@@ -13,6 +13,5 @@ dependencies {
         api(project(":actiongraph-spring-boot-starter"))
         api(project(":actiongraph-governance"))
         api(project(":actiongraph-console"))
-        api(project(":actiongraph-console-spring-boot-starter"))
     }
 }

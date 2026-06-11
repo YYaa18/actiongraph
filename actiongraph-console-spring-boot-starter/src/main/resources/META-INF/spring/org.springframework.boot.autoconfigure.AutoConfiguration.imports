@@ -1,5 +1,0 @@
-com.actiongraph.console.spring.ActionGraphConsoleServiceAutoConfiguration
-com.actiongraph.console.spring.ActionGraphConsoleApiAutoConfiguration
-com.actiongraph.console.spring.ActionGraphConsoleUiAutoConfiguration
-com.actiongraph.console.export.spring.ActionGraphConsoleExportAutoConfiguration
-com.actiongraph.console.jdbc.spring.ActionGraphConsoleJdbcAutoConfiguration

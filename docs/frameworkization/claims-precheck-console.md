@@ -97,13 +97,13 @@ This keeps the control-plane service independently reusable while still giving J
 
 ## Spring Boot Read-Only Control Plane
 
-`actiongraph-console-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
+`actiongraph-spring-boot-starter` can expose the read model through a servlet application when all of these are true:
 
 - `actiongraph.console.enabled=true`
-- `actiongraph-console-spring-boot-starter` is on the runtime classpath
+- `actiongraph-spring-boot-starter` is on the runtime classpath
 - an `ActionGraphConsoleService` or `ConsoleRunRepository` bean is available, or a `DataSource` is available for the starter's JDBC repository auto-configuration
 
-The Console starter wraps `actiongraph-console`, exposes the built-in page, JSON query endpoints, and CSV/JSONL export endpoints, and stays read-only. If the same Spring Boot service also executes or resumes runs, add `actiongraph-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
+The main starter wraps `actiongraph-console`, exposes the built-in page, JSON query endpoints, and CSV/JSONL export endpoints, and stays read-only. If the same Spring Boot service also executes or resumes runs, enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
 
 ```yaml
 actiongraph:

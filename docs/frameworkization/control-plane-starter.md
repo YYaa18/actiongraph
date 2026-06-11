@@ -1,13 +1,12 @@
 # Control-Plane Endpoint Composition
 
-ActionGraph no longer publishes an extra aggregate starter or one-artifact-per-endpoint starters for the built-in Spring MVC control-plane endpoints. Spring deployments compose the endpoint surface with the main starter, the optional Console starter, and explicit property switches.
+ActionGraph no longer publishes an extra aggregate starter or one-artifact-per-endpoint starters for the built-in Spring MVC control-plane endpoints. Spring deployments compose the endpoint surface with the main starter and explicit property switches.
 
 Use these dependencies when one deployment should expose the full built-in control plane:
 
 - `actiongraph-spring-boot-starter`
-- `actiongraph-console-spring-boot-starter`
 
-Runtime entry, component catalog, human-review task, and human-review callback endpoints live in the main starter but remain independently disabled by default. Console monitoring remains the only optional Spring UI/control-plane starter.
+Runtime entry, component catalog, human-review task, human-review callback, and Console endpoints live in the main starter but remain independently disabled by default.
 
 ## Dependency
 
@@ -15,7 +14,6 @@ Runtime entry, component catalog, human-review task, and human-review callback e
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```
 

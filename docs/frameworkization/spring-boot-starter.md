@@ -11,8 +11,6 @@ dependencies {
 }
 ```
 
-Add `actiongraph-console-spring-boot-starter` only when the deployment should expose the built-in read-only Console API/UI/export surface.
-
 ## Bean Registration
 
 The starter auto-configures these defaults, all guarded by `@ConditionalOnMissingBean`:
@@ -97,7 +95,7 @@ Without matching configuration, the starter keeps neutral defaults: no masking, 
 
 ## HTTP Endpoints
 
-The main starter contains the runtime entry, component catalog, human-review task, and human-review callback endpoint auto-configurations. They are disabled by default and stay independently selectable:
+The main starter contains the runtime entry, component catalog, human-review task, human-review callback, and Console endpoint auto-configurations. They are disabled by default and stay independently selectable:
 
 ```yaml
 actiongraph:
@@ -111,16 +109,12 @@ actiongraph:
       enabled: true
     callback-endpoint:
       enabled: true
+  console:
+    enabled: true
 ```
 
 Each endpoint family keeps its own path, token header, shared-secret, and backing-bean requirements. Enabling an endpoint never creates business actions, LLM clients, or domain-specific interpreters.
 
 ## Console
 
-The Console remains the one optional Spring control-plane starter:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
-```
-
-It exposes read-only run/trace APIs, the built-in HTML page, and CSV/JSONL export endpoints behind `actiongraph.console.*` properties. It must not execute, resume, approve, deny, or compensate runs.
+The main starter exposes read-only run/trace APIs, the built-in HTML page, and CSV/JSONL export endpoints behind `actiongraph.console.*` properties. It must not execute, resume, approve, deny, or compensate runs.
