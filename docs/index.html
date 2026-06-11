@@ -1574,7 +1574,7 @@ OrderRecord lookup(OrderId orderId) {
             </div>
             <div class="fact">
               <b>业务 Action 白名单</b>
-              <span>只能执行你暴露的类型化方法，不能绕过权限、审批和补偿边界。</span>
+              <span>只能执行应用显式暴露的类型化方法，不能绕过权限、审批和补偿边界。</span>
             </div>
             <div class="fact">
               <b>审计与恢复内建</b>
@@ -1645,7 +1645,7 @@ OrderRecord lookup(OrderId orderId) {
       <div class="split">
         <div class="prose">
           <p>在企业系统里，让 LLM 直接调 API 或写 SQL 通常不可控、不可复现，也很难审计。只做问答机器人又无法把流程办完。每个业务系统各自接 AI，则会重复建设 prompt、审批、审计和回滚机制。</p>
-          <p><strong>ActionGraph 选择了一条更保守也更工程化的路线：</strong>业务系统只暴露可控 Action，规划器只看条件与效果，运行时每一步都经过权限、人审、runtime guard 和补偿边界。LLM 可以解释目标，但不能直接操作你的业务状态。</p>
+          <p><strong>ActionGraph 选择了一条更保守也更工程化的路线：</strong>业务系统只暴露可控 Action，规划器只看条件与效果，运行时每一步都经过权限、人审、runtime guard 和补偿边界。LLM 可以解释目标，但不能直接操作业务状态。</p>
         </div>
         <div class="problem-list" aria-label="常见方案问题">
           <div class="problem">
@@ -1705,7 +1705,7 @@ OrderRecord lookup(OrderId orderId) {
     <div class="wrap">
       <div class="section-head">
         <h2>接入路径：先声明能力，再开放运行边界。</h2>
-        <p class="section-lead">Spring Boot 应用从依赖、Action adapter 和少量开关开始接入。配置不在官网里堆 YAML，而按运行域整理为可审阅的属性契约。</p>
+        <p class="section-lead">Spring Boot 应用从依赖、Action adapter 和少量开关开始接入。运行配置按能力域拆解，便于架构评审、环境差异管理和生产变更审查。</p>
       </div>
       <div class="setup-grid" aria-label="接入路径">
         <article class="setup-card">
@@ -1774,7 +1774,7 @@ class OrderCancellationWorkflow {
 
       <div class="config-block">
         <h3>配置属性速查</h3>
-        <p>官网只展示属性契约与生产语义；完整 YAML 建议放在接入文档或样例项目中维护，避免页面被配置噪声淹没。</p>
+        <p>配置以属性契约呈现，重点说明每个开关的运行语义、默认边界和生产审查要点。完整环境配置由接入应用按开发、测试和生产环境分别维护。</p>
         <div class="table-wrap">
           <table class="matrix">
             <thead>
@@ -1840,7 +1840,7 @@ class OrderCancellationWorkflow {
       </div>
 
       <div class="callout">
-        <strong>主 starter 不会替你创建业务 Action 或 LLM client。</strong>
+        <strong>主 starter 不创建业务 Action 或 LLM client。</strong>
         <p>它提供规划器、执行器、仓储默认实现、注解扫描、治理策略和端点自动装配。业务动作、领域 Goal、解释器、DataSource、LLM provider 与生产权限边界仍由接入应用明确提供。</p>
       </div>
     </div>
@@ -1864,7 +1864,7 @@ class OrderCancellationWorkflow {
           <div class="video-content">
             <span class="video-kicker">业务价值演示</span>
             <h3>让非技术管理者看懂：Agent 如何安全办理业务。</h3>
-            <p>用“大额转账预约”串起目标理解、规则约束、自动改道、人审挂起、审批恢复和审计证据，重点回答“为什么这套框架可以推广”。</p>
+            <p>用“大额转账预约”串起目标理解、规则约束、自动改道、人审挂起、审批恢复和审计证据，重点说明 ActionGraph 的推广价值。</p>
             <ul class="video-points">
               <li>用业务语言解释确定性规划、人审和审计价值。</li>
               <li>展示系统在风险、异常和审批场景下的可控行为。</li>
@@ -1872,7 +1872,6 @@ class OrderCancellationWorkflow {
             </ul>
             <div class="video-actions">
               <a class="button primary" href="assets/actiongraph-executive-demo.mp4">打开视频</a>
-              <a class="button" href="actiongraph-tutorial-video.md">查看分镜</a>
             </div>
           </div>
         </article>
@@ -1895,7 +1894,6 @@ class OrderCancellationWorkflow {
             </ul>
             <div class="video-actions">
               <a class="button primary" href="assets/actiongraph-coding-showcase.mp4">打开视频</a>
-              <a class="button" href="actiongraph-coding-showcase-video.md">查看分镜</a>
             </div>
           </div>
         </article>
@@ -2169,7 +2167,7 @@ class OrderCancellationWorkflow {
     <div class="wrap">
       <div class="section-head">
         <h2>样例以业务形态组织，而不是功能清单。</h2>
-        <p class="section-lead">样例不是玩具流程：续约报价、订单取消、理赔资料预审分别展示目标解释、Blackboard seeding、runtime guard、人审挂起恢复和审计报告。</p>
+        <p class="section-lead">样例覆盖真实业务环节：续约报价、订单取消、理赔资料预审分别展示目标解释、Blackboard seeding、runtime guard、人审挂起恢复和审计报告。</p>
       </div>
       <div class="sample-grid">
         <article class="sample">
@@ -2210,7 +2208,7 @@ class OrderCancellationWorkflow {
     <div class="wrap">
       <div class="section-head">
         <h2>端到端导览：同一条业务线贯穿规划、审批与审计。</h2>
-        <p class="section-lead">教学项目 <b>transfer-demo</b> 以“大额转账预约”为主线，按一次真实运行的顺序解释框架职责。这里强调系统行为和证据产物，完整代码留在接入指南与样例工程中。</p>
+        <p class="section-lead"><b>transfer-demo</b> 以“大额转账预约”为主线，按一次真实运行的顺序呈现框架职责，覆盖目标解释、规划执行、审批恢复、策略拦截和审计归档。</p>
       </div>
 
       <div class="journey-intro">
@@ -2309,18 +2307,18 @@ class OrderCancellationWorkflow {
             <h3>进程崩溃，副作用零孤儿</h3>
           </div>
           <div>
-            <p>开启 durability 后，每个 Action 成功即写检查点，执行前登记执行意图（WAL）。演示中进程恰好"断电"在最危险的窗口——草稿已在远端创建、检查点未落。重启后的恢复器认领僵尸运行：意图未清，该步按「结果未知」先补偿再重做，随后续跑进审批、照常挂起。真实输出：草稿创建成功×2、恢复性补偿×1 → 净草稿恰好 1 份；51 条 Trace 事件跨崩溃、恢复与审批连续编号，哈希链验证通过。</p>
+            <p>开启 durability 后，每个 Action 成功即写检查点，执行前登记执行意图（WAL）。故障注入场景模拟进程在高风险窗口中断——草稿已在远端创建、检查点未落。重启后的恢复器认领异常中断的运行记录：意图未清，该步按「结果未知」先补偿再重做，随后续跑进审批、照常挂起。真实输出：草稿创建成功×2、恢复性补偿×1 → 净草稿恰好 1 份；51 条 Trace 事件跨崩溃、恢复与审批连续编号，哈希链验证通过。</p>
             <ul>
               <li><strong>恢复语义：</strong>in-flight 步与超时同一哲学——结果未知，补偿＋重做实现等效恰好一次。</li>
-              <li><strong>运维含义：</strong>编排服务可随意滚动发布；实测每步检查点开销 0.054 ms。</li>
+              <li><strong>运维含义：</strong>编排服务可进行滚动发布；实测每步检查点开销 0.054 ms。</li>
             </ul>
           </div>
         </article>
       </div>
 
       <div class="evidence-block">
-        <h3>导览产物如何阅读</h3>
-        <p>下面把 transfer-demo 的输出按“证据类型”而不是代码片段组织，便于架构评审、开发接入和审计人员各取所需。</p>
+        <h3>证据产物</h3>
+        <p>transfer-demo 的输出按证据类型组织，覆盖 Action 图、运行状态、人审记录和 Trace 哈希链，便于架构评审、开发接入和审计归档。</p>
         <div class="table-wrap">
           <table class="matrix">
             <thead>
@@ -2358,7 +2356,7 @@ class OrderCancellationWorkflow {
 
       <div class="tutorial-run">
         <b>离线运行路径</b><br>
-        先在框架仓库根执行 <code>./gradlew publishToMavenLocal</code>，再进入教学项目运行 <code>./gradlew bootRun</code>。完整接入手册见
+        先在框架仓库根执行 <code>./gradlew publishToMavenLocal</code>，再进入 transfer-demo 工程运行 <code>./gradlew bootRun</code>。完整接入手册见
         <a href="quick-start.html">快速接入指南</a>。
       </div>
     </div>
@@ -2368,7 +2366,7 @@ class OrderCancellationWorkflow {
     <div class="wrap">
       <div class="section-head">
         <h2>文档入口按接入阶段组织。</h2>
-        <p class="section-lead">这套官网页聚合了主要概念。每个细节仍然指向仓库中的原始文档，方便开发者直接进入对应实现与示例。</p>
+        <p class="section-lead">文档入口按接入阶段和运行职责组织，从快速开始、Runtime API、控制面、人审到 JDBC 持久化，直接对应开发、架构评审和生产运维所需的材料。</p>
       </div>
       <div class="doc-grid">
         <a class="doc-link" href="quick-start.html">
