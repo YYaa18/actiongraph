@@ -357,12 +357,14 @@ class ActionGraphComponentCatalogServiceTest {
         String strategy = Files.readString(root.resolve("docs/finance-strategy.md"), StandardCharsets.UTF_8);
         String claimsNotes = Files.readString(root.resolve("docs/f1-claims-precheck-notes.md"), StandardCharsets.UTF_8);
         String pilotPack = Files.readString(root.resolve("docs/f1-pilot-validation-pack.md"), StandardCharsets.UTF_8);
+        String readinessStatus = Files.readString(root.resolve("docs/f1-readiness-status.md"),
+                StandardCharsets.UTF_8);
         String chineseReadme = Files.readString(root.resolve("README.zh-CN.md"), StandardCharsets.UTF_8);
         String pitch = Files.readString(root.resolve("docs/actiongraph-pitch.html"), StandardCharsets.UTF_8);
         String moduleGovernance = Files.readString(root.resolve("docs/frameworkization/module-governance.md"),
                 StandardCharsets.UTF_8);
-        String combined = strategy + "\n" + claimsNotes + "\n" + pilotPack + "\n" + chineseReadme + "\n"
-                + pitch + "\n" + moduleGovernance;
+        String combined = strategy + "\n" + claimsNotes + "\n" + pilotPack + "\n" + readinessStatus + "\n"
+                + chineseReadme + "\n" + pitch + "\n" + moduleGovernance;
 
         assertThat(strategy)
                 .contains("真实/准真实环境落地")
@@ -409,9 +411,18 @@ class ActionGraphComponentCatalogServiceTest {
                 StandardCharsets.UTF_8))
                 .contains("Business owner")
                 .contains("Business owner wants to continue");
+        assertThat(readinessStatus)
+                .contains("| Module consolidation | Done |")
+                .contains("| Real or near-real data source | Not done |")
+                .contains("| Real or shadow approval path | Not done |")
+                .contains("| Business owner sign-off | Not done |")
+                .contains("| F1 achieved | Not done |")
+                .contains("pilot-ready, F1 open")
+                .contains("verifyJava8MavenConsumer");
         assertThat(chineseReadme)
                 .contains("F1 是否成立仍以真实/准真实环境落地、业务方续用意愿和案例证据为门槛")
                 .contains("样板域已冻结新增演示能力")
+                .contains("docs/f1-readiness-status.md")
                 .contains("docs/f1-pilot-validation-pack.md")
                 .contains("docs/examples/f1-pilot-evidence-template");
         assertThat(pitch)
