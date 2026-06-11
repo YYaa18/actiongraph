@@ -24,10 +24,14 @@ import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemorySuspendedRunRepository;
 import com.actiongraph.runtime.RunStatus;
+import com.actiongraph.runtime.api.batch.BatchGoalInput;
+import com.actiongraph.runtime.api.batch.BatchGoalInterpretation;
+import com.actiongraph.runtime.api.batch.PerItemBatchGoalInterpreter;
 import com.actiongraph.trace.TraceEventType;
 import com.actiongraph.trace.InMemoryTraceRepository;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,6 +62,50 @@ class ActionGraphRuntimeApiServiceTest {
             assertThat(run.executedActions()).containsExactly("runtime-api-test.finish");
         });
         assertThat(executions).hasValue(1);
+    }
+
+    @Test
+    void canBeUsedThroughRuntimeOperationsInterface() {
+        AtomicInteger executions = new AtomicInteger();
+        ActionGraphRuntimeOperations operations = service(
+                registry(new FinishAction(false, executions)),
+                new AutoApproveHumanReviewPolicy(),
+                null
+        );
+
+        RuntimeStartResponse response = operations.start("finish", Map.of("id", "I-ops"));
+
+        assertThat(response.disposition()).isEqualTo(RuntimeStartDisposition.RUN_STARTED);
+        assertThat(response.run()).hasValueSatisfying(run ->
+                assertThat(run.status()).isEqualTo(RunStatus.COMPLETED));
+        assertThat(executions).hasValue(1);
+    }
+
+    @Test
+    void perItemBatchGoalInterpreterDelegatesToGoalInterpreterAndPreservesItemIds() {
+        PerItemBatchGoalInterpreter interpreter = new PerItemBatchGoalInterpreter(new TestInterpreter());
+
+        List<BatchGoalInterpretation> results = interpreter.interpret(List.of(
+                BatchGoalInput.of("row-1", "finish", GoalParameters.of(Map.of("id", "I-1"))),
+                BatchGoalInput.of("row-2", "finish")
+        ));
+
+        assertThat(results).extracting(BatchGoalInterpretation::itemId)
+                .containsExactly("row-1", "row-2");
+        assertThat(results.get(0).interpretation().isReady()).isTrue();
+        assertThat(results.get(1).interpretation().isReady()).isFalse();
+        assertThat(results.get(1).interpretation().missingFields())
+                .containsExactly(new MissingField("id"));
+    }
+
+    @Test
+    void batchGoalInputValidatesStableItemIdAndInput() {
+        assertThatThrownBy(() -> BatchGoalInput.of(" ", "finish"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("itemId must not be blank");
+        assertThatThrownBy(() -> BatchGoalInput.of("row-1", " "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("input must not be blank");
     }
 
     @Test

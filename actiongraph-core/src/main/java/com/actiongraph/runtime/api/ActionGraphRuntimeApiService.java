@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public final class ActionGraphRuntimeApiService {
+public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOperations {
     private final GoalInterpreter interpreter;
     private final GoalBlackboardSeederRegistry seeders;
     private final GoapExecutor executor;
@@ -44,22 +44,27 @@ public final class ActionGraphRuntimeApiService {
         this.blackboardFactory = Objects.requireNonNull(blackboardFactory, "blackboardFactory");
     }
 
+    @Override
     public RuntimeInterpretationResponse interpret(String input) {
         return interpret(input, Map.of());
     }
 
+    @Override
     public RuntimeInterpretationResponse interpret(String input, Map<String, String> knownParameters) {
         return RuntimeInterpretationResponse.from(interpretGoal(input, knownParameters));
     }
 
+    @Override
     public RuntimeStartResponse start(String input) {
         return start(input, Map.of());
     }
 
+    @Override
     public RuntimeStartResponse start(String input, Map<String, String> knownParameters) {
         return start(input, knownParameters, Map.of());
     }
 
+    @Override
     public RuntimeStartResponse start(
             String input,
             Map<String, String> knownParameters,
@@ -68,10 +73,12 @@ public final class ActionGraphRuntimeApiService {
         return start(interpretGoal(input, knownParameters), runMetadata);
     }
 
+    @Override
     public RuntimeStartResponse start(GoalInterpretation interpretation) {
         return start(interpretation, Map.of());
     }
 
+    @Override
     public RuntimeStartResponse start(GoalInterpretation interpretation, Map<String, String> runMetadata) {
         Objects.requireNonNull(interpretation, "interpretation");
         RuntimeInterpretationResponse interpretationResponse = RuntimeInterpretationResponse.from(interpretation);
@@ -94,10 +101,12 @@ public final class ActionGraphRuntimeApiService {
         return RuntimeStartResponse.runStarted(interpretationResponse, RuntimeRunResponse.from(result));
     }
 
+    @Override
     public RuntimeRunResponse resume(String runId) {
         return resume(runId, Map.of());
     }
 
+    @Override
     public RuntimeRunResponse resume(String runId, Map<String, String> runMetadata) {
         if (runId == null || runId.isBlank()) {
             throw new IllegalArgumentException("runId must not be blank");

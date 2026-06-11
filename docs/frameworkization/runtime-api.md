@@ -1,6 +1,6 @@
 # Runtime API
 
-`actiongraph-core` provides a reusable entry service for applications that want to expose ActionGraph runs through a gateway, CLI, worker, or custom controller without rewriting the same orchestration code.
+`actiongraph-core` provides a reusable runtime operations contract for applications that want to expose ActionGraph runs through a gateway, worker, custom controller, scheduler, MQ consumer, or batch process without rewriting the same orchestration code.
 
 It composes:
 
@@ -9,23 +9,23 @@ It composes:
 - `GoapExecutor`
 - `ActionRegistry`
 
-It does not provide an LLM provider, create repositories, register actions, or expose HTTP endpoints.
+It does not provide an LLM provider, create repositories, register actions, or force an HTTP endpoint shape.
 
 ## Pure Java Usage
 
 ```java
-ActionGraphRuntimeApiService api = new ActionGraphRuntimeApiService(
+ActionGraphRuntimeOperations runtime = new ActionGraphRuntimeApiService(
         goalInterpreter,
         seederRegistry,
         goapExecutor,
         actionRegistry
 );
 
-RuntimeInterpretationResponse interpretation = api.interpret(
+RuntimeInterpretationResponse interpretation = runtime.interpret(
         "Prepare renewal quote for C123"
 );
 
-RuntimeStartResponse started = api.start(
+RuntimeStartResponse started = runtime.start(
         "Prepare renewal quote for C123",
         Map.of(),
         Map.of(
@@ -34,15 +34,25 @@ RuntimeStartResponse started = api.start(
         )
 );
 
-RuntimeRunResponse resumed = api.resume(
+RuntimeRunResponse resumed = runtime.resume(
         started.run().orElseThrow().runId(),
         Map.of("requestHeader.X-Request-Id", "REQ-20260611-0002")
 );
 ```
 
+`ActionGraphRuntimeApiService` is the default `ActionGraphRuntimeOperations` implementation. Applications can inject the interface into their own Spring controller, Dubbo facade, MQ consumer, scheduler, batch worker, or gateway adapter. Production systems should not invoke Gradle or sample CLI commands; samples are executable documentation only.
+
 `start` returns `CLARIFICATION_REQUIRED` when the interpreter needs more parameters and does not execute any business Action in that branch. When the interpretation is ready, the service seeds a fresh Blackboard and runs the supplied `GoapExecutor` until the run reaches a terminal status or suspends.
 
 The metadata overloads write caller-provided request metadata into `RUN_STARTED` and `RUN_RESUMED` trace events. When a high-risk action requires human review, the same metadata is merged into `HumanReviewRequest.attributes` before the review task is stored, with review-specific attributes taking precedence on key collisions. These values go through the executor's configured `DataMaskingPolicy` and are included in the trace hash chain. Use this for gateway request ids, source system ids, tenant ids, or correlation ids when a custom controller or worker owns the HTTP layer.
+
+## Batch and Model Boundary
+
+Batch invocation is business-owned. `actiongraph-core` exposes `BatchGoalInterpreter` for applications or provider modules that want token-efficient grouped interpretation, plus a conservative `PerItemBatchGoalInterpreter` that delegates to `GoalInterpreter` one item at a time. Structured records should bypass LLM interpretation whenever they already contain goal type and known parameters. Free-text batches can be grouped, cached, or chunked by a provider-specific adapter.
+
+Model transport is provider-owned through `LlmClient`. DeepSeek is one implementation; other commercial, private, or local models should provide their own `LlmClient` or `BatchGoalInterpreter` adapter while preserving the contract that models produce goals and parameters, not plans.
+
+See `docs/frameworkization/runtime-invocation-spi.md` for the production invocation guidance.
 
 ## Spring MVC Endpoint
 

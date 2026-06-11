@@ -4,7 +4,7 @@ import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
 import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import com.actiongraph.runtime.SuspendedRunNotClaimableException;
-import com.actiongraph.runtime.api.ActionGraphRuntimeApiService;
+import com.actiongraph.runtime.api.ActionGraphRuntimeOperations;
 import com.actiongraph.runtime.api.RuntimeInterpretationResponse;
 import com.actiongraph.runtime.api.RuntimeRunResponse;
 import com.actiongraph.runtime.api.RuntimeStartResponse;
@@ -29,11 +29,11 @@ public final class ActionGraphRuntimeApiController {
     private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
     private static final String UNAUTHORIZED_MESSAGE = "Runtime API token is missing or invalid";
 
-    private final ActionGraphRuntimeApiService apiService;
+    private final ActionGraphRuntimeOperations apiService;
     private final ActionGraphRuntimeApiProperties properties;
 
     public ActionGraphRuntimeApiController(
-            ActionGraphRuntimeApiService apiService,
+            ActionGraphRuntimeOperations apiService,
             ActionGraphRuntimeApiProperties properties
     ) {
         this.apiService = Objects.requireNonNull(apiService, "apiService");

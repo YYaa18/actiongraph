@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
-public final class ActionGraphRuntimeHttpClient {
+public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGateway {
     public static final String DEFAULT_RUNTIME_TOKEN_HEADER = "X-ActionGraph-Runtime-Token";
 
     private final String runtimeApiBaseUrl;
@@ -35,14 +35,17 @@ public final class ActionGraphRuntimeHttpClient {
         return new Builder(runtimeApiBaseUrl);
     }
 
+    @Override
     public ControlPlaneHttpResponse interpret(String input) throws IOException {
         return interpret(input, null);
     }
 
+    @Override
     public ControlPlaneHttpResponse interpret(String input, Map<String, String> knownParameters) throws IOException {
         return interpret(input, knownParameters, null);
     }
 
+    @Override
     public ControlPlaneHttpResponse interpret(
             String input,
             Map<String, String> knownParameters,
@@ -51,14 +54,17 @@ public final class ActionGraphRuntimeHttpClient {
         return post("/interpret", goalRequestJson(input, knownParameters), requestHeaders);
     }
 
+    @Override
     public ControlPlaneHttpResponse start(String input) throws IOException {
         return start(input, null);
     }
 
+    @Override
     public ControlPlaneHttpResponse start(String input, Map<String, String> knownParameters) throws IOException {
         return start(input, knownParameters, null);
     }
 
+    @Override
     public ControlPlaneHttpResponse start(
             String input,
             Map<String, String> knownParameters,
@@ -67,10 +73,12 @@ public final class ActionGraphRuntimeHttpClient {
         return post("/runs", goalRequestJson(input, knownParameters), requestHeaders);
     }
 
+    @Override
     public ControlPlaneHttpResponse resume(String runId) throws IOException {
         return resume(runId, null);
     }
 
+    @Override
     public ControlPlaneHttpResponse resume(String runId, Map<String, String> requestHeaders) throws IOException {
         return post("/runs/" + encodePathSegment(requireText(runId, "runId")) + "/resume", "{}", requestHeaders);
     }

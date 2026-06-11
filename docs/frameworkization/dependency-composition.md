@@ -20,7 +20,7 @@ Use this for a service or library that wires actions, repositories, and entrypoi
 implementation("com.actiongraph:actiongraph-core")
 ```
 
-`actiongraph-core` provides Action SPI, annotation-based action registration, planning, execution, policy, trace, compensation, suspend/resume, GoalCatalog metadata, GoalInterpreter contracts, Blackboard seeders, `ActionGraphRuntimeApiService`, and structured memory contracts/defaults.
+`actiongraph-core` provides Action SPI, annotation-based action registration, planning, execution, policy, trace, compensation, suspend/resume, GoalCatalog metadata, GoalInterpreter contracts, Blackboard seeders, `ActionGraphRuntimeOperations` with the default `ActionGraphRuntimeApiService`, `BatchGoalInterpreter`, and structured memory contracts/defaults.
 
 Add `actiongraph-persistence-jdbc` when a non-Spring service wants durable trace, suspended-run, trace read-model, memory, or human-review repositories.
 
@@ -98,7 +98,7 @@ actiongraph:
       enabled: true
 ```
 
-Runtime endpoints require `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. Human-review endpoints require a `HumanReviewRepository`. Endpoint enablement never creates domain Actions or LLM clients.
+Runtime endpoints are optional adapters over `ActionGraphRuntimeOperations`. If an application provides its own operations bean, the starter backs off from the default service and wires the controller to that interface. If the application wants the default service, it must provide `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. Human-review endpoints require a `HumanReviewRepository`. Endpoint enablement never creates domain Actions or LLM clients.
 
 Runtime start/resume endpoints support whitelisted request-header capture through `actiongraph.runtime.api.trace-headers`. Defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`; the configured runtime token header is hard-excluded from trace metadata.
 

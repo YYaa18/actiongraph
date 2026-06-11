@@ -68,6 +68,29 @@ class ActionGraphRuntimeHttpClientTest {
     }
 
     @Test
+    void runtimeHttpClientCanBeUsedThroughJava8GatewayInterface() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        AtomicReference<String> path = new AtomicReference<>();
+        server.createContext("/actiongraph/runtime/interpret", exchange -> {
+            path.set(exchange.getRequestURI().getPath());
+            read(exchange);
+            send(exchange, 200, "{\"ready\":true}");
+        });
+        server.start();
+        try {
+            ActionGraphRuntimeGateway gateway = ActionGraphRuntimeHttpClient.builder(baseUrl(server)).build();
+
+            ControlPlaneHttpResponse response = gateway.interpret("finish");
+
+            assertThat(path.get()).isEqualTo("/actiongraph/runtime/interpret");
+            assertThat(response.statusCode()).isEqualTo(200);
+            assertThat(response.body()).contains("\"ready\":true");
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
     void resumesRunAndPreservesErrorBody() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
         AtomicReference<String> path = new AtomicReference<>();

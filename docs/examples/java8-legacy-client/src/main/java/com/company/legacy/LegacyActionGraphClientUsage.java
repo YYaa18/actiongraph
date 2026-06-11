@@ -1,5 +1,6 @@
 package com.company.legacy;
 
+import com.actiongraph.controlplane.api.ActionGraphRuntimeGateway;
 import com.actiongraph.controlplane.api.ActionGraphRuntimeHttpClient;
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
 import com.actiongraph.controlplane.api.ControlPlaneHttpResponse;
@@ -18,7 +19,7 @@ public final class LegacyActionGraphClientUsage {
     }
 
     public static void main(String[] args) throws Exception {
-        ActionGraphRuntimeHttpClient client = runtimeClientFromEnvironment();
+        ActionGraphRuntimeGateway client = runtimeGatewayFromEnvironment();
 
         Map<String, String> known = new HashMap<String, String>();
         known.put("customerId", "C001");
@@ -30,7 +31,7 @@ public final class LegacyActionGraphClientUsage {
         System.out.println(response.body());
     }
 
-    public static ActionGraphRuntimeHttpClient runtimeClientFromEnvironment() {
+    public static ActionGraphRuntimeGateway runtimeGatewayFromEnvironment() {
         String baseUrl = requireEnvironment("ACTIONGRAPH_RUNTIME_URL");
         String sharedSecret = System.getenv("ACTIONGRAPH_RUNTIME_TOKEN");
         return ActionGraphRuntimeHttpClient
@@ -66,7 +67,7 @@ public final class LegacyActionGraphClientUsage {
     }
 
     public static boolean resumeRunIfStillClaimable(
-            ActionGraphRuntimeHttpClient client,
+            ActionGraphRuntimeGateway client,
             String runId,
             Map<String, String> requestHeaders
     ) throws IOException {

@@ -450,6 +450,45 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void runtimeInvocationDocsKeepFrameworkOwnedInterfacesAndApplicationOwnedEntryPoints() throws IOException {
+        Path root = repositoryRoot();
+        String invocationSpi = Files.readString(root.resolve("docs/frameworkization/runtime-invocation-spi.md"),
+                StandardCharsets.UTF_8);
+        String runtimeApi = Files.readString(root.resolve("docs/frameworkization/runtime-api.md"),
+                StandardCharsets.UTF_8);
+        String readme = Files.readString(root.resolve("README.md"), StandardCharsets.UTF_8);
+        String chineseReadme = Files.readString(root.resolve("README.zh-CN.md"), StandardCharsets.UTF_8);
+        String combined = invocationSpi + "\n" + runtimeApi + "\n" + readme + "\n" + chineseReadme;
+
+        assertThat(invocationSpi)
+                .contains("ActionGraph is a framework ecosystem")
+                .contains("ActionGraphRuntimeOperations")
+                .contains("BatchGoalInterpreter")
+                .contains("structured source records should bypass LLM interpretation")
+                .contains("ActionGraphRuntimeGateway")
+                .contains("ActionGraphRuntimeHttpClient")
+                .contains("LlmClient")
+                .contains("Do not invoke Gradle or sample CLI commands from production");
+        assertThat(runtimeApi)
+                .contains("ActionGraphRuntimeOperations runtime = new ActionGraphRuntimeApiService")
+                .contains("Production systems should not invoke Gradle or sample CLI commands")
+                .contains("BatchGoalInterpreter")
+                .contains("LlmClient");
+        assertThat(readme)
+                .contains("Runtime operations SPI")
+                .contains("Batch goal interpretation SPI")
+                .contains("docs/frameworkization/runtime-invocation-spi.md");
+        assertThat(chineseReadme)
+                .contains("目标解释与 Runtime SPI")
+                .contains("批量目标解释 SPI")
+                .contains("生产系统不应该通过 Gradle 或样例命令行")
+                .contains("docs/frameworkization/runtime-invocation-spi.md");
+        assertThat(combined)
+                .doesNotContain("production should run Gradle")
+                .doesNotContain("生产通过 Gradle");
+    }
+
+    @Test
     void compatibilityLabelsAreFromClosedSet() {
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
         Set<String> validLabels = Arrays.stream(ComponentCompatibility.values())

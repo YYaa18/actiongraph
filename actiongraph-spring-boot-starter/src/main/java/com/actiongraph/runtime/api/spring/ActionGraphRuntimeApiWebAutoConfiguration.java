@@ -5,6 +5,7 @@ import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.interpretation.GoalInterpreter;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.api.ActionGraphRuntimeApiService;
+import com.actiongraph.runtime.api.ActionGraphRuntimeOperations;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -20,12 +21,6 @@ import org.springframework.context.annotation.Bean;
         "org.springframework.web.servlet.DispatcherServlet"
 })
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnBean({
-        GoalInterpreter.class,
-        GoalBlackboardSeederRegistry.class,
-        GoapExecutor.class,
-        ActionRegistry.class
-})
 @ConditionalOnProperty(
         prefix = "actiongraph.runtime.api",
         name = "enabled",
@@ -34,7 +29,13 @@ import org.springframework.context.annotation.Bean;
 @EnableConfigurationProperties(ActionGraphRuntimeApiProperties.class)
 public class ActionGraphRuntimeApiWebAutoConfiguration {
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnBean({
+            GoalInterpreter.class,
+            GoalBlackboardSeederRegistry.class,
+            GoapExecutor.class,
+            ActionRegistry.class
+    })
+    @ConditionalOnMissingBean(ActionGraphRuntimeOperations.class)
     public ActionGraphRuntimeApiService actionGraphRuntimeApiService(
             GoalInterpreter interpreter,
             GoalBlackboardSeederRegistry seeders,
@@ -45,9 +46,10 @@ public class ActionGraphRuntimeApiWebAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(ActionGraphRuntimeOperations.class)
     @ConditionalOnMissingBean(name = "actionGraphRuntimeApiController")
     public ActionGraphRuntimeApiController actionGraphRuntimeApiController(
-            ActionGraphRuntimeApiService apiService,
+            ActionGraphRuntimeOperations apiService,
             ActionGraphRuntimeApiProperties properties
     ) {
         return new ActionGraphRuntimeApiController(apiService, properties);

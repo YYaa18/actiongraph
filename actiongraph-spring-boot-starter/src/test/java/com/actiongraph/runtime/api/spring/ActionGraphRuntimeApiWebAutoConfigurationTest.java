@@ -17,6 +17,10 @@ import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.api.ActionGraphRuntimeApiService;
+import com.actiongraph.runtime.api.ActionGraphRuntimeOperations;
+import com.actiongraph.runtime.api.RuntimeInterpretationResponse;
+import com.actiongraph.runtime.api.RuntimeRunResponse;
+import com.actiongraph.runtime.api.RuntimeStartResponse;
 import com.actiongraph.spring.ActionGraphAutoConfiguration;
 import com.actiongraph.trace.TraceEventType;
 import com.actiongraph.trace.TraceRepository;
@@ -83,6 +87,32 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).doesNotHaveBean(ActionGraphRuntimeApiService.class);
                     assertThat(context).doesNotHaveBean(ActionGraphRuntimeApiController.class);
+                });
+    }
+
+    @Test
+    void backsOffWhenApplicationProvidesRuntimeOperations() {
+        new WebApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(
+                        JacksonAutoConfiguration.class,
+                        HttpMessageConvertersAutoConfiguration.class,
+                        WebMvcAutoConfiguration.class,
+                        ActionGraphRuntimeApiWebAutoConfiguration.class
+                ))
+                .withBean(ActionGraphRuntimeOperations.class, StubRuntimeOperations::new)
+                .withPropertyValues("actiongraph.runtime.api.enabled=true")
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean(ActionGraphRuntimeApiService.class);
+
+                    MockMvc mockMvc = mockMvc(context);
+                    mockMvc.perform(post("/actiongraph/runtime/interpret")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {"input":"finish","knownParameters":{"id":"I-custom"}}
+                                            """))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.ready").value(true))
+                            .andExpect(jsonPath("$.parameters.id").value("I-custom"));
                 });
     }
 
@@ -326,6 +356,61 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
                     knownParameters,
                     new Goal("finish spring runtime API workflow", Set.of(DONE))
             );
+        }
+    }
+
+    private static final class StubRuntimeOperations implements ActionGraphRuntimeOperations {
+        private final GoalInterpreter interpreter = new TestInterpreter();
+
+        @Override
+        public RuntimeInterpretationResponse interpret(String input) {
+            return interpret(input, Map.of());
+        }
+
+        @Override
+        public RuntimeInterpretationResponse interpret(String input, Map<String, String> knownParameters) {
+            return RuntimeInterpretationResponse.from(
+                    interpreter.interpret(input, GoalParameters.of(knownParameters == null ? Map.of() : knownParameters))
+            );
+        }
+
+        @Override
+        public RuntimeStartResponse start(String input) {
+            return start(input, Map.of());
+        }
+
+        @Override
+        public RuntimeStartResponse start(String input, Map<String, String> knownParameters) {
+            return start(input, knownParameters, Map.of());
+        }
+
+        @Override
+        public RuntimeStartResponse start(
+                String input,
+                Map<String, String> knownParameters,
+                Map<String, String> runMetadata
+        ) {
+            return RuntimeStartResponse.clarificationRequired(interpret(input, knownParameters));
+        }
+
+        @Override
+        public RuntimeStartResponse start(GoalInterpretation interpretation) {
+            return start(interpretation, Map.of());
+        }
+
+        @Override
+        public RuntimeStartResponse start(GoalInterpretation interpretation, Map<String, String> runMetadata) {
+            return RuntimeStartResponse.clarificationRequired(RuntimeInterpretationResponse.from(interpretation));
+        }
+
+        @Override
+        public RuntimeRunResponse resume(String runId) {
+            return resume(runId, Map.of());
+        }
+
+        @Override
+        public RuntimeRunResponse resume(String runId, Map<String, String> runMetadata) {
+            throw new UnsupportedOperationException("resume is not used by this test");
         }
     }
 
