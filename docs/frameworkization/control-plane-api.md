@@ -31,7 +31,7 @@ The root build also compiles a real Maven Java 8 consumer after publishing the B
 docs/examples/java8-maven-consumer
 ```
 
-Systems older than Java 8 should not depend on this artifact. For those estates, the repository also provides a raw HTTP gateway example that imports no ActionGraph classes, avoids common Java 7/8+ conveniences, and is compiled in CI with `javac --release 8` and an empty classpath:
+Systems that cannot depend on Java 8 artifacts should call ActionGraph over HTTP through an enterprise gateway, ESB, or sidecar. The repository keeps a raw HTTP contract reference that imports no ActionGraph classes and is compiled in CI with `javac --release 8` and an empty classpath, but Java-before-8 source/binary compatibility is not an official support target:
 
 ```text
 docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java
@@ -159,7 +159,7 @@ The response body is returned as raw JSON so Java 8 callers can parse it with th
 
 When these requests hit the built-in Runtime API Spring MVC starter, only headers configured in `actiongraph.runtime.api.trace-headers` are copied into run trace metadata. The default whitelist captures `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`.
 
-For Java 6/7 estates, copy the raw HTTP gateway example instead of introducing this jar. It uses the same request shape and token header while leaving JSON parsing, logging, retries, and network policy under the host system's existing stack. Modern CI toolchains no longer provide a reliable Java 6/7 target here, so those estates should run their own platform compiler check after copying the file.
+For systems that cannot introduce this jar, use the raw HTTP contract shape through an enterprise gateway or sidecar. That path leaves JSON parsing, logging, retries, and network policy under the host system's existing stack; the officially supported client artifact remains Java 8.
 
 ## Java 8 Component Catalog HTTP Client
 

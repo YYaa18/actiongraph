@@ -228,7 +228,7 @@ public final class DefaultActionGraphComponentCatalog {
                         list("actiongraph-component-catalog", "actiongraph-control-plane-api"),
                         list("Use actiongraph-component-catalog for local compatibility discovery and composition metadata.",
                                 "Use actiongraph-control-plane-api to call deployed ActionGraph runtime, component catalog, human-review, and console endpoints over HTTP through one aggregate client or split endpoint clients.",
-                                "Java 6/7 systems should call through HTTP, an enterprise gateway, ESB, or a Java 8+ sidecar instead of embedding ActionGraph jars.",
+                                "Systems that cannot load Java 8 client artifacts should call through HTTP, an enterprise gateway, ESB, or a Java 8+ sidecar instead of embedding ActionGraph jars.",
                                 "The embeddable runtime kernel remains java21-plus until a dedicated compatibility refactor removes modern language and library features.")),
                 profile("full-pilot-service",
                         "Pilot-oriented composition for a Spring business service with durable runtime, governance, human review, console, and catalog endpoints.",

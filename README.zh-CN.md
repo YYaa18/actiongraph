@@ -348,7 +348,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - [Java 8 人审 HTTP 客户端示例](docs/examples/java8-human-review-client)
 - [Java 8 Console HTTP 客户端示例](docs/examples/java8-console-client)
 - [Java 8 老系统客户端示例](docs/examples/java8-legacy-client)
-- [Java 8 以前系统 Raw HTTP 网关示例](docs/examples/pre-java8-http-gateway)
+- [Raw HTTP 网关协议参考](docs/examples/pre-java8-http-gateway)
 - [控制面聚合 Starter](docs/frameworkization/control-plane-starter.md)
 - [治理策略 Spring Boot Starter](docs/frameworkization/governance-spring-boot-starter.md)
 - [理赔预审 PostgreSQL 映射](docs/frameworkization/claims-precheck-postgresql.md)
