@@ -352,6 +352,56 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void repositoryGovernanceFilesArePresentAndLinked() throws IOException {
+        Path root = repositoryRoot();
+        String license = Files.readString(root.resolve("LICENSE"), StandardCharsets.UTF_8);
+        String security = Files.readString(root.resolve("SECURITY.md"), StandardCharsets.UTF_8);
+        String contributing = Files.readString(root.resolve("CONTRIBUTING.md"), StandardCharsets.UTF_8);
+        String changelog = Files.readString(root.resolve("CHANGELOG.md"), StandardCharsets.UTF_8);
+        String stableContract = Files.readString(root.resolve("STABLE_CONTRACT.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(root.resolve("README.md"), StandardCharsets.UTF_8);
+        String chineseReadme = Files.readString(root.resolve("README.zh-CN.md"), StandardCharsets.UTF_8);
+
+        assertThat(license)
+                .contains("Apache License")
+                .contains("Version 2.0")
+                .contains("Copyright 2026 ActionGraph contributors");
+        assertThat(security)
+                .contains("Do not open a public issue")
+                .contains("Supported Versions")
+                .contains("GitHub private vulnerability reporting")
+                .contains("Do not commit API keys, production endpoints, source credentials, raw PII");
+        assertThat(contributing)
+                .contains("./gradlew build --rerun-tasks")
+                .contains("STABLE_CONTRACT.md")
+                .contains("CHANGELOG.md")
+                .contains("Do not add a new Gradle module without updating");
+        assertThat(changelog)
+                .contains("## Unreleased")
+                .contains("## 0.1.0 - 2026-06-11")
+                .contains("Apache 2.0 license")
+                .contains("Batch goal interpretation SPI");
+        assertThat(stableContract)
+                .contains("semantic versioning")
+                .contains("Public API Surface")
+                .contains("Deprecation Policy")
+                .contains("actiongraph-control-plane-api")
+                .contains("Java 8 compatible client artifact")
+                .contains("Sample packages under `com.actiongraph.samples` are executable documentation");
+        assertThat(readme)
+                .contains("[License](LICENSE)")
+                .contains("[Security](SECURITY.md)")
+                .contains("[Contributing](CONTRIBUTING.md)")
+                .contains("[Stable Contract](STABLE_CONTRACT.md)")
+                .contains("[Changelog](CHANGELOG.md)");
+        assertThat(chineseReadme)
+                .contains("[安全政策](SECURITY.md)")
+                .contains("[贡献指南](CONTRIBUTING.md)")
+                .contains("[稳定契约](STABLE_CONTRACT.md)")
+                .contains("[变更日志](CHANGELOG.md)");
+    }
+
+    @Test
     void strategyDocumentsKeepF1AsRealWorldGateNotSampleCompletion() throws IOException {
         Path root = repositoryRoot();
         String strategy = Files.readString(root.resolve("docs/finance-strategy.md"), StandardCharsets.UTF_8);

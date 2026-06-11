@@ -4,6 +4,8 @@
 
 [中文文档](README.zh-CN.md)
 
+[Website](https://yyaa18.github.io/actiongraph/) · [License](LICENSE) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Stable Contract](STABLE_CONTRACT.md) · [Changelog](CHANGELOG.md)
+
 ActionGraph is a typed GOAP framework for governed business action execution in Java.
 
 It lets application teams expose ordinary business methods as typed Actions, then uses a deterministic symbolic planner to compose those Actions into auditable execution paths. LLMs can interpret user goals, but they do not generate or execute plans.
@@ -42,6 +44,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional goal interpretation contracts and GoalCatalog metadata
 - DeepSeek-compatible LLM client
 - Reference samples for renewal quote, order cancellation, and claims precheck flows
+- Apache 2.0 license, security policy, contribution guide, changelog, and stable API compatibility policy
 
 ## Modules
 
@@ -263,3 +266,11 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Original PRD](docs/PRD-v0.md)
 - [F0 financialization PRD](docs/PRD-F0-finance.md)
 - [F1 claims precheck notes](docs/f1-claims-precheck-notes.md)
+
+## Project Governance
+
+- [License](LICENSE)
+- [Security policy](SECURITY.md)
+- [Contribution guide](CONTRIBUTING.md)
+- [Stable contract and compatibility policy](STABLE_CONTRACT.md)
+- [Changelog](CHANGELOG.md)
