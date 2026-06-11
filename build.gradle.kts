@@ -18,23 +18,15 @@ val java8CompatibleModules = setOf(
 val libraryModuleDescriptions = mapOf(
     "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, trace, goal interpretation, runtime entry, and structured memory APIs.",
     "actiongraph-annotations" to "Optional pure Java annotation adapter for ActionGraph action registration.",
-    "actiongraph-memory-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph structured memory and JDBC repository support.",
     "actiongraph-component-catalog" to "Java 8 compatible machine-readable ActionGraph component catalog and composition profile service.",
     "actiongraph-control-plane-api" to "Java 8 compatible control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate and split HTTP clients, and shared-secret token verification.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, approval chains, and task query APIs for ActionGraph.",
     "actiongraph-llm" to "Provider-neutral LLM goal interpretation support for ActionGraph.",
     "actiongraph-llm-deepseek" to "DeepSeek-compatible LLM client provider for ActionGraph.",
     "actiongraph-persistence-jdbc" to "JDBC persistence repositories for ActionGraph trace, suspended runs, memory, human review, and read models.",
-    "actiongraph-jdbc-spring-boot-starter" to "Optional Spring Boot auto-configuration for ActionGraph core JDBC repositories.",
-    "actiongraph-runtime-api-spring-boot-starter" to "Optional Spring MVC runtime start and resume endpoints for ActionGraph.",
-    "actiongraph-component-catalog-spring-boot-starter" to "Optional Spring MVC read-only endpoints for the ActionGraph component catalog.",
-    "actiongraph-human-review-api-spring-boot-starter" to "Optional Spring MVC human-review task API and callback endpoints for ActionGraph.",
-    "actiongraph-spring-boot-starter" to "Spring Boot auto-configuration for annotation-driven ActionGraph action registration.",
+    "actiongraph-spring-boot-starter" to "Spring Boot auto-configuration for annotation-driven ActionGraph action registration, repositories, governance, memory, human review, and optional HTTP endpoints.",
     "actiongraph-governance" to "Optional governance policies for masking, amount limits, rule-based permissions, review attributes, and approval routing.",
-    "actiongraph-governance-spring-boot-starter" to "Optional Spring Boot governance policies for masking, amount limits, and rule-based permissions.",
-    "actiongraph-governance-human-review-spring-boot-starter" to "Optional Spring Boot governance policies for human-review routing and review attributes.",
     "actiongraph-console" to "Reusable ActionGraph console query, JDBC read model, and audit export services.",
-    "actiongraph-human-review-spring-boot-starter" to "Optional Spring Boot repository-backed human-review policy and JDBC repository support for ActionGraph.",
     "actiongraph-console-spring-boot-starter" to "Spring Boot starter for the ActionGraph console API, UI, export, and JDBC read model."
 )
 

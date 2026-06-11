@@ -44,16 +44,14 @@ RuntimeRunResponse resumed = api.resume(
 
 The metadata overloads write caller-provided request metadata into `RUN_STARTED` and `RUN_RESUMED` trace events. When a high-risk action requires human review, the same metadata is merged into `HumanReviewRequest.attributes` before the review task is stored, with review-specific attributes taking precedence on key collisions. These values go through the executor's configured `DataMaskingPolicy` and are included in the trace hash chain. Use this for gateway request ids, source system ids, tenant ids, or correlation ids when a custom controller or worker owns the HTTP layer.
 
-## Spring MVC Starter
+## Spring MVC Endpoint
 
-Add the optional starter only when an application should expose runtime entry endpoints:
+Add the main Spring starter only when an application should expose runtime entry endpoints:
 
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-core")
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
 }
 ```
 
@@ -73,7 +71,7 @@ actiongraph:
         - X-Source-System
 ```
 
-The starter requires a servlet web application plus `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. It exposes only:
+The endpoint requires `actiongraph.runtime.api.enabled=true`, a servlet web application plus `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. It exposes only:
 
 ```text
 POST /actiongraph/runtime/interpret
@@ -98,4 +96,4 @@ For `start` and `resume`, the Spring MVC controller copies only configured `trac
 
 ## Boundary
 
-The Runtime API starter is an entry control-plane component. It intentionally does not expose human-review task query/decision endpoints, approval callbacks, read-only Console endpoints, or audit exports. Add those starters separately only when the deployment should own those surfaces.
+The runtime entry endpoint intentionally does not enable human-review task query/decision endpoints, approval callbacks, read-only Console endpoints, or audit exports. Enable those surfaces separately only when the deployment should own them.

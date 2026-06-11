@@ -103,7 +103,7 @@ This keeps the control-plane service independently reusable while still giving J
 - `actiongraph-console-spring-boot-starter` is on the runtime classpath
 - an `ActionGraphConsoleService` or `ConsoleRunRepository` bean is available, or a `DataSource` is available for the starter's JDBC repository auto-configuration
 
-The Console starter wraps `actiongraph-console`, exposes the built-in page, JSON query endpoints, and CSV/JSONL export endpoints, and stays read-only. If the same Spring Boot service also executes or resumes runs, add `actiongraph-jdbc-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
+The Console starter wraps `actiongraph-console`, exposes the built-in page, JSON query endpoints, and CSV/JSONL export endpoints, and stays read-only. If the same Spring Boot service also executes or resumes runs, add `actiongraph-spring-boot-starter` separately and enable `actiongraph.persistence.jdbc.enabled=true` so runtime repositories are durable too.
 
 ```yaml
 actiongraph:

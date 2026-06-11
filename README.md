@@ -33,17 +33,10 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Reusable control-plane shared-secret token verification component
 - Optional non-Spring human review tasks, callback handling, and approval chains
 - Reusable human-review task API service for approval inboxes and gateways
-- Spring Boot starter with annotation-driven Action registration and runtime defaults
-- Optional governance Spring Boot starter for masking, amount limits, and rule-based permissions
-- Optional human-review governance Spring Boot starter for review attributes and approval-chain routing
-- Optional human-review Spring Boot starter with repository-backed review policy support
-- Optional runtime API Spring Boot starter with goal interpretation, start, resume, and trace-header capture endpoints
-- Optional component catalog Spring Boot starter with read-only ecosystem introspection endpoints
-- Optional human-review API Spring Boot starter with task query, decision, and approval callback endpoints
-- Explicit control-plane endpoint starter composition for runtime, component catalog, human-review, callback, and console endpoints
+- Primary Spring Boot starter for annotation scanning, runtime defaults, JDBC repositories, memory, governance, repository-backed human review, and opt-in runtime/catalog/review endpoints
+- Property-gated control-plane surfaces for runtime entry, component catalog, human-review task APIs, and approval callbacks
 - Reusable console library for read-only run monitoring, JDBC read models, and CSV/JSONL audit evidence
 - Optional console Spring Boot starter for JSON API, built-in UI, audit exports, and JDBC read-model repository auto-configuration
-- Optional JDBC Spring Boot starter for durable repository auto-configuration
 - Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing
 - Optional goal interpretation contracts and GoalCatalog metadata
 - DeepSeek-compatible LLM client
@@ -56,7 +49,6 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
 | `actiongraph-core` | Core action, planning, runtime, policy, trace, goal interpretation, runtime entry, and structured memory APIs |
 | `actiongraph-annotations` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
-| `actiongraph-memory-spring-boot-starter` | Optional Spring Boot auto-configuration for structured memory and JDBC memory repository |
 | `actiongraph-component-catalog` | Java 8 compatible machine-readable component catalog and composition profiles |
 | `actiongraph-control-plane-api` | Java 8 compatible control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
@@ -64,14 +56,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, trace read model, structured memory, and human-review tasks |
-| `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning; brings `actiongraph-annotations` transitively |
-| `actiongraph-governance-spring-boot-starter` | Optional Spring Boot governance policies for masking, amount limits, and rule-based permissions |
-| `actiongraph-governance-human-review-spring-boot-starter` | Optional Spring Boot human-review governance policies for amount review attributes and approval-chain routing |
-| `actiongraph-jdbc-spring-boot-starter` | Optional Spring Boot auto-configuration for core JDBC repositories |
-| `actiongraph-runtime-api-spring-boot-starter` | Optional Spring MVC runtime start and resume endpoints |
-| `actiongraph-human-review-spring-boot-starter` | Optional repository-backed review policy and JDBC repository auto-configuration |
-| `actiongraph-component-catalog-spring-boot-starter` | Optional Spring MVC read-only component catalog endpoints |
-| `actiongraph-human-review-api-spring-boot-starter` | Optional Spring MVC human-review task API and callback endpoints |
+| `actiongraph-spring-boot-starter` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review HTTP endpoints |
 | `actiongraph-console` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
 | `actiongraph-console-spring-boot-starter` | Optional Spring MVC Console API, UI, export endpoints, and JDBC repository auto-configuration |
 | `actiongraph-samples` | Pure Java sample applications |
@@ -83,20 +68,9 @@ dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
 
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
-    // Optional ecosystem/control-plane components:
-    implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-governance-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-governance-human-review-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
+    // Optional read-only Console UI/API:
     implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
-
-    // Choose only the built-in control-plane endpoint starters this deployment exposes.
-    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
-    // implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```
 
@@ -159,52 +133,52 @@ actiongraph:
     max-limit: 200
 ```
 
-When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, and trace read-model repositories. `actiongraph-memory-spring-boot-starter` includes property-gated JDBC memory repository auto-configuration, and `actiongraph-human-review-spring-boot-starter` includes the property-gated JDBC human-review repository auto-configuration. Non-Spring services can still use `actiongraph-persistence-jdbc` directly and wire runtime, memory, or human-review repositories by hand.
+When `actiongraph-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, trace read-model, memory, and human-review repositories. Non-Spring services can still use `actiongraph-persistence-jdbc` directly and wire runtime, memory, or human-review repositories by hand.
 
 Non-Spring services can use `actiongraph-governance` directly when they want packaged masking, amount-limit, rule-based permission policies, review attributes, or risk-based approval-chain routing without Spring auto-configuration.
 
 Non-Spring services can use `actiongraph-core` directly when they want structured long-term memory without adopting Spring, JDBC, or LLM modules.
 
-Spring services can add `actiongraph-memory-spring-boot-starter` when they want structured memory defaults and `MemoryContextLoader`. It provides an in-memory `MemoryRepository` by default and backs off to a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available.
+Spring services get structured memory defaults and `MemoryContextLoader` from `actiongraph-spring-boot-starter`. It provides an in-memory `MemoryRepository` by default and backs off to a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available.
 
-Non-Spring services can use `actiongraph-core` directly when they want GoalCatalog metadata, rule-based goal interpreters, Goal-to-Blackboard seeding, or the stable `interpret` / `start` / `resume` entry service without adopting an LLM provider or Spring MVC. The entry service composes a `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry`, and its start/resume metadata overloads can record request ids or source systems in trace events. It does not provide an LLM provider, persistence, or HTTP endpoints by itself. Spring MVC applications can add `actiongraph-runtime-api-spring-boot-starter` and enable `actiongraph.runtime.api.enabled=true` to expose the same entry surface:
+Non-Spring services can use `actiongraph-core` directly when they want GoalCatalog metadata, rule-based goal interpreters, Goal-to-Blackboard seeding, or the stable `interpret` / `start` / `resume` entry service without adopting an LLM provider or Spring MVC. The entry service composes a `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry`, and its start/resume metadata overloads can record request ids or source systems in trace events. It does not provide an LLM provider, persistence, or HTTP endpoints by itself. Spring MVC applications can add `actiongraph-spring-boot-starter` and enable `actiongraph.runtime.api.enabled=true` to expose the same entry surface:
 
 ```text
-Runtime API starter: POST /actiongraph/runtime/interpret
-Runtime API starter: POST /actiongraph/runtime/runs
-Runtime API starter: POST /actiongraph/runtime/runs/{runId}/resume
+Runtime API: POST /actiongraph/runtime/interpret
+Runtime API: POST /actiongraph/runtime/runs
+Runtime API: POST /actiongraph/runtime/runs/{runId}/resume
 ```
 
 The Runtime API Spring MVC starter captures only configured `actiongraph.runtime.api.trace-headers` into `RUN_STARTED` / `RUN_RESUMED` trace metadata. Defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`. The configured runtime token header is never copied into trace metadata, even if accidentally listed in `trace-headers`.
 
-Non-Spring services, CLIs, gateways, deployment checks, and Java 8 estates can use `actiongraph-component-catalog` when they need a structured list of ActionGraph modules, capability tags, dependency hints, compatibility labels, and recommended composition profiles. Spring MVC control-plane services can add `actiongraph-component-catalog-spring-boot-starter` and enable `actiongraph.component-catalog.enabled=true` to expose the same read-only catalog:
+Non-Spring services, CLIs, gateways, deployment checks, and Java 8 estates can use `actiongraph-component-catalog` when they need a structured list of ActionGraph modules, capability tags, dependency hints, compatibility labels, and recommended composition profiles. Spring MVC control-plane services can add `actiongraph-spring-boot-starter` and enable `actiongraph.component-catalog.enabled=true` to expose the same read-only catalog:
 
 ```text
-Catalog starter: GET /actiongraph/components
-Catalog starter: GET /actiongraph/components/modules
-Catalog starter: GET /actiongraph/components/modules/{module}
-Catalog starter: GET /actiongraph/components/modules/{module}/profiles
-Catalog starter: GET /actiongraph/components/compatibility/{compatibility}
-Catalog starter: GET /actiongraph/components/profiles
-Catalog starter: GET /actiongraph/components/profiles/{profile}
+Catalog API: GET /actiongraph/components
+Catalog API: GET /actiongraph/components/modules
+Catalog API: GET /actiongraph/components/modules/{module}
+Catalog API: GET /actiongraph/components/modules/{module}/profiles
+Catalog API: GET /actiongraph/components/compatibility/{compatibility}
+Catalog API: GET /actiongraph/components/profiles
+Catalog API: GET /actiongraph/components/profiles/{profile}
 ```
 
-Custom gateways, endpoint adapters, Java 8 legacy systems, Java 8 approval portals, or Java 8 audit consoles can use `actiongraph-control-plane-api` when they need ActionGraph's standard `{ "error", "message" }` error response contract, zero-dependency `ActionGraphControlPlaneHttpClient` for configuring all deployed control-plane surfaces from one `/actiongraph` base URL, zero-dependency `ActionGraphControlPlaneHttpClientProperties` for building that aggregate client from `.properties` / configuration-center keys, optional safe GET retries for transient read-side failures, zero-dependency `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`, zero-dependency `ActionGraphComponentCatalogHttpClient` for inspecting deployed component catalog endpoints, zero-dependency `ActionGraphHumanReviewHttpClient` for querying/deciding human-review tasks and callbacks, zero-dependency `ActionGraphConsoleHttpClient` for read-only run/trace queries and CSV/JSONL audit exports, or shared-secret token verification without depending on Spring Web. Built-in runtime, component catalog, human-review, callback, and Console endpoint starters depend on it transitively. GET retries are opt-in and limited to catalog/review-task/console reads; POST calls that can create side effects are not retried automatically. The token helper validates configured header names, skips token lookup when no shared secret is configured, and uses constant-time token comparison; it is not an enterprise IAM or RBAC layer. Runtime request headers whitelisted by the server are stored as trace metadata and copied to human-review task attributes when a high-risk run suspends, so legacy transaction ids and source-system ids remain visible through the approval path. The Runtime API starter still hard-excludes its configured token header from that metadata capture.
+Custom gateways, endpoint adapters, Java 8 legacy systems, Java 8 approval portals, or Java 8 audit consoles can use `actiongraph-control-plane-api` when they need ActionGraph's standard `{ "error", "message" }` error response contract, zero-dependency `ActionGraphControlPlaneHttpClient` for configuring all deployed control-plane surfaces from one `/actiongraph` base URL, zero-dependency `ActionGraphControlPlaneHttpClientProperties` for building that aggregate client from `.properties` / configuration-center keys, optional safe GET retries for transient read-side failures, zero-dependency `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`, zero-dependency `ActionGraphComponentCatalogHttpClient` for inspecting deployed component catalog endpoints, zero-dependency `ActionGraphHumanReviewHttpClient` for querying/deciding human-review tasks and callbacks, zero-dependency `ActionGraphConsoleHttpClient` for read-only run/trace queries and CSV/JSONL audit exports, or shared-secret token verification without depending on Spring Web. Built-in Spring endpoints and Console endpoints reuse it transitively. GET retries are opt-in and limited to catalog/review-task/console reads; POST calls that can create side effects are not retried automatically. The token helper validates configured header names, skips token lookup when no shared secret is configured, and uses constant-time token comparison; it is not an enterprise IAM or RBAC layer. Runtime request headers whitelisted by the server are stored as trace metadata and copied to human-review task attributes when a high-risk run suspends, so legacy transaction ids and source-system ids remain visible through the approval path. The runtime API endpoint hard-excludes its configured token header from that metadata capture.
 
 The component catalog exposes a `compatibility` label for each module. Today `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` artifacts that Java 8 applications can import directly; embeddable runtime, Spring, JDBC, governance, LLM, Console, and sample modules are `java21-plus` or `sample-only` and should run on the modern ActionGraph service side behind HTTP, an enterprise gateway, ESB, or a Java 8+ sidecar.
 
 Non-Spring services can use `actiongraph-human-review` directly when they need external approval task storage, callback handling, multi-stage approval chains, or a stable task query/decision service without Spring MVC.
 
-When `actiongraph-governance-spring-boot-starter` is on the classpath, masking and amount-limit permission rules are activated. Add `actiongraph-governance-human-review-spring-boot-starter` when those limit rules should also enrich human-review requests or when `actiongraph.human-review.risk-based-approval-chain=true` should route approval stages. Without these starter modules, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and safe pending human review.
+When `actiongraph-spring-boot-starter` is on the classpath, governance auto-configuration is available. Masking is activated with `actiongraph.masking.enabled=true`; amount-limit rules are activated by configuring `actiongraph.limits.rules`; review attributes and risk-based approval routing use the same starter and remain controlled by `actiongraph.human-review.risk-based-approval-chain`.
 
-When `actiongraph-human-review-spring-boot-starter` is on the classpath, Spring services get repository-backed human review defaults. The starter supplies an in-memory `HumanReviewRepository` by default, and supplies a durable JDBC `HumanReviewRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available. Add `actiongraph-human-review-api-spring-boot-starter` in a Spring MVC application to expose both pending-task/run-task/detail/decision endpoints and external approval callback endpoints; each surface still requires its own `actiongraph.human-review.*.enabled=true` switch.
+When `actiongraph-spring-boot-starter` is on the classpath, Spring services get repository-backed human review defaults. The starter supplies an in-memory `HumanReviewRepository` by default, and supplies a durable JDBC `HumanReviewRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available. In Spring MVC applications, pending-task/run-task/detail/decision endpoints and external approval callback endpoints are still opt-in through their own `actiongraph.human-review.*.enabled=true` switches.
 
 ```text
-API starter: GET  /actiongraph/human-review/tasks/pending
-API starter: GET  /actiongraph/human-review/tasks/runs/{runId}
-API starter: GET  /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}
-API starter: POST /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}/decision
-Callback starter: POST /actiongraph/human-review/callbacks
+Human Review API: GET  /actiongraph/human-review/tasks/pending
+Human Review API: GET  /actiongraph/human-review/tasks/runs/{runId}
+Human Review API: GET  /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}
+Human Review API: POST /actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}/decision
+Human Review Callback: POST /actiongraph/human-review/callbacks
 ```
 
 ```json
@@ -222,7 +196,7 @@ If `shared-secret` is configured, the request must include the configured token 
 
 `actiongraph-console` can be used directly by custom monitoring services, CLIs, or enterprise gateways that want the run query service, response model, `ConsoleRunRepository` port, JDBC trace read model, and CSV/JSONL audit export service without Spring MVC endpoints. Spring MVC control-plane services add `actiongraph-console-spring-boot-starter` when they want the built-in JSON API, HTML page, export endpoints, and optional JDBC `ConsoleRunRepository` auto-configuration from a `DataSource`. With `actiongraph.console.enabled=true`, the read-only surface is:
 
-If a single Spring MVC deployment should expose the built-in runtime entry, component catalog, approval task, approval callback, and console endpoints together, add the explicit endpoint starters: `actiongraph-runtime-api-spring-boot-starter`, `actiongraph-component-catalog-spring-boot-starter`, `actiongraph-human-review-api-spring-boot-starter`, and `actiongraph-console-spring-boot-starter`. They still do not create runtime actions, interpreters, runtime repositories, review storage, LLM clients, or governance policies. Console read-model repository wiring remains property-gated by the Console starter.
+If a single Spring MVC deployment should expose the built-in runtime entry, component catalog, approval task, approval callback, and console endpoints together, add `actiongraph-spring-boot-starter` plus the optional `actiongraph-console-spring-boot-starter`, then enable only the endpoint properties that deployment owns. The starters still do not create business actions, LLM clients, or domain-specific interpreters for you.
 
 ```text
 Console starter: GET /actiongraph/console
@@ -257,7 +231,7 @@ Run the sample apps:
 
 The JDBC batch input path uses standard `DriverManager`; add the target database driver to the sample runtime classpath before running against a real database. See `actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql` for the anonymized view contract.
 For PostgreSQL staging connections, see the dialect mapping in `actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql` and [Claims Precheck PostgreSQL Mapping](docs/frameworkization/claims-precheck-postgresql.md).
-Batch reports include Markdown, CSV, and a read-only HTML console with total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` from `actiongraph-human-review` or enable the optional Spring Boot callback endpoint from `actiongraph-human-review-api-spring-boot-starter`.
+Batch reports include Markdown, CSV, and a read-only HTML console with total runtime, business action time, framework overhead, and review wait time for each case. The `suspend-resume`, `external-decisions`, and `external-callbacks` review modes use the real suspended-run resume path and derive approval latency from review task timestamps. Production approval integrations can write decisions through `HumanReviewCallbackHandler` from `actiongraph-human-review` or enable the optional Spring Boot callback endpoint from `actiongraph-spring-boot-starter`.
 The `external-callbacks` mode replays JSONL approval callback deliveries through `HumanReviewCallbackHandler`, including shared-secret checks and duplicate-delivery idempotency.
 
 ## Documentation

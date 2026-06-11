@@ -76,7 +76,7 @@ The test suite compiles that exact file with `javac --release 8`.
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-spring-boot-starter")
 }
 ```
 

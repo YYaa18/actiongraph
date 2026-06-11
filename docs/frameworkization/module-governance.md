@@ -23,6 +23,8 @@ The target module surface is:
 | `actiongraph-bom` | Version platform |
 | `actiongraph-core` | Runtime kernel and small pure Java contracts |
 | `actiongraph-annotations` | Annotation action adapter |
+| `actiongraph-component-catalog` | Java 8 compatible component metadata for gateways and deployment checks |
+| `actiongraph-control-plane-api` | Java 8 compatible HTTP clients and control-plane contracts |
 | `actiongraph-human-review` | Human-review contracts, policies, callbacks, and storage adapters |
 | `actiongraph-governance` | Masking, permission, amount, and approval-routing policies |
 | `actiongraph-persistence-jdbc` | JDBC persistence for runtime, memory, review, and read models |
@@ -42,30 +44,22 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 |---|---|---|
 | `actiongraph-annotations` | keep-target | `actiongraph-annotations` |
 | `actiongraph-bom` | keep-target | `actiongraph-bom` |
-| `actiongraph-component-catalog` | merge-planned | `actiongraph-console` |
-| `actiongraph-component-catalog-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
+| `actiongraph-component-catalog` | keep-java8-client | `actiongraph-component-catalog` |
 | `actiongraph-console` | keep-target | `actiongraph-console` |
 | `actiongraph-console-spring-boot-starter` | temporary-optional-starter | `actiongraph-console-spring-boot-starter` |
-| `actiongraph-control-plane-api` | merge-planned | `actiongraph-console` |
+| `actiongraph-control-plane-api` | keep-java8-client | `actiongraph-control-plane-api` |
 | `actiongraph-core` | keep-target | `actiongraph-core` |
 | `actiongraph-governance` | keep-target | `actiongraph-governance` |
-| `actiongraph-governance-human-review-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
-| `actiongraph-governance-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
 | `actiongraph-human-review` | keep-target | `actiongraph-human-review` |
-| `actiongraph-human-review-api-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
-| `actiongraph-human-review-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
-| `actiongraph-jdbc-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
 | `actiongraph-llm` | merge-planned | `actiongraph-llm-deepseek` |
 | `actiongraph-llm-deepseek` | keep-target | `actiongraph-llm-deepseek` |
-| `actiongraph-memory-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
 | `actiongraph-persistence-jdbc` | keep-target | `actiongraph-persistence-jdbc` |
-| `actiongraph-runtime-api-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
 | `actiongraph-samples` | sample-only | `actiongraph-samples` |
 | `actiongraph-spring-boot-starter` | keep-target | `actiongraph-spring-boot-starter` |
 <!-- module-governance:end -->
 
 ## Freeze Notes
 
-- The ledger does not mean the current 22-module surface is desirable; it documents the temporary state so growth is visible.
+- The ledger does not mean the current 14-module surface is final; it documents the temporary state so growth is visible.
 - Consolidation should happen by moving implementation into target modules, keeping compatibility shims only when a consumer migration requires them.
 - Sample-domain growth is not a substitute for F1 validation. Claims precheck is frozen except for real/near-real integration fixes and evidence.

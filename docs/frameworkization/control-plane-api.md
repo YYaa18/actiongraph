@@ -370,14 +370,12 @@ If `sharedSecret` is blank, verification succeeds and `headers::getFirst` is not
 
 ## Built-In Reuse
 
-These Spring MVC endpoint starters depend on this module transitively:
+These Spring MVC starters depend on this module transitively:
 
-- `actiongraph-runtime-api-spring-boot-starter`
-- `actiongraph-component-catalog-spring-boot-starter`
-- `actiongraph-human-review-api-spring-boot-starter`
+- `actiongraph-spring-boot-starter`
 - `actiongraph-console-spring-boot-starter`
 
-The Spring endpoint starters use this shared response contract and shared-secret token verification directly; applications compose the endpoint set explicitly instead of relying on an extra aggregate artifact.
+The Spring endpoints use this shared response contract and shared-secret token verification directly; applications compose the endpoint set with dependencies plus explicit property gates instead of relying on an extra aggregate artifact.
 
 ## Boundary
 

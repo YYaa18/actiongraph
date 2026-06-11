@@ -10,9 +10,6 @@ Spring Boot applications should prefer the optional starter. It keeps durable pe
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")             // optional
-    implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")       // optional
 }
 ```
 

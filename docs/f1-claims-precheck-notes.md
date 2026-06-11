@@ -95,7 +95,7 @@ JDBC 默认查询 `claims_precheck_cases` 表，字段为 `claim_id`、`claimed_
 
 `--review-callbacks` 读取审批回调 JSONL，字段为 `deliveryId`、`claimId`、`runId`、`actionId`、`expectedStageIndex`、`decision`、`reviewer`、`comment`、`decisionDelayMs`、`token`。运行时把消息构造成 `HumanReviewCallback` 并交给 `HumanReviewCallbackHandler`；`--review-callback-secret` 或 `ACTIONGRAPH_REVIEW_CALLBACK_SECRET` 用于共享密钥校验。样例 fixture 包含一次重复投递，测试会验证同一 stage decision 的重复消息被当作幂等重试处理，错误 token 会在 resume 前 fail-fast。
 
-正式接审批系统时，CSV 只是演示输入源；JSONL callback replay 更接近消息总线/审批回调联调。Spring MVC 应用也可以引入 `actiongraph-human-review-spring-boot-starter` 和 `actiongraph-human-review-api-spring-boot-starter`，再启用 `actiongraph.human-review.callback-endpoint.enabled=true`，直接暴露 HTTP 回调端点接收 `runId`、`actionId`、`expectedStageIndex` 和审批决策。建议同时配置 `actiongraph.human-review.callback-endpoint.shared-secret`，通过共享密钥 Header 校验审批系统来源。handler 会校验 runId/actionId/stageIndex，并复用 repository 的重复审批防护。
+正式接审批系统时，CSV 只是演示输入源；JSONL callback replay 更接近消息总线/审批回调联调。Spring MVC 应用可以引入 `actiongraph-spring-boot-starter`，再启用 `actiongraph.human-review.callback-endpoint.enabled=true`，直接暴露 HTTP 回调端点接收 `runId`、`actionId`、`expectedStageIndex` 和审批决策。建议同时配置 `actiongraph.human-review.callback-endpoint.shared-secret`，通过共享密钥 Header 校验审批系统来源。handler 会校验 runId/actionId/stageIndex，并复用 repository 的重复审批防护。
 
 实跑结果摘要：
 

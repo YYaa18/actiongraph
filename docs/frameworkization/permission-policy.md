@@ -68,7 +68,7 @@ With `allowUnmatchedActions=false`, every executable action must have an explici
 
 ## Spring Boot
 
-The base starter still defaults to `DefaultPermissionPolicy`, which allows all actions. Production applications can add `actiongraph-governance` or `actiongraph-governance-spring-boot-starter`, then override it:
+The base starter still defaults to `DefaultPermissionPolicy`, which allows all actions. Production applications can add `actiongraph-governance` or `actiongraph-spring-boot-starter`, then override it:
 
 ```java
 @Bean
