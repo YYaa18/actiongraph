@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
+
 @RestController
 @RequestMapping("${actiongraph.human-review.callback-endpoint.path:/actiongraph/human-review/callbacks}")
 public final class ActionGraphHumanReviewCallbackController {
@@ -96,8 +98,8 @@ public final class ActionGraphHumanReviewCallbackController {
             String actionId,
             int expectedStageIndex,
             HumanReviewDecision decision,
-            String reviewer,
-            String comment
+            @Nullable String reviewer,
+            @Nullable String comment
     ) {
     }
 

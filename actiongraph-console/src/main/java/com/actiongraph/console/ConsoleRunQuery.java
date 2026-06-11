@@ -1,10 +1,12 @@
 package com.actiongraph.console;
 
+import org.jspecify.annotations.Nullable;
+
 public record ConsoleRunQuery(
         int limit,
         int offset,
-        String status,
-        Boolean auditComplete
+        @Nullable String status,
+        @Nullable Boolean auditComplete
 ) {
     public ConsoleRunQuery {
         if (limit <= 0) {

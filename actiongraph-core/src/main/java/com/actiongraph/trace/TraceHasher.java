@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Deterministic SHA-256 hasher for trace-chain events.
  *
@@ -49,10 +51,10 @@ public final class TraceHasher {
             long seq,
             Instant at,
             TraceEventType type,
-            String actionId,
-            String detail,
-            Map<String, String> data,
-            String prevHash
+            @Nullable String actionId,
+            @Nullable String detail,
+            @Nullable Map<String, String> data,
+            @Nullable String prevHash
     ) {
         String canonical = canonical(runId, seq, at, type, actionId, detail, data, prevHash);
         try {
@@ -69,10 +71,10 @@ public final class TraceHasher {
             long seq,
             Instant at,
             TraceEventType type,
-            String actionId,
-            String detail,
-            Map<String, String> data,
-            String prevHash
+            @Nullable String actionId,
+            @Nullable String detail,
+            @Nullable Map<String, String> data,
+            @Nullable String prevHash
     ) {
         String sortedData = (data == null ? Map.<String, String>of() : data).entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())

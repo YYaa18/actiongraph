@@ -505,6 +505,51 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void publishedSourcePackagesDeclareJSpecifyNullSafetyContracts() throws IOException {
+        Path root = repositoryRoot();
+        String build = readSource(root, "build.gradle.kts");
+        String bom = readSource(root, "actiongraph-bom/build.gradle.kts");
+
+        assertThat(build)
+                .contains("val jspecifyVersion = \"1.0.0\"")
+                .contains("compileOnlyApi")
+                .contains("org.jspecify:jspecify:$jspecifyVersion");
+        assertThat(bom)
+                .contains("org.jspecify:jspecify:1.0.0");
+
+        for (Path packageDirectory : publishedSourcePackageDirectories(root)) {
+            Path packageInfo = packageDirectory.resolve("package-info.java");
+            assertThat(packageInfo)
+                    .as("Published source package should declare JSpecify null defaults: "
+                            + root.relativize(packageDirectory))
+                    .exists();
+            assertThat(Files.readString(packageInfo, StandardCharsets.UTF_8))
+                    .as(packageInfo + " should opt into non-null-by-default")
+                    .contains("@NullMarked")
+                    .contains("org.jspecify.annotations.NullMarked");
+        }
+
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/policy/DataMaskingPolicy.java"))
+                .contains("String maskText(@Nullable String text)")
+                .contains("Map<String, String> maskData(@Nullable Map<String, String> data)");
+        assertThat(readSource(root,
+                "actiongraph-core/src/main/java/com/actiongraph/runtime/api/ActionGraphRuntimeOperations.java"))
+                .contains("RuntimeInterpretationResponse interpret(String input, @Nullable Map<String, String>")
+                .contains("RuntimeRunResponse resume(String runId, @Nullable Map<String, String>");
+        assertThat(readSource(root,
+                "actiongraph-control-plane-api/src/main/java/com/actiongraph/controlplane/api/ActionGraphRuntimeHttpClient.java"))
+                .contains("interpret(String input, @Nullable Map<String, String> knownParameters)")
+                .contains("resume(String runId, @Nullable Map<String, String> requestHeaders)");
+        assertThat(readSource(root, "actiongraph-console/src/main/java/com/actiongraph/console/ConsoleRunQuery.java"))
+                .contains("@Nullable String status")
+                .contains("@Nullable Boolean auditComplete");
+        assertThat(readSource(root,
+                "actiongraph-persistence-jdbc/src/main/java/com/actiongraph/persistence/jdbc/TraceRunQuery.java"))
+                .contains("@Nullable String status")
+                .contains("@Nullable Boolean auditComplete");
+    }
+
+    @Test
     void strategyDocumentsKeepF1AsRealWorldGateNotSampleCompletion() throws IOException {
         Path root = repositoryRoot();
         String strategy = Files.readString(root.resolve("docs/finance-strategy.md"), StandardCharsets.UTF_8);
@@ -879,6 +924,43 @@ class ActionGraphComponentCatalogServiceTest {
 
         Set<String> modules = new LinkedHashSet<>();
         var moduleMatcher = Pattern.compile("\"(actiongraph-[^\"]+)\"").matcher(matcher.group(1));
+        while (moduleMatcher.find()) {
+            modules.add(moduleMatcher.group(1));
+        }
+        return modules;
+    }
+
+    private Set<Path> publishedSourcePackageDirectories(Path root) throws IOException {
+        Set<Path> packages = new LinkedHashSet<>();
+        for (String module : parseLibraryModules(root.resolve("build.gradle.kts"))) {
+            Path sourceRoot = root.resolve(module).resolve("src/main/java");
+            if (!Files.isDirectory(sourceRoot)) {
+                continue;
+            }
+            try (var paths = Files.walk(sourceRoot)) {
+                paths.filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().endsWith(".java"))
+                        .filter(path -> !path.getFileName().toString().equals("package-info.java"))
+                        .map(Path::getParent)
+                        .sorted()
+                        .forEach(packages::add);
+            }
+        }
+        return packages;
+    }
+
+    private Set<String> parseLibraryModules(Path buildFile) throws IOException {
+        String content = Files.readString(buildFile, StandardCharsets.UTF_8);
+        var matcher = Pattern.compile(
+                "val\\s+libraryModuleDescriptions\\s*=\\s*mapOf\\((.*?)\\)\\s*\\n\\s*val\\s+publishableModuleDescriptions",
+                Pattern.DOTALL
+        ).matcher(content);
+        assertThat(matcher.find())
+                .as("root build must declare libraryModuleDescriptions")
+                .isTrue();
+
+        Set<String> modules = new LinkedHashSet<>();
+        var moduleMatcher = Pattern.compile("\"(actiongraph-[^\"]+)\"\\s+to").matcher(matcher.group(1));
         while (moduleMatcher.find()) {
             modules.add(moduleMatcher.group(1));
         }

@@ -5,6 +5,8 @@ import com.actiongraph.runtime.Blackboard;
 
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Adds application-specific attributes to a human-review request.
  *
@@ -22,7 +24,8 @@ public interface ReviewAttributeContributor {
      *
      * @param action pending action; never {@code null}
      * @param blackboard current run Blackboard; never {@code null}
-     * @return non-null attribute map
+     * @return attribute map, or {@code null} to add no attributes
      */
+    @Nullable
     Map<String, String> contribute(Action action, Blackboard blackboard);
 }

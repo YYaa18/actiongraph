@@ -3,6 +3,8 @@ package com.actiongraph.controlplane.api;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ActionGraphControlPlaneHttpClient {
     private static final String RUNTIME_PATH = "/runtime";
     private static final String CATALOG_PATH = "/components";
@@ -10,10 +12,10 @@ public final class ActionGraphControlPlaneHttpClient {
     private static final String REVIEW_CALLBACKS_PATH = "/human-review/callbacks";
     private static final String CONSOLE_PATH = "/console";
 
-    private final ActionGraphRuntimeHttpClient runtime;
-    private final ActionGraphComponentCatalogHttpClient catalog;
-    private final ActionGraphHumanReviewHttpClient humanReview;
-    private final ActionGraphConsoleHttpClient console;
+    private final @Nullable ActionGraphRuntimeHttpClient runtime;
+    private final @Nullable ActionGraphComponentCatalogHttpClient catalog;
+    private final @Nullable ActionGraphHumanReviewHttpClient humanReview;
+    private final @Nullable ActionGraphConsoleHttpClient console;
 
     private ActionGraphControlPlaneHttpClient(Builder builder) {
         String actionGraphBaseUrl = trimTrailingSlash(builder.actionGraphBaseUrl);
@@ -85,7 +87,7 @@ public final class ActionGraphControlPlaneHttpClient {
         return new Builder(null);
     }
 
-    public static Builder builder(String actionGraphBaseUrl) {
+    public static Builder builder(@Nullable String actionGraphBaseUrl) {
         return new Builder(actionGraphBaseUrl);
     }
 
@@ -121,14 +123,18 @@ public final class ActionGraphControlPlaneHttpClient {
         return requireConfigured(console, "console");
     }
 
-    private static <T> T requireConfigured(T value, String surface) {
+    private static <T> T requireConfigured(@Nullable T value, String surface) {
         if (value == null) {
             throw new IllegalStateException("ActionGraph " + surface + " endpoint is not configured");
         }
         return value;
     }
 
-    private static String coalesce(String configuredBaseUrl, String actionGraphBaseUrl, String path) {
+    private static @Nullable String coalesce(
+            @Nullable String configuredBaseUrl,
+            @Nullable String actionGraphBaseUrl,
+            String path
+    ) {
         if (!isBlank(configuredBaseUrl)) {
             return configuredBaseUrl;
         }
@@ -138,7 +144,7 @@ public final class ActionGraphControlPlaneHttpClient {
         return actionGraphBaseUrl + path;
     }
 
-    private static String trimTrailingSlash(String value) {
+    private static @Nullable String trimTrailingSlash(@Nullable String value) {
         if (isBlank(value)) {
             return null;
         }
@@ -156,61 +162,61 @@ public final class ActionGraphControlPlaneHttpClient {
         return value;
     }
 
-    private static boolean isBlank(String value) {
+    private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }
 
     public static final class Builder {
-        private String actionGraphBaseUrl;
-        private String runtimeApiBaseUrl;
-        private String catalogApiBaseUrl;
-        private String reviewTaskApiBaseUrl;
-        private String reviewCallbackApiBaseUrl;
-        private String consoleApiBaseUrl;
+        private @Nullable String actionGraphBaseUrl;
+        private @Nullable String runtimeApiBaseUrl;
+        private @Nullable String catalogApiBaseUrl;
+        private @Nullable String reviewTaskApiBaseUrl;
+        private @Nullable String reviewCallbackApiBaseUrl;
+        private @Nullable String consoleApiBaseUrl;
         private String runtimeTokenHeader = ActionGraphRuntimeHttpClient.DEFAULT_RUNTIME_TOKEN_HEADER;
         private String catalogTokenHeader = ActionGraphComponentCatalogHttpClient.DEFAULT_CATALOG_TOKEN_HEADER;
         private String reviewTokenHeader = ActionGraphHumanReviewHttpClient.DEFAULT_REVIEW_TOKEN_HEADER;
         private String consoleTokenHeader = ActionGraphConsoleHttpClient.DEFAULT_CONSOLE_TOKEN_HEADER;
-        private String runtimeSharedSecret = "";
-        private String catalogSharedSecret = "";
-        private String reviewSharedSecret = "";
-        private String consoleSharedSecret = "";
+        private @Nullable String runtimeSharedSecret = "";
+        private @Nullable String catalogSharedSecret = "";
+        private @Nullable String reviewSharedSecret = "";
+        private @Nullable String consoleSharedSecret = "";
         private int connectTimeoutMillis = 5000;
         private int readTimeoutMillis = 30000;
         private int maxGetRetries = 0;
         private int getRetryBackoffMillis = 0;
         private final Map<String, String> defaultHeaders = new TreeMap<String, String>();
 
-        private Builder(String actionGraphBaseUrl) {
+        private Builder(@Nullable String actionGraphBaseUrl) {
             this.actionGraphBaseUrl = actionGraphBaseUrl;
         }
 
-        public Builder actionGraphBaseUrl(String actionGraphBaseUrl) {
+        public Builder actionGraphBaseUrl(@Nullable String actionGraphBaseUrl) {
             this.actionGraphBaseUrl = actionGraphBaseUrl;
             return this;
         }
 
-        public Builder runtimeApiBaseUrl(String runtimeApiBaseUrl) {
+        public Builder runtimeApiBaseUrl(@Nullable String runtimeApiBaseUrl) {
             this.runtimeApiBaseUrl = runtimeApiBaseUrl;
             return this;
         }
 
-        public Builder catalogApiBaseUrl(String catalogApiBaseUrl) {
+        public Builder catalogApiBaseUrl(@Nullable String catalogApiBaseUrl) {
             this.catalogApiBaseUrl = catalogApiBaseUrl;
             return this;
         }
 
-        public Builder reviewTaskApiBaseUrl(String reviewTaskApiBaseUrl) {
+        public Builder reviewTaskApiBaseUrl(@Nullable String reviewTaskApiBaseUrl) {
             this.reviewTaskApiBaseUrl = reviewTaskApiBaseUrl;
             return this;
         }
 
-        public Builder reviewCallbackApiBaseUrl(String reviewCallbackApiBaseUrl) {
+        public Builder reviewCallbackApiBaseUrl(@Nullable String reviewCallbackApiBaseUrl) {
             this.reviewCallbackApiBaseUrl = reviewCallbackApiBaseUrl;
             return this;
         }
 
-        public Builder consoleApiBaseUrl(String consoleApiBaseUrl) {
+        public Builder consoleApiBaseUrl(@Nullable String consoleApiBaseUrl) {
             this.consoleApiBaseUrl = consoleApiBaseUrl;
             return this;
         }
@@ -244,7 +250,7 @@ public final class ActionGraphControlPlaneHttpClient {
             return this;
         }
 
-        public Builder sharedSecret(String sharedSecret) {
+        public Builder sharedSecret(@Nullable String sharedSecret) {
             this.runtimeSharedSecret = sharedSecret;
             this.catalogSharedSecret = sharedSecret;
             this.reviewSharedSecret = sharedSecret;
@@ -252,22 +258,22 @@ public final class ActionGraphControlPlaneHttpClient {
             return this;
         }
 
-        public Builder runtimeSharedSecret(String runtimeSharedSecret) {
+        public Builder runtimeSharedSecret(@Nullable String runtimeSharedSecret) {
             this.runtimeSharedSecret = runtimeSharedSecret;
             return this;
         }
 
-        public Builder catalogSharedSecret(String catalogSharedSecret) {
+        public Builder catalogSharedSecret(@Nullable String catalogSharedSecret) {
             this.catalogSharedSecret = catalogSharedSecret;
             return this;
         }
 
-        public Builder reviewSharedSecret(String reviewSharedSecret) {
+        public Builder reviewSharedSecret(@Nullable String reviewSharedSecret) {
             this.reviewSharedSecret = reviewSharedSecret;
             return this;
         }
 
-        public Builder consoleSharedSecret(String consoleSharedSecret) {
+        public Builder consoleSharedSecret(@Nullable String consoleSharedSecret) {
             this.consoleSharedSecret = consoleSharedSecret;
             return this;
         }
@@ -304,12 +310,12 @@ public final class ActionGraphControlPlaneHttpClient {
             return this;
         }
 
-        public Builder defaultHeader(String name, String value) {
+        public Builder defaultHeader(String name, @Nullable String value) {
             this.defaultHeaders.put(requireText(name, "default header name"), value == null ? "" : value);
             return this;
         }
 
-        public Builder defaultHeaders(Map<String, String> headers) {
+        public Builder defaultHeaders(@Nullable Map<String, String> headers) {
             if (headers == null) {
                 return this;
             }

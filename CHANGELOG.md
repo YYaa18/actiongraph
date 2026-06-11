@@ -14,6 +14,7 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 - Typed ActionGraph exception hierarchy for input, configuration, conflict, not-found, and integration failures, plus a separate Java 8 control-plane API exception root.
 - Provider-neutral runtime observability SPI with Spring Boot wiring and optional Micrometer-backed observation sink.
 - Checked-in public API snapshot and Gradle verification task for compatibility-sensitive published module surfaces.
+- JSpecify null-safety contracts for published source packages, with `@NullMarked` defaults and explicit `@Nullable` markers on optional public API boundaries.
 
 ### Changed
 

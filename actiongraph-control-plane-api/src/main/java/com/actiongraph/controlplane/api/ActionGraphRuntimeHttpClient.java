@@ -12,6 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGateway {
     public static final String DEFAULT_RUNTIME_TOKEN_HEADER = "X-ActionGraph-Runtime-Token";
 
@@ -41,15 +43,16 @@ public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGat
     }
 
     @Override
-    public ControlPlaneHttpResponse interpret(String input, Map<String, String> knownParameters) throws IOException {
+    public ControlPlaneHttpResponse interpret(String input, @Nullable Map<String, String> knownParameters)
+            throws IOException {
         return interpret(input, knownParameters, null);
     }
 
     @Override
     public ControlPlaneHttpResponse interpret(
             String input,
-            Map<String, String> knownParameters,
-            Map<String, String> requestHeaders
+            @Nullable Map<String, String> knownParameters,
+            @Nullable Map<String, String> requestHeaders
     ) throws IOException {
         return post("/interpret", goalRequestJson(input, knownParameters), requestHeaders);
     }
@@ -60,15 +63,16 @@ public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGat
     }
 
     @Override
-    public ControlPlaneHttpResponse start(String input, Map<String, String> knownParameters) throws IOException {
+    public ControlPlaneHttpResponse start(String input, @Nullable Map<String, String> knownParameters)
+            throws IOException {
         return start(input, knownParameters, null);
     }
 
     @Override
     public ControlPlaneHttpResponse start(
             String input,
-            Map<String, String> knownParameters,
-            Map<String, String> requestHeaders
+            @Nullable Map<String, String> knownParameters,
+            @Nullable Map<String, String> requestHeaders
     ) throws IOException {
         return post("/runs", goalRequestJson(input, knownParameters), requestHeaders);
     }
@@ -79,15 +83,20 @@ public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGat
     }
 
     @Override
-    public ControlPlaneHttpResponse resume(String runId, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse resume(String runId, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         return post("/runs/" + encodePathSegment(requireText(runId, "runId")) + "/resume", "{}", requestHeaders);
     }
 
-    public ControlPlaneHttpResponse post(String path, String jsonBody) throws IOException {
+    public ControlPlaneHttpResponse post(@Nullable String path, @Nullable String jsonBody) throws IOException {
         return post(path, jsonBody, null);
     }
 
-    public ControlPlaneHttpResponse post(String path, String jsonBody, Map<String, String> requestHeaders)
+    public ControlPlaneHttpResponse post(
+            @Nullable String path,
+            @Nullable String jsonBody,
+            @Nullable Map<String, String> requestHeaders
+    )
             throws IOException {
         String requestPath = path == null ? "" : path;
         if (!requestPath.startsWith("/")) {
@@ -123,7 +132,7 @@ public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGat
         }
     }
 
-    private static void applyHeaders(HttpURLConnection connection, Map<String, String> headers) {
+    private static void applyHeaders(HttpURLConnection connection, @Nullable Map<String, String> headers) {
         if (headers == null) {
             return;
         }
@@ -134,7 +143,7 @@ public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGat
         }
     }
 
-    private static String goalRequestJson(String input, Map<String, String> knownParameters) {
+    private static String goalRequestJson(String input, @Nullable Map<String, String> knownParameters) {
         String safeInput = requireText(input, "input");
         StringBuilder json = new StringBuilder();
         json.append("{\"input\":").append(jsonString(safeInput)).append(",\"knownParameters\":{");
@@ -194,7 +203,7 @@ public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGat
         return escaped.toString();
     }
 
-    private static String readBody(InputStream stream) throws IOException {
+    private static String readBody(@Nullable InputStream stream) throws IOException {
         if (stream == null) {
             return "";
         }
@@ -235,14 +244,14 @@ public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGat
         return value;
     }
 
-    private static boolean isBlank(String value) {
+    private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }
 
     public static final class Builder {
         private final String runtimeApiBaseUrl;
         private String tokenHeader = DEFAULT_RUNTIME_TOKEN_HEADER;
-        private String sharedSecret = "";
+        private @Nullable String sharedSecret = "";
         private int connectTimeoutMillis = 5000;
         private int readTimeoutMillis = 30000;
         private final Map<String, String> defaultHeaders = new TreeMap<String, String>();
@@ -256,7 +265,7 @@ public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGat
             return this;
         }
 
-        public Builder sharedSecret(String sharedSecret) {
+        public Builder sharedSecret(@Nullable String sharedSecret) {
             this.sharedSecret = sharedSecret;
             return this;
         }
@@ -277,12 +286,12 @@ public final class ActionGraphRuntimeHttpClient implements ActionGraphRuntimeGat
             return this;
         }
 
-        public Builder defaultHeader(String name, String value) {
+        public Builder defaultHeader(String name, @Nullable String value) {
             this.defaultHeaders.put(requireText(name, "default header name"), value == null ? "" : value);
             return this;
         }
 
-        public Builder defaultHeaders(Map<String, String> headers) {
+        public Builder defaultHeaders(@Nullable Map<String, String> headers) {
             if (headers == null) {
                 return this;
             }

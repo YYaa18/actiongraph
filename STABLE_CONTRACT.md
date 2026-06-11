@@ -26,6 +26,7 @@ The following are public API after 1.0 unless documented otherwise:
 - SLF4J API remains the logging facade; ActionGraph library modules must not bind a logging implementation for applications;
 - `ObservationSink` remains the provider-neutral runtime observability SPI; Micrometer integration is optional and must not become a core dependency;
 - public APIs must document compatibility-sensitive semantics in Javadoc, including null handling, thread-safety expectations, failure outcomes, compensation behavior, audit ordering, and resume-claim concurrency where applicable;
+- published source packages use JSpecify null-safety annotations. `@NullMarked` means unannotated API parameters and return values are non-null by default; `@Nullable` marks optional inputs or nullable accessors. After 1.0, tightening or loosening nullability in a way that breaks source compatibility is compatibility-sensitive and must be documented;
 - Spring Boot configuration properties and documented `actiongraph.*` property names;
 - SQL schema expectations documented for JDBC persistence;
 - JSON request and response shapes documented for built-in HTTP endpoints.
@@ -41,6 +42,7 @@ After 1.0, compatible changes include:
 - adding more specific exception subclasses while preserving documented parent categories;
 - adding configuration properties with safe defaults;
 - adding trace event attributes without removing existing keys.
+- adding `@Nullable` to a parameter that was already documented and implemented as optional, when source compatibility is preserved.
 
 After 1.0, incompatible changes require a major version unless a security fix makes the break unavoidable:
 
@@ -48,6 +50,7 @@ After 1.0, incompatible changes require a major version unless a security fix ma
 - changing method semantics in a way that invalidates existing implementations;
 - adding abstract interface methods without defaults;
 - changing Java compatibility labels or raising the minimum Java level of a public artifact;
+- changing nullability in a way that rejects values previously accepted by a public API or makes a previously non-null accessor nullable;
 - changing documented exception parent categories for public operational failures;
 - removing documented trace fields, response fields, or persisted snapshot compatibility without a migration path.
 

@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
+
 @RestController
 @RequestMapping("${actiongraph.console.path:/actiongraph/console}")
 public final class ActionGraphConsoleApiController {
@@ -41,10 +43,10 @@ public final class ActionGraphConsoleApiController {
     @GetMapping("/runs")
     public ConsoleRunsResponse recentRuns(
             @RequestHeader HttpHeaders headers,
-            @RequestParam(name = "limit", required = false) Integer limit,
-            @RequestParam(name = "offset", required = false) Integer offset,
-            @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "auditComplete", required = false) Boolean auditComplete
+            @RequestParam(name = "limit", required = false) @Nullable Integer limit,
+            @RequestParam(name = "offset", required = false) @Nullable Integer offset,
+            @RequestParam(name = "status", required = false) @Nullable String status,
+            @RequestParam(name = "auditComplete", required = false) @Nullable Boolean auditComplete
     ) {
         verifyToken(headers);
         return consoleService.recentRuns(limit, offset, status, auditComplete);

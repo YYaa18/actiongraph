@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.LinkedHashMap;
 
+import org.jspecify.annotations.Nullable;
+
 @RestController
 @RequestMapping("${actiongraph.runtime.api.path:/actiongraph/runtime}")
 public final class ActionGraphRuntimeApiController {
@@ -110,7 +112,7 @@ public final class ActionGraphRuntimeApiController {
 
     public record RuntimeGoalRequest(
             String input,
-            Map<String, String> knownParameters
+            @Nullable Map<String, String> knownParameters
     ) {
         private Map<String, String> knownParametersOrEmpty() {
             return knownParameters == null ? Map.of() : knownParameters;

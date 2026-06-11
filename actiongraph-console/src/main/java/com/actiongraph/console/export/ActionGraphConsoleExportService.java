@@ -9,6 +9,8 @@ import com.actiongraph.console.ConsoleTraceResponse;
 import java.util.Map;
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ActionGraphConsoleExportService {
     private final ActionGraphConsoleService consoleService;
 
@@ -16,7 +18,12 @@ public final class ActionGraphConsoleExportService {
         this.consoleService = Objects.requireNonNull(consoleService, "consoleService");
     }
 
-    public String runsCsv(Integer limit, Integer offset, String status, Boolean auditComplete) {
+    public String runsCsv(
+            @Nullable Integer limit,
+            @Nullable Integer offset,
+            @Nullable String status,
+            @Nullable Boolean auditComplete
+    ) {
         ConsoleRunsResponse response = consoleService.recentRuns(limit, offset, status, auditComplete);
         StringBuilder csv = new StringBuilder();
         appendRow(csv,
@@ -84,7 +91,7 @@ public final class ActionGraphConsoleExportService {
         return jsonl.toString();
     }
 
-    private static String string(Object value) {
+    private static String string(@Nullable Object value) {
         return value == null ? "" : value.toString();
     }
 
@@ -98,7 +105,7 @@ public final class ActionGraphConsoleExportService {
         csv.append('\n');
     }
 
-    private static String csvValue(String value) {
+    private static String csvValue(@Nullable String value) {
         if (value == null) {
             return "";
         }
@@ -138,7 +145,7 @@ public final class ActionGraphConsoleExportService {
         return json.append('}').toString();
     }
 
-    private static String jsonString(String value) {
+    private static String jsonString(@Nullable String value) {
         if (value == null) {
             return "null";
         }

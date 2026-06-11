@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ActionGraphComponentCatalogHttpClient {
     public static final String DEFAULT_CATALOG_TOKEN_HEADER = "X-ActionGraph-Catalog-Token";
 
@@ -42,7 +44,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         return catalog(null);
     }
 
-    public ControlPlaneHttpResponse catalog(Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse catalog(@Nullable Map<String, String> requestHeaders) throws IOException {
         return get("", requestHeaders);
     }
 
@@ -50,7 +52,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         return modules(null);
     }
 
-    public ControlPlaneHttpResponse modules(Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse modules(@Nullable Map<String, String> requestHeaders) throws IOException {
         return get("/modules", requestHeaders);
     }
 
@@ -58,8 +60,10 @@ public final class ActionGraphComponentCatalogHttpClient {
         return modulesByCompatibility(compatibility, null);
     }
 
-    public ControlPlaneHttpResponse modulesByCompatibility(String compatibility, Map<String, String> requestHeaders)
-            throws IOException {
+    public ControlPlaneHttpResponse modulesByCompatibility(
+            String compatibility,
+            @Nullable Map<String, String> requestHeaders
+    ) throws IOException {
         return get("/compatibility/" + encodePathSegment(requireText(compatibility, "compatibility")),
                 requestHeaders);
     }
@@ -68,7 +72,8 @@ public final class ActionGraphComponentCatalogHttpClient {
         return module(module, null);
     }
 
-    public ControlPlaneHttpResponse module(String module, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse module(String module, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         return get("/modules/" + encodePathSegment(requireText(module, "module")), requestHeaders);
     }
 
@@ -76,7 +81,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         return profilesForModule(module, null);
     }
 
-    public ControlPlaneHttpResponse profilesForModule(String module, Map<String, String> requestHeaders)
+    public ControlPlaneHttpResponse profilesForModule(String module, @Nullable Map<String, String> requestHeaders)
             throws IOException {
         return get("/modules/" + encodePathSegment(requireText(module, "module")) + "/profiles", requestHeaders);
     }
@@ -85,7 +90,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         return profiles(null);
     }
 
-    public ControlPlaneHttpResponse profiles(Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse profiles(@Nullable Map<String, String> requestHeaders) throws IOException {
         return get("/profiles", requestHeaders);
     }
 
@@ -93,15 +98,17 @@ public final class ActionGraphComponentCatalogHttpClient {
         return profile(profile, null);
     }
 
-    public ControlPlaneHttpResponse profile(String profile, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse profile(String profile, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         return get("/profiles/" + encodePathSegment(requireText(profile, "profile")), requestHeaders);
     }
 
-    public ControlPlaneHttpResponse get(String path) throws IOException {
+    public ControlPlaneHttpResponse get(@Nullable String path) throws IOException {
         return get(path, null);
     }
 
-    public ControlPlaneHttpResponse get(String path, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse get(@Nullable String path, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         String requestPath = path == null ? "" : path;
         if (!requestPath.isEmpty() && !requestPath.startsWith("/")) {
             requestPath = "/" + requestPath;
@@ -123,7 +130,8 @@ public final class ActionGraphComponentCatalogHttpClient {
         }
     }
 
-    private ControlPlaneHttpResponse getOnce(String requestPath, Map<String, String> requestHeaders) throws IOException {
+    private ControlPlaneHttpResponse getOnce(String requestPath, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(catalogApiBaseUrl + requestPath).openConnection();
         try {
             connection.setRequestMethod("GET");
@@ -156,7 +164,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         }
     }
 
-    private static void applyHeaders(HttpURLConnection connection, Map<String, String> headers) {
+    private static void applyHeaders(HttpURLConnection connection, @Nullable Map<String, String> headers) {
         if (headers == null) {
             return;
         }
@@ -167,7 +175,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         }
     }
 
-    private static String readBody(InputStream stream) throws IOException {
+    private static String readBody(@Nullable InputStream stream) throws IOException {
         if (stream == null) {
             return "";
         }
@@ -208,7 +216,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         return value;
     }
 
-    private static boolean isBlank(String value) {
+    private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }
 
@@ -219,7 +227,7 @@ public final class ActionGraphComponentCatalogHttpClient {
     public static final class Builder {
         private final String catalogApiBaseUrl;
         private String tokenHeader = DEFAULT_CATALOG_TOKEN_HEADER;
-        private String sharedSecret = "";
+        private @Nullable String sharedSecret = "";
         private int connectTimeoutMillis = 5000;
         private int readTimeoutMillis = 30000;
         private int maxGetRetries = 0;
@@ -235,7 +243,7 @@ public final class ActionGraphComponentCatalogHttpClient {
             return this;
         }
 
-        public Builder sharedSecret(String sharedSecret) {
+        public Builder sharedSecret(@Nullable String sharedSecret) {
             this.sharedSecret = sharedSecret;
             return this;
         }
@@ -272,12 +280,12 @@ public final class ActionGraphComponentCatalogHttpClient {
             return this;
         }
 
-        public Builder defaultHeader(String name, String value) {
+        public Builder defaultHeader(String name, @Nullable String value) {
             this.defaultHeaders.put(requireText(name, "default header name"), value == null ? "" : value);
             return this;
         }
 
-        public Builder defaultHeaders(Map<String, String> headers) {
+        public Builder defaultHeaders(@Nullable Map<String, String> headers) {
             if (headers == null) {
                 return this;
             }

@@ -1,5 +1,7 @@
 package com.actiongraph.controlplane.api;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ControlPlaneErrorResponse {
     public static final String BAD_REQUEST = "BAD_REQUEST";
     public static final String CONFLICT = "CONFLICT";
@@ -10,7 +12,7 @@ public final class ControlPlaneErrorResponse {
     private final String error;
     private final String message;
 
-    public ControlPlaneErrorResponse(String error, String message) {
+    public ControlPlaneErrorResponse(String error, @Nullable String message) {
         if (isBlank(error)) {
             throw new IllegalArgumentException("error must not be blank");
         }
@@ -34,31 +36,31 @@ public final class ControlPlaneErrorResponse {
         return message;
     }
 
-    public static ControlPlaneErrorResponse badRequest(String message) {
+    public static ControlPlaneErrorResponse badRequest(@Nullable String message) {
         return of(BAD_REQUEST, message);
     }
 
-    public static ControlPlaneErrorResponse conflict(String message) {
+    public static ControlPlaneErrorResponse conflict(@Nullable String message) {
         return of(CONFLICT, message);
     }
 
-    public static ControlPlaneErrorResponse notClaimable(String message) {
+    public static ControlPlaneErrorResponse notClaimable(@Nullable String message) {
         return of(NOT_CLAIMABLE, message);
     }
 
-    public static ControlPlaneErrorResponse notFound(String message) {
+    public static ControlPlaneErrorResponse notFound(@Nullable String message) {
         return of(NOT_FOUND, message);
     }
 
-    public static ControlPlaneErrorResponse unauthorized(String message) {
+    public static ControlPlaneErrorResponse unauthorized(@Nullable String message) {
         return of(UNAUTHORIZED, message);
     }
 
-    public static ControlPlaneErrorResponse of(String error, String message) {
+    public static ControlPlaneErrorResponse of(String error, @Nullable String message) {
         return new ControlPlaneErrorResponse(error, message);
     }
 
-    private static boolean isBlank(String value) {
+    private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }
 }

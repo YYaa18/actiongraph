@@ -12,6 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ActionGraphHumanReviewHttpClient {
     public static final String DEFAULT_REVIEW_TOKEN_HEADER = "X-ActionGraph-Review-Token";
 
@@ -49,7 +51,7 @@ public final class ActionGraphHumanReviewHttpClient {
         return pendingTasks(null);
     }
 
-    public ControlPlaneHttpResponse pendingTasks(Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse pendingTasks(@Nullable Map<String, String> requestHeaders) throws IOException {
         return get("/pending", requestHeaders);
     }
 
@@ -57,7 +59,8 @@ public final class ActionGraphHumanReviewHttpClient {
         return tasksForRun(runId, null);
     }
 
-    public ControlPlaneHttpResponse tasksForRun(String runId, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse tasksForRun(String runId, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         return get("/runs/" + encodePathSegment(requireText(runId, "runId")), requestHeaders);
     }
 
@@ -65,7 +68,7 @@ public final class ActionGraphHumanReviewHttpClient {
         return task(runId, actionId, null);
     }
 
-    public ControlPlaneHttpResponse task(String runId, String actionId, Map<String, String> requestHeaders)
+    public ControlPlaneHttpResponse task(String runId, String actionId, @Nullable Map<String, String> requestHeaders)
             throws IOException {
         return get("/runs/" + encodePathSegment(requireText(runId, "runId"))
                 + "/actions/" + encodePathSegment(requireText(actionId, "actionId")), requestHeaders);
@@ -74,10 +77,10 @@ public final class ActionGraphHumanReviewHttpClient {
     public ControlPlaneHttpResponse decide(
             String runId,
             String actionId,
-            Integer expectedStageIndex,
+            @Nullable Integer expectedStageIndex,
             String decision,
-            String reviewer,
-            String comment
+            @Nullable String reviewer,
+            @Nullable String comment
     ) throws IOException {
         return decide(runId, actionId, expectedStageIndex, decision, reviewer, comment, null);
     }
@@ -85,11 +88,11 @@ public final class ActionGraphHumanReviewHttpClient {
     public ControlPlaneHttpResponse decide(
             String runId,
             String actionId,
-            Integer expectedStageIndex,
+            @Nullable Integer expectedStageIndex,
             String decision,
-            String reviewer,
-            String comment,
-            Map<String, String> requestHeaders
+            @Nullable String reviewer,
+            @Nullable String comment,
+            @Nullable Map<String, String> requestHeaders
     ) throws IOException {
         return post(taskApiBaseUrl,
                 "/runs/" + encodePathSegment(requireText(runId, "runId"))
@@ -104,8 +107,8 @@ public final class ActionGraphHumanReviewHttpClient {
             String actionId,
             int expectedStageIndex,
             String decision,
-            String reviewer,
-            String comment
+            @Nullable String reviewer,
+            @Nullable String comment
     ) throws IOException {
         return callback(runId, actionId, expectedStageIndex, decision, reviewer, comment, null);
     }
@@ -115,19 +118,20 @@ public final class ActionGraphHumanReviewHttpClient {
             String actionId,
             int expectedStageIndex,
             String decision,
-            String reviewer,
-            String comment,
-            Map<String, String> requestHeaders
+            @Nullable String reviewer,
+            @Nullable String comment,
+            @Nullable Map<String, String> requestHeaders
     ) throws IOException {
         return post(callbackApiBaseUrl, "", callbackJson(
                 runId, actionId, expectedStageIndex, decision, reviewer, comment), requestHeaders);
     }
 
-    public ControlPlaneHttpResponse get(String path) throws IOException {
+    public ControlPlaneHttpResponse get(@Nullable String path) throws IOException {
         return get(path, null);
     }
 
-    public ControlPlaneHttpResponse get(String path, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse get(@Nullable String path, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         String requestPath = path == null ? "" : path;
         if (!requestPath.isEmpty() && !requestPath.startsWith("/")) {
             requestPath = "/" + requestPath;
@@ -149,7 +153,7 @@ public final class ActionGraphHumanReviewHttpClient {
         }
     }
 
-    private ControlPlaneHttpResponse getOnce(String requestPath, Map<String, String> requestHeaders)
+    private ControlPlaneHttpResponse getOnce(String requestPath, @Nullable Map<String, String> requestHeaders)
             throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(taskApiBaseUrl + requestPath).openConnection();
         try {
@@ -183,20 +187,24 @@ public final class ActionGraphHumanReviewHttpClient {
         }
     }
 
-    public ControlPlaneHttpResponse post(String path, String jsonBody) throws IOException {
+    public ControlPlaneHttpResponse post(@Nullable String path, @Nullable String jsonBody) throws IOException {
         return post(taskApiBaseUrl, path, jsonBody, null);
     }
 
-    public ControlPlaneHttpResponse post(String path, String jsonBody, Map<String, String> requestHeaders)
+    public ControlPlaneHttpResponse post(
+            @Nullable String path,
+            @Nullable String jsonBody,
+            @Nullable Map<String, String> requestHeaders
+    )
             throws IOException {
         return post(taskApiBaseUrl, path, jsonBody, requestHeaders);
     }
 
     private ControlPlaneHttpResponse post(
             String baseUrl,
-            String path,
-            String jsonBody,
-            Map<String, String> requestHeaders
+            @Nullable String path,
+            @Nullable String jsonBody,
+            @Nullable Map<String, String> requestHeaders
     ) throws IOException {
         String requestPath = path == null ? "" : path;
         if (!requestPath.isEmpty() && !requestPath.startsWith("/")) {
@@ -232,7 +240,7 @@ public final class ActionGraphHumanReviewHttpClient {
         }
     }
 
-    private static void applyHeaders(HttpURLConnection connection, Map<String, String> headers) {
+    private static void applyHeaders(HttpURLConnection connection, @Nullable Map<String, String> headers) {
         if (headers == null) {
             return;
         }
@@ -243,7 +251,12 @@ public final class ActionGraphHumanReviewHttpClient {
         }
     }
 
-    private static String decisionJson(Integer expectedStageIndex, String decision, String reviewer, String comment) {
+    private static String decisionJson(
+            @Nullable Integer expectedStageIndex,
+            String decision,
+            @Nullable String reviewer,
+            @Nullable String comment
+    ) {
         StringBuilder json = new StringBuilder();
         json.append("{\"expectedStageIndex\":");
         if (expectedStageIndex == null) {
@@ -263,8 +276,8 @@ public final class ActionGraphHumanReviewHttpClient {
             String actionId,
             int expectedStageIndex,
             String decision,
-            String reviewer,
-            String comment
+            @Nullable String reviewer,
+            @Nullable String comment
     ) {
         StringBuilder json = new StringBuilder();
         json.append("{\"runId\":").append(jsonString(requireText(runId, "runId")));
@@ -317,7 +330,7 @@ public final class ActionGraphHumanReviewHttpClient {
         return escaped.toString();
     }
 
-    private static String readBody(InputStream stream) throws IOException {
+    private static String readBody(@Nullable InputStream stream) throws IOException {
         if (stream == null) {
             return "";
         }
@@ -365,7 +378,7 @@ public final class ActionGraphHumanReviewHttpClient {
         return value;
     }
 
-    private static boolean isBlank(String value) {
+    private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }
 
@@ -375,9 +388,9 @@ public final class ActionGraphHumanReviewHttpClient {
 
     public static final class Builder {
         private final String taskApiBaseUrl;
-        private String callbackApiBaseUrl;
+        private @Nullable String callbackApiBaseUrl;
         private String tokenHeader = DEFAULT_REVIEW_TOKEN_HEADER;
-        private String sharedSecret = "";
+        private @Nullable String sharedSecret = "";
         private int connectTimeoutMillis = 5000;
         private int readTimeoutMillis = 30000;
         private int maxGetRetries = 0;
@@ -388,7 +401,7 @@ public final class ActionGraphHumanReviewHttpClient {
             this.taskApiBaseUrl = taskApiBaseUrl;
         }
 
-        public Builder callbackApiBaseUrl(String callbackApiBaseUrl) {
+        public Builder callbackApiBaseUrl(@Nullable String callbackApiBaseUrl) {
             this.callbackApiBaseUrl = callbackApiBaseUrl;
             return this;
         }
@@ -398,7 +411,7 @@ public final class ActionGraphHumanReviewHttpClient {
             return this;
         }
 
-        public Builder sharedSecret(String sharedSecret) {
+        public Builder sharedSecret(@Nullable String sharedSecret) {
             this.sharedSecret = sharedSecret;
             return this;
         }
@@ -435,12 +448,12 @@ public final class ActionGraphHumanReviewHttpClient {
             return this;
         }
 
-        public Builder defaultHeader(String name, String value) {
+        public Builder defaultHeader(String name, @Nullable String value) {
             this.defaultHeaders.put(requireText(name, "default header name"), value == null ? "" : value);
             return this;
         }
 
-        public Builder defaultHeaders(Map<String, String> headers) {
+        public Builder defaultHeaders(@Nullable Map<String, String> headers) {
             if (headers == null) {
                 return this;
             }

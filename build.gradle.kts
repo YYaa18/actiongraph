@@ -16,6 +16,7 @@ group = "com.actiongraph"
 version = "0.1.0"
 
 val platformModuleName = "actiongraph-bom"
+val jspecifyVersion = "1.0.0"
 
 val java8CompatibleModules = setOf(
     "actiongraph-control-plane-api"
@@ -60,6 +61,12 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
     description = publishableModuleDescriptions[name] ?: "ActionGraph sample application."
+
+    if (name in libraryModuleDescriptions.keys) {
+        pluginManager.withPlugin("java-library") {
+            dependencies.add("compileOnlyApi", "org.jspecify:jspecify:$jspecifyVersion")
+        }
+    }
 
     if (name == platformModuleName) {
         apply(plugin = "java-platform")

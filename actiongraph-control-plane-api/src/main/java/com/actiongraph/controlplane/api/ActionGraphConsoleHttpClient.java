@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ActionGraphConsoleHttpClient {
     public static final String DEFAULT_CONSOLE_TOKEN_HEADER = "X-ActionGraph-Console-Token";
 
@@ -43,20 +45,20 @@ public final class ActionGraphConsoleHttpClient {
     }
 
     public ControlPlaneHttpResponse runs(
-            Integer limit,
-            Integer offset,
-            String status,
-            Boolean auditComplete
+            @Nullable Integer limit,
+            @Nullable Integer offset,
+            @Nullable String status,
+            @Nullable Boolean auditComplete
     ) throws IOException {
         return runs(limit, offset, status, auditComplete, null);
     }
 
     public ControlPlaneHttpResponse runs(
-            Integer limit,
-            Integer offset,
-            String status,
-            Boolean auditComplete,
-            Map<String, String> requestHeaders
+            @Nullable Integer limit,
+            @Nullable Integer offset,
+            @Nullable String status,
+            @Nullable Boolean auditComplete,
+            @Nullable Map<String, String> requestHeaders
     ) throws IOException {
         return get("/runs" + runQuery(limit, offset, status, auditComplete),
                 "application/json", requestHeaders);
@@ -66,7 +68,8 @@ public final class ActionGraphConsoleHttpClient {
         return run(runId, null);
     }
 
-    public ControlPlaneHttpResponse run(String runId, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse run(String runId, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         return get("/runs/" + encodePathSegment(requireText(runId, "runId")),
                 "application/json", requestHeaders);
     }
@@ -75,26 +78,27 @@ public final class ActionGraphConsoleHttpClient {
         return trace(runId, null);
     }
 
-    public ControlPlaneHttpResponse trace(String runId, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse trace(String runId, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         return get("/runs/" + encodePathSegment(requireText(runId, "runId")) + "/trace",
                 "application/json", requestHeaders);
     }
 
     public ControlPlaneHttpResponse runsCsv(
-            Integer limit,
-            Integer offset,
-            String status,
-            Boolean auditComplete
+            @Nullable Integer limit,
+            @Nullable Integer offset,
+            @Nullable String status,
+            @Nullable Boolean auditComplete
     ) throws IOException {
         return runsCsv(limit, offset, status, auditComplete, null);
     }
 
     public ControlPlaneHttpResponse runsCsv(
-            Integer limit,
-            Integer offset,
-            String status,
-            Boolean auditComplete,
-            Map<String, String> requestHeaders
+            @Nullable Integer limit,
+            @Nullable Integer offset,
+            @Nullable String status,
+            @Nullable Boolean auditComplete,
+            @Nullable Map<String, String> requestHeaders
     ) throws IOException {
         return get("/runs/export.csv" + runQuery(limit, offset, status, auditComplete),
                 "text/csv", requestHeaders);
@@ -104,7 +108,8 @@ public final class ActionGraphConsoleHttpClient {
         return traceCsv(runId, null);
     }
 
-    public ControlPlaneHttpResponse traceCsv(String runId, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse traceCsv(String runId, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         return get("/runs/" + encodePathSegment(requireText(runId, "runId")) + "/trace/export.csv",
                 "text/csv", requestHeaders);
     }
@@ -113,20 +118,26 @@ public final class ActionGraphConsoleHttpClient {
         return traceJsonl(runId, null);
     }
 
-    public ControlPlaneHttpResponse traceJsonl(String runId, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse traceJsonl(String runId, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         return get("/runs/" + encodePathSegment(requireText(runId, "runId")) + "/trace/export.jsonl",
                 "application/x-ndjson", requestHeaders);
     }
 
-    public ControlPlaneHttpResponse get(String path) throws IOException {
+    public ControlPlaneHttpResponse get(@Nullable String path) throws IOException {
         return get(path, null);
     }
 
-    public ControlPlaneHttpResponse get(String path, Map<String, String> requestHeaders) throws IOException {
+    public ControlPlaneHttpResponse get(@Nullable String path, @Nullable Map<String, String> requestHeaders)
+            throws IOException {
         return get(path, "application/json", requestHeaders);
     }
 
-    private ControlPlaneHttpResponse get(String path, String accept, Map<String, String> requestHeaders)
+    private ControlPlaneHttpResponse get(
+            @Nullable String path,
+            @Nullable String accept,
+            @Nullable Map<String, String> requestHeaders
+    )
             throws IOException {
         String requestPath = path == null ? "" : path;
         if (!requestPath.isEmpty() && !requestPath.startsWith("/")) {
@@ -149,7 +160,11 @@ public final class ActionGraphConsoleHttpClient {
         }
     }
 
-    private ControlPlaneHttpResponse getOnce(String requestPath, String accept, Map<String, String> requestHeaders)
+    private ControlPlaneHttpResponse getOnce(
+            String requestPath,
+            @Nullable String accept,
+            @Nullable Map<String, String> requestHeaders
+    )
             throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(consoleApiBaseUrl + requestPath).openConnection();
         try {
@@ -183,7 +198,12 @@ public final class ActionGraphConsoleHttpClient {
         }
     }
 
-    private static String runQuery(Integer limit, Integer offset, String status, Boolean auditComplete)
+    private static String runQuery(
+            @Nullable Integer limit,
+            @Nullable Integer offset,
+            @Nullable String status,
+            @Nullable Boolean auditComplete
+    )
             throws IOException {
         StringBuilder query = new StringBuilder();
         appendIntParam(query, "limit", limit, true);
@@ -197,7 +217,7 @@ public final class ActionGraphConsoleHttpClient {
         return query.toString();
     }
 
-    private static void appendIntParam(StringBuilder query, String name, Integer value, boolean positive)
+    private static void appendIntParam(StringBuilder query, String name, @Nullable Integer value, boolean positive)
             throws IOException {
         if (value == null) {
             return;
@@ -216,7 +236,7 @@ public final class ActionGraphConsoleHttpClient {
         query.append(encodeQueryParam(name)).append('=').append(encodeQueryParam(value));
     }
 
-    private static void applyHeaders(HttpURLConnection connection, Map<String, String> headers) {
+    private static void applyHeaders(HttpURLConnection connection, @Nullable Map<String, String> headers) {
         if (headers == null) {
             return;
         }
@@ -227,7 +247,7 @@ public final class ActionGraphConsoleHttpClient {
         }
     }
 
-    private static String readBody(InputStream stream) throws IOException {
+    private static String readBody(@Nullable InputStream stream) throws IOException {
         if (stream == null) {
             return "";
         }
@@ -272,7 +292,7 @@ public final class ActionGraphConsoleHttpClient {
         return value;
     }
 
-    private static boolean isBlank(String value) {
+    private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }
 
@@ -283,7 +303,7 @@ public final class ActionGraphConsoleHttpClient {
     public static final class Builder {
         private final String consoleApiBaseUrl;
         private String tokenHeader = DEFAULT_CONSOLE_TOKEN_HEADER;
-        private String sharedSecret = "";
+        private @Nullable String sharedSecret = "";
         private int connectTimeoutMillis = 5000;
         private int readTimeoutMillis = 30000;
         private int maxGetRetries = 0;
@@ -299,7 +319,7 @@ public final class ActionGraphConsoleHttpClient {
             return this;
         }
 
-        public Builder sharedSecret(String sharedSecret) {
+        public Builder sharedSecret(@Nullable String sharedSecret) {
             this.sharedSecret = sharedSecret;
             return this;
         }
@@ -336,12 +356,12 @@ public final class ActionGraphConsoleHttpClient {
             return this;
         }
 
-        public Builder defaultHeader(String name, String value) {
+        public Builder defaultHeader(String name, @Nullable String value) {
             this.defaultHeaders.put(requireText(name, "default header name"), value == null ? "" : value);
             return this;
         }
 
-        public Builder defaultHeaders(Map<String, String> headers) {
+        public Builder defaultHeaders(@Nullable Map<String, String> headers) {
             if (headers == null) {
                 return this;
             }

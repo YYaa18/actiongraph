@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
+
 @RestController
 @RequestMapping("${actiongraph.human-review.api.path:/actiongraph/human-review/tasks}")
 public final class ActionGraphHumanReviewApiController {
@@ -112,10 +114,10 @@ public final class ActionGraphHumanReviewApiController {
     }
 
     public record HumanReviewDecisionRequest(
-            Integer expectedStageIndex,
+            @Nullable Integer expectedStageIndex,
             HumanReviewDecision decision,
-            String reviewer,
-            String comment
+            @Nullable String reviewer,
+            @Nullable String comment
     ) {
     }
 

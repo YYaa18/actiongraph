@@ -5,6 +5,8 @@ import com.actiongraph.action.ActionId;
 import java.util.Map;
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Immutable runtime observation emitted to {@link ObservationSink}.
  *
@@ -42,7 +44,7 @@ public record ObservationEvent(
     public static ObservationEvent of(
             String runId,
             ObservationEventType type,
-            ActionId actionId,
+            @Nullable ActionId actionId,
             Map<String, String> tags
     ) {
         return new ObservationEvent(runId, type, actionIdValue(actionId), tags, 0);
@@ -51,14 +53,14 @@ public record ObservationEvent(
     public static ObservationEvent timed(
             String runId,
             ObservationEventType type,
-            ActionId actionId,
+            @Nullable ActionId actionId,
             Map<String, String> tags,
             long durationNanos
     ) {
         return new ObservationEvent(runId, type, actionIdValue(actionId), tags, durationNanos);
     }
 
-    private static String actionIdValue(ActionId actionId) {
+    private static String actionIdValue(@Nullable ActionId actionId) {
         return actionId == null ? "" : actionId.value();
     }
 }

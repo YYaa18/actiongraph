@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
+
 @RestController
 @RequestMapping("${actiongraph.console.path:/actiongraph/console}")
 public final class ActionGraphConsoleExportController {
@@ -45,10 +47,10 @@ public final class ActionGraphConsoleExportController {
     @GetMapping(value = "/runs/export.csv", produces = "text/csv")
     public ResponseEntity<String> runsCsv(
             @RequestHeader HttpHeaders headers,
-            @RequestParam(name = "limit", required = false) Integer limit,
-            @RequestParam(name = "offset", required = false) Integer offset,
-            @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "auditComplete", required = false) Boolean auditComplete
+            @RequestParam(name = "limit", required = false) @Nullable Integer limit,
+            @RequestParam(name = "offset", required = false) @Nullable Integer offset,
+            @RequestParam(name = "status", required = false) @Nullable String status,
+            @RequestParam(name = "auditComplete", required = false) @Nullable Boolean auditComplete
     ) {
         verifyToken(headers);
         return download("actiongraph-runs.csv", TEXT_CSV,

@@ -5,10 +5,12 @@ import java.security.MessageDigest;
 import java.util.Objects;
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ControlPlaneTokenVerifier {
     public void verify(
             SharedSecretTokenProperties properties,
-            Function<String, String> tokenLookup,
+            Function<String, @Nullable String> tokenLookup,
             String unauthorizedMessage
     ) {
         Objects.requireNonNull(properties, "properties");
@@ -22,7 +24,7 @@ public final class ControlPlaneTokenVerifier {
 
     public void verify(
             SharedSecretTokenProtection protection,
-            String actualToken,
+            @Nullable String actualToken,
             String unauthorizedMessage
     ) {
         if (!isAuthorized(protection, actualToken)) {
@@ -30,7 +32,7 @@ public final class ControlPlaneTokenVerifier {
         }
     }
 
-    public boolean isAuthorized(SharedSecretTokenProtection protection, String actualToken) {
+    public boolean isAuthorized(SharedSecretTokenProtection protection, @Nullable String actualToken) {
         Objects.requireNonNull(protection, "protection");
         if (!protection.enabled()) {
             return true;
@@ -38,7 +40,7 @@ public final class ControlPlaneTokenVerifier {
         return sameSecret(protection.sharedSecret(), actualToken);
     }
 
-    private boolean sameSecret(String expected, String actual) {
+    private boolean sameSecret(String expected, @Nullable String actual) {
         byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
         byte[] actualBytes = actual == null
                 ? new byte[0]

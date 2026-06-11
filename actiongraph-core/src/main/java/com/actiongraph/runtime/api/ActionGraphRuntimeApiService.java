@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOperations {
     private final GoalInterpreter interpreter;
     private final GoalBlackboardSeederRegistry seeders;
@@ -50,7 +52,7 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
     }
 
     @Override
-    public RuntimeInterpretationResponse interpret(String input, Map<String, String> knownParameters) {
+    public RuntimeInterpretationResponse interpret(String input, @Nullable Map<String, String> knownParameters) {
         return RuntimeInterpretationResponse.from(interpretGoal(input, knownParameters));
     }
 
@@ -60,15 +62,15 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
     }
 
     @Override
-    public RuntimeStartResponse start(String input, Map<String, String> knownParameters) {
+    public RuntimeStartResponse start(String input, @Nullable Map<String, String> knownParameters) {
         return start(input, knownParameters, Map.of());
     }
 
     @Override
     public RuntimeStartResponse start(
             String input,
-            Map<String, String> knownParameters,
-            Map<String, String> runMetadata
+            @Nullable Map<String, String> knownParameters,
+            @Nullable Map<String, String> runMetadata
     ) {
         return start(interpretGoal(input, knownParameters), runMetadata);
     }
@@ -79,7 +81,7 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
     }
 
     @Override
-    public RuntimeStartResponse start(GoalInterpretation interpretation, Map<String, String> runMetadata) {
+    public RuntimeStartResponse start(GoalInterpretation interpretation, @Nullable Map<String, String> runMetadata) {
         Objects.requireNonNull(interpretation, "interpretation");
         RuntimeInterpretationResponse interpretationResponse = RuntimeInterpretationResponse.from(interpretation);
         if (!interpretation.isReady()) {
@@ -107,7 +109,7 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
     }
 
     @Override
-    public RuntimeRunResponse resume(String runId, Map<String, String> runMetadata) {
+    public RuntimeRunResponse resume(String runId, @Nullable Map<String, String> runMetadata) {
         if (runId == null || runId.isBlank()) {
             throw new IllegalArgumentException("runId must not be blank");
         }
@@ -115,7 +117,7 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
                 safeStringMap(runMetadata, "run metadata key")));
     }
 
-    private GoalInterpretation interpretGoal(String input, Map<String, String> knownParameters) {
+    private GoalInterpretation interpretGoal(String input, @Nullable Map<String, String> knownParameters) {
         if (input == null || input.isBlank()) {
             throw new IllegalArgumentException("input must not be blank");
         }
@@ -128,7 +130,7 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
         return interpreter.interpret(input, GoalParameters.of(safeKnownParameters));
     }
 
-    private static Map<String, String> safeStringMap(Map<String, String> values, String keyName) {
+    private static Map<String, String> safeStringMap(@Nullable Map<String, String> values, String keyName) {
         if (values == null || values.isEmpty()) {
             return Map.of();
         }

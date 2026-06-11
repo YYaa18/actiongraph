@@ -1,10 +1,12 @@
 package com.actiongraph.controlplane.auth;
 
+import org.jspecify.annotations.Nullable;
+
 public final class SharedSecretTokenProtection {
     private final String tokenHeader;
     private final String sharedSecret;
 
-    public SharedSecretTokenProtection(String tokenHeader, String sharedSecret) {
+    public SharedSecretTokenProtection(String tokenHeader, @Nullable String sharedSecret) {
         if (isBlank(tokenHeader)) {
             throw new IllegalArgumentException("token header must not be blank");
         }
@@ -32,7 +34,7 @@ public final class SharedSecretTokenProtection {
         return !isBlank(sharedSecret);
     }
 
-    private static boolean isBlank(String value) {
+    private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }
 }

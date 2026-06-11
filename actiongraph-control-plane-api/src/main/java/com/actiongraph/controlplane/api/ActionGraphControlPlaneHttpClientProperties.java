@@ -2,13 +2,18 @@ package com.actiongraph.controlplane.api;
 
 import java.util.Properties;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ActionGraphControlPlaneHttpClientProperties {
     public static final String DEFAULT_PREFIX = "actiongraph.control-plane.";
 
     private final Properties properties;
     private final String prefix;
 
-    private ActionGraphControlPlaneHttpClientProperties(Properties properties, String prefix) {
+    private ActionGraphControlPlaneHttpClientProperties(
+            @Nullable Properties properties,
+            @Nullable String prefix
+    ) {
         this.properties = new Properties();
         if (properties != null) {
             this.properties.putAll(properties);
@@ -16,19 +21,25 @@ public final class ActionGraphControlPlaneHttpClientProperties {
         this.prefix = normalizePrefix(prefix);
     }
 
-    public static ActionGraphControlPlaneHttpClient build(Properties properties) {
+    public static ActionGraphControlPlaneHttpClient build(@Nullable Properties properties) {
         return from(properties).toClient();
     }
 
-    public static ActionGraphControlPlaneHttpClient build(Properties properties, String prefix) {
+    public static ActionGraphControlPlaneHttpClient build(
+            @Nullable Properties properties,
+            @Nullable String prefix
+    ) {
         return from(properties, prefix).toClient();
     }
 
-    public static ActionGraphControlPlaneHttpClientProperties from(Properties properties) {
+    public static ActionGraphControlPlaneHttpClientProperties from(@Nullable Properties properties) {
         return new ActionGraphControlPlaneHttpClientProperties(properties, DEFAULT_PREFIX);
     }
 
-    public static ActionGraphControlPlaneHttpClientProperties from(Properties properties, String prefix) {
+    public static ActionGraphControlPlaneHttpClientProperties from(
+            @Nullable Properties properties,
+            @Nullable String prefix
+    ) {
         return new ActionGraphControlPlaneHttpClientProperties(properties, prefix);
     }
 
@@ -199,7 +210,7 @@ public final class ActionGraphControlPlaneHttpClientProperties {
         return prefix + name;
     }
 
-    private static String normalizePrefix(String prefix) {
+    private static String normalizePrefix(@Nullable String prefix) {
         if (isBlank(prefix)) {
             return "";
         }
@@ -210,7 +221,7 @@ public final class ActionGraphControlPlaneHttpClientProperties {
         return trimmed + ".";
     }
 
-    private static boolean isBlank(String value) {
+    private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }
 

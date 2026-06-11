@@ -1,10 +1,12 @@
 package com.actiongraph.persistence.jdbc;
 
+import org.jspecify.annotations.Nullable;
+
 public record TraceRunQuery(
         int limit,
         int offset,
-        String status,
-        Boolean auditComplete
+        @Nullable String status,
+        @Nullable Boolean auditComplete
 ) {
     public TraceRunQuery {
         if (limit <= 0) {

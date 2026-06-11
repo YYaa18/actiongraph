@@ -1,10 +1,12 @@
 package com.actiongraph.controlplane.api;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ControlPlaneHttpResponse {
     private final int statusCode;
     private final String body;
 
-    public ControlPlaneHttpResponse(int statusCode, String body) {
+    public ControlPlaneHttpResponse(int statusCode, @Nullable String body) {
         this.statusCode = statusCode;
         this.body = body == null ? "" : body;
     }
@@ -41,7 +43,7 @@ public final class ControlPlaneHttpResponse {
         return error();
     }
 
-    public boolean hasError(String error) {
+    public boolean hasError(@Nullable String error) {
         return !isBlank(error) && error.equals(error());
     }
 
@@ -62,7 +64,7 @@ public final class ControlPlaneHttpResponse {
     }
 
     private static String readJsonString(String json, int start) {
-        StringBuilder result = null;
+        @Nullable StringBuilder result = null;
         for (int i = start; i < json.length(); i++) {
             char ch = json.charAt(i);
             if (ch == '"') {
@@ -130,7 +132,7 @@ public final class ControlPlaneHttpResponse {
         return cursor;
     }
 
-    private static boolean isBlank(String value) {
+    private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }
 }

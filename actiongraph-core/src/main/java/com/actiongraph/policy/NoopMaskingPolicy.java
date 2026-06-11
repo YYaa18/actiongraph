@@ -2,6 +2,8 @@ package com.actiongraph.policy;
 
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Masking policy that returns input values unchanged.
  *
@@ -15,12 +17,12 @@ public final class NoopMaskingPolicy implements DataMaskingPolicy {
     }
 
     @Override
-    public String maskText(String text) {
+    public String maskText(@Nullable String text) {
         return text == null ? "" : text;
     }
 
     @Override
-    public Map<String, String> maskData(Map<String, String> data) {
+    public Map<String, String> maskData(@Nullable Map<String, String> data) {
         return data == null ? Map.of() : data;
     }
 }

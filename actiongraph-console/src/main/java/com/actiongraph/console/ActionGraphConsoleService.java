@@ -5,6 +5,8 @@ import com.actiongraph.trace.TraceEvent;
 import java.util.List;
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ActionGraphConsoleService {
     private final ConsoleRunRepository runRepository;
     private final ConsoleOptions options;
@@ -15,10 +17,10 @@ public final class ActionGraphConsoleService {
     }
 
     public ConsoleRunsResponse recentRuns(
-            Integer limit,
-            Integer offset,
-            String status,
-            Boolean auditComplete
+            @Nullable Integer limit,
+            @Nullable Integer offset,
+            @Nullable String status,
+            @Nullable Boolean auditComplete
     ) {
         int resolvedLimit = resolveLimit(limit);
         int resolvedOffset = resolveOffset(offset);
@@ -61,7 +63,7 @@ public final class ActionGraphConsoleService {
         return ConsolePageRenderer.render(template, options);
     }
 
-    private int resolveLimit(Integer limit) {
+    private int resolveLimit(@Nullable Integer limit) {
         int resolved = limit == null ? options.defaultLimit() : limit;
         if (resolved <= 0) {
             throw new IllegalArgumentException("limit must be positive");
@@ -72,7 +74,7 @@ public final class ActionGraphConsoleService {
         return resolved;
     }
 
-    private int resolveOffset(Integer offset) {
+    private int resolveOffset(@Nullable Integer offset) {
         int resolved = offset == null ? 0 : offset;
         if (resolved < 0) {
             throw new IllegalArgumentException("offset must not be negative");

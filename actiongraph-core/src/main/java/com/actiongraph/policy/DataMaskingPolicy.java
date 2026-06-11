@@ -2,6 +2,8 @@ package com.actiongraph.policy;
 
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Masks trace and review payload data before it leaves the runtime boundary.
  *
@@ -21,7 +23,7 @@ public interface DataMaskingPolicy {
      * @param text raw text, possibly {@code null}
      * @return masked text, never {@code null}
      */
-    String maskText(String text);
+    String maskText(@Nullable String text);
 
     /**
      * Masks structured trace or review attributes.
@@ -29,5 +31,5 @@ public interface DataMaskingPolicy {
      * @param data raw key/value data, possibly {@code null}
      * @return masked key/value data, never {@code null}
      */
-    Map<String, String> maskData(Map<String, String> data);
+    Map<String, String> maskData(@Nullable Map<String, String> data);
 }

@@ -30,6 +30,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Typed exception hierarchy for framework input, configuration, conflict, not-found, and integration failures
 - Provider-neutral Observability SPI plus optional Spring Boot Micrometer observation sink
 - Public API snapshot verification for published module compatibility checks
+- JSpecify null-safety contracts for published API packages with non-null-by-default semantics and explicit optional boundaries
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
@@ -56,8 +57,8 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | Module | Purpose |
 |---|---|
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | Core action, annotation adapter, planning, runtime, policy, trace, observability SPI, public contract Javadocs, SLF4J API diagnostics, goal interpretation, runtime entry, and structured memory APIs |
-| `actiongraph-control-plane-api` | Java 8 compatible component catalog, control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
+| `actiongraph-core` | Core action, annotation adapter, planning, runtime, policy, trace, observability SPI, JSpecify null contracts, public contract Javadocs, SLF4J API diagnostics, goal interpretation, runtime entry, and structured memory APIs |
+| `actiongraph-control-plane-api` | Java 8 compatible component catalog, JSpecify null contracts, control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, rule-based permissions, amount review attributes, and risk-based approval routing |
 | `actiongraph-llm-deepseek` | Optional LLM package with provider-neutral goal interpretation, GoalCatalog prompt rendering, structured output parsing, and a DeepSeek-compatible client |
@@ -248,6 +249,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Runtime invocation SPI](docs/frameworkization/runtime-invocation-spi.md)
 - [Observability SPI and Micrometer](docs/frameworkization/observability-spi.md)
 - [Public API compatibility check](docs/frameworkization/public-api-compatibility.md)
+- [Null-safety contracts](docs/frameworkization/null-safety.md)
 - [Component catalog](docs/frameworkization/component-catalog.md)
 - [Control-plane API contracts](docs/frameworkization/control-plane-api.md)
 - [Java 8 legacy integration](docs/frameworkization/java8-legacy-integration.md)
