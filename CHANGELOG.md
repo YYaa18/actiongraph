@@ -18,6 +18,7 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 - ArchUnit-style architecture guard tests for published module dependencies, core import boundaries, Spring isolation, and sample-code dependency bans.
 - API stability annotations with `@Experimental` and `@Internal` markers for evolving or framework-internal public surfaces.
 - GitHub Pages API reference publishing that generates per-module Javadocs under `docs/api/javadoc/*` during site deployment.
+- Core and JDBC operational failures now use the `ActionGraphException` hierarchy, with a guard test preventing bare `IllegalStateException` from returning to those modules.
 
 ### Changed
 

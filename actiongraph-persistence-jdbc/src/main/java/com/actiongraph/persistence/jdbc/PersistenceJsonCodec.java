@@ -2,6 +2,7 @@ package com.actiongraph.persistence.jdbc;
 
 import com.actiongraph.api.Internal;
 import com.actiongraph.action.ActionId;
+import com.actiongraph.exception.ActionGraphIntegrationException;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.runtime.Blackboard;
@@ -143,9 +144,10 @@ public final class PersistenceJsonCodec {
             Object value = objectMapper.treeToValue(snapshot.value(), type);
             putTyped(blackboard, type, snapshot.id(), value);
         } catch (ClassNotFoundException ex) {
-            throw new IllegalStateException("Cannot restore blackboard object type: " + snapshot.className(), ex);
+            throw new ActionGraphIntegrationException(
+                    "Cannot restore blackboard object type: " + snapshot.className(), ex);
         } catch (JsonProcessingException ex) {
-            throw new IllegalStateException("Cannot restore blackboard object: " + snapshot.className(), ex);
+            throw new ActionGraphIntegrationException("Cannot restore blackboard object: " + snapshot.className(), ex);
         }
     }
 
@@ -157,7 +159,7 @@ public final class PersistenceJsonCodec {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (JsonProcessingException ex) {
-            throw new IllegalStateException("Cannot serialize runtime persistence payload", ex);
+            throw new ActionGraphIntegrationException("Cannot serialize runtime persistence payload", ex);
         }
     }
 
@@ -165,7 +167,7 @@ public final class PersistenceJsonCodec {
         try {
             return objectMapper.readValue(json, type);
         } catch (JsonProcessingException ex) {
-            throw new IllegalStateException("Cannot deserialize runtime persistence payload", ex);
+            throw new ActionGraphIntegrationException("Cannot deserialize runtime persistence payload", ex);
         }
     }
 
@@ -173,7 +175,7 @@ public final class PersistenceJsonCodec {
         try {
             return objectMapper.readValue(json, type);
         } catch (JsonProcessingException ex) {
-            throw new IllegalStateException("Cannot deserialize runtime persistence payload", ex);
+            throw new ActionGraphIntegrationException("Cannot deserialize runtime persistence payload", ex);
         }
     }
 

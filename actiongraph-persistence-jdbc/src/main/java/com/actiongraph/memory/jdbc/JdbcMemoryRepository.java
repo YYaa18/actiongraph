@@ -1,5 +1,6 @@
 package com.actiongraph.memory.jdbc;
 
+import com.actiongraph.exception.ActionGraphIntegrationException;
 import com.actiongraph.memory.MemoryRecord;
 import com.actiongraph.memory.MemoryRepository;
 import com.actiongraph.memory.MemoryScope;
@@ -55,7 +56,7 @@ public final class JdbcMemoryRepository implements MemoryRepository {
              Statement statement = connection.createStatement()) {
             statement.execute(sql);
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot initialize memory repository schema", ex);
+            throw new ActionGraphIntegrationException("Cannot initialize memory repository schema", ex);
         }
     }
 
@@ -76,7 +77,7 @@ public final class JdbcMemoryRepository implements MemoryRepository {
                 connection.setAutoCommit(autoCommit);
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot save memory record: " + record.id(), ex);
+            throw new ActionGraphIntegrationException("Cannot save memory record: " + record.id(), ex);
         }
     }
 
@@ -93,7 +94,7 @@ public final class JdbcMemoryRepository implements MemoryRepository {
                         : Optional.empty();
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot find memory record: " + id, ex);
+            throw new ActionGraphIntegrationException("Cannot find memory record: " + id, ex);
         }
     }
 
@@ -107,7 +108,7 @@ public final class JdbcMemoryRepository implements MemoryRepository {
             bindScope(statement, scope);
             return readRecords(statement);
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot find memory records for scope: " + scope, ex);
+            throw new ActionGraphIntegrationException("Cannot find memory records for scope: " + scope, ex);
         }
     }
 
@@ -126,7 +127,8 @@ public final class JdbcMemoryRepository implements MemoryRepository {
             statement.setString(4, type);
             return readRecords(statement);
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot find memory records for scope/type: " + scope + "/" + type, ex);
+            throw new ActionGraphIntegrationException(
+                    "Cannot find memory records for scope/type: " + scope + "/" + type, ex);
         }
     }
 
@@ -136,7 +138,7 @@ public final class JdbcMemoryRepository implements MemoryRepository {
         try (Connection connection = dataSource.getConnection()) {
             delete(connection, id);
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot delete memory record: " + id, ex);
+            throw new ActionGraphIntegrationException("Cannot delete memory record: " + id, ex);
         }
     }
 

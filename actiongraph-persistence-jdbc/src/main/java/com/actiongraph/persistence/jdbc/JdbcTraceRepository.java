@@ -1,5 +1,6 @@
 package com.actiongraph.persistence.jdbc;
 
+import com.actiongraph.exception.ActionGraphIntegrationException;
 import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceEventType;
 import com.actiongraph.trace.TraceRepository;
@@ -59,7 +60,7 @@ public final class JdbcTraceRepository implements TraceRepository {
             ensureColumn(connection, "prev_hash", "varchar(64)");
             ensureColumn(connection, "hash", "varchar(64)");
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot initialize trace repository schema", ex);
+            throw new ActionGraphIntegrationException("Cannot initialize trace repository schema", ex);
         }
     }
 
@@ -94,7 +95,7 @@ public final class JdbcTraceRepository implements TraceRepository {
             }
             statement.executeBatch();
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot append trace events", ex);
+            throw new ActionGraphIntegrationException("Cannot append trace events", ex);
         }
     }
 
@@ -124,7 +125,7 @@ public final class JdbcTraceRepository implements TraceRepository {
                 return List.copyOf(events);
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot find trace events for runId: " + runId, ex);
+            throw new ActionGraphIntegrationException("Cannot find trace events for runId: " + runId, ex);
         }
     }
 

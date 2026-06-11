@@ -1,5 +1,6 @@
 package com.actiongraph.action;
 
+import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.planning.Condition;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +17,7 @@ class DefaultActionRegistryTest {
         registry.register(action);
 
         assertThatThrownBy(() -> registry.register(action))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ActionGraphConfigurationException.class)
                 .hasMessageContaining("same.id");
     }
 

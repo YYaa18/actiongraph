@@ -1,5 +1,7 @@
 package com.actiongraph.action;
 
+import com.actiongraph.exception.ActionGraphConfigurationException;
+
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,7 +25,7 @@ public final class DefaultActionRegistry implements ActionRegistry {
         Objects.requireNonNull(action, "action");
         Action previous = actions.putIfAbsent(action.id(), action);
         if (previous != null) {
-            throw new IllegalStateException("Duplicate action id: " + action.id().value());
+            throw new ActionGraphConfigurationException("Duplicate action id: " + action.id().value());
         }
     }
 

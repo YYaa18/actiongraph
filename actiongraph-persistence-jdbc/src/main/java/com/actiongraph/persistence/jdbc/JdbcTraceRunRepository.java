@@ -1,5 +1,6 @@
 package com.actiongraph.persistence.jdbc;
 
+import com.actiongraph.exception.ActionGraphIntegrationException;
 import com.actiongraph.trace.TraceChainVerifier;
 import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceEventType;
@@ -76,7 +77,7 @@ public final class JdbcTraceRunRepository {
                 return List.copyOf(runIds);
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot query recent trace runs", ex);
+            throw new ActionGraphIntegrationException("Cannot query recent trace runs", ex);
         }
     }
 

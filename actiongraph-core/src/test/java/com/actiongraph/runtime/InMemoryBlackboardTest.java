@@ -1,5 +1,6 @@
 package com.actiongraph.runtime;
 
+import com.actiongraph.exception.ActionGraphInputException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,7 +42,7 @@ class InMemoryBlackboardTest {
         blackboard.put(BlackboardKey.of(CustomerRecord.class, "secondary"), new CustomerRecord("C002"));
 
         assertThatThrownBy(() -> blackboard.get(CustomerRecord.class))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ActionGraphInputException.class)
                 .hasMessageContaining("Multiple blackboard values");
     }
 

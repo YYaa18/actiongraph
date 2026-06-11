@@ -1,5 +1,7 @@
 package com.actiongraph.trace;
 
+import com.actiongraph.exception.ActionGraphIntegrationException;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -62,7 +64,7 @@ public final class TraceHasher {
             byte[] hash = digest.digest(canonical.getBytes(StandardCharsets.UTF_8));
             return toHex(hash);
         } catch (NoSuchAlgorithmException ex) {
-            throw new IllegalStateException("SHA-256 is not available", ex);
+            throw new ActionGraphIntegrationException("SHA-256 is not available", ex);
         }
     }
 

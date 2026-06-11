@@ -581,6 +581,32 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void coreAndJdbcOperationalFailuresUseActionGraphExceptionHierarchy() throws IOException {
+        Path root = repositoryRoot();
+        for (String module : java.util.List.of("actiongraph-core", "actiongraph-persistence-jdbc")) {
+            for (Path sourceFile : javaSourceFiles(root.resolve(module))) {
+                String source = Files.readString(sourceFile, StandardCharsets.UTF_8);
+                assertThat(source)
+                        .as(sourceFile + " should not expose bare IllegalStateException operational failures")
+                        .doesNotContain("new IllegalStateException");
+            }
+        }
+
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/exception/ActionGraphException.java"))
+                .contains("Base unchecked exception");
+        assertThat(readSource(root,
+                "actiongraph-persistence-jdbc/src/main/java/com/actiongraph/persistence/jdbc/JdbcTraceRepository.java"))
+                .contains("ActionGraphIntegrationException")
+                .doesNotContain("new IllegalStateException");
+        assertThat(readSource(root,
+                "actiongraph-core/src/main/java/com/actiongraph/action/annotation/AnnotatedActionFactory.java"))
+                .contains("ActionGraphConfigurationException")
+                .contains("ActionGraphInputException")
+                .contains("ActionGraphIntegrationException")
+                .doesNotContain("new IllegalStateException");
+    }
+
+    @Test
     void publishedSourcePackagesDeclareJSpecifyNullSafetyContracts() throws IOException {
         Path root = repositoryRoot();
         String build = readSource(root, "build.gradle.kts");

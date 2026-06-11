@@ -1,5 +1,7 @@
 package com.actiongraph.interpretation;
 
+import com.actiongraph.exception.ActionGraphConfigurationException;
+import com.actiongraph.exception.ActionGraphInputException;
 import com.actiongraph.runtime.Blackboard;
 
 import java.util.LinkedHashMap;
@@ -14,7 +16,8 @@ public final class GoalBlackboardSeederRegistry {
         Objects.requireNonNull(seeder, "seeder");
         GoalBlackboardSeeder previous = seeders.putIfAbsent(seeder.goalType(), seeder);
         if (previous != null) {
-            throw new IllegalStateException("Duplicate blackboard seeder for goal type: " + seeder.goalType());
+            throw new ActionGraphConfigurationException(
+                    "Duplicate blackboard seeder for goal type: " + seeder.goalType());
         }
     }
 
@@ -24,10 +27,10 @@ public final class GoalBlackboardSeederRegistry {
 
     public void seed(GoalInterpretation interpretation, Blackboard blackboard) {
         if (!interpretation.isReady()) {
-            throw new IllegalStateException("Cannot seed blackboard from an incomplete interpretation");
+            throw new ActionGraphInputException("Cannot seed blackboard from an incomplete interpretation");
         }
         GoalBlackboardSeeder seeder = byGoalType(interpretation.goalType())
-                .orElseThrow(() -> new IllegalStateException(
+                .orElseThrow(() -> new ActionGraphConfigurationException(
                         "No blackboard seeder registered for goal type: " + interpretation.goalType()));
         seeder.seed(interpretation.parameters(), blackboard);
     }

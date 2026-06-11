@@ -2,6 +2,7 @@ package com.actiongraph.humanreview.jdbc;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRiskLevel;
+import com.actiongraph.exception.ActionGraphNotFoundException;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Plan;
 import com.actiongraph.planning.PlanStep;
@@ -179,7 +180,7 @@ class JdbcHumanReviewRepositoryTest {
                 HumanReviewDecision.APPROVED,
                 "approver-1",
                 "approved"
-        )).isInstanceOf(IllegalStateException.class);
+        )).isInstanceOf(ActionGraphNotFoundException.class);
     }
 
     private HumanReviewRequest request(String runId) {

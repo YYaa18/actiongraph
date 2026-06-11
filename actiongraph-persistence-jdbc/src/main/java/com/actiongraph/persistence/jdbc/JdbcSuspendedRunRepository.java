@@ -1,6 +1,7 @@
 package com.actiongraph.persistence.jdbc;
 
 import com.actiongraph.action.ActionId;
+import com.actiongraph.exception.ActionGraphIntegrationException;
 import com.actiongraph.runtime.SuspendedRun;
 import com.actiongraph.runtime.SuspendedRunRepository;
 
@@ -119,7 +120,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                         + "' where status is null");
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot initialize suspended run repository schema", ex);
+            throw new ActionGraphIntegrationException("Cannot initialize suspended run repository schema", ex);
         }
     }
 
@@ -140,7 +141,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                 connection.setAutoCommit(autoCommit);
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot save suspended run: " + run.runId(), ex);
+            throw new ActionGraphIntegrationException("Cannot save suspended run: " + run.runId(), ex);
         }
     }
 
@@ -150,7 +151,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
         try (Connection connection = dataSource.getConnection()) {
             return findByRunId(connection, runId);
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot find suspended run: " + runId, ex);
+            throw new ActionGraphIntegrationException("Cannot find suspended run: " + runId, ex);
         }
     }
 
@@ -187,7 +188,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                 connection.setAutoCommit(autoCommit);
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot claim suspended run for resume: " + runId, ex);
+            throw new ActionGraphIntegrationException("Cannot claim suspended run for resume: " + runId, ex);
         }
     }
 
@@ -220,7 +221,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
         try (Connection connection = dataSource.getConnection()) {
             delete(connection, runId);
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot delete suspended run: " + runId, ex);
+            throw new ActionGraphIntegrationException("Cannot delete suspended run: " + runId, ex);
         }
     }
 

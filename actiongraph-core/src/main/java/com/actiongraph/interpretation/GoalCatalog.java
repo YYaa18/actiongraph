@@ -1,5 +1,6 @@
 package com.actiongraph.interpretation;
 
+import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.planning.Goal;
 
 import java.util.Collection;
@@ -13,7 +14,7 @@ public final class GoalCatalog {
     public void register(GoalDefinition definition) {
         GoalDefinition previous = definitions.putIfAbsent(definition.type(), definition);
         if (previous != null) {
-            throw new IllegalStateException("Duplicate goal type: " + definition.type().value());
+            throw new ActionGraphConfigurationException("Duplicate goal type: " + definition.type().value());
         }
     }
 

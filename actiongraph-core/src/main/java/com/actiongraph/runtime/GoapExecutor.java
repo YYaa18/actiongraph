@@ -6,6 +6,7 @@ import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.action.ActionResult;
 import com.actiongraph.action.CompensationResult;
 import com.actiongraph.action.ExecutionContext;
+import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.observability.NoopObservationSink;
 import com.actiongraph.observability.ObservationEvent;
 import com.actiongraph.observability.ObservationEventType;
@@ -608,7 +609,7 @@ public final class GoapExecutor implements Executor {
         Deque<Action> stack = new ArrayDeque<>();
         for (ActionId actionId : suspendedRun.compensationStack()) {
             Action action = registry.byId(actionId)
-                    .orElseThrow(() -> new IllegalStateException(
+                    .orElseThrow(() -> new ActionGraphConfigurationException(
                             "Compensation action is not registered: " + actionId.value()));
             stack.addLast(action);
         }

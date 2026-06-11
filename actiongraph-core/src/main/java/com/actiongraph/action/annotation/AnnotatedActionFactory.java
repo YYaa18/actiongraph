@@ -8,6 +8,9 @@ import com.actiongraph.action.ActionRiskLevel;
 import com.actiongraph.action.CompensationResult;
 import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.action.ExecutionContext;
+import com.actiongraph.exception.ActionGraphConfigurationException;
+import com.actiongraph.exception.ActionGraphInputException;
+import com.actiongraph.exception.ActionGraphIntegrationException;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.BlackboardKey;
@@ -84,7 +87,8 @@ public final class AnnotatedActionFactory {
         }
         AnnotatedMethod previous = methods.putIfAbsent(actionId, method);
         if (previous != null) {
-            throw new IllegalStateException("Duplicate annotated " + kind + " for action id: " + actionId);
+            throw new ActionGraphConfigurationException(
+                    "Duplicate annotated " + kind + " for action id: " + actionId);
         }
     }
 
@@ -188,13 +192,13 @@ public final class AnnotatedActionFactory {
             if (result instanceof Boolean allowed) {
                 return allowed;
             }
-            throw new IllegalStateException("Runtime guard must return boolean for action " + id().value());
+            throw new ActionGraphConfigurationException("Runtime guard must return boolean for action " + id().value());
         }
 
         @Override
         public ActionResult execute(ExecutionContext context) {
             Object[] args = resolveArguments(actionMethod.method(), context.blackboard(), true)
-                    .orElseThrow(() -> new IllegalStateException("Missing action input for " + id().value()));
+                    .orElseThrow(() -> new ActionGraphInputException("Missing action input for " + id().value()));
             Object result = invoke(actionMethod, args);
             if (result == null || actionMethod.method().getReturnType().equals(Void.TYPE)) {
                 return ActionResult.ok();
@@ -239,7 +243,7 @@ public final class AnnotatedActionFactory {
                 Optional<?> value = resolveArgument(parameters[i], parameterType, blackboard);
                 if (value.isEmpty()) {
                     if (required) {
-                        throw new IllegalStateException("Missing blackboard value for " + parameterType.getName());
+                        throw new ActionGraphInputException("Missing blackboard value for " + parameterType.getName());
                     }
                     return Optional.empty();
                 }
@@ -277,7 +281,7 @@ public final class AnnotatedActionFactory {
             try {
                 return annotatedMethod.method().invoke(annotatedMethod.target(), args);
             } catch (IllegalAccessException ex) {
-                throw new IllegalStateException("Cannot access annotated action method", ex);
+                throw new ActionGraphConfigurationException("Cannot access annotated action method", ex);
             } catch (InvocationTargetException ex) {
                 Throwable cause = ex.getCause();
                 if (cause instanceof RuntimeException runtimeException) {
@@ -286,7 +290,7 @@ public final class AnnotatedActionFactory {
                 if (cause instanceof Error error) {
                     throw error;
                 }
-                throw new IllegalStateException("Annotated action method failed", cause);
+                throw new ActionGraphIntegrationException("Annotated action method failed", cause);
             }
         }
     }

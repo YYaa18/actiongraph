@@ -2,6 +2,8 @@ package com.actiongraph.humanreview.jdbc;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRiskLevel;
+import com.actiongraph.exception.ActionGraphIntegrationException;
+import com.actiongraph.exception.ActionGraphNotFoundException;
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import com.actiongraph.persistence.jdbc.PersistenceJsonCodec;
 import com.actiongraph.policy.ApprovalChain;
@@ -82,7 +84,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             ensureColumn(connection, "stage_decisions_json", "clob");
             ensureColumn(connection, "attributes_json", "clob");
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot initialize human review repository schema", ex);
+            throw new ActionGraphIntegrationException("Cannot initialize human review repository schema", ex);
         }
     }
 
@@ -105,7 +107,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             bindTask(statement, task);
             statement.executeUpdate();
         } catch (SQLException ex) {
-            throw new IllegalStateException(
+            throw new ActionGraphIntegrationException(
                     "Cannot save human review task: " + task.runId() + "/" + task.actionId().value(), ex);
         }
     }
@@ -125,7 +127,8 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
                         : Optional.empty();
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot find human review task: " + runId + "/" + actionId.value(), ex);
+            throw new ActionGraphIntegrationException(
+                    "Cannot find human review task: " + runId + "/" + actionId.value(), ex);
         }
     }
 
@@ -138,7 +141,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             statement.setString(1, runId);
             return readTasks(statement);
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot find human review tasks for runId: " + runId, ex);
+            throw new ActionGraphIntegrationException("Cannot find human review tasks for runId: " + runId, ex);
         }
     }
 
@@ -150,7 +153,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             statement.setString(1, HumanReviewDecision.PENDING.name());
             return readTasks(statement);
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot find pending human review tasks", ex);
+            throw new ActionGraphIntegrationException("Cannot find pending human review tasks", ex);
         }
     }
 
@@ -167,8 +170,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             throw new IllegalArgumentException("Human review task decision must be APPROVED or DENIED");
         }
         HumanReviewTask existing = find(runId, actionId)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No human review task found for " + runId + "/" + actionId.value()));
+                .orElseThrow(() -> humanReviewTaskNotFound(runId, actionId));
         decideStage(runId, actionId, existing.currentStageIndex(), decision, reviewer, message);
     }
 
@@ -188,8 +190,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             throw new IllegalArgumentException("Human review task decision must be APPROVED or DENIED");
         }
         HumanReviewTask existing = find(runId, actionId)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No human review task found for " + runId + "/" + actionId.value()));
+                .orElseThrow(() -> humanReviewTaskNotFound(runId, actionId));
         HumanReviewTask decided = existing.withDecision(decision, reviewer, message, Instant.now());
         String sql = "update " + table
                 + " set decision = ?, reviewer = ?, message = ?, updated_at = ?, "
@@ -212,7 +213,8 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
                 throw new StageAlreadyDecidedException(runId, actionId, expectedStageIndex);
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Cannot decide human review task: " + runId + "/" + actionId.value(), ex);
+            throw new ActionGraphIntegrationException(
+                    "Cannot decide human review task: " + runId + "/" + actionId.value(), ex);
         }
     }
 
@@ -310,7 +312,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (JsonProcessingException ex) {
-            throw new IllegalStateException("Cannot serialize human-review persistence payload", ex);
+            throw new ActionGraphIntegrationException("Cannot serialize human-review persistence payload", ex);
         }
     }
 
@@ -318,7 +320,7 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
         try {
             return objectMapper.readValue(json, type);
         } catch (JsonProcessingException ex) {
-            throw new IllegalStateException("Cannot deserialize human-review persistence payload", ex);
+            throw new ActionGraphIntegrationException("Cannot deserialize human-review persistence payload", ex);
         }
     }
 
@@ -361,5 +363,9 @@ public final class JdbcHumanReviewRepository implements HumanReviewRepository {
             }
         }
         return false;
+    }
+
+    private static ActionGraphNotFoundException humanReviewTaskNotFound(String runId, ActionId actionId) {
+        return new ActionGraphNotFoundException("human review task", runId + "/" + actionId.value());
     }
 }

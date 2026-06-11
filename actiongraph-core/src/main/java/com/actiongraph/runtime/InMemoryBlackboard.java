@@ -1,5 +1,6 @@
 package com.actiongraph.runtime;
 
+import com.actiongraph.exception.ActionGraphInputException;
 import com.actiongraph.planning.Condition;
 
 import java.util.Comparator;
@@ -33,7 +34,7 @@ public final class InMemoryBlackboard implements Blackboard {
         if (matches.size() == 1) {
             return Optional.of(type.cast(matches.getFirst()));
         }
-        throw new IllegalStateException(
+        throw new ActionGraphInputException(
                 "Multiple blackboard values exist for " + type.getName() + "; use a BlackboardKey");
     }
 

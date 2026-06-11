@@ -3,6 +3,7 @@ package com.actiongraph.action.annotation;
 import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionRiskLevel;
 import com.actiongraph.action.DefaultActionRegistry;
+import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.planning.GoapPlanner;
@@ -102,7 +103,7 @@ class AnnotatedActionFactoryTest {
     @Test
     void duplicateAnnotatedActionIdThrows() {
         assertThatThrownBy(() -> AnnotatedActionFactory.actions(new DuplicateActionAdapter()))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ActionGraphConfigurationException.class)
                 .hasMessageContaining("duplicate.id");
     }
 
