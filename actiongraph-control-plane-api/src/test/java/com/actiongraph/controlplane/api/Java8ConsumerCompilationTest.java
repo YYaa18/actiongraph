@@ -58,6 +58,16 @@ class Java8ConsumerCompilationTest {
     }
 
     @Test
+    void consoleHttpClientExampleCanBeCompiledByJava8ConsumerCode() throws Exception {
+        compileExample(
+                "8",
+                repositoryRoot().resolve(
+                        "docs/examples/java8-console-client/src/main/java/com/company/audit/ActionGraphConsoleClientUsage.java"),
+                mainClassesClasspath(),
+                "com/company/audit/ActionGraphConsoleClientUsage.class");
+    }
+
+    @Test
     void rawHttpGatewayExampleCanBeCompiledWithoutActionGraphClasspath() throws Exception {
         compileExample(
                 "8",

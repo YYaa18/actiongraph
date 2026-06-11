@@ -15,12 +15,13 @@ dependencies {
 
 The module has no Spring, JDBC, LLM, runtime, servlet, Jackson, OkHttp, or Apache HTTP Client dependency. Its main classes are compiled with `--release 8` so Java 8 applications can load the jar.
 
-CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the runtime HTTP client, component catalog HTTP client, human-review HTTP client, response DTOs, shared-secret token verification, and exception type:
+CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, response DTOs, shared-secret token verification, and exception type:
 
 ```text
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
 docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
 docs/examples/java8-human-review-client/src/main/java/com/company/approval/ActionGraphHumanReviewClientUsage.java
+docs/examples/java8-console-client/src/main/java/com/company/audit/ActionGraphConsoleClientUsage.java
 ```
 
 The root build also compiles a real Maven Java 8 consumer after publishing the BOM and Java 8 client artifacts to Maven Local:
@@ -170,6 +171,43 @@ The client uses only `HttpURLConnection`. It sends:
 - `POST` to the configured callback endpoint
 
 The default callback URL is derived by replacing a task base URL ending in `/tasks` with `/callbacks`. Set `callbackApiBaseUrl(...)` when enterprise routing exposes task and callback endpoints through different gateways. As with the runtime and catalog clients, response bodies are raw JSON and callers can pass default or per-request audit headers.
+
+## Java 8 Console HTTP Client
+
+Java 8 operational consoles, audit gateways, and reporting jobs can query deployed read-only Console endpoints through `ActionGraphConsoleHttpClient`:
+
+```java
+ActionGraphConsoleHttpClient console = ActionGraphConsoleHttpClient
+        .builder("https://agent.example.com/actiongraph/console")
+        .sharedSecret(System.getenv("ACTIONGRAPH_CONSOLE_TOKEN"))
+        .defaultHeader("X-Source-System", "legacy-audit")
+        .build();
+
+Map<String, String> requestHeaders = new HashMap<String, String>();
+requestHeaders.put("X-Request-Id", requestId);
+
+ControlPlaneHttpResponse runs = console.runs(
+        Integer.valueOf(50),
+        Integer.valueOf(0),
+        "COMPLETED",
+        Boolean.TRUE,
+        requestHeaders
+);
+ControlPlaneHttpResponse trace = console.trace("RUN-1", requestHeaders);
+ControlPlaneHttpResponse csv = console.traceCsv("RUN-1", requestHeaders);
+ControlPlaneHttpResponse jsonl = console.traceJsonl("RUN-1", requestHeaders);
+```
+
+The client uses only `HttpURLConnection`. It sends:
+
+- `GET /runs`
+- `GET /runs/{runId}`
+- `GET /runs/{runId}/trace`
+- `GET /runs/export.csv`
+- `GET /runs/{runId}/trace/export.csv`
+- `GET /runs/{runId}/trace/export.jsonl`
+
+Response bodies are raw JSON, CSV, or JSONL. This lets old Java callers forward audit evidence to existing storage or reporting jobs without pulling in a JSON or HTTP library.
 
 ## Shared-Secret Token Verification
 

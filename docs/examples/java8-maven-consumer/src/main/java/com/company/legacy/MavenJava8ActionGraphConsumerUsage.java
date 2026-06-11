@@ -4,6 +4,7 @@ import com.actiongraph.catalog.ActionGraphComponent;
 import com.actiongraph.catalog.ActionGraphComponentCatalogService;
 import com.actiongraph.catalog.ComponentCompatibility;
 import com.actiongraph.controlplane.api.ActionGraphComponentCatalogHttpClient;
+import com.actiongraph.controlplane.api.ActionGraphConsoleHttpClient;
 import com.actiongraph.controlplane.api.ActionGraphHumanReviewHttpClient;
 import com.actiongraph.controlplane.api.ActionGraphRuntimeHttpClient;
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
@@ -52,6 +53,14 @@ public final class MavenJava8ActionGraphConsumerUsage {
     public static ActionGraphHumanReviewHttpClient humanReviewClient(String tasksUrl, String token) {
         return ActionGraphHumanReviewHttpClient
                 .builder(tasksUrl)
+                .sharedSecret(token)
+                .defaultHeader("X-Source-System", "legacy-maven-app")
+                .build();
+    }
+
+    public static ActionGraphConsoleHttpClient consoleClient(String consoleUrl, String token) {
+        return ActionGraphConsoleHttpClient
+                .builder(consoleUrl)
                 .sharedSecret(token)
                 .defaultHeader("X-Source-System", "legacy-maven-app")
                 .build();

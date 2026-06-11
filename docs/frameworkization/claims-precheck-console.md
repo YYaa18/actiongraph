@@ -129,3 +129,29 @@ GET /actiongraph/console/runs/{runId}/trace/export.jsonl
 ```
 
 The built-in page shows the same read model as a compact operational surface: run list, status/audit filters, selected-run metadata, and a trace timeline. API responses are read-only summaries and trace details: run id, first/last trace timestamps, terminal or suspended status, trace event count, audit-chain verification fields, and individual trace event rows. Export responses return attachment-friendly CSV or JSONL evidence over the same read model. Missing or invalid console tokens return `401 UNAUTHORIZED` for API/export calls when `shared-secret` is configured. A production deployment should still add enterprise authentication/authorization and retention controls.
+
+## Java 8 Console HTTP Client
+
+Java 8 audit jobs, operations consoles, and reporting gateways can call a deployed Console endpoint through `actiongraph-control-plane-api` without loading Spring or the console model classes:
+
+```java
+ActionGraphConsoleHttpClient console = ActionGraphConsoleHttpClient
+        .builder("https://agent.example.com/actiongraph/console")
+        .sharedSecret(System.getenv("ACTIONGRAPH_CONSOLE_TOKEN"))
+        .defaultHeader("X-Source-System", "legacy-audit")
+        .build();
+
+ControlPlaneHttpResponse runs = console.runs(
+        Integer.valueOf(50),
+        Integer.valueOf(0),
+        "COMPLETED",
+        Boolean.TRUE
+);
+ControlPlaneHttpResponse traceJsonl = console.traceJsonl("RUN-1");
+```
+
+The client returns raw JSON, CSV, or JSONL response bodies so older systems can use their existing parsers, file writers, and reporting pipelines. The documented example is compiled in CI with `javac --release 8`:
+
+```text
+docs/examples/java8-console-client/src/main/java/com/company/audit/ActionGraphConsoleClientUsage.java
+```

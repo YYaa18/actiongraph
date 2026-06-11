@@ -117,7 +117,7 @@ The default catalog includes profiles such as:
 | `console-control-plane` | Read-only console and audit export surface |
 | `full-control-plane` | Built-in endpoint aggregate |
 | `ecosystem-introspection` | Component catalog modules |
-| `java8-legacy-client` | Java 8 client-side integration over deployed runtime, component catalog, and human-review APIs |
+| `java8-legacy-client` | Java 8 client-side integration over deployed runtime, component catalog, human-review, and console APIs |
 | `full-pilot-service` | Pilot-oriented full composition |
 
 Profiles are guidance, not magic auto-installers. A service still chooses dependencies explicitly through Gradle/Maven and enables each endpoint family through its own `actiongraph.*` property.
