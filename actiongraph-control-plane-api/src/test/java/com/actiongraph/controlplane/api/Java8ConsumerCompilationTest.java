@@ -48,6 +48,16 @@ class Java8ConsumerCompilationTest {
     }
 
     @Test
+    void controlPlaneHttpClientExampleCanBeCompiledByJava8ConsumerCode() throws Exception {
+        compileExample(
+                "8",
+                repositoryRoot().resolve(
+                        "docs/examples/java8-control-plane-client/src/main/java/com/company/controlplane/ActionGraphControlPlaneClientUsage.java"),
+                mainClassesClasspath(),
+                "com/company/controlplane/ActionGraphControlPlaneClientUsage.class");
+    }
+
+    @Test
     void humanReviewHttpClientExampleCanBeCompiledByJava8ConsumerCode() throws Exception {
         compileExample(
                 "8",

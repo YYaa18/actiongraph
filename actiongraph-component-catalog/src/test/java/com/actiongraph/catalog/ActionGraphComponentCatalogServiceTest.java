@@ -72,7 +72,8 @@ class ActionGraphComponentCatalogServiceTest {
                 .satisfies(component -> {
                     assertThat(component.compatibility()).isEqualTo(ComponentCompatibility.JAVA8_CLIENT.label());
                     assertThat(component.capabilities())
-                            .contains("java8-runtime-client", "java8-component-catalog-client",
+                            .contains("java8-control-plane-client", "java8-runtime-client",
+                                    "java8-component-catalog-client",
                                     "java8-human-review-client", "java8-console-client", "http-audit-headers",
                                     "shared-secret-token-verification");
                 });
@@ -162,6 +163,9 @@ class ActionGraphComponentCatalogServiceTest {
                 .satisfies(profile -> {
                     assertThat(profile.modules())
                             .containsExactly("actiongraph-control-plane-api");
+                    assertThat(profile.notes())
+                            .anySatisfy(note -> assertThat(note)
+                                    .contains("ActionGraphControlPlaneHttpClient"));
                     assertThat(profile.notes())
                             .anySatisfy(note -> assertThat(note)
                                     .contains("ActionGraphConsoleHttpClient"));

@@ -23,7 +23,7 @@ val libraryModuleDescriptions = mapOf(
     "actiongraph-interpretation" to "Optional goal interpretation contracts and GoalCatalog support for ActionGraph.",
     "actiongraph-runtime-api" to "Reusable ActionGraph goal interpretation, start, and resume API service.",
     "actiongraph-component-catalog" to "Java 8 compatible machine-readable ActionGraph component catalog and composition profile service.",
-    "actiongraph-control-plane-api" to "Java 8 compatible control-plane contracts, lightweight HTTP clients, and shared-secret token verification.",
+    "actiongraph-control-plane-api" to "Java 8 compatible control-plane contracts, lightweight aggregate and split HTTP clients, and shared-secret token verification.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, approval chains, and task query APIs for ActionGraph.",
     "actiongraph-llm" to "Provider-neutral LLM goal interpretation support for ActionGraph.",
     "actiongraph-llm-deepseek" to "DeepSeek-compatible LLM client provider for ActionGraph.",

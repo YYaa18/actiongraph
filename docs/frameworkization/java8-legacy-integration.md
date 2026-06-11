@@ -14,7 +14,7 @@ Many financial systems still run on Java 8, and some are older. ActionGraph ther
 
 ## Current Java 8 Artifact
 
-`actiongraph-control-plane-api` is compiled with `--release 8` and has no runtime dependencies. It includes lightweight Runtime, Component Catalog, Human Review, and Console HTTP clients.
+`actiongraph-control-plane-api` is compiled with `--release 8` and has no runtime dependencies. It includes a lightweight aggregate control-plane HTTP client plus individual Runtime, Component Catalog, Human Review, and Console HTTP clients.
 
 ```kotlin
 dependencies {
@@ -42,6 +42,27 @@ if (response.successful()) {
 The client uses only JDK `HttpURLConnection` and returns the raw JSON body. It accepts default HTTP headers for stable enterprise metadata such as source system, tenant, or branch, and per-request headers for transaction metadata such as request id, trace id, or correlation id. This keeps legacy projects free to use their existing JSON library, gateway wrapper, or audit logging rules.
 
 If the deployed Runtime API uses the built-in Spring MVC starter, the default server-side trace-header whitelist records `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System` into `RUN_STARTED` / `RUN_RESUMED` trace events. The same run metadata is also copied into `HumanReviewRequest.attributes` when a high-risk action suspends for external approval, so approval portals can display the legacy transaction id, correlation id, and source system without recomputing them. Deployments can change the whitelist with `actiongraph.runtime.api.trace-headers`; keep it limited to non-sensitive audit and correlation metadata.
+
+When a single ActionGraph service exposes the built-in control-plane endpoints under one `/actiongraph` base path, old systems can configure all HTTP clients once:
+
+```java
+ActionGraphControlPlaneHttpClient controlPlane = ActionGraphControlPlaneHttpClient
+        .builder("https://agent.example.com/actiongraph")
+        .sharedSecret("control-plane-shared-secret")
+        .defaultHeader("X-Source-System", "legacy-core")
+        .build();
+
+ControlPlaneHttpResponse moduleProfiles =
+        controlPlane.catalog().profilesForModule("actiongraph-control-plane-api");
+ControlPlaneHttpResponse started =
+        controlPlane.runtime().start("帮客户 C001 生成续约报价");
+ControlPlaneHttpResponse pendingReviews =
+        controlPlane.humanReview().pendingTasks();
+ControlPlaneHttpResponse traceExport =
+        controlPlane.console().traceJsonl("RUN-1");
+```
+
+When enterprise routing exposes each surface separately, use the same facade with split base URLs and per-surface secrets. Unconfigured surfaces stay unavailable, so a project that only calls runtime endpoints can configure only `runtimeApiBaseUrl(...)` and still keep catalog, review, and console disabled.
 
 The same artifact also includes a Java 8 Component Catalog HTTP client for remote ecosystem discovery:
 
@@ -113,12 +134,13 @@ Java 8 client templates live at:
 ```text
 docs/examples/java8-maven-consumer/src/main/java/com/company/legacy/MavenJava8ActionGraphConsumerUsage.java
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
+docs/examples/java8-control-plane-client/src/main/java/com/company/controlplane/ActionGraphControlPlaneClientUsage.java
 docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
 docs/examples/java8-human-review-client/src/main/java/com/company/approval/ActionGraphHumanReviewClientUsage.java
 docs/examples/java8-console-client/src/main/java/com/company/audit/ActionGraphConsoleClientUsage.java
 ```
 
-The test suite compiles the standalone source examples with `javac --release 8`, so those examples are both documentation and compatibility evidence. The root build also runs `verifyJava8MavenConsumer`: it publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles the Maven example with Maven Compiler Plugin `release=8`. Together, these gates prove both source compatibility and real Maven BOM consumption for Java 8 callers. The examples demonstrate runtime start/resume calls, catalog metadata calls, human-review task query/decision/callback calls, console run/trace/audit-export calls, default headers, per-request audit headers, response handling, standard control-plane error-code detection, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
+The test suite compiles the standalone source examples with `javac --release 8`, so those examples are both documentation and compatibility evidence. The root build also runs `verifyJava8MavenConsumer`: it publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles the Maven example with Maven Compiler Plugin `release=8`. Together, these gates prove both source compatibility and real Maven BOM consumption for Java 8 callers. The examples demonstrate aggregate control-plane configuration, split endpoint configuration, runtime start/resume calls, catalog metadata calls, human-review task query/decision/callback calls, console run/trace/audit-export calls, default headers, per-request audit headers, response handling, standard control-plane error-code detection, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
 
 ## Older-Than-Java-8 HTTP Gateway Example
 
@@ -150,7 +172,7 @@ Current labels:
 | `java21-plus` | Requires the modern ActionGraph service runtime side |
 | `sample-only` | Demonstration code, not a supported library dependency |
 
-Today, `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` modules. They are safe for Java 8 projects to import directly. `actiongraph-control-plane-api` covers runtime, component catalog, human-review, and console HTTP clients. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts; deploy those on the modern ActionGraph service side and let old applications call them over HTTP.
+Today, `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` modules. They are safe for Java 8 projects to import directly. `actiongraph-control-plane-api` covers the aggregate control-plane facade plus runtime, component catalog, human-review, and console HTTP clients. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts; deploy those on the modern ActionGraph service side and let old applications call them over HTTP.
 
 ## Non-Goals
 
@@ -169,4 +191,4 @@ Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Com
 
 This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.
 
-The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, default audit headers, per-request audit headers, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The root `check` task also runs the Maven consumer gate described above, so BOM import and published POM consumption stay covered. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, scans for ActionGraph imports, Java 8 conveniences, and common Java 7+ syntax/library features, and invokes the compiled template against a local server for runtime, catalog, review, and console calls. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.
+The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the aggregate control-plane facade, runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, default audit headers, per-request audit headers, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The root `check` task also runs the Maven consumer gate described above, so BOM import and published POM consumption stay covered. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, scans for ActionGraph imports, Java 8 conveniences, and common Java 7+ syntax/library features, and invokes the compiled template against a local server for runtime, catalog, review, and console calls. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.

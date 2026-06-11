@@ -1,6 +1,6 @@
 # Control-Plane API Contracts
 
-`actiongraph-control-plane-api` is a small Java 8 compatible component for shared response contracts, lightweight control-plane HTTP clients, and shared-secret token verification.
+`actiongraph-control-plane-api` is a small Java 8 compatible component for shared response contracts, lightweight aggregate and split control-plane HTTP clients, and shared-secret token verification.
 
 It exists so built-in Spring MVC endpoint starters, custom gateways, CLIs, legacy Java 8 applications, and enterprise control-plane services can speak the same minimal protocol without depending on Spring Web or third-party JSON libraries.
 
@@ -15,11 +15,12 @@ dependencies {
 
 The module has no Spring, JDBC, LLM, runtime, servlet, Jackson, OkHttp, or Apache HTTP Client dependency. Its main classes are compiled with `--release 8` so Java 8 applications can load the jar.
 
-CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, response DTOs, shared-secret token verification, and exception type:
+CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the aggregate control-plane HTTP client, runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, response DTOs, shared-secret token verification, and exception type:
 
 ```text
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
 docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
+docs/examples/java8-control-plane-client/src/main/java/com/company/controlplane/ActionGraphControlPlaneClientUsage.java
 docs/examples/java8-human-review-client/src/main/java/com/company/approval/ActionGraphHumanReviewClientUsage.java
 docs/examples/java8-console-client/src/main/java/com/company/audit/ActionGraphConsoleClientUsage.java
 ```
@@ -75,6 +76,55 @@ if (!response.successful()) {
 ```
 
 For non-error payloads such as Console CSV/JSONL exports or successful run responses, `response.error()` returns an empty string.
+
+## Java 8 Aggregate Control-Plane HTTP Client
+
+Legacy applications that call a deployed aggregate control plane can configure all built-in surfaces once through `ActionGraphControlPlaneHttpClient`:
+
+```java
+ActionGraphControlPlaneHttpClient client = ActionGraphControlPlaneHttpClient
+        .builder("https://agent.example.com/actiongraph")
+        .sharedSecret(System.getenv("ACTIONGRAPH_CONTROL_PLANE_TOKEN"))
+        .defaultHeader("X-Source-System", "legacy-core")
+        .build();
+
+Map<String, String> requestHeaders = new HashMap<String, String>();
+requestHeaders.put("X-Request-Id", requestId);
+
+ControlPlaneHttpResponse modules = client.catalog().profilesForModule(
+        "actiongraph-control-plane-api", requestHeaders);
+ControlPlaneHttpResponse run = client.runtime().start(
+        "帮客户 C001 生成续约报价", null, requestHeaders);
+ControlPlaneHttpResponse pending = client.humanReview().pendingTasks(requestHeaders);
+ControlPlaneHttpResponse trace = client.console().traceJsonl("RUN-1", requestHeaders);
+```
+
+The aggregate base URL derives these built-in paths:
+
+- Runtime: `/runtime`
+- Component Catalog: `/components`
+- Human Review tasks: `/human-review/tasks`
+- Human Review callbacks: `/human-review/callbacks`
+- Console: `/console`
+
+When enterprise routing exposes each surface through a different gateway, use the same facade with split URLs:
+
+```java
+ActionGraphControlPlaneHttpClient client = ActionGraphControlPlaneHttpClient
+        .builder()
+        .runtimeApiBaseUrl("https://runtime-gw.example.com/actiongraph/runtime")
+        .catalogApiBaseUrl("https://catalog-gw.example.com/actiongraph/components")
+        .reviewTaskApiBaseUrl("https://review-gw.example.com/actiongraph/human-review/tasks")
+        .reviewCallbackApiBaseUrl("https://review-gw.example.com/actiongraph/human-review/callbacks")
+        .consoleApiBaseUrl("https://audit-gw.example.com/actiongraph/console")
+        .runtimeSharedSecret(System.getenv("ACTIONGRAPH_RUNTIME_TOKEN"))
+        .catalogSharedSecret(System.getenv("ACTIONGRAPH_CATALOG_TOKEN"))
+        .reviewSharedSecret(System.getenv("ACTIONGRAPH_REVIEW_TOKEN"))
+        .consoleSharedSecret(System.getenv("ACTIONGRAPH_CONSOLE_TOKEN"))
+        .build();
+```
+
+Unconfigured surfaces stay unavailable: `hasCatalog()` / `hasHumanReview()` / `hasConsole()` report what was configured, and the corresponding getter fails fast if a legacy application calls a surface that its gateway did not enable. This keeps the control layer composable while still giving old systems a single client object when that is convenient.
 
 ## Java 8 Runtime HTTP Client
 
