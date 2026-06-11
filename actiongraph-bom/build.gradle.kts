@@ -16,8 +16,6 @@ dependencies {
         api(project(":actiongraph-llm"))
         api(project(":actiongraph-llm-deepseek"))
         api(project(":actiongraph-persistence-jdbc"))
-        api(project(":actiongraph-memory-jdbc"))
-        api(project(":actiongraph-human-review-jdbc"))
         api(project(":actiongraph-jdbc-spring-boot-starter"))
         api(project(":actiongraph-runtime-api-spring-boot-starter"))
         api(project(":actiongraph-component-catalog-spring-boot-starter"))

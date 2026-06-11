@@ -53,14 +53,12 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 | `actiongraph-governance-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
 | `actiongraph-human-review` | keep-target | `actiongraph-human-review` |
 | `actiongraph-human-review-api-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
-| `actiongraph-human-review-jdbc` | merge-planned | `actiongraph-persistence-jdbc` |
 | `actiongraph-human-review-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
 | `actiongraph-interpretation` | merge-planned | `actiongraph-core` |
 | `actiongraph-jdbc-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
 | `actiongraph-llm` | merge-planned | `actiongraph-llm-deepseek` |
 | `actiongraph-llm-deepseek` | keep-target | `actiongraph-llm-deepseek` |
 | `actiongraph-memory` | merge-planned | `actiongraph-core` |
-| `actiongraph-memory-jdbc` | merge-planned | `actiongraph-persistence-jdbc` |
 | `actiongraph-memory-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
 | `actiongraph-persistence-jdbc` | keep-target | `actiongraph-persistence-jdbc` |
 | `actiongraph-runtime-api` | merge-planned | `actiongraph-core` |
@@ -71,6 +69,6 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 
 ## Freeze Notes
 
-- The ledger does not mean the current 27-module surface is desirable; it documents the temporary state so growth is visible.
+- The ledger does not mean the current 25-module surface is desirable; it documents the temporary state so growth is visible.
 - Consolidation should happen by moving implementation into target modules, keeping compatibility shims only when a consumer migration requires them.
 - Sample-domain growth is not a substitute for F1 validation. Claims precheck is frozen except for real/near-real integration fixes and evidence.

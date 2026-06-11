@@ -19,9 +19,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
 | `actiongraph-llm` | `com.actiongraph:actiongraph-llm:0.1.0` | Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional DeepSeek-compatible LLM client |
-| `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | Core JDBC trace, suspended-run, and trace read-model repositories |
-| `actiongraph-memory-jdbc` | `com.actiongraph:actiongraph-memory-jdbc:0.1.0` | Optional JDBC structured-memory repository |
-| `actiongraph-human-review-jdbc` | `com.actiongraph:actiongraph-human-review-jdbc:0.1.0` | Optional JDBC human-review task repository |
+| `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace, suspended-run, trace read-model, structured-memory, and human-review repositories |
 | `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Spring Boot auto-configuration and annotation-driven action registration |
 | `actiongraph-governance-spring-boot-starter` | `com.actiongraph:actiongraph-governance-spring-boot-starter:0.1.0` | Optional Spring Boot governance policies for masking, amount limits, and rule-based permissions |
 | `actiongraph-governance-human-review-spring-boot-starter` | `com.actiongraph:actiongraph-governance-human-review-spring-boot-starter:0.1.0` | Optional Spring Boot human-review governance policies for amount review attributes and approval routing |
@@ -192,13 +190,6 @@ Low-level non-Spring/manual core persistence adds:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-persistence-jdbc")
-```
-
-Low-level non-Spring/manual optional persistence adds:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-memory-jdbc")
-implementation("com.actiongraph:actiongraph-human-review-jdbc")
 ```
 
 Spring Boot repository-backed review and optional JDBC task persistence add:

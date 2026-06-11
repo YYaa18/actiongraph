@@ -47,12 +47,10 @@ The optional memory Spring starter creates a JDBC `MemoryRepository` when the sh
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-persistence-jdbc")
-    implementation("com.actiongraph:actiongraph-memory-jdbc")        // optional
-    implementation("com.actiongraph:actiongraph-human-review-jdbc")  // optional
 }
 ```
 
-The low-level core module depends on `actiongraph-core`, Jackson, and standard JDBC APIs. `actiongraph-memory-jdbc` depends on `actiongraph-memory`; `actiongraph-human-review-jdbc` depends on `actiongraph-human-review`. Applications provide the JDBC driver and `DataSource`. Use these artifacts directly for non-Spring services or when repository construction needs full manual control.
+The low-level JDBC module depends on `actiongraph-core`, `actiongraph-memory`, `actiongraph-human-review`, Jackson, and standard JDBC APIs. Applications provide the JDBC driver and `DataSource`. Use this artifact directly for non-Spring services or when repository construction needs full manual control.
 
 ## Repositories
 

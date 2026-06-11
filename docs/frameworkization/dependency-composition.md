@@ -177,7 +177,7 @@ dependencies {
 }
 ```
 
-The memory starter brings `actiongraph-memory` and `actiongraph-memory-jdbc` transitively. It creates an in-memory `MemoryRepository` by default and creates a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available. It backs off if the application provides its own `MemoryRepository`.
+The memory starter brings `actiongraph-memory` and `actiongraph-persistence-jdbc` transitively. It creates an in-memory `MemoryRepository` by default and creates a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available. It backs off if the application provides its own `MemoryRepository`.
 
 ## Repository-Backed Human Review
 
@@ -231,7 +231,7 @@ dependencies {
 }
 ```
 
-Spring Boot applications enable the JDBC implementation with `actiongraph.persistence.jdbc.enabled=true` and a `DataSource`. Non-Spring services can depend on `actiongraph-memory-jdbc` directly and instantiate `JdbcMemoryRepository`.
+Spring Boot applications enable the JDBC implementation with `actiongraph.persistence.jdbc.enabled=true` and a `DataSource`. Non-Spring services can depend on `actiongraph-persistence-jdbc` directly and instantiate `JdbcMemoryRepository`.
 
 ## Durable Human Review
 
@@ -244,7 +244,7 @@ dependencies {
 }
 ```
 
-Spring Boot applications enable the JDBC implementation with `actiongraph.persistence.jdbc.enabled=true` and a `DataSource`; the human-review starter still backs off when the application provides its own `HumanReviewRepository`. Non-Spring services can depend on `actiongraph-human-review-jdbc` directly and instantiate `JdbcHumanReviewRepository`.
+Spring Boot applications enable the JDBC implementation with `actiongraph.persistence.jdbc.enabled=true` and a `DataSource`; the human-review starter still backs off when the application provides its own `HumanReviewRepository`. Non-Spring services can depend on `actiongraph-persistence-jdbc` directly and instantiate `JdbcHumanReviewRepository`.
 
 ## Non-Spring Governance Policies
 
@@ -344,7 +344,7 @@ dependencies {
 }
 ```
 
-The human-review starter brings `actiongraph-human-review` and `actiongraph-human-review-jdbc` transitively. It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`; when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available, it creates a JDBC-backed `HumanReviewRepository`. It does not expose HTTP endpoints.
+The human-review starter brings `actiongraph-human-review` and `actiongraph-persistence-jdbc` transitively. It creates an in-memory `HumanReviewRepository`, a default `ApprovalChainResolver`, and `RepositoryBackedHumanReviewPolicy`; when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available, it creates a JDBC-backed `HumanReviewRepository`. It does not expose HTTP endpoints.
 
 ## Spring MVC Human Review Control Plane
 

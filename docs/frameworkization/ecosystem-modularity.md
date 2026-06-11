@@ -8,7 +8,7 @@ ActionGraph is split so the public runtime framework and optional ecosystem/cont
 |---|---|---|
 | Version platform | `actiongraph-bom` | Aligns all ActionGraph module versions for mix-and-match adoption |
 | Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace |
-| Optional adapters | `actiongraph-annotations`, `actiongraph-memory`, `actiongraph-memory-spring-boot-starter`, `actiongraph-memory-jdbc`, `actiongraph-interpretation`, `actiongraph-runtime-api`, `actiongraph-human-review`, `actiongraph-human-review-jdbc`, `actiongraph-human-review-spring-boot-starter`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-spring-boot-starter`, `actiongraph-governance-human-review-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, structured memory context, Spring memory/JDBC wiring, JDBC memory storage, goal interpretation contracts, reusable runtime entry API service, repository-backed human review with task query APIs, JDBC review storage, Spring review-policy/JDBC wiring, Spring runtime wiring, reusable governance policies, Spring governance wiring, Spring core JDBC wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
+| Optional adapters | `actiongraph-annotations`, `actiongraph-memory`, `actiongraph-memory-spring-boot-starter`, `actiongraph-interpretation`, `actiongraph-runtime-api`, `actiongraph-human-review`, `actiongraph-human-review-spring-boot-starter`, `actiongraph-spring-boot-starter`, `actiongraph-governance`, `actiongraph-governance-spring-boot-starter`, `actiongraph-governance-human-review-spring-boot-starter`, `actiongraph-jdbc-spring-boot-starter`, `actiongraph-llm`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Pure Java annotation action registration, structured memory context, Spring memory/JDBC wiring, goal interpretation contracts, reusable runtime entry API service, repository-backed human review with task query APIs, Spring review-policy/JDBC wiring, Spring runtime wiring, reusable governance policies, Spring governance wiring, Spring core JDBC wiring, provider-neutral LLM goal interpretation, DeepSeek provider adapter, low-level durable repositories |
 | Control-plane ecosystem | `actiongraph-component-catalog`, `actiongraph-control-plane-api`, `actiongraph-component-catalog-spring-boot-starter`, `actiongraph-runtime-api-spring-boot-starter`, `actiongraph-human-review-api-spring-boot-starter`, `actiongraph-console`, `actiongraph-console-spring-boot-starter` | Machine-readable component catalog, shared control-plane response contracts, shared control-plane token verification, optional catalog HTTP endpoints, runtime goal interpretation/start/resume HTTP endpoints, human-review task query/decision and callback HTTP endpoints, read-only Console query/JDBC/export services, optional Spring Console API/UI/export/JDBC auto-configuration |
 | Samples | `actiongraph-samples` | Reference domains and batch demos; not published as a library |
 
@@ -35,17 +35,17 @@ The module catalog is checked against `settings.gradle.kts`, the module governan
 - Pure Java annotation-based registration adds `actiongraph-annotations`.
 - Structured long-term memory adds `actiongraph-memory`.
 - Spring Boot structured memory defaults and JDBC memory wiring add `actiongraph-memory-spring-boot-starter`.
-- JDBC structured memory adds `actiongraph-memory-jdbc`; Spring Boot JDBC memory is wired by `actiongraph-memory-spring-boot-starter` when `actiongraph.persistence.jdbc.enabled=true`.
+- JDBC structured memory adds `actiongraph-persistence-jdbc`; Spring Boot JDBC memory is wired by `actiongraph-memory-spring-boot-starter` when `actiongraph.persistence.jdbc.enabled=true`.
 - Goal catalogs, rule-based interpreters, and Goal-to-Blackboard seeding add `actiongraph-interpretation`.
 - Stable non-Spring goal interpretation/start/resume entry services add `actiongraph-runtime-api`; Spring MVC runtime entry endpoints add `actiongraph-runtime-api-spring-boot-starter`.
 - Machine-readable module and composition metadata adds `actiongraph-component-catalog`; Spring MVC catalog endpoints add `actiongraph-component-catalog-spring-boot-starter`.
 - Shared control-plane contracts, Java 8 aggregate / properties-based aggregate / safe GET retry / Runtime API / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification add `actiongraph-control-plane-api`; built-in Spring MVC endpoint starters bring it transitively.
 - Repository-backed external review tasks, callback handling, and stable task query/decision projections add `actiongraph-human-review`.
-- JDBC review task storage adds `actiongraph-human-review-jdbc`; Spring Boot JDBC review task storage is wired by `actiongraph-human-review-spring-boot-starter` when `actiongraph.persistence.jdbc.enabled=true`.
+- JDBC review task storage adds `actiongraph-persistence-jdbc`; Spring Boot JDBC review task storage is wired by `actiongraph-human-review-spring-boot-starter` when `actiongraph.persistence.jdbc.enabled=true`.
 - A Spring Boot business service can depend on `actiongraph-spring-boot-starter` without exposing any HTTP control-plane endpoint.
 - Non-Spring masking, amount-limit, rule-based permission, review-attribute, and approval-routing policies add `actiongraph-governance`.
 - Spring Boot masking and amount-limit governance add `actiongraph-governance-spring-boot-starter`; risk-based approval routing and review attributes add `actiongraph-governance-human-review-spring-boot-starter`.
-- Durable Spring Boot production runs add `actiongraph-jdbc-spring-boot-starter`; non-Spring/manual runtimes add `actiongraph-persistence-jdbc`. Memory and review-task durability are opt-in through their own JDBC modules.
+- Durable Spring Boot production runs add `actiongraph-jdbc-spring-boot-starter`; non-Spring/manual runtimes add `actiongraph-persistence-jdbc`. Runtime, memory, and review-task durability now share this one low-level JDBC module.
 - Provider-neutral natural-language goal interpretation adds `actiongraph-llm`.
 - DeepSeek-compatible model access adds `actiongraph-llm-deepseek`.
 - Spring Boot repository-backed approval tasks add `actiongraph-human-review-spring-boot-starter`; Spring MVC approval task APIs and external approval callbacks add `actiongraph-human-review-api-spring-boot-starter`.
@@ -118,9 +118,7 @@ The full control-plane surface is composed explicitly from the Spring MVC endpoi
 
 `actiongraph-jdbc-spring-boot-starter` is an optional infrastructure adapter: it replaces core trace/suspend in-memory repository defaults with JDBC implementations when enabled. It must not register business actions, configure Memory/Human Review storage, or expose endpoints.
 
-`actiongraph-persistence-jdbc` is a low-level core persistence library for trace, suspended runs, and trace read models. It is usable without Spring and is the dependency that specialized services can wire manually.
-
-`actiongraph-memory-jdbc` and `actiongraph-human-review-jdbc` are optional low-level persistence libraries. They must depend on their domain contracts plus core JDBC helpers, and must not register Spring beans by themselves.
+`actiongraph-persistence-jdbc` is a low-level persistence library for trace, suspended runs, trace read models, structured memory, and human-review tasks. It is usable without Spring and is the dependency that specialized services can wire manually. It must not register Spring beans by itself.
 
 Memory JDBC Spring wiring lives in `actiongraph-memory-spring-boot-starter`; human-review JDBC Spring wiring lives in `actiongraph-human-review-spring-boot-starter`. Both are behind the shared JDBC persistence switch, and neither path exposes endpoints.
 

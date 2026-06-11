@@ -1,6 +1,6 @@
 # Human Review Integration
 
-v2 human review now has a repository-backed integration point for external approval systems. The non-Spring task/repository API, callback handler, and reusable task query/decision projections live in `actiongraph-human-review`; durable storage lives in `actiongraph-human-review-jdbc`; Spring auto-configuration for repository-backed review policy and optional JDBC storage lives in `actiongraph-human-review-spring-boot-starter`; optional MVC task and callback endpoints live in `actiongraph-human-review-api-spring-boot-starter`.
+v2 human review now has a repository-backed integration point for external approval systems. The non-Spring task/repository API, callback handler, and reusable task query/decision projections live in `actiongraph-human-review`; durable storage lives in `actiongraph-persistence-jdbc`; Spring auto-configuration for repository-backed review policy and optional JDBC storage lives in `actiongraph-human-review-spring-boot-starter`; optional MVC task and callback endpoints live in `actiongraph-human-review-api-spring-boot-starter`.
 
 ## Dependency
 
@@ -110,7 +110,7 @@ ControlPlaneHttpResponse decided = review.decide(
 ## JDBC Usage
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-human-review-jdbc")
+implementation("com.actiongraph:actiongraph-persistence-jdbc")
 ```
 
 ```java
@@ -151,7 +151,7 @@ The human-review starter provides these defaults:
 - `HumanReviewPolicy` -> `RepositoryBackedHumanReviewPolicy`
 - `ApprovalChainResolver` -> `SingleStageApprovalChainResolver`
 
-Applications can replace these beans. For durable review tasks in Spring Boot services, enable the shared JDBC switch with a `DataSource`; the starter then creates a JDBC-backed `HumanReviewRepository` and still backs off if the application provides its own repository. Non-Spring services can use `actiongraph-human-review-jdbc` directly:
+Applications can replace these beans. For durable review tasks in Spring Boot services, enable the shared JDBC switch with a `DataSource`; the starter then creates a JDBC-backed `HumanReviewRepository` and still backs off if the application provides its own repository. Non-Spring services can use `actiongraph-persistence-jdbc` directly:
 
 ```java
 @Bean

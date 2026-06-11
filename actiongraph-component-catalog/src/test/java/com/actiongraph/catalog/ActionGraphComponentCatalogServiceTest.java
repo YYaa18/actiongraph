@@ -120,12 +120,16 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(component -> {
                     assertThat(component.requires())
-                            .containsExactly("actiongraph-memory", "actiongraph-memory-jdbc",
+                            .containsExactly("actiongraph-memory", "actiongraph-persistence-jdbc",
                                     "actiongraph-jdbc-spring-boot-starter");
                     assertThat(component.capabilities())
                             .contains("spring-memory-autoconfiguration", "spring-jdbc-memory-repository");
                 });
         assertThat(service.component("actiongraph-memory-jdbc" + "-spring-boot-starter"))
+                .isEmpty();
+        assertThat(service.component("actiongraph-memory-jdbc"))
+                .isEmpty();
+        assertThat(service.component("actiongraph-human-review-jdbc"))
                 .isEmpty();
         assertThat(service.component("actiongraph-governance-human-review"))
                 .isEmpty();

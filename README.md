@@ -66,9 +66,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, rule-based permissions, amount review attributes, and risk-based approval routing |
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
-| `actiongraph-persistence-jdbc` | Core JDBC repositories for trace, suspended runs, and trace read model |
-| `actiongraph-memory-jdbc` | Optional JDBC repository for structured memory |
-| `actiongraph-human-review-jdbc` | Optional JDBC repository for human-review tasks |
+| `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, trace read model, structured memory, and human-review tasks |
 | `actiongraph-spring-boot-starter` | Spring Boot auto-configuration and annotation scanning; brings `actiongraph-annotations` transitively |
 | `actiongraph-governance-spring-boot-starter` | Optional Spring Boot governance policies for masking, amount limits, and rule-based permissions |
 | `actiongraph-governance-human-review-spring-boot-starter` | Optional Spring Boot human-review governance policies for amount review attributes and approval-chain routing |
@@ -164,7 +162,7 @@ actiongraph:
     max-limit: 200
 ```
 
-When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, and trace read-model repositories. `actiongraph-memory-spring-boot-starter` includes property-gated JDBC memory repository auto-configuration, and `actiongraph-human-review-spring-boot-starter` includes the property-gated JDBC human-review repository auto-configuration. Non-Spring services can still use `actiongraph-persistence-jdbc`, `actiongraph-memory-jdbc`, and `actiongraph-human-review-jdbc` directly and wire repositories by hand.
+When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, and trace read-model repositories. `actiongraph-memory-spring-boot-starter` includes property-gated JDBC memory repository auto-configuration, and `actiongraph-human-review-spring-boot-starter` includes the property-gated JDBC human-review repository auto-configuration. Non-Spring services can still use `actiongraph-persistence-jdbc` directly and wire runtime, memory, or human-review repositories by hand.
 
 Non-Spring services can use `actiongraph-governance` directly when they want packaged masking, amount-limit, rule-based permission policies, review attributes, or risk-based approval-chain routing without Spring auto-configuration.
 
