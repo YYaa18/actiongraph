@@ -15,6 +15,7 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 - Provider-neutral runtime observability SPI with Spring Boot wiring and optional Micrometer-backed observation sink.
 - Checked-in public API snapshot and Gradle verification task for compatibility-sensitive published module surfaces.
 - JSpecify null-safety contracts for published source packages, with `@NullMarked` defaults and explicit `@Nullable` markers on optional public API boundaries.
+- ArchUnit-style architecture guard tests for published module dependencies, core import boundaries, Spring isolation, and sample-code dependency bans.
 
 ### Changed
 

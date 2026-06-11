@@ -269,6 +269,82 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void publishedLibraryModulesRespectArchitectureDependencyGraph() throws IOException {
+        Path root = repositoryRoot();
+        java.util.Map<String, Set<String>> allowedDependencies = java.util.Map.of(
+                "actiongraph-core", Set.of(),
+                "actiongraph-control-plane-api", Set.of(),
+                "actiongraph-human-review", Set.of("actiongraph-core"),
+                "actiongraph-governance", Set.of("actiongraph-core", "actiongraph-human-review"),
+                "actiongraph-llm-deepseek", Set.of("actiongraph-core"),
+                "actiongraph-persistence-jdbc", Set.of("actiongraph-core", "actiongraph-human-review"),
+                "actiongraph-console", Set.of("actiongraph-core", "actiongraph-persistence-jdbc"),
+                "actiongraph-spring-boot-starter", Set.of(
+                        "actiongraph-core",
+                        "actiongraph-control-plane-api",
+                        "actiongraph-console",
+                        "actiongraph-governance",
+                        "actiongraph-human-review",
+                        "actiongraph-persistence-jdbc")
+        );
+
+        assertThat(allowedDependencies.keySet())
+                .as("architecture dependency graph should cover every published library module")
+                .containsExactlyInAnyOrderElementsOf(parseLibraryModules(root.resolve("build.gradle.kts")));
+        for (var entry : allowedDependencies.entrySet()) {
+            Set<String> gradleDependencies = parseModules(
+                    root.resolve(entry.getKey()).resolve("build.gradle.kts"),
+                    "(?:api|implementation|compileOnly|runtimeOnly)\\(project\\(\":([^\"]+)\"\\)\\)"
+            );
+            assertThat(gradleDependencies)
+                    .as(entry.getKey() + " must only depend on approved lower-layer modules")
+                    .containsExactlyInAnyOrderElementsOf(entry.getValue());
+        }
+    }
+
+    @Test
+    void publishedMainSourcesRespectArchitectureImportBoundaries() throws IOException {
+        Path root = repositoryRoot();
+        Set<String> libraryModules = parseLibraryModules(root.resolve("build.gradle.kts"));
+        Set<String> nonSpringModules = libraryModules.stream()
+                .filter(module -> !module.equals("actiongraph-spring-boot-starter"))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<String> coreForbiddenImports = Set.of(
+                "org.springframework.",
+                "io.micrometer.",
+                "java.sql.",
+                "javax.sql.",
+                "com.fasterxml.",
+                "okhttp3.",
+                "com.actiongraph.samples."
+        );
+
+        for (String module : libraryModules) {
+            Path modulePath = root.resolve(module);
+            for (Path sourceFile : javaSourceFiles(modulePath)) {
+                String source = Files.readString(sourceFile, StandardCharsets.UTF_8);
+                assertThat(source)
+                        .as(module + " library main sources must not depend on sample code: "
+                                + root.relativize(sourceFile))
+                        .doesNotContain("import com.actiongraph.samples.");
+                if (nonSpringModules.contains(module)) {
+                    assertThat(source)
+                            .as(module + " is not the Spring integration layer: " + root.relativize(sourceFile))
+                            .doesNotContain("import org.springframework.");
+                }
+                if (module.equals("actiongraph-core")) {
+                    for (String forbiddenImport : coreForbiddenImports) {
+                        assertThat(source)
+                                .as("core must remain provider, persistence, sample, and Spring agnostic: "
+                                        + root.relativize(sourceFile))
+                                .doesNotContain("import " + forbiddenImport);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     void catalogRelationshipsReferenceExistingModules() {
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
         Set<String> catalogModules = service.components().stream()

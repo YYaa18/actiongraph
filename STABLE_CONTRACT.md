@@ -96,6 +96,7 @@ Compatibility-sensitive changes should include at least one of:
 - source-level tests using the public interface;
 - Java 8 compilation tests for Java 8 artifacts;
 - public API snapshot verification;
+- architecture guard tests for published module dependency direction and forbidden framework/provider imports;
 - component catalog or documentation guard tests;
 - migration notes in `CHANGELOG.md`;
 - explicit compatibility notes in `docs/frameworkization/`.
