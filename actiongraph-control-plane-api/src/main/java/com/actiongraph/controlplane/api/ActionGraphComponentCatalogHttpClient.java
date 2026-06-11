@@ -94,20 +94,23 @@ public final class ActionGraphComponentCatalogHttpClient {
             requestPath = "/" + requestPath;
         }
         HttpURLConnection connection = (HttpURLConnection) new URL(catalogApiBaseUrl + requestPath).openConnection();
-        connection.setRequestMethod("GET");
-        connection.setConnectTimeout(connectTimeoutMillis);
-        connection.setReadTimeout(readTimeoutMillis);
-        applyHeaders(connection, defaultHeaders);
-        applyHeaders(connection, requestHeaders);
-        connection.setRequestProperty("Accept", "application/json");
-        if (!isBlank(sharedSecret)) {
-            connection.setRequestProperty(tokenHeader, sharedSecret);
-        }
+        try {
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(connectTimeoutMillis);
+            connection.setReadTimeout(readTimeoutMillis);
+            applyHeaders(connection, defaultHeaders);
+            applyHeaders(connection, requestHeaders);
+            connection.setRequestProperty("Accept", "application/json");
+            if (!isBlank(sharedSecret)) {
+                connection.setRequestProperty(tokenHeader, sharedSecret);
+            }
 
-        int statusCode = connection.getResponseCode();
-        String body = readBody(statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream());
-        connection.disconnect();
-        return new ControlPlaneHttpResponse(statusCode, body);
+            int statusCode = connection.getResponseCode();
+            String body = readBody(statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream());
+            return new ControlPlaneHttpResponse(statusCode, body);
+        } finally {
+            connection.disconnect();
+        }
     }
 
     private static void applyHeaders(HttpURLConnection connection, Map<String, String> headers) {

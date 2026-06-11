@@ -86,30 +86,33 @@ public final class ActionGraphRuntimeHttpClient {
             requestPath = "/" + requestPath;
         }
         HttpURLConnection connection = (HttpURLConnection) new URL(runtimeApiBaseUrl + requestPath).openConnection();
-        connection.setRequestMethod("POST");
-        connection.setConnectTimeout(connectTimeoutMillis);
-        connection.setReadTimeout(readTimeoutMillis);
-        applyHeaders(connection, defaultHeaders);
-        applyHeaders(connection, requestHeaders);
-        connection.setRequestProperty("Accept", "application/json");
-        connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-        if (!isBlank(sharedSecret)) {
-            connection.setRequestProperty(tokenHeader, sharedSecret);
-        }
-        connection.setDoOutput(true);
-        byte[] payload = (jsonBody == null ? "" : jsonBody).getBytes(StandardCharsets.UTF_8);
-        connection.setFixedLengthStreamingMode(payload.length);
-        OutputStream output = connection.getOutputStream();
         try {
-            output.write(payload);
-        } finally {
-            output.close();
-        }
+            connection.setRequestMethod("POST");
+            connection.setConnectTimeout(connectTimeoutMillis);
+            connection.setReadTimeout(readTimeoutMillis);
+            applyHeaders(connection, defaultHeaders);
+            applyHeaders(connection, requestHeaders);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            if (!isBlank(sharedSecret)) {
+                connection.setRequestProperty(tokenHeader, sharedSecret);
+            }
+            connection.setDoOutput(true);
+            byte[] payload = (jsonBody == null ? "" : jsonBody).getBytes(StandardCharsets.UTF_8);
+            connection.setFixedLengthStreamingMode(payload.length);
+            OutputStream output = connection.getOutputStream();
+            try {
+                output.write(payload);
+            } finally {
+                output.close();
+            }
 
-        int statusCode = connection.getResponseCode();
-        String body = readBody(statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream());
-        connection.disconnect();
-        return new ControlPlaneHttpResponse(statusCode, body);
+            int statusCode = connection.getResponseCode();
+            String body = readBody(statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream());
+            return new ControlPlaneHttpResponse(statusCode, body);
+        } finally {
+            connection.disconnect();
+        }
     }
 
     private static void applyHeaders(HttpURLConnection connection, Map<String, String> headers) {
