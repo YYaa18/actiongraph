@@ -278,6 +278,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Component catalog](docs/frameworkization/component-catalog.md)
 - [Control-plane API contracts](docs/frameworkization/control-plane-api.md)
 - [Java 8 legacy integration](docs/frameworkization/java8-legacy-integration.md)
+- [Java 8 Maven consumer example](docs/examples/java8-maven-consumer)
 - [Java 8 component catalog client example](docs/examples/java8-component-catalog-client)
 - [Java 8 catalog HTTP client example](docs/examples/java8-catalog-http-client)
 - [Java 8 legacy client example](docs/examples/java8-legacy-client)

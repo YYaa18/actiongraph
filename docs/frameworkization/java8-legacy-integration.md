@@ -55,14 +55,15 @@ That path is useful when a legacy gateway should query the deployed catalog endp
 
 ## Copy-Paste Example
 
-A Java 8 client template lives at:
+Java 8 client templates live at:
 
 ```text
+docs/examples/java8-maven-consumer/src/main/java/com/company/legacy/MavenJava8ActionGraphConsumerUsage.java
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
 docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
 ```
 
-The test suite compiles those exact files with `javac --release 8`, so the examples are both documentation and compatibility evidence. They demonstrate runtime start calls, catalog metadata calls, response handling, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
+The test suite compiles the standalone source examples with `javac --release 8`, so those examples are both documentation and compatibility evidence. The root build also runs `verifyJava8MavenConsumer`: it publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles the Maven example with Maven Compiler Plugin `release=8`. Together, these gates prove both source compatibility and real Maven BOM consumption for Java 8 callers. The examples demonstrate runtime start calls, catalog metadata calls, response handling, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
 
 ## Older-Than-Java-8 HTTP Gateway Example
 
@@ -113,4 +114,4 @@ Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Com
 
 This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.
 
-The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the runtime HTTP client, component catalog HTTP client, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, then scans for ActionGraph imports and Java 8-only conveniences. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.
+The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the runtime HTTP client, component catalog HTTP client, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The root `check` task also runs the Maven consumer gate described above, so BOM import and published POM consumption stay covered. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, then scans for ActionGraph imports and Java 8-only conveniences. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.

@@ -49,6 +49,9 @@ val publishableModuleDescriptions = mapOf(
     platformModuleName to "Bill of materials for aligning ActionGraph module versions."
 ) + libraryModuleDescriptions
 
+val java8MavenConsumerDir = layout.projectDirectory.dir("docs/examples/java8-maven-consumer")
+val java8MavenConsumerBuildDir = layout.buildDirectory.dir("java8-maven-consumer")
+
 fun classFileMajorVersion(file: File): Int {
     DataInputStream(FileInputStream(file)).use { input ->
         val magic = input.readInt()
@@ -226,4 +229,29 @@ subprojects {
             }
         }
     }
+}
+
+val verifyJava8MavenConsumer = tasks.register<Exec>("verifyJava8MavenConsumer") {
+    group = "verification"
+    description = "Verifies a Java 8 Maven consumer can import the BOM and Java 8 ActionGraph client artifacts."
+    dependsOn(
+            ":actiongraph-bom:publishToMavenLocal",
+            ":actiongraph-component-catalog:publishToMavenLocal",
+            ":actiongraph-control-plane-api:publishToMavenLocal"
+    )
+    workingDir = java8MavenConsumerDir.asFile
+    inputs.dir(java8MavenConsumerDir)
+    outputs.dir(java8MavenConsumerBuildDir)
+    outputs.upToDateWhen { false }
+    commandLine(
+            "mvn",
+            "-q",
+            "-Djava8.consumer.build.directory=${java8MavenConsumerBuildDir.get().asFile.absolutePath}",
+            "clean",
+            "compile"
+    )
+}
+
+tasks.named("check") {
+    dependsOn(verifyJava8MavenConsumer)
 }

@@ -22,6 +22,12 @@ docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionG
 docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
 ```
 
+The root build also compiles a real Maven Java 8 consumer after publishing the BOM and Java 8 client artifacts to Maven Local:
+
+```text
+docs/examples/java8-maven-consumer
+```
+
 Systems older than Java 8 should not depend on this artifact. For those estates, the repository also provides a raw HTTP gateway example that imports no ActionGraph classes and is compiled in CI with `javac --release 8` and an empty classpath:
 
 ```text

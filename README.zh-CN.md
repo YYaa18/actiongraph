@@ -337,6 +337,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - [组件目录 Component Catalog](docs/frameworkization/component-catalog.md)
 - [控制层响应契约](docs/frameworkization/control-plane-api.md)
 - [Java 8 老系统接入](docs/frameworkization/java8-legacy-integration.md)
+- [Java 8 Maven 消费者示例](docs/examples/java8-maven-consumer)
 - [Java 8 组件目录客户端示例](docs/examples/java8-component-catalog-client)
 - [Java 8 组件目录 HTTP 客户端示例](docs/examples/java8-catalog-http-client)
 - [Java 8 老系统客户端示例](docs/examples/java8-legacy-client)

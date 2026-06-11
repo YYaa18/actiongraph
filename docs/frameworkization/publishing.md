@@ -53,6 +53,14 @@ Each published library module emits:
 ./gradlew publishToMavenLocal
 ```
 
+Java 8 client compatibility includes a Maven consumption gate:
+
+```bash
+./gradlew verifyJava8MavenConsumer
+```
+
+That task publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles `docs/examples/java8-maven-consumer` with Maven Compiler Plugin `release=8`. It proves that a legacy Maven application can import the BOM and omit individual ActionGraph versions while consuming the Java 8 client artifacts.
+
 GitHub Actions also runs the CI workflow on every push to `main` and every pull request:
 
 ```bash
@@ -126,7 +134,7 @@ Control-plane response contracts, lightweight Runtime and Component Catalog HTTP
 implementation("com.actiongraph:actiongraph-control-plane-api")
 ```
 
-This artifact is compiled with `--release 8` and has no runtime dependencies, so legacy Java 8 systems can use `ActionGraphRuntimeHttpClient` to call a deployed Runtime API, use `ActionGraphComponentCatalogHttpClient` to inspect a deployed Component Catalog endpoint, and custom gateways can use `ControlPlaneTokenVerifier` without importing Spring Boot, JDBC, LLM providers, or JSON libraries. The root build runs `verifyJava8Compatibility` for Java 8 compatible modules during `check`; it verifies no main runtime dependencies are resolved and no produced class file exceeds Java 8 bytecode major version `52`.
+This artifact is compiled with `--release 8` and has no runtime dependencies, so legacy Java 8 systems can use `ActionGraphRuntimeHttpClient` to call a deployed Runtime API, use `ActionGraphComponentCatalogHttpClient` to inspect a deployed Component Catalog endpoint, and custom gateways can use `ControlPlaneTokenVerifier` without importing Spring Boot, JDBC, LLM providers, or JSON libraries. The root build runs `verifyJava8Compatibility` for Java 8 compatible modules during `check`; it verifies no main runtime dependencies are resolved and no produced class file exceeds Java 8 bytecode major version `52`. The same `check` path also runs `verifyJava8MavenConsumer`, proving BOM-based Maven consumption of these Java 8 artifacts.
 
 Repository-backed human review adds:
 

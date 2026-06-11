@@ -117,7 +117,7 @@ The default catalog includes profiles such as:
 | `console-control-plane` | Read-only console and audit export surface |
 | `full-control-plane` | Built-in endpoint aggregate |
 | `ecosystem-introspection` | Component catalog modules |
-| `java8-legacy-client` | Java 8 client-side integration over a deployed runtime API |
+| `java8-legacy-client` | Java 8 client-side integration over deployed runtime and component catalog APIs |
 | `full-pilot-service` | Pilot-oriented full composition |
 
 Profiles are guidance, not magic auto-installers. A service still chooses dependencies explicitly through Gradle/Maven and enables each endpoint family through its own `actiongraph.*` property.
@@ -146,6 +146,7 @@ The catalog is part of the release contract, not only documentation. Tests verif
 - every module listed as Java 8 compatible by the build passes the Java 8 bytecode and dependency guard
 - the documented Java 8 component catalog example can be consumed from standalone `javac --release 8` source
 - the documented Java 8 control-plane client example can be consumed from standalone `javac --release 8` source
+- the documented Java 8 Maven consumer can import the BOM and compile against the published Java 8 client artifacts
 - the documented older-than-Java-8 raw HTTP gateway example can be consumed from standalone `javac --release 8` source with an empty classpath and no ActionGraph imports
 
 Adding a module therefore requires updating the catalog, assigning compatibility, and deciding whether the artifact belongs in the BOM.
