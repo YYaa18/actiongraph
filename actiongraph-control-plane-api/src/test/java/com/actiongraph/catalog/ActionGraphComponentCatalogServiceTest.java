@@ -49,6 +49,7 @@ class ActionGraphComponentCatalogServiceTest {
                                     "actiongraph-persistence-jdbc");
                     assertThat(component.capabilities())
                             .contains("spring-runtime-autoconfiguration", "action-scanning",
+                                    "observation-sink-autoconfiguration", "micrometer-observability",
                                     "spring-jdbc-runtime-repositories", "spring-memory-autoconfiguration",
                                     "spring-human-review-policy", "spring-governance-autoconfiguration",
                                     "runtime-http-api", "runtime-request-trace-metadata",
@@ -70,6 +71,7 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(component -> assertThat(component.capabilities())
                         .contains("runtime-entry-service", "runtime-request-trace-metadata",
+                                "observability-spi",
                                 "goal-interpretation", "blackboard-seeding",
                                 "structured-memory", "context-loading",
                                 "annotation-actions", "reflection-adapter"));

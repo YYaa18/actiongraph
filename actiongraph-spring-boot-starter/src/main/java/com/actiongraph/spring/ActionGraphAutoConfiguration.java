@@ -3,6 +3,8 @@ package com.actiongraph.spring;
 import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.action.DefaultActionRegistry;
+import com.actiongraph.observability.NoopObservationSink;
+import com.actiongraph.observability.ObservationSink;
 import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.planning.Planner;
 import com.actiongraph.policy.DataMaskingPolicy;
@@ -83,6 +85,12 @@ public class ActionGraphAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
+    public ObservationSink actionGraphObservationSink() {
+        return NoopObservationSink.INSTANCE;
+    }
+
+    @Bean
     @ConditionalOnMissingBean(Executor.class)
     public GoapExecutor actionGraphExecutor(
             Planner planner,
@@ -92,6 +100,7 @@ public class ActionGraphAutoConfiguration {
             SuspendedRunRepository suspendedRunRepository,
             DataMaskingPolicy maskingPolicy,
             ReviewAttributeContributor reviewAttributeContributor,
+            ObservationSink observationSink,
             ActionGraphProperties properties
     ) {
         return GoapExecutor.builder()
@@ -102,6 +111,7 @@ public class ActionGraphAutoConfiguration {
                 .suspendedRunRepository(suspendedRunRepository)
                 .maskingPolicy(maskingPolicy)
                 .reviewAttributeContributor(reviewAttributeContributor)
+                .observationSink(observationSink)
                 .maxSteps(properties.getExecutor().getMaxSteps())
                 .build();
     }

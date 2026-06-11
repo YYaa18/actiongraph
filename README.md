@@ -28,6 +28,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - SLF4J API debug logging at planner, executor, compensation, and suspend/resume decision points without binding a logging implementation
 - Public contract Javadocs for core Action, Policy, Human Review, Suspension, Blackboard, and Trace APIs
 - Typed exception hierarchy for framework input, configuration, conflict, not-found, and integration failures
+- Provider-neutral Observability SPI plus optional Spring Boot Micrometer observation sink
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
@@ -54,13 +55,13 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | Module | Purpose |
 |---|---|
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | Core action, annotation adapter, planning, runtime, policy, trace, public contract Javadocs, SLF4J API diagnostics, goal interpretation, runtime entry, and structured memory APIs |
+| `actiongraph-core` | Core action, annotation adapter, planning, runtime, policy, trace, observability SPI, public contract Javadocs, SLF4J API diagnostics, goal interpretation, runtime entry, and structured memory APIs |
 | `actiongraph-control-plane-api` | Java 8 compatible component catalog, control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, rule-based permissions, amount review attributes, and risk-based approval routing |
 | `actiongraph-llm-deepseek` | Optional LLM package with provider-neutral goal interpretation, GoalCatalog prompt rendering, structured output parsing, and a DeepSeek-compatible client |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, trace read model, structured memory, and human-review tasks |
-| `actiongraph-spring-boot-starter` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review/console HTTP endpoints |
+| `actiongraph-spring-boot-starter` | Main Spring Boot integration: annotation scanning, runtime defaults, optional Micrometer observations, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review/console HTTP endpoints |
 | `actiongraph-console` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
 | `actiongraph-samples` | Pure Java sample applications |
 
@@ -244,6 +245,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Human review integration](docs/frameworkization/human-review.md)
 - [Runtime API](docs/frameworkization/runtime-api.md)
 - [Runtime invocation SPI](docs/frameworkization/runtime-invocation-spi.md)
+- [Observability SPI and Micrometer](docs/frameworkization/observability-spi.md)
 - [Component catalog](docs/frameworkization/component-catalog.md)
 - [Control-plane API contracts](docs/frameworkization/control-plane-api.md)
 - [Java 8 legacy integration](docs/frameworkization/java8-legacy-integration.md)

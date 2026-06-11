@@ -21,9 +21,10 @@ ActionGraph uses semantic versioning after 1.0:
 The following are public API after 1.0 unless documented otherwise:
 
 - published Maven artifacts listed in `README.md` and the component catalog;
-- public and protected types in `com.actiongraph.action`, `com.actiongraph.planning`, `com.actiongraph.runtime`, `com.actiongraph.runtime.api`, `com.actiongraph.runtime.api.batch`, `com.actiongraph.policy`, `com.actiongraph.trace`, `com.actiongraph.interpretation`, `com.actiongraph.memory`, and `com.actiongraph.exception`;
+- public and protected types in `com.actiongraph.action`, `com.actiongraph.planning`, `com.actiongraph.runtime`, `com.actiongraph.runtime.api`, `com.actiongraph.runtime.api.batch`, `com.actiongraph.policy`, `com.actiongraph.trace`, `com.actiongraph.interpretation`, `com.actiongraph.memory`, `com.actiongraph.observability`, and `com.actiongraph.exception`;
 - Java 8 control-plane API, HTTP gateway types, and `com.actiongraph.controlplane.ControlPlaneApiException` in `actiongraph-control-plane-api`;
 - SLF4J API remains the logging facade; ActionGraph library modules must not bind a logging implementation for applications;
+- `ObservationSink` remains the provider-neutral runtime observability SPI; Micrometer integration is optional and must not become a core dependency;
 - public APIs must document compatibility-sensitive semantics in Javadoc, including null handling, thread-safety expectations, failure outcomes, compensation behavior, audit ordering, and resume-claim concurrency where applicable;
 - Spring Boot configuration properties and documented `actiongraph.*` property names;
 - SQL schema expectations documented for JDBC persistence;

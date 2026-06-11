@@ -9,6 +9,10 @@ import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.action.annotation.ActionGraphAction;
 import com.actiongraph.action.annotation.ActionGraphGuard;
+import com.actiongraph.observability.NoopObservationSink;
+import com.actiongraph.observability.ObservationEvent;
+import com.actiongraph.observability.ObservationEventType;
+import com.actiongraph.observability.ObservationSink;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.policy.DataMaskingPolicy;
@@ -26,6 +30,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -152,6 +158,40 @@ class ActionGraphAutoConfigurationTest {
     void createsNoopMaskingPolicyByDefault() {
         contextRunner.run(context -> assertThat(context.getBean(DataMaskingPolicy.class))
                 .isInstanceOf(NoopMaskingPolicy.class));
+    }
+
+    @Test
+    void createsNoopObservationSinkByDefault() {
+        contextRunner.run(context -> assertThat(context.getBean(ObservationSink.class))
+                .isSameAs(NoopObservationSink.INSTANCE));
+    }
+
+    @Test
+    void usesApplicationObservationSinkInExecutor() {
+        List<ObservationEvent> events = new ArrayList<>();
+
+        contextRunner
+                .withBean(ObservationSink.class, () -> events::add)
+                .withBean(AnnotatedWorkflow.class)
+                .run(context -> {
+                    ActionRegistry registry = context.getBean(ActionRegistry.class);
+                    Executor executor = context.getBean(Executor.class);
+                    InMemoryBlackboard blackboard = new InMemoryBlackboard();
+                    blackboard.put(new InputId("I-1"));
+                    blackboard.addCondition(INPUT_PRESENT);
+
+                    var result = executor.run(
+                            new Goal("finishSpringWorkflow", Set.of(DONE)),
+                            blackboard,
+                            registry.all(),
+                            registry
+                    );
+
+                    assertThat(result.status()).isEqualTo(RunStatus.COMPLETED);
+                    assertThat(events)
+                            .extracting(ObservationEvent::type)
+                            .contains(ObservationEventType.ACTION_FINISHED, ObservationEventType.RUN_FINISHED);
+                });
     }
 
     @Test

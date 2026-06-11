@@ -14,10 +14,12 @@ dependencies {
     api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
     compileOnly("org.springframework:spring-web:6.1.14")
+    compileOnly("io.micrometer:micrometer-core:1.13.6")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+    testImplementation("io.micrometer:micrometer-core:1.13.6")
     testImplementation("com.h2database:h2:2.2.224")
 }
