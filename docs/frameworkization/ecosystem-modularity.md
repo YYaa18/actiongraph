@@ -7,8 +7,8 @@ ActionGraph keeps the runtime framework, Java 8 client surface, and optional con
 | Layer | Modules | Responsibility |
 |---|---|---|
 | Version platform | `actiongraph-bom` | Aligns all ActionGraph module versions for mix-and-match adoption |
-| Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace, goal interpretation contracts, Blackboard seeders, runtime entry service, structured memory contracts |
-| Pure Java adapters | `actiongraph-annotations`, `actiongraph-human-review`, `actiongraph-governance`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Annotation action registration, human-review model/services, governance policies, LLM interpretation, provider access, and low-level durable repositories |
+| Runtime kernel | `actiongraph-core` | Action SPI, annotation action registration, planner, executor, policy, trace, goal interpretation contracts, Blackboard seeders, runtime entry service, structured memory contracts |
+| Pure Java adapters | `actiongraph-human-review`, `actiongraph-governance`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Human-review model/services, governance policies, LLM interpretation, provider access, and low-level durable repositories |
 | Java 8 client surface | `actiongraph-control-plane-api` | Component metadata, composition profiles, Java 8 HTTP clients, shared response DTOs, shared-secret token verification |
 | Spring ecosystem | `actiongraph-spring-boot-starter` | Main Spring integration, opt-in runtime/catalog/review/console endpoints, JDBC/memory/human-review/governance wiring, and optional Console UI/API/export endpoints |
 | Console services | `actiongraph-console` | Read-only run query service, JDBC read model, CSV/JSONL audit export |
@@ -33,8 +33,7 @@ The module catalog is checked against `settings.gradle.kts`, the module governan
 ## Composition Rules
 
 - Consumers should import `actiongraph-bom` first, then choose the modules they need without repeating versions.
-- A pure Java service can depend only on `actiongraph-core` for execution, GoalCatalog metadata, Blackboard seeding, structured memory, and the reusable runtime entry service.
-- Pure Java annotation-based registration adds `actiongraph-annotations`.
+- A pure Java service can depend only on `actiongraph-core` for execution, annotation-based action registration, GoalCatalog metadata, Blackboard seeding, structured memory, and the reusable runtime entry service.
 - Structured long-term memory is part of `actiongraph-core`.
 - Repository-backed external review tasks, callback handling, and stable task query/decision projections add `actiongraph-human-review`.
 - Non-Spring masking, amount-limit, rule-based permission, review-attribute, and approval-routing policies add `actiongraph-governance`.

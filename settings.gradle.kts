@@ -2,7 +2,6 @@ rootProject.name = "actiongraph"
 
 include("actiongraph-core")
 include("actiongraph-bom")
-include("actiongraph-annotations")
 include("actiongraph-control-plane-api")
 include("actiongraph-human-review")
 include("actiongraph-llm-deepseek")

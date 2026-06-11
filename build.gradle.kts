@@ -16,7 +16,6 @@ val java8CompatibleModules = setOf(
 
 val libraryModuleDescriptions = mapOf(
     "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, trace, goal interpretation, runtime entry, and structured memory APIs.",
-    "actiongraph-annotations" to "Optional pure Java annotation adapter for ActionGraph action registration.",
     "actiongraph-control-plane-api" to "Java 8 compatible component catalog, control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate and split HTTP clients, and shared-secret token verification.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, approval chains, and task query APIs for ActionGraph.",
     "actiongraph-llm-deepseek" to "Provider-neutral LLM goal interpretation support and DeepSeek-compatible client provider for ActionGraph.",

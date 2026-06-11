@@ -21,8 +21,7 @@ The target module surface is:
 | Target module | Role |
 |---|---|
 | `actiongraph-bom` | Version platform |
-| `actiongraph-core` | Runtime kernel and small pure Java contracts |
-| `actiongraph-annotations` | Annotation action adapter |
+| `actiongraph-core` | Runtime kernel, annotation action adapter, and small pure Java contracts |
 | `actiongraph-control-plane-api` | Java 8 compatible component metadata, HTTP clients, and control-plane contracts |
 | `actiongraph-human-review` | Human-review contracts, policies, callbacks, and storage adapters |
 | `actiongraph-governance` | Masking, permission, amount, and approval-routing policies |
@@ -39,7 +38,6 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 <!-- module-governance:start -->
 | Current module | Disposition | Consolidation target |
 |---|---|---|
-| `actiongraph-annotations` | keep-target | `actiongraph-annotations` |
 | `actiongraph-bom` | keep-target | `actiongraph-bom` |
 | `actiongraph-console` | keep-target | `actiongraph-console` |
 | `actiongraph-control-plane-api` | keep-java8-client | `actiongraph-control-plane-api` |

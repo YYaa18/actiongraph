@@ -7,8 +7,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | Module | Artifact | Purpose |
 |---|---|---|
 | `actiongraph-bom` | `com.actiongraph:actiongraph-bom:0.1.0` | BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, trace, goal interpretation, runtime entry, and structured memory APIs |
-| `actiongraph-annotations` | `com.actiongraph:actiongraph-annotations:0.1.0` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
+| `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, annotation adapter, planning, runtime, policy, trace, goal interpretation, runtime entry, and structured memory APIs |
 | `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible component metadata, compatibility labels, composition profiles, control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
@@ -72,12 +71,6 @@ Pure Java/non-Spring consumers can depend on:
 ```kotlin
 implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
 implementation("com.actiongraph:actiongraph-core")
-```
-
-Pure Java annotation-based action registration adds:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-annotations")
 ```
 
 Structured memory context is part of `actiongraph-core`; Spring Boot structured memory defaults are provided by `actiongraph-spring-boot-starter`.

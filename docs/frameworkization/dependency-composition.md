@@ -20,9 +20,7 @@ Use this for a service or library that wires actions, repositories, and entrypoi
 implementation("com.actiongraph:actiongraph-core")
 ```
 
-`actiongraph-core` provides Action SPI, planning, execution, policy, trace, compensation, suspend/resume, GoalCatalog metadata, GoalInterpreter contracts, Blackboard seeders, `ActionGraphRuntimeApiService`, and structured memory contracts/defaults.
-
-Add `actiongraph-annotations` when ordinary Java methods should be registered as Actions without implementing `Action`.
+`actiongraph-core` provides Action SPI, annotation-based action registration, planning, execution, policy, trace, compensation, suspend/resume, GoalCatalog metadata, GoalInterpreter contracts, Blackboard seeders, `ActionGraphRuntimeApiService`, and structured memory contracts/defaults.
 
 Add `actiongraph-persistence-jdbc` when a non-Spring service wants durable trace, suspended-run, trace read-model, memory, or human-review repositories.
 

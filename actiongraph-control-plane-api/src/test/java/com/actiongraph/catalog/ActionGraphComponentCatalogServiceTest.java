@@ -43,8 +43,8 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(component -> {
                     assertThat(component.requires())
-                            .containsExactly("actiongraph-core", "actiongraph-annotations",
-                                    "actiongraph-console", "actiongraph-control-plane-api",
+                            .containsExactly("actiongraph-core", "actiongraph-console",
+                                    "actiongraph-control-plane-api",
                                     "actiongraph-governance", "actiongraph-human-review",
                                     "actiongraph-persistence-jdbc");
                     assertThat(component.capabilities())
@@ -63,13 +63,16 @@ class ActionGraphComponentCatalogServiceTest {
                 .isEmpty();
         assertThat(service.component("actiongraph-llm"))
                 .isEmpty();
+        assertThat(service.component("actiongraph-annotations"))
+                .isEmpty();
         assertThat(service.component("actiongraph-core"))
                 .isPresent()
                 .get()
                 .satisfies(component -> assertThat(component.capabilities())
                         .contains("runtime-entry-service", "runtime-request-trace-metadata",
                                 "goal-interpretation", "blackboard-seeding",
-                                "structured-memory", "context-loading"));
+                                "structured-memory", "context-loading",
+                                "annotation-actions", "reflection-adapter"));
         assertThat(service.component("actiongraph-component-catalog-spring-boot-starter"))
                 .isEmpty();
         assertThat(service.component("actiongraph-control-plane-api"))

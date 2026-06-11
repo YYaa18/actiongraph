@@ -181,8 +181,7 @@
   <tr><th>Maven 坐标（version 0.1.0）</th><th>内容</th><th>什么时候需要</th></tr>
   <tr><td><code>com.actiongraph:actiongraph-bom</code></td><td>版本对齐 BOM</td><td><b>推荐先引入</b>，之后各组件无需重复写版本号</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-spring-boot-starter</code></td><td>主 Spring Boot 集成：自动装配、注解 Bean 扫描、JDBC 仓储、结构化记忆、仓储型人审、治理策略、运行入口 / 组件目录 / 人审 HTTP 端点</td><td><b>业务执行型 Spring Boot 应用常用</b>，HTTP 端点仍由各自 <code>enabled</code> 配置显式打开</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、审批契约、Trace、GoalCatalog、运行入口服务、结构化记忆</td><td>非 Spring 应用需要最小运行内核、目标解释契约、启动/恢复入口服务或结构化记忆时直接依赖它</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-annotations</code></td><td>纯 Java 注解 + AnnotatedActionFactory</td><td>非 Spring 服务希望用注解注册普通方法时引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、注解适配器、审批契约、Trace、GoalCatalog、运行入口服务、结构化记忆</td><td>非 Spring 应用需要最小运行内核、目标解释契约、启动/恢复入口服务、结构化记忆，或用注解注册普通方法时直接依赖它</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-control-plane-api</code></td><td>Java 8 组件目录 + 控制层契约 + .properties 聚合配置 + 安全 GET 重试 + 聚合 / Runtime / Component Catalog / Human Review / Console HTTP client + 共享密钥 token 校验</td><td>自研网关、自定义 endpoint adapter、Java 8 老系统、审批门户或审计控制台需要读取组件目录、复用 <code>error/message</code> 响应结构、用一个聚合客户端、配置文件或拆分客户端调用已部署 Runtime API / 组件目录 / 人审任务 / Console 审计端点，或复用 token 语义时引入；内置 endpoint starter 会传递引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review</code></td><td>审批任务仓储 / 审批链 / 回调处理 / 查询决策服务 / repository-backed policy</td><td>非 Spring 服务需要对接外部审批系统时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>通用 LLM 解释器 + GoalCatalog prompt 渲染 + 结构化输出解析 + DeepSeek 兼容客户端</td><td>需要自然语言目标解释或使用 DeepSeek 兼容接口时</td></tr>
