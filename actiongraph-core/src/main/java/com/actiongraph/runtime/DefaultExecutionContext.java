@@ -15,6 +15,10 @@ import com.actiongraph.trace.TraceRepository;
 public record DefaultExecutionContext(
         Blackboard blackboard,
         TraceRepository trace,
-        String runId
+        String runId,
+        int attempt
 ) implements ExecutionContext {
+    public DefaultExecutionContext(Blackboard blackboard, TraceRepository trace, String runId) {
+        this(blackboard, trace, runId, 1);
+    }
 }

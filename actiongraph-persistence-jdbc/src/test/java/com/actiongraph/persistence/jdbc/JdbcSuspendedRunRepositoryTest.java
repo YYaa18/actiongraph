@@ -5,6 +5,7 @@ import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.runtime.BlackboardKey;
 import com.actiongraph.runtime.InMemoryBlackboard;
+import com.actiongraph.runtime.SnapshotState;
 import com.actiongraph.runtime.SuspendedRun;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Types;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -206,6 +208,63 @@ class JdbcSuspendedRunRepositoryTest {
 
         assertThat(repository.claimForResume("RUN-CLAIM")).isPresent();
         assertThat(repository.claimForResume("RUN-CLAIM")).isEmpty();
+    }
+
+    @Test
+    void persistsAndClaimsStaleRunningCheckpoint() {
+        JdbcSuspendedRunRepository repository = new JdbcSuspendedRunRepository(JdbcTestDataSources.h2());
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+        blackboard.addCondition(INPUT_PRESENT);
+
+        repository.saveCheckpoint(new SuspendedRun(
+                "RUN-CHECKPOINT",
+                new Goal("persistedGoal", Set.of(DRAFTED)),
+                blackboard,
+                List.of(new ActionId("action.one")),
+                List.of(new ActionId("action.one")),
+                null,
+                "running",
+                SnapshotState.RUNNING,
+                Instant.EPOCH,
+                new ActionId("action.two")
+        ));
+
+        SuspendedRun restored = repository.findByRunId("RUN-CHECKPOINT").orElseThrow();
+        assertThat(restored.snapshotState()).isEqualTo(SnapshotState.RUNNING);
+        assertThat(restored.pendingActionId()).isNull();
+        assertThat(restored.inFlightActionId()).isEqualTo(new ActionId("action.two"));
+        assertThat(restored.heartbeatAt()).isEqualTo(Instant.EPOCH);
+        assertThat(repository.claimForResume("RUN-CHECKPOINT")).isEmpty();
+
+        SuspendedRun claimed = repository.claimStaleRunning(Instant.now()).orElseThrow();
+
+        assertThat(claimed.runId()).isEqualTo("RUN-CHECKPOINT");
+        assertThat(repository.claimStaleRunning(Instant.now())).isEmpty();
+    }
+
+    @Test
+    void heartbeatAndMarkInFlightKeepRunningCheckpointFresh() {
+        JdbcSuspendedRunRepository repository = new JdbcSuspendedRunRepository(JdbcTestDataSources.h2());
+        repository.saveCheckpoint(new SuspendedRun(
+                "RUN-FRESH",
+                new Goal("persistedGoal", Set.of(DRAFTED)),
+                new InMemoryBlackboard(),
+                List.of(),
+                List.of(),
+                null,
+                "running",
+                SnapshotState.RUNNING,
+                Instant.EPOCH,
+                null
+        ));
+
+        assertThat(repository.markInFlight("RUN-FRESH", new ActionId("action.two"))).isTrue();
+        repository.heartbeat("RUN-FRESH");
+
+        SuspendedRun restored = repository.findByRunId("RUN-FRESH").orElseThrow();
+        assertThat(restored.inFlightActionId()).isEqualTo(new ActionId("action.two"));
+        assertThat(restored.heartbeatAt()).isAfter(Instant.EPOCH);
+        assertThat(repository.claimStaleRunning(Instant.now().minus(Duration.ofSeconds(1)))).isEmpty();
     }
 
     @Test

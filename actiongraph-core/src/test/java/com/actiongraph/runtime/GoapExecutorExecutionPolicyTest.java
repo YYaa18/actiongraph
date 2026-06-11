@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +42,7 @@ class GoapExecutorExecutionPolicyTest {
 
         assertThat(result.status()).isEqualTo(RunStatus.COMPLETED);
         assertThat(action.attempts()).isEqualTo(3);
+        assertThat(action.contextAttempts()).containsExactly(1, 2, 3);
         assertThat(traceRepository.findByRun(result.runId()))
                 .filteredOn(event -> event.type() == TraceEventType.ACTION_RETRIED)
                 .hasSize(2)
@@ -121,6 +123,7 @@ class GoapExecutorExecutionPolicyTest {
 
     private static final class RetryThenSuccessAction extends BaseAction {
         private final AtomicInteger attempts = new AtomicInteger();
+        private final CopyOnWriteArrayList<Integer> contextAttempts = new CopyOnWriteArrayList<>();
 
         @Override
         public ActionId id() {
@@ -134,6 +137,7 @@ class GoapExecutorExecutionPolicyTest {
 
         @Override
         public ActionResult execute(ExecutionContext context) {
+            contextAttempts.add(context.attempt());
             if (attempts.incrementAndGet() < 3) {
                 throw new IllegalStateException("transient");
             }
@@ -142,6 +146,10 @@ class GoapExecutorExecutionPolicyTest {
 
         int attempts() {
             return attempts.get();
+        }
+
+        List<Integer> contextAttempts() {
+            return contextAttempts;
         }
     }
 

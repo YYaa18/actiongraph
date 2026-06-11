@@ -1,6 +1,7 @@
 package com.actiongraph.spring;
 
 import com.actiongraph.api.Experimental;
+import com.actiongraph.durability.RecoveryPolicy;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.runtime.GoapExecutor;
@@ -20,6 +21,7 @@ public class ActionGraphProperties {
     private final ValidationProperties validation = new ValidationProperties();
     private final ExecutionProperties execution = new ExecutionProperties();
     private final LlmProperties llm = new LlmProperties();
+    private final DurabilityProperties durability = new DurabilityProperties();
 
     public PlannerProperties getPlanner() {
         return planner;
@@ -55,6 +57,14 @@ public class ActionGraphProperties {
     )
     public LlmProperties getLlm() {
         return llm;
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Durability configuration is experimental until MS1 crash-recovery pilots complete."
+    )
+    public DurabilityProperties getDurability() {
+        return durability;
     }
 
     public static final class PlannerProperties {
@@ -250,6 +260,70 @@ public class ActionGraphProperties {
             throw new ActionGraphConfigurationException(
                     "actiongraph.llm.api-key is not supported. Use actiongraph.llm.api-key-env instead."
             );
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Durability configuration is experimental until MS1 crash-recovery pilots complete."
+    )
+    public static final class DurabilityProperties {
+        private boolean enabled = false;
+        private RecoveryPolicy recovery = RecoveryPolicy.CONTINUE;
+        private Duration heartbeatInterval = GoapExecutor.DEFAULT_HEARTBEAT_INTERVAL;
+        private Duration staleAfter = Duration.ofMinutes(5);
+        private Duration recovererPeriod = Duration.ofSeconds(60);
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public RecoveryPolicy getRecovery() {
+            return recovery;
+        }
+
+        public void setRecovery(RecoveryPolicy recovery) {
+            this.recovery = recovery;
+        }
+
+        public Duration getHeartbeatInterval() {
+            return heartbeatInterval;
+        }
+
+        public void setHeartbeatInterval(Duration heartbeatInterval) {
+            this.heartbeatInterval = requirePositiveDuration(heartbeatInterval, "heartbeatInterval");
+        }
+
+        public Duration getStaleAfter() {
+            return staleAfter;
+        }
+
+        public void setStaleAfter(Duration staleAfter) {
+            this.staleAfter = requirePositiveDuration(staleAfter, "staleAfter");
+        }
+
+        public Duration getRecovererPeriod() {
+            return recovererPeriod;
+        }
+
+        public void setRecovererPeriod(Duration recovererPeriod) {
+            Duration value = java.util.Objects.requireNonNull(recovererPeriod, "recovererPeriod");
+            if (value.isNegative()) {
+                throw new IllegalArgumentException("recovererPeriod must not be negative");
+            }
+            this.recovererPeriod = value;
+        }
+
+        private static Duration requirePositiveDuration(Duration duration, String name) {
+            Duration value = java.util.Objects.requireNonNull(duration, name);
+            if (value.isZero() || value.isNegative()) {
+                throw new IllegalArgumentException(name + " must be positive");
+            }
+            return value;
         }
     }
 

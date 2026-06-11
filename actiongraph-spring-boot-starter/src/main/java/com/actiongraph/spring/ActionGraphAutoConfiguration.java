@@ -8,6 +8,7 @@ import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.action.annotation.AnnotatedActionFactory;
 import com.actiongraph.api.Experimental;
 import com.actiongraph.contribution.ActionGraphContribution;
+import com.actiongraph.durability.RunRecoverer;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
@@ -47,13 +48,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.SmartLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @AutoConfiguration
 @EnableConfigurationProperties(ActionGraphProperties.class)
@@ -181,7 +185,46 @@ public class ActionGraphAutoConfiguration {
                 .reviewAttributeContributor(reviewAttributeContributor)
                 .observationSink(observationSink)
                 .maxSteps(properties.getExecutor().getMaxSteps())
+                .durabilityEnabled(properties.getDurability().isEnabled())
+                .heartbeatInterval(properties.getDurability().getHeartbeatInterval())
                 .build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "actiongraph.durability", name = "enabled", havingValue = "true")
+    @Experimental(
+            since = "0.2.0",
+            value = "Crash recovery auto-configuration is experimental until MS1 recovery pilots complete."
+    )
+    public RunRecoverer actionGraphRunRecoverer(
+            GoapExecutor executor,
+            SuspendedRunRepository suspendedRunRepository,
+            ActionRegistry registry,
+            ActionGraphProperties properties
+    ) {
+        return new RunRecoverer(
+                executor,
+                suspendedRunRepository,
+                registry.all(),
+                registry,
+                properties.getDurability().getRecovery()
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "actionGraphRunRecovererLifecycle")
+    @ConditionalOnProperty(prefix = "actiongraph.durability", name = "enabled", havingValue = "true")
+    @Experimental(
+            since = "0.2.0",
+            value = "Crash recovery scheduling is experimental until MS1 recovery pilots complete."
+    )
+    public SmartLifecycle actionGraphRunRecovererLifecycle(
+            RunRecoverer recoverer,
+            ActionGraphProperties properties
+    ) {
+        return new RecovererLifecycle(recoverer, properties.getDurability().getStaleAfter(),
+                properties.getDurability().getRecovererPeriod());
     }
 
     @Bean
@@ -346,5 +389,57 @@ public class ActionGraphAutoConfiguration {
 
     private String blankToDefault(String value, String defaultValue) {
         return value == null || value.isBlank() ? defaultValue : value;
+    }
+
+    private static final class RecovererLifecycle implements SmartLifecycle {
+        private final RunRecoverer recoverer;
+        private final Duration staleAfter;
+        private final Duration period;
+        private final AtomicBoolean running = new AtomicBoolean(false);
+        private Thread thread;
+
+        private RecovererLifecycle(RunRecoverer recoverer, Duration staleAfter, Duration period) {
+            this.recoverer = recoverer;
+            this.staleAfter = staleAfter;
+            this.period = period;
+        }
+
+        @Override
+        public void start() {
+            if (period.isZero() || !running.compareAndSet(false, true)) {
+                return;
+            }
+            thread = Thread.ofVirtual().name("actiongraph-run-recoverer").start(() -> {
+                while (running.get()) {
+                    try {
+                        recoverer.recoverOne(Instant.now().minus(staleAfter));
+                        Thread.sleep(period.toMillis());
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    } catch (RuntimeException ex) {
+                        LOGGER.debug("ActionGraph recoverer iteration failed", ex);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void stop() {
+            running.set(false);
+            if (thread != null) {
+                thread.interrupt();
+            }
+        }
+
+        @Override
+        public boolean isRunning() {
+            return running.get();
+        }
+
+        @Override
+        public boolean isAutoStartup() {
+            return true;
+        }
     }
 }

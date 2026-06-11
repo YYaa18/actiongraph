@@ -104,6 +104,13 @@ new JdbcSuspendedRunRepository(dataSource, "my_suspended_run", Duration.ofMinute
 
 Suspended-run snapshots also store a `snapshot_version`. The current `JdbcSuspendedRunRepository.SNAPSHOT_FORMAT_VERSION` is `1`; legacy rows without this column are migrated to version `1` on repository initialization. Unsupported versions raise `UnsupportedSuspendedRunSnapshotVersionException` before Goal/Blackboard JSON is restored. During `claimForResume`, that exception rolls the claim transaction back, so the row does not get stuck in `RESUMING`.
 
+MS1 reuses the same table for crash-recovery checkpoints. New columns
+`snapshot_state`, `heartbeat_at`, and `in_flight_action_id` distinguish
+human-review rows (`SUSPENDED`) from active run checkpoints (`RUNNING`). Stale
+running checkpoints are claimed through `claimStaleRunning(...)`; human-review
+resume still uses `claimForResume(...)`, so approval callbacks cannot claim
+running checkpoints by accident.
+
 Production applications should also constrain which Blackboard object types can be restored from suspended-run JSON. By default the repository allows all types to preserve backward compatibility. Passing a `BlackboardTypeRegistry` makes restore fail fast before `Class.forName(...)` for any class outside the allowlist:
 
 ```java

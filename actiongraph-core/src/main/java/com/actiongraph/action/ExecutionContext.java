@@ -1,5 +1,6 @@
 package com.actiongraph.action;
 
+import com.actiongraph.api.Experimental;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.trace.TraceRepository;
 
@@ -35,4 +36,21 @@ public interface ExecutionContext {
      * @return non-blank run id
      */
     String runId();
+
+    /**
+     * One-based attempt number for the current action invocation.
+     *
+     * <p>The default preserves source and binary compatibility for custom
+     * contexts. The built-in executor injects the real attempt number when an
+     * action declares a retry policy.
+     *
+     * @return one-based attempt number
+     */
+    @Experimental(
+            since = "0.2.0",
+            value = "Attempt-aware execution context is experimental until idempotency conventions settle."
+    )
+    default int attempt() {
+        return 1;
+    }
 }

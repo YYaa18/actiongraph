@@ -210,3 +210,66 @@ Runtime Trace adds two event types:
 
 These events are experimental in `0.1.x` and should be treated as audit-preview
 signals until the retry/idempotency convention has been validated in pilots.
+
+## 6. Durability And Cross-Service Actions
+
+MS1 adds optional step-level durability for services that orchestrate remote
+Actions. It is off by default:
+
+```yaml
+actiongraph:
+  durability:
+    enabled: true
+    recovery: CONTINUE      # CONTINUE | COMPENSATE
+    heartbeat-interval: 30s
+    stale-after: 5m
+    recoverer-period: 60s   # 0 disables the built-in scheduler
+```
+
+Durability promotes the existing suspended-run snapshot into a general run
+snapshot. Human review stores `SUSPENDED`; crash recovery stores `RUNNING`.
+No new `RunStatus` values are introduced.
+
+Runtime sequence for each Action:
+
+1. before an attempt, the executor records `inFlightActionId`;
+2. if the attempt succeeds, trace is flushed and a `RUNNING` checkpoint is
+   saved with the updated Blackboard, executed action list, and compensation
+   stack;
+3. while the run is active, a heartbeat refreshes `heartbeatAt`;
+4. a recoverer can atomically claim stale `RUNNING` checkpoints.
+
+Recovery treats an in-flight Action as **unknown outcome**. The recoverer first
+calls that Action's compensation method, then either replans from the checkpoint
+(`CONTINUE`) or compensates the existing stack (`COMPENSATE`).
+
+Cross-service Actions should pass a stable idempotency key to downstream
+systems:
+
+```java
+IdempotencyKey key = new IdempotencyKey(
+        context.runId(),
+        "payment.reserve",
+        context.attempt()
+);
+
+request.header(IdempotencyKey.HEADER_NAME, key.asHeaderValue());
+```
+
+Feign-style interceptor:
+
+```java
+public final class ActionGraphIdempotencyInterceptor implements RequestInterceptor {
+    private final ExecutionContext context;
+    private final String actionId;
+
+    public void apply(RequestTemplate template) {
+        IdempotencyKey key = new IdempotencyKey(context.runId(), actionId, context.attempt());
+        template.header(IdempotencyKey.HEADER_NAME, key.asHeaderValue());
+    }
+}
+```
+
+The framework does not force this header because enterprise gateways and core
+systems often have their own idempotency fields. The important contract is the
+shape: run id + action id + attempt.

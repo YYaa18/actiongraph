@@ -12,6 +12,16 @@ import com.actiongraph.api.Experimental;
 public enum TraceEventType {
     RUN_STARTED,
     RUN_RESUMED,
+    @Experimental(
+            since = "0.2.0",
+            value = "Durable checkpoint trace events are experimental until MS1 crash-recovery pilots complete."
+    )
+    RUN_CHECKPOINTED,
+    @Experimental(
+            since = "0.2.0",
+            value = "Crash-recovery trace events are experimental until MS1 recovery pilots complete."
+    )
+    RUN_RECOVERED,
     RUN_SUSPENDED,
     PLAN_GENERATED,
     NO_PLAN,

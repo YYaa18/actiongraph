@@ -7,7 +7,10 @@ import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.action.ActionResult;
 import com.actiongraph.action.CompensationResult;
 import com.actiongraph.action.ExecutionContext;
+import com.actiongraph.api.Experimental;
+import com.actiongraph.durability.RecoveryPolicy;
 import com.actiongraph.exception.ActionGraphConfigurationException;
+import com.actiongraph.exception.ActionGraphIntegrationException;
 import com.actiongraph.observability.NoopObservationSink;
 import com.actiongraph.observability.ObservationEvent;
 import com.actiongraph.observability.ObservationEventType;
@@ -52,6 +55,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +64,7 @@ import java.util.stream.Collectors;
 
 public final class GoapExecutor implements Executor {
     public static final int DEFAULT_MAX_STEPS = 64;
+    public static final Duration DEFAULT_HEARTBEAT_INTERVAL = Duration.ofSeconds(30);
     private static final Logger LOGGER = LoggerFactory.getLogger(GoapExecutor.class);
 
     private final Planner planner;
@@ -71,6 +76,8 @@ public final class GoapExecutor implements Executor {
     private final ReviewAttributeContributor reviewAttributeContributor;
     private final ObservationSink observationSink;
     private final int maxSteps;
+    private final boolean durabilityEnabled;
+    private final Duration heartbeatInterval;
 
     public GoapExecutor() {
         this(new GoapPlanner(), new DefaultPolicyGuard(), new PendingHumanReviewPolicy(),
@@ -122,7 +129,7 @@ public final class GoapExecutor implements Executor {
     ) {
         this(planner, policyGuard, humanReviewPolicy, traceRepository, suspendedRunRepository,
                 NoopMaskingPolicy.INSTANCE, NoopReviewAttributeContributor.INSTANCE,
-                NoopObservationSink.INSTANCE, maxSteps);
+                NoopObservationSink.INSTANCE, maxSteps, false, DEFAULT_HEARTBEAT_INTERVAL);
     }
 
     private GoapExecutor(
@@ -134,10 +141,16 @@ public final class GoapExecutor implements Executor {
             DataMaskingPolicy maskingPolicy,
             ReviewAttributeContributor reviewAttributeContributor,
             ObservationSink observationSink,
-            int maxSteps
+            int maxSteps,
+            boolean durabilityEnabled,
+            Duration heartbeatInterval
     ) {
         if (maxSteps <= 0) {
             throw new IllegalArgumentException("maxSteps must be > 0");
+        }
+        Duration validatedHeartbeatInterval = Objects.requireNonNull(heartbeatInterval, "heartbeatInterval");
+        if (validatedHeartbeatInterval.isZero() || validatedHeartbeatInterval.isNegative()) {
+            throw new IllegalArgumentException("heartbeatInterval must be positive");
         }
         this.planner = Objects.requireNonNull(planner, "planner");
         this.policyGuard = Objects.requireNonNull(policyGuard, "policyGuard");
@@ -148,6 +161,8 @@ public final class GoapExecutor implements Executor {
         this.reviewAttributeContributor = Objects.requireNonNull(reviewAttributeContributor, "reviewAttributeContributor");
         this.observationSink = Objects.requireNonNull(observationSink, "observationSink");
         this.maxSteps = maxSteps;
+        this.durabilityEnabled = durabilityEnabled;
+        this.heartbeatInterval = validatedHeartbeatInterval;
     }
 
     public static Builder builder() {
@@ -203,7 +218,8 @@ public final class GoapExecutor implements Executor {
                 new ArrayDeque<>(),
                 trace,
                 normalizedRunMetadata,
-                runStartedAt
+                runStartedAt,
+                true
         );
     }
 
@@ -251,7 +267,72 @@ public final class GoapExecutor implements Executor {
                 rehydrateCompensationStack(suspendedRun, registry),
                 trace,
                 normalizedRunMetadata,
-                runStartedAt
+                runStartedAt,
+                true
+        );
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Crash recovery entry point is experimental until MS1 recovery pilots complete."
+    )
+    public RunResult recover(
+            SuspendedRun checkpoint,
+            Collection<Action> actions,
+            ActionRegistry registry,
+            RecoveryPolicy recoveryPolicy
+    ) {
+        Objects.requireNonNull(checkpoint, "checkpoint");
+        Objects.requireNonNull(actions, "actions");
+        Objects.requireNonNull(registry, "registry");
+        Objects.requireNonNull(recoveryPolicy, "recoveryPolicy");
+        if (checkpoint.snapshotState() != SnapshotState.RUNNING) {
+            throw new IllegalArgumentException("Only RUNNING checkpoints can be recovered");
+        }
+
+        long runStartedAt = System.nanoTime();
+        String runId = checkpoint.runId();
+        RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy, observationSink);
+        trace.append(TraceEventType.RUN_RECOVERED, checkpoint.inFlightActionId(), "Run recovered", Map.of(
+                "policy", recoveryPolicy.name(),
+                "inFlightActionId", checkpoint.inFlightActionId() == null
+                        ? "" : checkpoint.inFlightActionId().value(),
+                "executedActions", Integer.toString(checkpoint.executedActions().size()),
+                "compensationStack", Integer.toString(checkpoint.compensationStack().size())
+        ));
+        ExecutionContext context = new DefaultExecutionContext(checkpoint.blackboard(), traceRepository, runId);
+        Deque<Action> compensationStack = rehydrateCompensationStack(checkpoint, registry);
+        if (checkpoint.inFlightActionId() != null) {
+            Action inFlight = registry.byId(checkpoint.inFlightActionId())
+                    .orElseThrow(() -> new ActionGraphConfigurationException(
+                            "In-flight action is not registered: " + checkpoint.inFlightActionId().value()));
+            boolean compensated = compensateOne(inFlight, context, trace);
+            if (!compensated) {
+                return finish(trace, runId, RunStatus.FAILED_COMPENSATION_INCOMPLETE,
+                        checkpoint.blackboard(), checkpoint.executedActions(),
+                        "Recovered in-flight action could not be compensated", runStartedAt);
+            }
+        }
+        if (recoveryPolicy == RecoveryPolicy.COMPENSATE) {
+            boolean compensated = compensateAll(compensationStack, context, trace);
+            RunStatus status = compensated
+                    ? RunStatus.FAILED_COMPENSATED
+                    : RunStatus.FAILED_COMPENSATION_INCOMPLETE;
+            return finish(trace, runId, status, checkpoint.blackboard(), checkpoint.executedActions(),
+                    "Recovered run compensated", runStartedAt);
+        }
+        return runLoop(
+                runId,
+                checkpoint.goal(),
+                checkpoint.blackboard(),
+                actions,
+                registry,
+                new ArrayList<>(checkpoint.executedActions()),
+                compensationStack,
+                trace,
+                Map.of(),
+                runStartedAt,
+                true
         );
     }
 
@@ -284,12 +365,17 @@ public final class GoapExecutor implements Executor {
             Deque<Action> compensationStack,
             RunTrace trace,
             Map<String, String> runMetadata,
-            long runStartedAt
+            long runStartedAt,
+            boolean checkpointAtStart
     ) {
         ExecutionContext context = new DefaultExecutionContext(blackboard, traceRepository, runId);
         List<Action> allActions = List.copyOf(actions);
 
-        for (int step = 0; step < maxSteps; step++) {
+        try (Heartbeat heartbeat = startHeartbeat(runId)) {
+            if (checkpointAtStart) {
+                saveInitialCheckpoint(runId, goal, blackboard, executedActionIds, compensationStack);
+            }
+            for (int step = 0; step < maxSteps; step++) {
             Set<Condition> state = blackboard.conditions();
             LOGGER.debug("Run step started: runId={}, step={}, conditions={}",
                     runId, step + 1, state.size());
@@ -359,6 +445,7 @@ public final class GoapExecutor implements Executor {
                 LOGGER.debug("Action succeeded: runId={}, actionId={}, addedConditions={}",
                         runId, action.id().value(), addedConditions.size());
                 traceBlackboardUpdate(trace, action, beforeObjects, blackboard.snapshotEntries(), addedConditions);
+                checkpointAfterAction(runId, goal, blackboard, executedActionIds, compensationStack, trace, action.id());
             } else {
                 if (outcome.timedOut()) {
                     executedActionIds.add(action.id());
@@ -387,13 +474,17 @@ public final class GoapExecutor implements Executor {
         LOGGER.debug("Max executor steps exceeded: runId={}, maxSteps={}", runId, maxSteps);
         return finish(trace, runId, RunStatus.HALTED_UNREACHABLE, blackboard, executedActionIds,
                 "Max executor steps exceeded", runStartedAt);
+        }
     }
 
     private ActionExecutionOutcome executeWithPolicy(Action action, ExecutionContext context, RunTrace trace) {
         ActionExecutionPolicy policy = action.executionPolicy();
         Map<String, String> tags = new LinkedHashMap<>();
         for (int attempt = 1; attempt <= policy.maxAttempts(); attempt++) {
-            AttemptResult attemptResult = executeAttempt(action, context, policy.timeout());
+            markInFlight(context.runId(), action.id());
+            ExecutionContext attemptContext = new DefaultExecutionContext(
+                    context.blackboard(), context.trace(), context.runId(), attempt);
+            AttemptResult attemptResult = executeAttempt(action, attemptContext, policy.timeout());
             if (attemptResult.timedOut()) {
                 tags.put("success", "false");
                 tags.put("timedOut", "true");
@@ -699,6 +790,35 @@ public final class GoapExecutor implements Executor {
         return allOk;
     }
 
+    private boolean compensateOne(Action action, ExecutionContext context, RunTrace trace) {
+        trace.flush();
+        long compensationStartedAt = System.nanoTime();
+        try {
+            CompensationResult result = action.compensate(context);
+            observe(ObservationEvent.timed(context.runId(), ObservationEventType.COMPENSATION_FINISHED,
+                    action.id(), Map.of(
+                            "success", Boolean.toString(result.success()),
+                            "noop", Boolean.toString(result.noOp())
+                    ), elapsedSince(compensationStartedAt)));
+            trace.append(TraceEventType.COMPENSATED, action.id(), result.message(), Map.of(
+                    "success", Boolean.toString(result.success()),
+                    "noop", Boolean.toString(result.noOp()),
+                    "recoveredInFlight", "true"
+            ));
+            trace.flush();
+            return result.success() || result.noOp();
+        } catch (Exception ex) {
+            LOGGER.debug("Recovered in-flight compensation raised exception: runId={}, actionId={}",
+                    context.runId(), action.id().value(), ex);
+            trace.append(TraceEventType.COMPENSATION_ERROR, action.id(), ex.getMessage(), Map.of(
+                    "exceptionType", ex.getClass().getName(),
+                    "recoveredInFlight", "true"
+            ));
+            trace.flush();
+            return false;
+        }
+    }
+
     private void saveSuspendedRun(
             String runId,
             Goal goal,
@@ -717,8 +837,77 @@ public final class GoapExecutor implements Executor {
                 executedActionIds,
                 compensationStack.stream().map(Action::id).toList(),
                 pendingActionId,
-                message
+                message,
+                SnapshotState.SUSPENDED,
+                Instant.now(),
+                null
         ));
+    }
+
+    private void saveInitialCheckpoint(
+            String runId,
+            Goal goal,
+            Blackboard blackboard,
+            List<ActionId> executedActionIds,
+            Deque<Action> compensationStack
+    ) {
+        if (!durabilityEnabled) {
+            return;
+        }
+        suspendedRunRepository.saveCheckpoint(new SuspendedRun(
+                runId,
+                goal,
+                copyBlackboard(blackboard),
+                executedActionIds,
+                compensationStack.stream().map(Action::id).toList(),
+                null,
+                "Running checkpoint",
+                SnapshotState.RUNNING,
+                Instant.now(),
+                null
+        ));
+    }
+
+    private void checkpointAfterAction(
+            String runId,
+            Goal goal,
+            Blackboard blackboard,
+            List<ActionId> executedActionIds,
+            Deque<Action> compensationStack,
+            RunTrace trace,
+            ActionId actionId
+    ) {
+        if (!durabilityEnabled) {
+            return;
+        }
+        trace.append(TraceEventType.RUN_CHECKPOINTED, actionId, "Run checkpointed", Map.of(
+                "executedActions", Integer.toString(executedActionIds.size()),
+                "compensationStack", Integer.toString(compensationStack.size())
+        ));
+        trace.flush();
+        suspendedRunRepository.saveCheckpoint(new SuspendedRun(
+                runId,
+                goal,
+                copyBlackboard(blackboard),
+                executedActionIds,
+                compensationStack.stream().map(Action::id).toList(),
+                null,
+                "Running checkpoint",
+                SnapshotState.RUNNING,
+                Instant.now(),
+                null
+        ));
+    }
+
+    private void markInFlight(String runId, ActionId actionId) {
+        if (!durabilityEnabled) {
+            return;
+        }
+        boolean updated = suspendedRunRepository.markInFlight(runId, actionId);
+        if (!updated) {
+            throw new ActionGraphIntegrationException(
+                    "Cannot mark in-flight action without a running checkpoint: " + runId);
+        }
     }
 
     private Deque<Action> rehydrateCompensationStack(SuspendedRun suspendedRun, ActionRegistry registry) {
@@ -829,6 +1018,40 @@ public final class GoapExecutor implements Executor {
         return preview;
     }
 
+    private Blackboard copyBlackboard(Blackboard source) {
+        InMemoryBlackboard copy = new InMemoryBlackboard();
+        source.snapshotEntries().forEach((key, value) -> putSnapshotEntry(copy, key, value));
+        source.conditions().forEach(copy::addCondition);
+        return copy;
+    }
+
+    private <T> void putSnapshotEntry(InMemoryBlackboard target, BlackboardKey<T> key, Object value) {
+        target.put(key, key.type().cast(value));
+    }
+
+    private Heartbeat startHeartbeat(String runId) {
+        if (!durabilityEnabled) {
+            return Heartbeat.noop();
+        }
+        AtomicBoolean active = new AtomicBoolean(true);
+        Thread thread = Thread.ofVirtual().name("actiongraph-heartbeat-" + runId).start(() -> {
+            while (active.get()) {
+                try {
+                    Thread.sleep(heartbeatInterval.toMillis());
+                    if (active.get()) {
+                        suspendedRunRepository.heartbeat(runId);
+                    }
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    return;
+                } catch (RuntimeException ex) {
+                    LOGGER.debug("Heartbeat failed: runId={}", runId, ex);
+                }
+            }
+        });
+        return new Heartbeat(active, thread);
+    }
+
     private record Selection(
             Action action,
             boolean halted,
@@ -868,6 +1091,20 @@ public final class GoapExecutor implements Executor {
 
         static AttemptResult timeout() {
             return new AttemptResult(null, null, true);
+        }
+    }
+
+    private record Heartbeat(AtomicBoolean active, Thread thread) implements AutoCloseable {
+        static Heartbeat noop() {
+            return new Heartbeat(new AtomicBoolean(false), null);
+        }
+
+        @Override
+        public void close() {
+            active.set(false);
+            if (thread != null) {
+                thread.interrupt();
+            }
         }
     }
 
@@ -957,6 +1194,8 @@ public final class GoapExecutor implements Executor {
         private ReviewAttributeContributor reviewAttributeContributor = NoopReviewAttributeContributor.INSTANCE;
         private ObservationSink observationSink = NoopObservationSink.INSTANCE;
         private int maxSteps = DEFAULT_MAX_STEPS;
+        private boolean durabilityEnabled;
+        private Duration heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
 
         public Builder planner(Planner planner) {
             this.planner = Objects.requireNonNull(planner, "planner");
@@ -1003,6 +1242,24 @@ public final class GoapExecutor implements Executor {
             return this;
         }
 
+        @Experimental(
+                since = "0.2.0",
+                value = "Durable checkpoints are experimental until MS1 crash-recovery pilots complete."
+        )
+        public Builder durabilityEnabled(boolean durabilityEnabled) {
+            this.durabilityEnabled = durabilityEnabled;
+            return this;
+        }
+
+        @Experimental(
+                since = "0.2.0",
+                value = "Durable checkpoint heartbeats are experimental until MS1 crash-recovery pilots complete."
+        )
+        public Builder heartbeatInterval(Duration heartbeatInterval) {
+            this.heartbeatInterval = Objects.requireNonNull(heartbeatInterval, "heartbeatInterval");
+            return this;
+        }
+
         public GoapExecutor build() {
             return new GoapExecutor(
                     planner,
@@ -1013,7 +1270,9 @@ public final class GoapExecutor implements Executor {
                     maskingPolicy,
                     reviewAttributeContributor,
                     observationSink,
-                    maxSteps
+                    maxSteps,
+                    durabilityEnabled,
+                    heartbeatInterval
             );
         }
     }

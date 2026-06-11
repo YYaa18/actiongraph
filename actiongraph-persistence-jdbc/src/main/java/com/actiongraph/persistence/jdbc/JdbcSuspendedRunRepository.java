@@ -2,6 +2,7 @@ package com.actiongraph.persistence.jdbc;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.exception.ActionGraphIntegrationException;
+import com.actiongraph.runtime.SnapshotState;
 import com.actiongraph.runtime.SuspendedRun;
 import com.actiongraph.runtime.SuspendedRunRepository;
 
@@ -103,6 +104,9 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                 + "compensation_stack_json clob not null,"
                 + "pending_action_id varchar(256) not null,"
                 + "message clob not null,"
+                + "snapshot_state varchar(16),"
+                + "heartbeat_at varchar(64),"
+                + "in_flight_action_id varchar(256),"
                 + "status varchar(32) not null,"
                 + "claimed_at varchar(64),"
                 + "updated_at varchar(64) not null"
@@ -113,11 +117,17 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
             ensureColumn(connection, "snapshot_version", "int");
             ensureColumn(connection, "status", "varchar(32)");
             ensureColumn(connection, "claimed_at", "varchar(64)");
+            ensureColumn(connection, "snapshot_state", "varchar(16)");
+            ensureColumn(connection, "heartbeat_at", "varchar(64)");
+            ensureColumn(connection, "in_flight_action_id", "varchar(256)");
             try (Statement update = connection.createStatement()) {
                 update.executeUpdate("update " + table + " set snapshot_version = " + SNAPSHOT_FORMAT_VERSION
                         + " where snapshot_version is null");
                 update.executeUpdate("update " + table + " set status = '" + STATUS_SUSPENDED
                         + "' where status is null");
+                update.executeUpdate("update " + table + " set snapshot_state = '" + SnapshotState.SUSPENDED.name()
+                        + "' where snapshot_state is null");
+                update.executeUpdate("update " + table + " set heartbeat_at = updated_at where heartbeat_at is null");
             }
         } catch (SQLException ex) {
             throw new ActionGraphIntegrationException("Cannot initialize suspended run repository schema", ex);
@@ -127,6 +137,9 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
     @Override
     public void save(SuspendedRun run) {
         Objects.requireNonNull(run, "run");
+        if (run.snapshotState() != SnapshotState.SUSPENDED) {
+            throw new IllegalArgumentException("save expects a SUSPENDED snapshot");
+        }
         try (Connection connection = dataSource.getConnection()) {
             boolean autoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
@@ -146,6 +159,30 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
     }
 
     @Override
+    public void saveCheckpoint(SuspendedRun checkpoint) {
+        Objects.requireNonNull(checkpoint, "checkpoint");
+        if (checkpoint.snapshotState() != SnapshotState.RUNNING) {
+            throw new IllegalArgumentException("checkpoint must have RUNNING snapshotState");
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            boolean autoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                delete(connection, checkpoint.runId());
+                insert(connection, checkpoint);
+                connection.commit();
+            } catch (SQLException | RuntimeException ex) {
+                connection.rollback();
+                throw ex;
+            } finally {
+                connection.setAutoCommit(autoCommit);
+            }
+        } catch (SQLException ex) {
+            throw new ActionGraphIntegrationException("Cannot save running checkpoint: " + checkpoint.runId(), ex);
+        }
+    }
+
+    @Override
     public Optional<SuspendedRun> findByRunId(String runId) {
         Objects.requireNonNull(runId, "runId");
         try (Connection connection = dataSource.getConnection()) {
@@ -161,7 +198,8 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
         Instant now = Instant.now();
         Instant staleBefore = now.minus(claimTimeout);
         String sql = "update " + table + " set status = ?, claimed_at = ?, updated_at = ? "
-                + "where run_id = ? and (status is null or status = ? or (status = ? and claimed_at < ?))";
+                + "where run_id = ? and snapshot_state = ? "
+                + "and (status is null or status = ? or (status = ? and claimed_at < ?))";
         try (Connection connection = dataSource.getConnection()) {
             boolean autoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
@@ -170,9 +208,10 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                 statement.setString(2, now.toString());
                 statement.setString(3, now.toString());
                 statement.setString(4, runId);
-                statement.setString(5, STATUS_SUSPENDED);
-                statement.setString(6, STATUS_RESUMING);
-                statement.setString(7, staleBefore.toString());
+                statement.setString(5, SnapshotState.SUSPENDED.name());
+                statement.setString(6, STATUS_SUSPENDED);
+                statement.setString(7, STATUS_RESUMING);
+                statement.setString(8, staleBefore.toString());
                 int claimed = statement.executeUpdate();
                 if (claimed == 0) {
                     connection.commit();
@@ -192,9 +231,81 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
         }
     }
 
+    @Override
+    public boolean markInFlight(String runId, ActionId actionId) {
+        Objects.requireNonNull(runId, "runId");
+        Objects.requireNonNull(actionId, "actionId");
+        Instant now = Instant.now();
+        String sql = "update " + table
+                + " set in_flight_action_id = ?, heartbeat_at = ?, updated_at = ? "
+                + "where run_id = ? and snapshot_state = ?";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, actionId.value());
+            statement.setString(2, now.toString());
+            statement.setString(3, now.toString());
+            statement.setString(4, runId);
+            statement.setString(5, SnapshotState.RUNNING.name());
+            return statement.executeUpdate() == 1;
+        } catch (SQLException ex) {
+            throw new ActionGraphIntegrationException("Cannot mark in-flight action: " + runId, ex);
+        }
+    }
+
+    @Override
+    public void heartbeat(String runId) {
+        Objects.requireNonNull(runId, "runId");
+        Instant now = Instant.now();
+        String sql = "update " + table + " set heartbeat_at = ?, updated_at = ? "
+                + "where run_id = ? and snapshot_state = ?";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, now.toString());
+            statement.setString(2, now.toString());
+            statement.setString(3, runId);
+            statement.setString(4, SnapshotState.RUNNING.name());
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw new ActionGraphIntegrationException("Cannot heartbeat running checkpoint: " + runId, ex);
+        }
+    }
+
+    @Override
+    public Optional<SuspendedRun> claimStaleRunning(Instant staleBefore) {
+        Objects.requireNonNull(staleBefore, "staleBefore");
+        Instant now = Instant.now();
+        Instant claimStaleBefore = now.minus(claimTimeout);
+        try (Connection connection = dataSource.getConnection()) {
+            boolean autoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                Optional<String> runId = firstClaimableRunningRunId(connection, staleBefore, claimStaleBefore);
+                if (runId.isEmpty()) {
+                    connection.commit();
+                    return Optional.empty();
+                }
+                if (!claimRunning(connection, runId.get(), staleBefore, claimStaleBefore, now)) {
+                    connection.commit();
+                    return Optional.empty();
+                }
+                Optional<SuspendedRun> run = findByRunId(connection, runId.get());
+                connection.commit();
+                return run;
+            } catch (SQLException | RuntimeException ex) {
+                connection.rollback();
+                throw ex;
+            } finally {
+                connection.setAutoCommit(autoCommit);
+            }
+        } catch (SQLException ex) {
+            throw new ActionGraphIntegrationException("Cannot claim stale running checkpoint", ex);
+        }
+    }
+
     private Optional<SuspendedRun> findByRunId(Connection connection, String runId) throws SQLException {
         String sql = "select run_id, snapshot_version, goal_json, blackboard_json, executed_actions_json, "
-                + "compensation_stack_json, pending_action_id, message from " + table + " where run_id = ?";
+                + "compensation_stack_json, pending_action_id, message, snapshot_state, heartbeat_at, "
+                + "in_flight_action_id from " + table + " where run_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, runId);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -208,8 +319,11 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                         codec.readBlackboard(resultSet.getString("blackboard_json")),
                         codec.readActionIds(resultSet.getString("executed_actions_json")),
                         codec.readActionIds(resultSet.getString("compensation_stack_json")),
-                        new ActionId(resultSet.getString("pending_action_id")),
-                        resultSet.getString("message")
+                        readActionId(resultSet.getString("pending_action_id")),
+                        resultSet.getString("message"),
+                        readSnapshotState(resultSet.getString("snapshot_state")),
+                        readInstantOrNow(resultSet.getString("heartbeat_at")),
+                        readActionId(resultSet.getString("in_flight_action_id"))
                 ));
             }
         }
@@ -235,7 +349,8 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
     private void insert(Connection connection, SuspendedRun run) throws SQLException {
         String sql = "insert into " + table
                 + " (run_id, snapshot_version, goal_json, blackboard_json, executed_actions_json, compensation_stack_json, "
-                + "pending_action_id, message, status, claimed_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "pending_action_id, message, snapshot_state, heartbeat_at, in_flight_action_id, status, claimed_at, updated_at) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, run.runId());
             statement.setInt(2, SNAPSHOT_FORMAT_VERSION);
@@ -243,13 +358,89 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
             statement.setString(4, codec.writeBlackboard(run.blackboard()));
             statement.setString(5, codec.writeActionIds(run.executedActions()));
             statement.setString(6, codec.writeActionIds(run.compensationStack()));
-            statement.setString(7, run.pendingActionId().value());
+            statement.setString(7, run.pendingActionId() == null ? "" : run.pendingActionId().value());
             statement.setString(8, run.message());
-            statement.setString(9, STATUS_SUSPENDED);
-            statement.setNull(10, Types.VARCHAR);
-            statement.setString(11, Instant.now().toString());
+            statement.setString(9, run.snapshotState().name());
+            statement.setString(10, run.heartbeatAt().toString());
+            if (run.inFlightActionId() == null) {
+                statement.setNull(11, Types.VARCHAR);
+            } else {
+                statement.setString(11, run.inFlightActionId().value());
+            }
+            statement.setString(12, STATUS_SUSPENDED);
+            statement.setNull(13, Types.VARCHAR);
+            statement.setString(14, Instant.now().toString());
             statement.executeUpdate();
         }
+    }
+
+    private Optional<String> firstClaimableRunningRunId(
+            Connection connection,
+            Instant staleBefore,
+            Instant claimStaleBefore
+    ) throws SQLException {
+        String sql = "select run_id from " + table
+                + " where snapshot_state = ? and heartbeat_at < ? "
+                + "and (status is null or status = ? or (status = ? and claimed_at < ?)) "
+                + "order by updated_at";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, SnapshotState.RUNNING.name());
+            statement.setString(2, staleBefore.toString());
+            statement.setString(3, STATUS_SUSPENDED);
+            statement.setString(4, STATUS_RESUMING);
+            statement.setString(5, claimStaleBefore.toString());
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.of(resultSet.getString("run_id"));
+                }
+                return Optional.empty();
+            }
+        }
+    }
+
+    private boolean claimRunning(
+            Connection connection,
+            String runId,
+            Instant staleBefore,
+            Instant claimStaleBefore,
+            Instant now
+    ) throws SQLException {
+        String sql = "update " + table + " set status = ?, claimed_at = ?, updated_at = ? "
+                + "where run_id = ? and snapshot_state = ? and heartbeat_at < ? "
+                + "and (status is null or status = ? or (status = ? and claimed_at < ?))";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, STATUS_RESUMING);
+            statement.setString(2, now.toString());
+            statement.setString(3, now.toString());
+            statement.setString(4, runId);
+            statement.setString(5, SnapshotState.RUNNING.name());
+            statement.setString(6, staleBefore.toString());
+            statement.setString(7, STATUS_SUSPENDED);
+            statement.setString(8, STATUS_RESUMING);
+            statement.setString(9, claimStaleBefore.toString());
+            return statement.executeUpdate() == 1;
+        }
+    }
+
+    private ActionId readActionId(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return new ActionId(value);
+    }
+
+    private SnapshotState readSnapshotState(String value) {
+        if (value == null || value.isBlank()) {
+            return SnapshotState.SUSPENDED;
+        }
+        return SnapshotState.valueOf(value);
+    }
+
+    private Instant readInstantOrNow(String value) {
+        if (value == null || value.isBlank()) {
+            return Instant.now();
+        }
+        return Instant.parse(value);
     }
 
     private int readSnapshotVersion(ResultSet resultSet) throws SQLException {
