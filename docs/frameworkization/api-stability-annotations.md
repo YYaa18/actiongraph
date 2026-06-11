@@ -16,6 +16,11 @@ Current experimental areas:
 - `com.actiongraph.memory`: structured memory contracts and context loading.
 - `com.actiongraph.runtime.api.batch`: application-owned batch interpretation SPI.
 - `com.actiongraph.llm`: LLM provider adapter, prompt rendering, and structured-output parsing contracts.
+- `com.actiongraph.validation`: development-time reachability diagnostics and seeder conformance helpers.
+- `com.actiongraph.graph`: Mermaid / Graphviz export for review and self-check workflows.
+- `com.actiongraph.contribution`: business-domain contribution packaging SPI.
+- retry/timeout execution policy additions on `Action`, `ActionGraphAction`, and related trace events.
+- `GoalDefinition.seedConditions`: static seeder metadata for validation and graph previews.
 
 `com.actiongraph.runtime.api` itself is part of the stable runtime facade; only
 the nested `batch` package is excluded from the 1.0 freeze while real batch

@@ -10,8 +10,11 @@ dependencies {
     api(project(":actiongraph-console"))
     api(project(":actiongraph-governance"))
     api(project(":actiongraph-human-review"))
+    api(project(":actiongraph-llm-deepseek"))
     api(project(":actiongraph-persistence-jdbc"))
     api("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+
+    implementation("org.slf4j:slf4j-api:2.0.17")
 
     compileOnly("org.springframework:spring-web:6.1.14")
     compileOnly("io.micrometer:micrometer-core:1.13.6")

@@ -46,9 +46,10 @@ class ActionGraphComponentCatalogServiceTest {
                             .containsExactly("actiongraph-core", "actiongraph-console",
                                     "actiongraph-control-plane-api",
                                     "actiongraph-governance", "actiongraph-human-review",
-                                    "actiongraph-persistence-jdbc");
+                                    "actiongraph-llm-deepseek", "actiongraph-persistence-jdbc");
                     assertThat(component.capabilities())
                             .contains("spring-runtime-autoconfiguration", "action-scanning",
+                                    "spring-llm-client-autoconfiguration",
                                     "observation-sink-autoconfiguration", "micrometer-observability",
                                     "spring-jdbc-runtime-repositories", "spring-memory-autoconfiguration",
                                     "spring-human-review-policy", "spring-governance-autoconfiguration",
@@ -285,6 +286,7 @@ class ActionGraphComponentCatalogServiceTest {
                         "actiongraph-console",
                         "actiongraph-governance",
                         "actiongraph-human-review",
+                        "actiongraph-llm-deepseek",
                         "actiongraph-persistence-jdbc")
         );
 

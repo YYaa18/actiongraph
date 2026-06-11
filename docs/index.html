@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ActionGraph | Governed Java Agent Runtime</title>
 <meta name="description" content="ActionGraph 是面向 Java 企业业务系统的类型化 GOAP 框架，用确定性规划、人审、补偿、审计与控制面能力把自然语言目标安全落到业务 Action。">
+<meta name="theme-color" content="#143c27">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ActionGraph">
+<meta property="og:title" content="ActionGraph — Governed Java Agent Runtime">
+<meta property="og:description" content="类型化 GOAP Agent 运行时：确定性规划、多级人审、Saga 补偿、防篡改审计。LLM 负责理解目标，业务系统拥有最终裁决权。">
+<meta property="og:image" content="assets/actiongraph-hero.jpg">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ActionGraph — Governed Java Agent Runtime">
+<meta name="twitter:description" content="类型化 GOAP Agent 运行时：确定性规划、多级人审、Saga 补偿、防篡改审计。">
+<meta name="twitter:image" content="assets/actiongraph-hero.jpg">
+<link rel="canonical" href="./">
+<link rel="preload" as="image" href="assets/actiongraph-hero.jpg" fetchpriority="high">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23143c27'/%3E%3Cpath d='M32 12l18 10v20L32 52 14 42V22l18-10z' fill='none' stroke='%239df0b2' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M22 32h20M32 22v20' stroke='%239df0b2' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
   :root {
@@ -189,6 +202,137 @@
     stroke-width: 2;
   }
 
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    padding: 10px 16px;
+    background: #143c27;
+    color: #fff;
+    border-radius: 0 0 8px 0;
+    font-weight: 700;
+  }
+
+  .skip-link:focus {
+    left: 0;
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--green-strong);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  .hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .hero-badges span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--ink-2);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .hero-badges span::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  .stats-band {
+    border-bottom: 1px solid var(--line);
+    background: var(--section);
+  }
+
+  .stats-inner {
+    width: min(var(--max), calc(100% - 40px));
+    margin: 0 auto;
+    padding: 34px 0 30px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+
+  .stat-cell b {
+    display: block;
+    font-size: clamp(24px, 2.6vw, 34px);
+    font-weight: 800;
+    color: var(--green-strong);
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-cell span {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .discipline-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+
+  .discipline-row span {
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--green-soft);
+    color: var(--green-strong);
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  .footer-legal {
+    width: min(var(--max), calc(100% - 40px));
+    margin: 0 auto;
+    padding: 18px 0 26px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--faint);
+    font-size: 13px;
+  }
+
+  .footer-legal a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 880px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+
   .hero {
     position: relative;
     min-height: min(720px, calc(100vh - 88px));
@@ -196,7 +340,7 @@
     border-bottom: 1px solid var(--line);
     background-image:
       linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 38%, rgba(255, 255, 255, 0.36) 68%, rgba(255, 255, 255, 0.08) 100%),
-      url("assets/actiongraph-hero.png");
+      url("assets/actiongraph-hero.jpg");
     background-size: cover;
     background-position: center right;
   }
@@ -950,7 +1094,7 @@
       min-height: 690px;
       background-image:
         linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.96) 48%, rgba(255,255,255,0.72) 78%, rgba(255,255,255,0.28) 100%),
-        url("assets/actiongraph-hero.png");
+        url("assets/actiongraph-hero.jpg");
       background-size: 980px auto;
       background-position: 62% bottom;
     }
@@ -1015,6 +1159,7 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#why">跳到主要内容</a>
 <header class="site-header" id="top">
   <div class="nav-shell">
     <a class="brand" href="#top" aria-label="ActionGraph 首页">
@@ -1085,6 +1230,12 @@
             查看运行模型
           </a>
         </div>
+        <div class="hero-badges" aria-label="项目状态">
+          <span>v0.1.0</span>
+          <span>Apache-2.0</span>
+          <span>Java 21 运行时 · Java 8 控制面客户端</span>
+          <span>376 项自动化测试</span>
+        </div>
         <div class="hero-command" aria-label="代码示例">
           <div class="terminal">
             <div class="terminal-head" aria-hidden="true">
@@ -1139,7 +1290,38 @@ OrderRecord lookup(OrderId orderId) {
     </div>
   </div>
 
-  <section class="section" id="why">
+  <section class="stats-band" aria-label="工程数据">
+  <div class="stats-inner">
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <b>8 μs</b>
+        <span>单次规划耗时（5 步链，确定性 GOAP，JIT 预热后）</span>
+      </div>
+      <div class="stat-cell">
+        <b>≈6,000 /s</b>
+        <span>并发冒烟吞吐（200 虚拟线程共享单 executor，内存仓储）</span>
+      </div>
+      <div class="stat-cell">
+        <b>376</b>
+        <span>自动化测试，覆盖并发竞争、跨重启恢复、补偿与防篡改</span>
+      </div>
+      <div class="stat-cell">
+        <b>10</b>
+        <span>模块，新增需治理台账审批，公共 API 由 japicmp 快照守护</span>
+      </div>
+    </div>
+    <div class="discipline-row" aria-label="工程纪律">
+      <span>japicmp 二进制兼容检查</span>
+      <span>JSpecify 空安全标注</span>
+      <span>@Experimental / @Internal API 分级</span>
+      <span>文档一致性守卫测试</span>
+      <span>挂起恢复原子认领</span>
+      <span>Trace SHA-256 哈希链</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="why">
     <div class="wrap">
       <div class="section-head">
         <h2>企业 AI 执行的难点，不是回答，而是敢不敢执行。</h2>
@@ -1728,6 +1910,14 @@ class OrderCancellationWorkflow {
       <a href="frameworkization/jdbc-persistence.md">JDBC Persistence</a>
       <a href="frameworkization/component-catalog.md">Component Catalog</a>
     </div>
+  </div>
+  <div class="footer-legal">
+    <span>© 2026 ActionGraph</span>
+    <span>Apache License 2.0</span>
+    <span>v0.1.0</span>
+    <a href="frameworkization/public-api-compatibility.md">公共 API 兼容性政策</a>
+    <a href="../SECURITY.md">安全披露</a>
+    <a href="../CHANGELOG.md">更新日志</a>
   </div>
 </footer>
 

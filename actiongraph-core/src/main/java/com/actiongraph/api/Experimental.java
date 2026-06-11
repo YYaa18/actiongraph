@@ -21,7 +21,9 @@ import java.lang.annotation.Target;
         ElementType.METHOD,
         ElementType.CONSTRUCTOR,
         ElementType.FIELD,
-        ElementType.PACKAGE
+        ElementType.PACKAGE,
+        ElementType.PARAMETER,
+        ElementType.RECORD_COMPONENT
 })
 public @interface Experimental {
     /**

@@ -42,8 +42,9 @@ The main starter brings:
 - governance policy auto-configuration
 - JDBC repository auto-configuration behind `actiongraph.persistence.jdbc.enabled=true`
 - runtime, component-catalog, human-review task, and callback HTTP endpoints behind their own `enabled` switches
+- a generic `LlmClient` only when `actiongraph.llm.provider` is explicitly set
 
-It does not create business Actions, LLM clients, or domain-specific interpreters.
+It does not create business Actions or domain-specific interpreters. LLM provider wiring is opt-in and only creates a generic client; goal interpretation still needs application-owned goal metadata and interpreter beans.
 
 ## Java 8 Legacy Clients
 
@@ -98,7 +99,7 @@ actiongraph:
       enabled: true
 ```
 
-Runtime endpoints are optional adapters over `ActionGraphRuntimeOperations`. If an application provides its own operations bean, the starter backs off from the default service and wires the controller to that interface. If the application wants the default service, it must provide `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. Human-review endpoints require a `HumanReviewRepository`. Endpoint enablement never creates domain Actions or LLM clients.
+Runtime endpoints are optional adapters over `ActionGraphRuntimeOperations`. If an application provides its own operations bean, the starter backs off from the default service and wires the controller to that interface. If the application wants the default service, it must provide `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. Human-review endpoints require a `HumanReviewRepository`. Endpoint enablement never creates domain Actions or domain-specific interpreters.
 
 Runtime start/resume endpoints support whitelisted request-header capture through `actiongraph.runtime.api.trace-headers`. Defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`; the configured runtime token header is hard-excluded from trace metadata.
 

@@ -9,6 +9,7 @@ dependencies {
     implementation(project(":actiongraph-llm-deepseek"))
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
     implementation("org.apache.commons:commons-csv:1.14.1")
+    runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
 
     testImplementation("com.h2database:h2:2.2.224")
 }

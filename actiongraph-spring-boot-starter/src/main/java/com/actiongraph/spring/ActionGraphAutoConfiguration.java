@@ -1,8 +1,22 @@
 package com.actiongraph.spring;
 
 import com.actiongraph.action.Action;
+import com.actiongraph.action.ActionExecutionPolicy;
+import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.action.DefaultActionRegistry;
+import com.actiongraph.action.annotation.AnnotatedActionFactory;
+import com.actiongraph.api.Experimental;
+import com.actiongraph.contribution.ActionGraphContribution;
+import com.actiongraph.exception.ActionGraphConfigurationException;
+import com.actiongraph.interpretation.GoalBlackboardSeeder;
+import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
+import com.actiongraph.interpretation.GoalCatalog;
+import com.actiongraph.interpretation.GoalDefinition;
+import com.actiongraph.interpretation.GoalType;
+import com.actiongraph.llm.DeepSeekChatClient;
+import com.actiongraph.llm.LlmClient;
+import com.actiongraph.llm.OpenAiCompatibleChatClient;
 import com.actiongraph.observability.NoopObservationSink;
 import com.actiongraph.observability.ObservationSink;
 import com.actiongraph.planning.GoapPlanner;
@@ -23,16 +37,29 @@ import com.actiongraph.runtime.InMemorySuspendedRunRepository;
 import com.actiongraph.runtime.SuspendedRunRepository;
 import com.actiongraph.trace.InMemoryTraceRepository;
 import com.actiongraph.trace.TraceRepository;
+import com.actiongraph.validation.ActionGraphValidator;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @AutoConfiguration
 @EnableConfigurationProperties(ActionGraphProperties.class)
 public class ActionGraphAutoConfiguration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ActionGraphAutoConfiguration.class);
+
     @Bean
     @ConditionalOnMissingBean
     public Planner actionGraphPlanner(ActionGraphProperties properties) {
@@ -91,6 +118,47 @@ public class ActionGraphAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "actiongraph.llm", name = "provider", havingValue = "openai-compatible")
+    @Experimental(
+            since = "0.1.0",
+            value = "LLM auto-configuration is experimental while provider wiring conventions settle."
+    )
+    public LlmClient actionGraphOpenAiCompatibleLlmClient(ActionGraphProperties properties) {
+        ActionGraphProperties.LlmProperties llm = properties.getLlm();
+        String endpoint = requireNonBlank(llm.getBaseUrl(), "actiongraph.llm.base-url");
+        String model = requireNonBlank(llm.getModel(), "actiongraph.llm.model");
+        return new OpenAiCompatibleChatClient(
+                endpoint,
+                model,
+                resolveApiKey(llm),
+                llm.getHeaders(),
+                llm.getTimeout()
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "actiongraph.llm", name = "provider", havingValue = "deepseek")
+    @Experimental(
+            since = "0.1.0",
+            value = "LLM auto-configuration is experimental while provider wiring conventions settle."
+    )
+    public LlmClient actionGraphDeepSeekLlmClient(ActionGraphProperties properties) {
+        ActionGraphProperties.LlmProperties llm = properties.getLlm();
+        return new DeepSeekChatClient(
+                new okhttp3.OkHttpClient.Builder()
+                        .callTimeout(llm.getTimeout())
+                        .readTimeout(llm.getTimeout())
+                        .build(),
+                new com.fasterxml.jackson.databind.ObjectMapper(),
+                blankToDefault(llm.getBaseUrl(), DeepSeekChatClient.DEFAULT_ENDPOINT),
+                resolveApiKey(llm),
+                blankToDefault(llm.getModel(), DeepSeekChatClient.DEFAULT_MODEL)
+        );
+    }
+
+    @Bean
     @ConditionalOnMissingBean(Executor.class)
     public GoapExecutor actionGraphExecutor(
             Planner planner,
@@ -120,14 +188,163 @@ public class ActionGraphAutoConfiguration {
     @ConditionalOnMissingBean
     public ActionRegistry actionGraphActionRegistry(
             ObjectProvider<Action> actionBeans,
+            ObjectProvider<ActionGraphContribution> contributions,
             ConfigurableListableBeanFactory beanFactory,
             ActionGraphProperties properties
     ) {
         DefaultActionRegistry registry = new DefaultActionRegistry();
-        actionBeans.orderedStream().forEach(registry::register);
+        Map<String, ActionExecutionPolicy> overrides = executionPolicyOverrides(properties);
+        actionBeans.orderedStream().forEach(action -> registry.register(applyExecutionPolicyOverride(action, overrides)));
+        registerContributionActions(registry, contributions.orderedStream().toList(), overrides);
         if (properties.getActions().isAutoRegisterAnnotated()) {
-            new AnnotatedSpringBeanActionRegistrar(beanFactory).registerAnnotatedActions(registry);
+            for (Action action : new AnnotatedSpringBeanActionRegistrar(beanFactory).annotatedActions()) {
+                registry.register(applyExecutionPolicyOverride(action, overrides));
+            }
         }
         return registry;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @Experimental(
+            since = "0.1.0",
+            value = "Contribution-driven goal catalog registration is experimental until more domains validate the packaging SPI."
+    )
+    public GoalCatalog actionGraphGoalCatalog(
+            ObjectProvider<GoalDefinition> goalDefinitions,
+            ObjectProvider<ActionGraphContribution> contributions
+    ) {
+        GoalCatalog catalog = new GoalCatalog();
+        goalDefinitions.orderedStream().forEach(catalog::register);
+        Map<GoalType, String> sources = new LinkedHashMap<>();
+        for (ActionGraphContribution contribution : contributions.orderedStream().toList()) {
+            for (GoalDefinition goal : contribution.goals()) {
+                String previous = sources.putIfAbsent(goal.type(), contribution.getClass().getName());
+                if (previous != null) {
+                    throw new ActionGraphConfigurationException("Duplicate goal type " + goal.type().value()
+                            + " from contributions " + previous + " and " + contribution.getClass().getName());
+                }
+                catalog.register(goal);
+            }
+        }
+        return catalog;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @Experimental(
+            since = "0.1.0",
+            value = "Contribution-driven seeder registration is experimental until more domains validate the packaging SPI."
+    )
+    public GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(
+            ObjectProvider<GoalBlackboardSeeder> seeders,
+            ObjectProvider<ActionGraphContribution> contributions
+    ) {
+        GoalBlackboardSeederRegistry registry = new GoalBlackboardSeederRegistry();
+        seeders.orderedStream().forEach(registry::register);
+        Map<GoalType, String> sources = new LinkedHashMap<>();
+        for (ActionGraphContribution contribution : contributions.orderedStream().toList()) {
+            for (GoalBlackboardSeeder seeder : contribution.seeders()) {
+                String previous = sources.putIfAbsent(seeder.goalType(), contribution.getClass().getName());
+                if (previous != null) {
+                    throw new ActionGraphConfigurationException("Duplicate blackboard seeder for goal type "
+                            + seeder.goalType().value() + " from contributions " + previous
+                            + " and " + contribution.getClass().getName());
+                }
+                registry.register(seeder);
+            }
+        }
+        return registry;
+    }
+
+    @Bean
+    @ConditionalOnBean({GoalCatalog.class, ActionRegistry.class})
+    @Experimental(
+            since = "0.1.0",
+            value = "Startup graph validation is experimental while diagnostics are validated in pilots."
+    )
+    public SmartInitializingSingleton actionGraphValidationRunner(
+            GoalCatalog catalog,
+            ActionRegistry registry,
+            ActionGraphProperties properties
+    ) {
+        return () -> {
+            if (properties.getValidation().getMode() == ActionGraphProperties.ValidationMode.OFF) {
+                return;
+            }
+            var report = new ActionGraphValidator().validate(catalog, registry.all());
+            if (report.valid()) {
+                return;
+            }
+            String message = report.formatText();
+            if (properties.getValidation().getMode() == ActionGraphProperties.ValidationMode.WARN) {
+                LOGGER.warn("ActionGraph validation failed: {}", message);
+                return;
+            }
+            throw new ActionGraphConfigurationException("ActionGraph validation failed: " + message);
+        };
+    }
+
+    private void registerContributionActions(
+            DefaultActionRegistry registry,
+            List<ActionGraphContribution> contributions,
+            Map<String, ActionExecutionPolicy> overrides
+    ) {
+        Map<ActionId, String> sources = new LinkedHashMap<>();
+        for (ActionGraphContribution contribution : contributions) {
+            List<Action> contributionActions = new java.util.ArrayList<>(contribution.actions());
+            contributionActions.addAll(AnnotatedActionFactory.actions(contribution.annotatedBeans().toArray()));
+            for (Action action : contributionActions) {
+                String source = contribution.getClass().getName();
+                String previous = sources.putIfAbsent(action.id(), source);
+                if (previous != null) {
+                    throw new ActionGraphConfigurationException("Duplicate action id " + action.id().value()
+                            + " from contributions " + previous + " and " + source);
+                }
+                registry.register(applyExecutionPolicyOverride(action, overrides));
+            }
+        }
+    }
+
+    private Map<String, ActionExecutionPolicy> executionPolicyOverrides(ActionGraphProperties properties) {
+        Map<String, ActionExecutionPolicy> overrides = new LinkedHashMap<>();
+        for (ActionGraphProperties.ExecutionPolicyProperties policy : properties.getExecution().getPolicies()) {
+            if (policy.getActionId() == null || policy.getActionId().isBlank()) {
+                throw new IllegalArgumentException("actiongraph.execution.policies action-id must not be blank");
+            }
+            overrides.put(policy.getActionId(), new ActionExecutionPolicy(
+                    policy.getMaxAttempts() == null ? 1 : policy.getMaxAttempts(),
+                    policy.getBackoff() == null ? Duration.ZERO : policy.getBackoff(),
+                    policy.getTimeout()
+            ));
+        }
+        return Map.copyOf(overrides);
+    }
+
+    private Action applyExecutionPolicyOverride(Action action, Map<String, ActionExecutionPolicy> overrides) {
+        ActionExecutionPolicy override = overrides.get(action.id().value());
+        return override == null ? action : new ExecutionPolicyOverrideAction(action, override);
+    }
+
+    private String resolveApiKey(ActionGraphProperties.LlmProperties llm) {
+        String envName = requireNonBlank(llm.getApiKeyEnv(), "actiongraph.llm.api-key-env");
+        String apiKey = System.getenv(envName);
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new ActionGraphConfigurationException(
+                    "Environment variable " + envName + " configured by actiongraph.llm.api-key-env is not set"
+            );
+        }
+        return apiKey;
+    }
+
+    private String requireNonBlank(String value, String propertyName) {
+        if (value == null || value.isBlank()) {
+            throw new ActionGraphConfigurationException(propertyName + " must not be blank");
+        }
+        return value;
+    }
+
+    private String blankToDefault(String value, String defaultValue) {
+        return value == null || value.isBlank() ? defaultValue : value;
     }
 }

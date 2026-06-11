@@ -1,6 +1,7 @@
 package com.actiongraph.action.annotation;
 
 import com.actiongraph.action.Action;
+import com.actiongraph.action.ActionExecutionPolicy;
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.action.ActionResult;
@@ -19,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Modifier;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -177,6 +179,18 @@ public final class AnnotatedActionFactory {
         @Override
         public boolean requiresHumanReview() {
             return metadata.requiresHumanReview();
+        }
+
+        @Override
+        public ActionExecutionPolicy executionPolicy() {
+            Duration timeout = metadata.timeoutMillis() <= 0
+                    ? null
+                    : Duration.ofMillis(metadata.timeoutMillis());
+            return new ActionExecutionPolicy(
+                    metadata.maxAttempts(),
+                    Duration.ofMillis(metadata.backoffMillis()),
+                    timeout
+            );
         }
 
         @Override

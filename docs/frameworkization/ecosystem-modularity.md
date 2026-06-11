@@ -50,7 +50,7 @@ The module catalog is checked against `settings.gradle.kts`, the module governan
 
 `actiongraph-control-plane-api` is a Java 8 compatible ecosystem utility. It exposes component metadata, composition profiles, response DTO contracts, aggregate and split HTTP clients, properties-based aggregate configuration, safe GET retries, and shared-secret token verification. It must not depend on Spring, runtime repositories, LLM providers, governance, endpoint modules, or third-party HTTP/JSON libraries.
 
-`actiongraph-spring-boot-starter` is the main Spring integration surface. It may auto-configure runtime beans, memory, repository-backed human review, governance policies, JDBC repositories, and runtime/catalog/review/console HTTP endpoints, but every endpoint must remain opt-in through its own `enabled` property. It must not create business actions, LLM clients, or domain-specific interpreters.
+`actiongraph-spring-boot-starter` is the main Spring integration surface. It may auto-configure runtime beans, memory, repository-backed human review, governance policies, JDBC repositories, opt-in generic LLM clients, and runtime/catalog/review/console HTTP endpoints, but every endpoint must remain opt-in through its own `enabled` property. It must not create business actions or domain-specific interpreters, and it creates an `LlmClient` only when `actiongraph.llm.provider` is explicitly configured.
 
 `actiongraph-console` is a reusable read-only monitoring library. It must not depend on Spring Web, expose HTTP endpoints, or mutate runtime state.
 

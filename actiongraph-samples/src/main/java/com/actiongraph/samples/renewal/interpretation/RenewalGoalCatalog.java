@@ -1,11 +1,13 @@
 package com.actiongraph.samples.renewal.interpretation;
 
 import com.actiongraph.samples.renewal.RenewalGoals;
+import com.actiongraph.samples.renewal.RenewalConditions;
 import com.actiongraph.interpretation.GoalCatalog;
 import com.actiongraph.interpretation.GoalDefinition;
 import com.actiongraph.interpretation.GoalParameterDefinition;
 
 import java.util.List;
+import java.util.Set;
 
 public final class RenewalGoalCatalog {
     private RenewalGoalCatalog() {
@@ -21,7 +23,8 @@ public final class RenewalGoalCatalog {
                         "customerId",
                         "Customer identifier. Use canonical IDs such as C001.",
                         "C001"
-                ))
+                )),
+                Set.of(RenewalConditions.CUSTOMER_ID_PRESENT)
         ));
         return catalog;
     }

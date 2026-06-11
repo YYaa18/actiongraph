@@ -1,6 +1,7 @@
 package com.actiongraph.action.annotation;
 
 import com.actiongraph.action.ActionRiskLevel;
+import com.actiongraph.api.Experimental;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -21,4 +22,22 @@ public @interface ActionGraphAction {
     ActionRiskLevel riskLevel() default ActionRiskLevel.LOW;
 
     boolean requiresHumanReview() default false;
+
+    @Experimental(
+            since = "0.1.0",
+            value = "Retry configuration on annotated actions is experimental until idempotency conventions are proven in pilots."
+    )
+    int maxAttempts() default 1;
+
+    @Experimental(
+            since = "0.1.0",
+            value = "Retry configuration on annotated actions is experimental until idempotency conventions are proven in pilots."
+    )
+    long backoffMillis() default 0;
+
+    @Experimental(
+            since = "0.1.0",
+            value = "Timeout configuration on annotated actions is experimental until unknown-outcome compensation conventions are proven in pilots."
+    )
+    long timeoutMillis() default 0;
 }

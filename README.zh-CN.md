@@ -227,7 +227,7 @@ Human Review Callback: POST /actiongraph/human-review/callbacks
 
 自研控制台、CLI 或企业网关适配可以直接依赖 `actiongraph-console`，复用只读查询服务、JSON 响应模型、`ConsoleRunRepository` 端口、JDBC Trace read model 与 CSV/JSONL 审计导出服务，不引入 Spring MVC endpoint。Spring MVC 控制层引入 `actiongraph-spring-boot-starter`，即可获得内置 JSON API、页面、导出端点，以及可选的 `DataSource` 到 `ConsoleRunRepository` 自动装配。启用 `actiongraph.console.enabled=true` 后，会暴露只读运行监控能力：
 
-如果单个 Spring MVC 部署需要同时暴露运行入口、组件目录、审批任务、审批回调和 Console API/UI/导出端点，引入 `actiongraph-spring-boot-starter`，再按部署边界打开对应 `enabled` 配置即可。starter 不会替你创建业务 Action、LLM client 或领域解释器。
+如果单个 Spring MVC 部署需要同时暴露运行入口、组件目录、审批任务、审批回调和 Console API/UI/导出端点，引入 `actiongraph-spring-boot-starter`，再按部署边界打开对应 `enabled` 配置即可。starter 不会替你创建业务 Action 或领域解释器；通用 LLM client 只有在显式配置 `actiongraph.llm.provider` 后才会创建。
 
 ```text
 Console starter: GET /actiongraph/console
@@ -288,7 +288,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 ## 当前成熟度
 
-- 358 个自动化测试通过。
+- 376 个自动化测试通过。
 - 并发冒烟约 6000 runs/s；重复 resume 只产生一次业务副作用。
 - Gradle 模块已收敛到 10 个：core、control-plane-api、governance、human-review、persistence-jdbc、llm-deepseek、console、spring-boot-starter、bom 与 samples。
 - 3 个参考业务域完整跑通。

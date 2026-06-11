@@ -13,7 +13,7 @@ The guardrails live in `ActionGraphComponentCatalogServiceTest` because that tes
   - `actiongraph-llm-deepseek` depends only on core.
   - `actiongraph-persistence-jdbc` depends only on core and human-review.
   - `actiongraph-console` depends only on core and persistence-jdbc.
-  - `actiongraph-spring-boot-starter` is the only aggregate Spring integration layer and may depend on the runtime, control-plane, console, governance, human-review, and JDBC modules.
+  - `actiongraph-spring-boot-starter` is the only aggregate Spring integration layer and may depend on the runtime, control-plane, console, governance, human-review, LLM, and JDBC modules.
 - Non-Spring library modules must not import `org.springframework.*`.
 - Core must not import Spring, Micrometer, JDBC, Jackson, OkHttp, or sample-domain packages.
 - Published library modules must not import `com.actiongraph.samples.*`.

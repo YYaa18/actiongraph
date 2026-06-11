@@ -5,7 +5,6 @@ import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.samples.renewal.interpretation.RenewalGoalInterpreterFactory;
 import com.actiongraph.samples.renewal.narration.RenewalPlanExplainer;
 import com.actiongraph.samples.renewal.narration.RenewalRunSummarizer;
-import com.actiongraph.samples.renewal.seed.RenewalQuoteBlackboardSeeder;
 import com.actiongraph.samples.renewal.service.InMemoryApprovalService;
 import com.actiongraph.samples.renewal.service.InMemoryContractService;
 import com.actiongraph.samples.renewal.service.InMemoryCustomerService;
@@ -49,17 +48,19 @@ public final class RenewalQuoteSampleApp {
         }
 
         InMemoryBlackboard blackboard = new InMemoryBlackboard();
-        GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
-        seeders.register(new RenewalQuoteBlackboardSeeder());
-        seeders.seed(interpretation, blackboard);
-
-        List<Action> actions = RenewalActionFactory.actions(
+        RenewalContribution contribution = new RenewalContribution(
                 new InMemoryCustomerService(),
                 new InMemoryContractService(),
                 new InMemoryRenewalPolicyService(),
                 new InMemoryQuoteService(),
                 new InMemoryApprovalService()
         );
+
+        GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
+        contribution.seeders().forEach(seeders::register);
+        seeders.seed(interpretation, blackboard);
+
+        List<Action> actions = contribution.actions();
         DefaultActionRegistry registry = RenewalActionFactory.registry(actions);
         InMemoryTraceRepository traceRepository = new InMemoryTraceRepository();
         GoapPlanner planner = new GoapPlanner();

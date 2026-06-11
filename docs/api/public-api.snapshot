@@ -417,6 +417,7 @@ CLASS public abstract interface com.actiongraph.action.Action
   METHOD public abstract int cost()
   METHOD public abstract java.util.Set effects()
   METHOD public abstract com.actiongraph.action.ActionResult execute(com.actiongraph.action.ExecutionContext)
+  METHOD public default com.actiongraph.action.ActionExecutionPolicy executionPolicy()
   METHOD public abstract com.actiongraph.action.ActionId id()
   METHOD public abstract java.util.Set inputTypes()
   METHOD public abstract java.util.Set outputTypes()
@@ -424,6 +425,15 @@ CLASS public abstract interface com.actiongraph.action.Action
   METHOD public abstract boolean requiresHumanReview()
   METHOD public abstract com.actiongraph.action.ActionRiskLevel riskLevel()
   METHOD public default boolean runtimeGuard(com.actiongraph.runtime.Blackboard)
+CLASS public final record com.actiongraph.action.ActionExecutionPolicy
+  CONSTRUCTOR public com.actiongraph.action.ActionExecutionPolicy(int,java.time.Duration,java.time.Duration)
+  METHOD public java.time.Duration backoff()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public int maxAttempts()
+  METHOD public static com.actiongraph.action.ActionExecutionPolicy none()
+  METHOD public java.time.Duration timeout()
+  METHOD public final java.lang.String toString()
 CLASS public final record com.actiongraph.action.ActionId
   CONSTRUCTOR public com.actiongraph.action.ActionId(java.lang.String)
   METHOD public final boolean equals(java.lang.Object)
@@ -472,12 +482,15 @@ CLASS public abstract interface com.actiongraph.action.ExecutionContext
   METHOD public abstract java.lang.String runId()
   METHOD public abstract com.actiongraph.trace.TraceRepository trace()
 CLASS public abstract annotation com.actiongraph.action.annotation.ActionGraphAction
+  METHOD public abstract long backoffMillis()
   METHOD public abstract int cost()
   METHOD public abstract java.lang.String[] effects()
   METHOD public abstract java.lang.String id()
+  METHOD public abstract int maxAttempts()
   METHOD public abstract java.lang.String[] preconditions()
   METHOD public abstract boolean requiresHumanReview()
   METHOD public abstract com.actiongraph.action.ActionRiskLevel riskLevel()
+  METHOD public abstract long timeoutMillis()
 CLASS public abstract annotation com.actiongraph.action.annotation.ActionGraphCompensation
   METHOD public abstract java.lang.String actionId()
 CLASS public abstract annotation com.actiongraph.action.annotation.ActionGraphGuard
@@ -491,6 +504,11 @@ CLASS public abstract annotation com.actiongraph.api.Experimental
   METHOD public abstract java.lang.String since()
   METHOD public abstract java.lang.String value()
 CLASS public abstract annotation com.actiongraph.api.Internal
+CLASS public abstract interface com.actiongraph.contribution.ActionGraphContribution
+  METHOD public default java.util.List actions()
+  METHOD public default java.util.List annotatedBeans()
+  METHOD public default java.util.List goals()
+  METHOD public default java.util.List seeders()
 CLASS public class com.actiongraph.exception.ActionGraphConfigurationException
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphConfigurationException(java.lang.String)
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphConfigurationException(java.lang.String,java.lang.Throwable)
@@ -511,6 +529,12 @@ CLASS public class com.actiongraph.exception.ActionGraphNotFoundException
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphNotFoundException(java.lang.String,java.lang.String,java.lang.String)
   METHOD public java.lang.String resourceId()
   METHOD public java.lang.String resourceType()
+CLASS public final class com.actiongraph.graph.ActionGraphExporter
+  CONSTRUCTOR public com.actiongraph.graph.ActionGraphExporter()
+  METHOD public java.lang.String toDot(java.util.Collection)
+  METHOD public java.lang.String toMermaid(java.util.Collection)
+  METHOD public java.lang.String toMermaid(java.util.Collection,com.actiongraph.planning.Goal)
+  METHOD public java.lang.String toMermaid(java.util.Collection,com.actiongraph.planning.Goal,java.util.Set)
 CLASS public final record com.actiongraph.interpretation.ClarificationQuestion
   CONSTRUCTOR public com.actiongraph.interpretation.ClarificationQuestion(java.lang.String)
   METHOD public final boolean equals(java.lang.Object)
@@ -533,11 +557,13 @@ CLASS public final class com.actiongraph.interpretation.GoalCatalog
   METHOD public void register(com.actiongraph.interpretation.GoalDefinition)
 CLASS public final record com.actiongraph.interpretation.GoalDefinition
   CONSTRUCTOR public com.actiongraph.interpretation.GoalDefinition(com.actiongraph.interpretation.GoalType,java.lang.String,com.actiongraph.planning.Goal,java.util.List)
+  CONSTRUCTOR public com.actiongraph.interpretation.GoalDefinition(com.actiongraph.interpretation.GoalType,java.lang.String,com.actiongraph.planning.Goal,java.util.List,java.util.Set)
   METHOD public java.lang.String description()
   METHOD public final boolean equals(java.lang.Object)
   METHOD public com.actiongraph.planning.Goal goal()
   METHOD public final int hashCode()
   METHOD public java.util.List parameters()
+  METHOD public java.util.Set seedConditions()
   METHOD public final java.lang.String toString()
   METHOD public com.actiongraph.interpretation.GoalType type()
 CLASS public final record com.actiongraph.interpretation.GoalInterpretation
@@ -1037,8 +1063,10 @@ CLASS public final record com.actiongraph.trace.TraceEvent
   METHOD public com.actiongraph.trace.TraceEventType type()
 CLASS public final enum com.actiongraph.trace.TraceEventType
   FIELD public static final com.actiongraph.trace.TraceEventType ACTION_FAILED
+  FIELD public static final com.actiongraph.trace.TraceEventType ACTION_RETRIED
   FIELD public static final com.actiongraph.trace.TraceEventType ACTION_STARTED
   FIELD public static final com.actiongraph.trace.TraceEventType ACTION_SUCCEEDED
+  FIELD public static final com.actiongraph.trace.TraceEventType ACTION_TIMED_OUT
   FIELD public static final com.actiongraph.trace.TraceEventType BLACKBOARD_UPDATED
   FIELD public static final com.actiongraph.trace.TraceEventType COMPENSATED
   FIELD public static final com.actiongraph.trace.TraceEventType COMPENSATION_ERROR
@@ -1063,6 +1091,42 @@ CLASS public abstract interface com.actiongraph.trace.TraceRepository
   METHOD public abstract void append(com.actiongraph.trace.TraceEvent)
   METHOD public default void appendAll(java.util.Collection)
   METHOD public abstract java.util.List findByRun(java.lang.String)
+CLASS public final class com.actiongraph.validation.ActionGraphReachability
+  METHOD public static com.actiongraph.validation.ReachabilityResult closure(java.util.Set,java.util.Collection)
+CLASS public final class com.actiongraph.validation.ActionGraphValidator
+  CONSTRUCTOR public com.actiongraph.validation.ActionGraphValidator()
+  CONSTRUCTOR public com.actiongraph.validation.ActionGraphValidator(com.actiongraph.planning.GoapPlanner)
+  METHOD public com.actiongraph.validation.ValidationReport validate(com.actiongraph.interpretation.GoalCatalog,java.util.Collection)
+CLASS public final record com.actiongraph.validation.GoalValidation
+  CONSTRUCTOR public com.actiongraph.validation.GoalValidation(com.actiongraph.interpretation.GoalType,boolean,java.util.List,java.util.Set,java.util.List)
+  CONSTRUCTOR public com.actiongraph.validation.GoalValidation(com.actiongraph.interpretation.GoalType,boolean,java.util.List,java.util.Set,java.util.List,java.util.List)
+  METHOD public java.util.List danglingActions()
+  METHOD public java.lang.String diagnosticText()
+  METHOD public java.util.List diagnostics()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public java.util.Set missingConditions()
+  METHOD public java.util.List previewPlan()
+  METHOD public boolean reachable()
+  METHOD public final java.lang.String toString()
+  METHOD public com.actiongraph.interpretation.GoalType type()
+CLASS public final record com.actiongraph.validation.ReachabilityResult
+  CONSTRUCTOR public com.actiongraph.validation.ReachabilityResult(java.util.Set,java.util.List)
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public java.util.List reachableActions()
+  METHOD public java.util.Set reachableConditions()
+  METHOD public final java.lang.String toString()
+CLASS public final class com.actiongraph.validation.SeederConformance
+  METHOD public static void assertSeedsDeclaredConditions(com.actiongraph.interpretation.GoalBlackboardSeeder,com.actiongraph.interpretation.GoalParameters,com.actiongraph.interpretation.GoalDefinition)
+CLASS public final record com.actiongraph.validation.ValidationReport
+  CONSTRUCTOR public com.actiongraph.validation.ValidationReport(boolean,java.util.List)
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public java.lang.String formatText()
+  METHOD public java.util.List goals()
+  METHOD public final int hashCode()
+  METHOD public final java.lang.String toString()
+  METHOD public boolean valid()
 
 MODULE actiongraph-governance
 CLASS public abstract interface com.actiongraph.governance.AmountExtractor
@@ -1298,11 +1362,26 @@ CLASS public final record com.actiongraph.policy.StageDecision
   METHOD public final java.lang.String toString()
 
 MODULE actiongraph-llm-deepseek
+CLASS public abstract class com.actiongraph.llm.AbstractHttpChatClient
+  CONSTRUCTOR protected com.actiongraph.llm.AbstractHttpChatClient(okhttp3.OkHttpClient,com.fasterxml.jackson.databind.ObjectMapper,java.lang.String)
+  METHOD protected java.util.Map authHeaders()
+  METHOD protected abstract com.actiongraph.llm.AbstractHttpChatClient$HttpRequestSpec buildRequest(com.actiongraph.llm.LlmRequest)
+  METHOD public final com.actiongraph.llm.LlmResponse complete(com.actiongraph.llm.LlmRequest)
+  METHOD protected com.fasterxml.jackson.databind.ObjectMapper objectMapper()
+  METHOD protected abstract java.lang.String parseContent(java.lang.String)
+CLASS protected static final record com.actiongraph.llm.AbstractHttpChatClient$HttpRequestSpec
+  CONSTRUCTOR public com.actiongraph.llm.AbstractHttpChatClient$HttpRequestSpec(java.lang.String,java.lang.String,java.util.Map)
+  METHOD public java.lang.String body()
+  METHOD public java.lang.String endpoint()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public java.util.Map headers()
+  METHOD public final java.lang.String toString()
 CLASS public final class com.actiongraph.llm.DeepSeekChatClient
   FIELD public static final java.lang.String DEFAULT_ENDPOINT
   FIELD public static final java.lang.String DEFAULT_MODEL
   CONSTRUCTOR public com.actiongraph.llm.DeepSeekChatClient(okhttp3.OkHttpClient,com.fasterxml.jackson.databind.ObjectMapper,java.lang.String,java.lang.String,java.lang.String)
-  METHOD public com.actiongraph.llm.LlmResponse complete(com.actiongraph.llm.LlmRequest)
+  METHOD protected java.util.Map extraBodyProperties()
   METHOD public static java.util.Optional fromEnvironment()
 CLASS public final class com.actiongraph.llm.FallbackGoalInterpreter
   CONSTRUCTOR public com.actiongraph.llm.FallbackGoalInterpreter(com.actiongraph.interpretation.GoalInterpreter,com.actiongraph.interpretation.GoalInterpreter)
@@ -1340,6 +1419,12 @@ CLASS public final record com.actiongraph.llm.LlmResponse
   METHOD public final int hashCode()
   METHOD public java.lang.String text()
   METHOD public final java.lang.String toString()
+CLASS public class com.actiongraph.llm.OpenAiCompatibleChatClient
+  CONSTRUCTOR public com.actiongraph.llm.OpenAiCompatibleChatClient(java.lang.String,java.lang.String,java.lang.String,java.util.Map,java.time.Duration)
+  CONSTRUCTOR public com.actiongraph.llm.OpenAiCompatibleChatClient(okhttp3.OkHttpClient,com.fasterxml.jackson.databind.ObjectMapper,java.lang.String,java.lang.String,java.lang.String,java.util.Map)
+  METHOD protected com.actiongraph.llm.AbstractHttpChatClient$HttpRequestSpec buildRequest(com.actiongraph.llm.LlmRequest)
+  METHOD protected java.util.Map extraBodyProperties()
+  METHOD protected java.lang.String parseContent(java.lang.String)
 CLASS public abstract interface com.actiongraph.llm.PromptRenderer
   METHOD public abstract com.actiongraph.llm.LlmRequest render(java.lang.String,com.actiongraph.interpretation.GoalParameters)
 CLASS public final class com.actiongraph.llm.StructuredOutputException
@@ -1754,34 +1839,86 @@ CLASS public class com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiWebAu
   METHOD public com.actiongraph.runtime.api.ActionGraphRuntimeApiService actionGraphRuntimeApiService(com.actiongraph.interpretation.GoalInterpreter,com.actiongraph.interpretation.GoalBlackboardSeederRegistry,com.actiongraph.runtime.GoapExecutor,com.actiongraph.action.ActionRegistry)
 CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphAutoConfiguration()
-  METHOD public com.actiongraph.action.ActionRegistry actionGraphActionRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
+  METHOD public com.actiongraph.action.ActionRegistry actionGraphActionRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.DataMaskingPolicy actionGraphDataMaskingPolicy()
+  METHOD public com.actiongraph.llm.LlmClient actionGraphDeepSeekLlmClient(com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.runtime.GoapExecutor actionGraphExecutor(com.actiongraph.planning.Planner,com.actiongraph.policy.ExecutionPolicyGuard,com.actiongraph.policy.HumanReviewPolicy,com.actiongraph.trace.TraceRepository,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.policy.DataMaskingPolicy,com.actiongraph.policy.ReviewAttributeContributor,com.actiongraph.observability.ObservationSink,com.actiongraph.spring.ActionGraphProperties)
+  METHOD public com.actiongraph.interpretation.GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider)
+  METHOD public com.actiongraph.interpretation.GoalCatalog actionGraphGoalCatalog(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.policy.HumanReviewPolicy actionGraphHumanReviewPolicy()
   METHOD public com.actiongraph.observability.ObservationSink actionGraphObservationSink()
+  METHOD public com.actiongraph.llm.LlmClient actionGraphOpenAiCompatibleLlmClient(com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.PermissionPolicy actionGraphPermissionPolicy()
   METHOD public com.actiongraph.planning.Planner actionGraphPlanner(com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.ExecutionPolicyGuard actionGraphPolicyGuard(com.actiongraph.policy.PermissionPolicy)
   METHOD public com.actiongraph.policy.ReviewAttributeContributor actionGraphReviewAttributeContributor()
   METHOD public com.actiongraph.runtime.SuspendedRunRepository actionGraphSuspendedRunRepository()
   METHOD public com.actiongraph.trace.TraceRepository actionGraphTraceRepository()
+  METHOD public org.springframework.beans.factory.SmartInitializingSingleton actionGraphValidationRunner(com.actiongraph.interpretation.GoalCatalog,com.actiongraph.action.ActionRegistry,com.actiongraph.spring.ActionGraphProperties)
 CLASS public class com.actiongraph.spring.ActionGraphProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ActionsProperties getActions()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$ExecutionProperties getExecution()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ExecutorProperties getExecutor()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$LlmProperties getLlm()
   METHOD public com.actiongraph.spring.ActionGraphProperties$PlannerProperties getPlanner()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$ValidationProperties getValidation()
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ActionsProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ActionsProperties()
   METHOD public boolean isAutoRegisterAnnotated()
   METHOD public void setAutoRegisterAnnotated(boolean)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ExecutionPolicyProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ExecutionPolicyProperties()
+  METHOD public java.lang.String getActionId()
+  METHOD public java.time.Duration getBackoff()
+  METHOD public java.lang.Integer getMaxAttempts()
+  METHOD public java.time.Duration getTimeout()
+  METHOD public void setActionId(java.lang.String)
+  METHOD public void setBackoff(java.time.Duration)
+  METHOD public void setMaxAttempts(java.lang.Integer)
+  METHOD public void setTimeout(java.time.Duration)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ExecutionProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ExecutionProperties()
+  METHOD public java.util.List getPolicies()
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ExecutorProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ExecutorProperties()
   METHOD public int getMaxSteps()
   METHOD public void setMaxSteps(int)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$LlmProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$LlmProperties()
+  METHOD public java.lang.String getApiKeyEnv()
+  METHOD public java.lang.String getBaseUrl()
+  METHOD public java.util.Map getHeaders()
+  METHOD public java.lang.String getModel()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$LlmProvider getProvider()
+  METHOD public java.time.Duration getTimeout()
+  METHOD public void setApiKey(java.lang.String)
+  METHOD public void setApiKeyEnv(java.lang.String)
+  METHOD public void setBaseUrl(java.lang.String)
+  METHOD public void setHeaders(java.util.Map)
+  METHOD public void setModel(java.lang.String)
+  METHOD public void setProvider(com.actiongraph.spring.ActionGraphProperties$LlmProvider)
+  METHOD public void setTimeout(java.time.Duration)
+CLASS public static final enum com.actiongraph.spring.ActionGraphProperties$LlmProvider
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$LlmProvider DEEPSEEK
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$LlmProvider NONE
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$LlmProvider OPENAI_COMPATIBLE
+  METHOD public static com.actiongraph.spring.ActionGraphProperties$LlmProvider valueOf(java.lang.String)
+  METHOD public static com.actiongraph.spring.ActionGraphProperties$LlmProvider[] values()
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$PlannerProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$PlannerProperties()
   METHOD public int getMaxDepth()
   METHOD public int getMaxExpansions()
   METHOD public void setMaxDepth(int)
   METHOD public void setMaxExpansions(int)
+CLASS public static final enum com.actiongraph.spring.ActionGraphProperties$ValidationMode
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$ValidationMode FAIL
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$ValidationMode OFF
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$ValidationMode WARN
+  METHOD public static com.actiongraph.spring.ActionGraphProperties$ValidationMode valueOf(java.lang.String)
+  METHOD public static com.actiongraph.spring.ActionGraphProperties$ValidationMode[] values()
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ValidationProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ValidationProperties()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$ValidationMode getMode()
+  METHOD public void setMode(com.actiongraph.spring.ActionGraphProperties$ValidationMode)
 

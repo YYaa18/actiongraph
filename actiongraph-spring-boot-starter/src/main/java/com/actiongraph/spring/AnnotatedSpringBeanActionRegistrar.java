@@ -24,13 +24,17 @@ final class AnnotatedSpringBeanActionRegistrar {
     }
 
     void registerAnnotatedActions(DefaultActionRegistry registry) {
-        List<Object> targets = annotatedTargets();
-        if (targets.isEmpty()) {
-            return;
-        }
-        for (Action action : AnnotatedActionFactory.actions(targets.toArray())) {
+        for (Action action : annotatedActions()) {
             registry.register(action);
         }
+    }
+
+    List<Action> annotatedActions() {
+        List<Object> targets = annotatedTargets();
+        if (targets.isEmpty()) {
+            return List.of();
+        }
+        return AnnotatedActionFactory.actions(targets.toArray());
     }
 
     private List<Object> annotatedTargets() {

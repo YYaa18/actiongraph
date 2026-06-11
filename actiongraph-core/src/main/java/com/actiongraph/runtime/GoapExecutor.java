@@ -1,6 +1,7 @@
 package com.actiongraph.runtime;
 
 import com.actiongraph.action.Action;
+import com.actiongraph.action.ActionExecutionPolicy;
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.action.ActionResult;
@@ -36,6 +37,7 @@ import com.actiongraph.trace.TraceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -50,6 +52,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public final class GoapExecutor implements Executor {
@@ -334,22 +340,12 @@ public final class GoapExecutor implements Executor {
                     "riskLevel", action.riskLevel().name()
             )));
 
-            ActionResult result;
             long actionStartedAt = System.nanoTime();
-            Map<String, String> actionObservationTags = new LinkedHashMap<>();
-            try {
-                result = action.execute(context);
-                actionObservationTags.put("success", Boolean.toString(result.success()));
-            } catch (Exception ex) {
-                LOGGER.debug("Action raised exception: runId={}, actionId={}",
-                        runId, action.id().value(), ex);
-                result = ActionResult.fail("Exception executing " + action.id().value() + ": " + ex.getMessage());
-                actionObservationTags.put("success", "false");
-                actionObservationTags.put("exceptionType", ex.getClass().getName());
-            }
+            ActionExecutionOutcome outcome = executeWithPolicy(action, context, trace);
             observe(ObservationEvent.timed(runId, ObservationEventType.ACTION_FINISHED, action.id(),
-                    actionObservationTags, elapsedSince(actionStartedAt)));
+                    outcome.observationTags(), elapsedSince(actionStartedAt)));
 
+            ActionResult result = outcome.result();
             if (result.success()) {
                 Set<Condition> addedConditions = new LinkedHashSet<>(action.effects());
                 addedConditions.addAll(result.producedConditions());
@@ -364,6 +360,16 @@ public final class GoapExecutor implements Executor {
                         runId, action.id().value(), addedConditions.size());
                 traceBlackboardUpdate(trace, action, beforeObjects, blackboard.snapshotEntries(), addedConditions);
             } else {
+                if (outcome.timedOut()) {
+                    executedActionIds.add(action.id());
+                    compensationStack.push(action);
+                    trace.append(TraceEventType.ACTION_TIMED_OUT, action.id(), result.message(), Map.of(
+                            "outcome", "UNKNOWN",
+                            "attempt", Integer.toString(outcome.attempts())
+                    ));
+                    LOGGER.debug("Action timed out with unknown outcome: runId={}, actionId={}, attempt={}",
+                            runId, action.id().value(), outcome.attempts());
+                }
                 trace.append(TraceEventType.ACTION_FAILED, action.id(), result.message(), Map.of());
                 LOGGER.debug("Action failed, starting compensation: runId={}, actionId={}, compensationStack={}",
                         runId, action.id().value(), compensationStack.size());
@@ -381,6 +387,116 @@ public final class GoapExecutor implements Executor {
         LOGGER.debug("Max executor steps exceeded: runId={}, maxSteps={}", runId, maxSteps);
         return finish(trace, runId, RunStatus.HALTED_UNREACHABLE, blackboard, executedActionIds,
                 "Max executor steps exceeded", runStartedAt);
+    }
+
+    private ActionExecutionOutcome executeWithPolicy(Action action, ExecutionContext context, RunTrace trace) {
+        ActionExecutionPolicy policy = action.executionPolicy();
+        Map<String, String> tags = new LinkedHashMap<>();
+        for (int attempt = 1; attempt <= policy.maxAttempts(); attempt++) {
+            AttemptResult attemptResult = executeAttempt(action, context, policy.timeout());
+            if (attemptResult.timedOut()) {
+                tags.put("success", "false");
+                tags.put("timedOut", "true");
+                tags.put("attempts", Integer.toString(attempt));
+                return new ActionExecutionOutcome(
+                        ActionResult.fail("Action timed out with unknown outcome: " + action.id().value()),
+                        true,
+                        attempt,
+                        tags
+                );
+            }
+            if (attemptResult.exception() != null) {
+                RuntimeException ex = attemptResult.exception();
+                LOGGER.debug("Action raised exception: runId={}, actionId={}, attempt={}",
+                        context.runId(), action.id().value(), attempt, ex);
+                tags.put("success", "false");
+                tags.put("exceptionType", ex.getClass().getName());
+                if (attempt < policy.maxAttempts()) {
+                    traceRetry(action, trace, attempt, policy.backoff(), "exception");
+                    backoff(policy.backoff());
+                    continue;
+                }
+                tags.put("attempts", Integer.toString(attempt));
+                return new ActionExecutionOutcome(
+                        ActionResult.fail("Exception executing " + action.id().value() + ": " + ex.getMessage()),
+                        false,
+                        attempt,
+                        tags
+                );
+            }
+
+            ActionResult result = attemptResult.result();
+            if (result.success() || attempt == policy.maxAttempts()) {
+                tags.put("success", Boolean.toString(result.success()));
+                tags.put("attempts", Integer.toString(attempt));
+                return new ActionExecutionOutcome(result, false, attempt, tags);
+            }
+            traceRetry(action, trace, attempt, policy.backoff(), "failed-result");
+            backoff(policy.backoff());
+        }
+        tags.put("success", "false");
+        tags.put("attempts", Integer.toString(policy.maxAttempts()));
+        return new ActionExecutionOutcome(
+                ActionResult.fail("Action failed after " + policy.maxAttempts() + " attempts: " + action.id().value()),
+                false,
+                policy.maxAttempts(),
+                tags
+        );
+    }
+
+    private AttemptResult executeAttempt(Action action, ExecutionContext context, Duration timeout) {
+        if (timeout == null) {
+            return callAction(action, context);
+        }
+        FutureTask<ActionResult> task = new FutureTask<>(() -> action.execute(context));
+        Thread thread = Thread.ofVirtual().name("actiongraph-action-" + action.id().value()).start(task);
+        try {
+            return AttemptResult.result(task.get(timeout.toNanos(), TimeUnit.NANOSECONDS));
+        } catch (TimeoutException ex) {
+            task.cancel(true);
+            thread.interrupt();
+            return AttemptResult.timeout();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return AttemptResult.exception(new RuntimeException("Interrupted while executing action", ex));
+        } catch (ExecutionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException runtimeException) {
+                return AttemptResult.exception(runtimeException);
+            }
+            if (cause instanceof Error error) {
+                throw error;
+            }
+            return AttemptResult.exception(new RuntimeException(cause));
+        }
+    }
+
+    private AttemptResult callAction(Action action, ExecutionContext context) {
+        try {
+            return AttemptResult.result(action.execute(context));
+        } catch (RuntimeException ex) {
+            return AttemptResult.exception(ex);
+        }
+    }
+
+    private void traceRetry(Action action, RunTrace trace, int attempt, Duration backoff, String reason) {
+        trace.append(TraceEventType.ACTION_RETRIED, action.id(), "Retrying action " + action.id().value(), Map.of(
+                "attempt", Integer.toString(attempt),
+                "nextAttempt", Integer.toString(attempt + 1),
+                "backoffMillis", Long.toString(backoff.toMillis()),
+                "reason", reason
+        ));
+    }
+
+    private void backoff(Duration backoff) {
+        if (backoff.isZero()) {
+            return;
+        }
+        try {
+            Thread.sleep(backoff.toMillis());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private Selection selectNextAction(
@@ -727,6 +843,31 @@ public final class GoapExecutor implements Executor {
 
         static Selection halt(RunStatus status, boolean compensateOnHalt, ActionId pendingActionId, String message) {
             return new Selection(null, true, status, compensateOnHalt, pendingActionId, message);
+        }
+    }
+
+    private record ActionExecutionOutcome(
+            ActionResult result,
+            boolean timedOut,
+            int attempts,
+            Map<String, String> observationTags
+    ) {
+        private ActionExecutionOutcome {
+            observationTags = Map.copyOf(observationTags);
+        }
+    }
+
+    private record AttemptResult(ActionResult result, RuntimeException exception, boolean timedOut) {
+        static AttemptResult result(ActionResult result) {
+            return new AttemptResult(Objects.requireNonNull(result, "result"), null, false);
+        }
+
+        static AttemptResult exception(RuntimeException exception) {
+            return new AttemptResult(null, Objects.requireNonNull(exception, "exception"), false);
+        }
+
+        static AttemptResult timeout() {
+            return new AttemptResult(null, null, true);
         }
     }
 

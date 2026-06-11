@@ -204,7 +204,7 @@ If `shared-secret` is configured, the request must include the configured token 
 
 `actiongraph-console` can be used directly by custom monitoring services, CLIs, or enterprise gateways that want the run query service, response model, `ConsoleRunRepository` port, JDBC trace read model, and CSV/JSONL audit export service without Spring MVC endpoints. Spring MVC control-plane services use `actiongraph-spring-boot-starter` when they want the built-in JSON API, HTML page, export endpoints, and optional JDBC `ConsoleRunRepository` auto-configuration from a `DataSource`. With `actiongraph.console.enabled=true`, the read-only surface is:
 
-If a single Spring MVC deployment should expose the built-in runtime entry, component catalog, approval task, approval callback, and console endpoints together, add `actiongraph-spring-boot-starter`, then enable only the endpoint properties that deployment owns. The starter still does not create business actions, LLM clients, or domain-specific interpreters for you.
+If a single Spring MVC deployment should expose the built-in runtime entry, component catalog, approval task, approval callback, and console endpoints together, add `actiongraph-spring-boot-starter`, then enable only the endpoint properties that deployment owns. The starter still does not create business actions or domain-specific interpreters for you; generic LLM clients are created only when `actiongraph.llm.provider` is explicitly configured.
 
 ```text
 Console API: GET /actiongraph/console

@@ -1,5 +1,6 @@
 package com.actiongraph.action;
 
+import com.actiongraph.api.Experimental;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.runtime.Blackboard;
 
@@ -81,6 +82,23 @@ public interface Action {
      * @return {@code true} when human review is required
      */
     boolean requiresHumanReview();
+
+    /**
+     * Runtime execution controls for this action.
+     *
+     * <p>The default policy preserves legacy behavior: a single attempt, no
+     * backoff, and no timeout. Declaring more than one attempt is an application
+     * contract that {@link #execute(ExecutionContext)} is idempotent.
+     *
+     * @return non-null execution policy
+     */
+    @Experimental(
+            since = "0.1.0",
+            value = "Retry and timeout execution policy is experimental until idempotency conventions are proven in pilots."
+    )
+    default ActionExecutionPolicy executionPolicy() {
+        return ActionExecutionPolicy.none();
+    }
 
     /**
      * Value-dependent guard evaluated immediately before execution. Unlike

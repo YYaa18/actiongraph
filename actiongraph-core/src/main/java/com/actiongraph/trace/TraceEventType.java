@@ -1,5 +1,7 @@
 package com.actiongraph.trace;
 
+import com.actiongraph.api.Experimental;
+
 /**
  * Stable taxonomy of runtime audit events.
  *
@@ -19,6 +21,16 @@ public enum TraceEventType {
     HUMAN_REVIEW_DECIDED,
     RUNTIME_GUARD_FAILED,
     ACTION_STARTED,
+    @Experimental(
+            since = "0.1.0",
+            value = "Retry trace events are experimental until retry/idempotency conventions settle."
+    )
+    ACTION_RETRIED,
+    @Experimental(
+            since = "0.1.0",
+            value = "Timeout trace events are experimental until unknown-outcome compensation conventions settle."
+    )
+    ACTION_TIMED_OUT,
     ACTION_SUCCEEDED,
     ACTION_FAILED,
     BLACKBOARD_UPDATED,
