@@ -227,6 +227,19 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void gradleModulesRequireModuleGovernanceApproval() throws IOException {
+        Path root = repositoryRoot();
+        Set<String> includedModules = parseModules(root.resolve("settings.gradle.kts"),
+                "include\\(\"([^\"]+)\"\\)");
+        Set<String> governedModules = parseGovernedModules(
+                root.resolve("docs/frameworkization/module-governance.md"));
+
+        assertThat(governedModules)
+                .as("every included module should be listed in the module governance approval ledger")
+                .containsExactlyInAnyOrderElementsOf(includedModules);
+    }
+
+    @Test
     void catalogRequiredModulesMatchGradleProjectDependencies() throws IOException {
         Path root = repositoryRoot();
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
@@ -423,6 +436,28 @@ class ActionGraphComponentCatalogServiceTest {
     private Set<String> parseModules(Path file, String regex) throws IOException {
         String content = Files.readString(file, StandardCharsets.UTF_8);
         var matcher = Pattern.compile(regex).matcher(content);
+        Set<String> modules = new LinkedHashSet<>();
+        while (matcher.find()) {
+            modules.add(matcher.group(1));
+        }
+        return modules;
+    }
+
+    private Set<String> parseGovernedModules(Path file) throws IOException {
+        String content = Files.readString(file, StandardCharsets.UTF_8);
+        String startMarker = "<!-- module-governance:start -->";
+        String endMarker = "<!-- module-governance:end -->";
+        int start = content.indexOf(startMarker);
+        int end = content.indexOf(endMarker);
+        assertThat(start)
+                .as(file + " should contain a module governance start marker")
+                .isGreaterThanOrEqualTo(0);
+        assertThat(end)
+                .as(file + " should contain a module governance end marker")
+                .isGreaterThan(start);
+
+        String ledger = content.substring(start + startMarker.length(), end);
+        var matcher = Pattern.compile("\\|\\s*`(actiongraph-[^`]+)`\\s*\\|").matcher(ledger);
         Set<String> modules = new LinkedHashSet<>();
         while (matcher.find()) {
             modules.add(matcher.group(1));

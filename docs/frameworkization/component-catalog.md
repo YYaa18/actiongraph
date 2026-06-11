@@ -142,6 +142,7 @@ This lets old Java estates ask the catalog which artifacts are safe to load dire
 The catalog is part of the release contract, not only documentation. Tests verify:
 
 - every module in `settings.gradle.kts` appears in the default catalog
+- every module in `settings.gradle.kts` appears in the module governance approval ledger
 - every non-sample library module appears in the BOM constraints
 - every component `requires` list matches that module's direct Gradle project dependencies
 - every `requires`, `optionalWith`, and composition profile module reference points to an existing catalog component
