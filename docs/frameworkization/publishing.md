@@ -55,7 +55,7 @@ Java 8 client compatibility includes a Maven consumption gate:
 ./gradlew verifyJava8MavenConsumer
 ```
 
-That task publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles `docs/examples/java8-maven-consumer` with Maven Compiler Plugin `release=8`. It proves that a legacy Maven application can import the BOM and omit individual ActionGraph versions while consuming the Java 8 client artifacts.
+That task publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles `docs/examples/java8-maven-consumer` with Maven Compiler Plugin `source=1.8` / `target=1.8`. The CI workflow also compiles the same consumer after switching to a real JDK 8, proving that a legacy Maven application can import the BOM and omit individual ActionGraph versions while consuming the Java 8 client artifacts.
 
 GitHub Actions also runs the CI workflow on every push to `main` and every pull request:
 

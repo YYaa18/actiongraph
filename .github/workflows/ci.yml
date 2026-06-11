@@ -37,3 +37,16 @@ jobs:
 
       - name: Build
         run: ./gradlew build --no-daemon --stacktrace
+
+      - name: Set Up Java 8
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 8
+
+      - name: Verify Java 8 Maven Consumer On JDK 8
+        run: >
+          mvn -q
+          -f docs/examples/java8-maven-consumer/pom.xml
+          -Djava8.consumer.build.directory=${{ github.workspace }}/build/java8-maven-consumer-jdk8
+          clean compile

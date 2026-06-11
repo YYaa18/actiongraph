@@ -376,7 +376,9 @@ class ActionGraphComponentCatalogServiceTest {
                 .map(ActionGraphComponent::module)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         Set<String> buildJava8Modules = parseJava8CompatibleModules(root.resolve("build.gradle.kts"));
-        Set<String> mavenConsumerModules = parseModules(root.resolve("docs/examples/java8-maven-consumer/pom.xml"),
+        Path mavenConsumerPom = root.resolve("docs/examples/java8-maven-consumer/pom.xml");
+        String mavenConsumerPomXml = Files.readString(mavenConsumerPom, StandardCharsets.UTF_8);
+        Set<String> mavenConsumerModules = parseModules(mavenConsumerPom,
                 "<artifactId>(actiongraph-[^<]+)</artifactId>");
         mavenConsumerModules.remove("actiongraph-java8-maven-consumer");
         mavenConsumerModules.remove("actiongraph-bom");
@@ -387,6 +389,11 @@ class ActionGraphComponentCatalogServiceTest {
         assertThat(mavenConsumerModules)
                 .as("Maven Java 8 consumer example should import exactly the Java 8 client artifacts")
                 .containsExactlyInAnyOrderElementsOf(catalogJava8Modules);
+        assertThat(mavenConsumerPomXml)
+                .as("Maven Java 8 consumer must build on a real JDK 8, where --release is unavailable")
+                .doesNotContain("maven.compiler.release", "<release>")
+                .contains("<maven.compiler.source>1.8</maven.compiler.source>")
+                .contains("<maven.compiler.target>1.8</maven.compiler.target>");
     }
 
     @Test
