@@ -257,6 +257,29 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void java8ClientCatalogMatchesBuildGateAndMavenConsumerExample() throws IOException {
+        Path root = repositoryRoot();
+        ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
+
+        Set<String> catalogJava8Modules = service.componentsByCompatibility(ComponentCompatibility.JAVA8_CLIENT.label())
+                .stream()
+                .map(ActionGraphComponent::module)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<String> buildJava8Modules = parseJava8CompatibleModules(root.resolve("build.gradle.kts"));
+        Set<String> mavenConsumerModules = parseModules(root.resolve("docs/examples/java8-maven-consumer/pom.xml"),
+                "<artifactId>(actiongraph-[^<]+)</artifactId>");
+        mavenConsumerModules.remove("actiongraph-java8-maven-consumer");
+        mavenConsumerModules.remove("actiongraph-bom");
+
+        assertThat(catalogJava8Modules)
+                .as("catalog java8-client labels must match modules compiled and verified as Java 8 artifacts")
+                .containsExactlyInAnyOrderElementsOf(buildJava8Modules);
+        assertThat(mavenConsumerModules)
+                .as("Maven Java 8 consumer example should import exactly the Java 8 client artifacts")
+                .containsExactlyInAnyOrderElementsOf(catalogJava8Modules);
+    }
+
+    @Test
     void lookupReturnsEmptyForUnknownEntries() {
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
 
@@ -330,5 +353,21 @@ class ActionGraphComponentCatalogServiceTest {
                     .forEach(documents::add);
         }
         return documents;
+    }
+
+    private Set<String> parseJava8CompatibleModules(Path buildFile) throws IOException {
+        String content = Files.readString(buildFile, StandardCharsets.UTF_8);
+        var matcher = Pattern.compile("val\\s+java8CompatibleModules\\s*=\\s*setOf\\((.*?)\\)",
+                Pattern.DOTALL).matcher(content);
+        assertThat(matcher.find())
+                .as("root build must declare java8CompatibleModules")
+                .isTrue();
+
+        Set<String> modules = new LinkedHashSet<>();
+        var moduleMatcher = Pattern.compile("\"(actiongraph-[^\"]+)\"").matcher(matcher.group(1));
+        while (moduleMatcher.find()) {
+            modules.add(moduleMatcher.group(1));
+        }
+        return modules;
     }
 }
