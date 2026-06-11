@@ -1,6 +1,14 @@
 package com.actiongraph.persistence.jdbc;
 
-public final class UnsupportedSuspendedRunSnapshotVersionException extends IllegalStateException {
+import com.actiongraph.exception.ActionGraphConfigurationException;
+
+/**
+ * Raised when a persisted suspended-run snapshot was written with an unsupported
+ * format version.
+ */
+public final class UnsupportedSuspendedRunSnapshotVersionException extends ActionGraphConfigurationException {
+    private static final long serialVersionUID = 1L;
+
     private final int snapshotVersion;
     private final int supportedVersion;
 

@@ -1,5 +1,6 @@
 package com.actiongraph.controlplane.auth;
 
+import com.actiongraph.controlplane.ControlPlaneApiException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -25,6 +26,7 @@ class ControlPlaneTokenVerifierTest {
         assertThat(verifier.isAuthorized(protection, null)).isFalse();
         assertThat(verifier.isAuthorized(protection, "wrong")).isFalse();
         assertThatThrownBy(() -> verifier.verify(protection, "wrong", "custom unauthorized"))
+                .isInstanceOf(ControlPlaneApiException.class)
                 .isInstanceOf(UnauthorizedControlPlaneAccessException.class)
                 .hasMessage("custom unauthorized");
     }

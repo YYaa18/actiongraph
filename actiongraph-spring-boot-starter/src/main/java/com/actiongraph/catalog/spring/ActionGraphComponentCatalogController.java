@@ -65,7 +65,8 @@ public final class ActionGraphComponentCatalogController {
     ) {
         verifyToken(headers);
         return catalogService.component(module)
-                .orElseThrow(() -> new ComponentCatalogEntryNotFoundException("Component not found: " + module));
+                .orElseThrow(() -> new ComponentCatalogEntryNotFoundException(
+                        "component", module, "Component not found: " + module));
     }
 
     @GetMapping("/modules/{module}/profiles")
@@ -75,7 +76,8 @@ public final class ActionGraphComponentCatalogController {
     ) {
         verifyToken(headers);
         catalogService.component(module)
-                .orElseThrow(() -> new ComponentCatalogEntryNotFoundException("Component not found: " + module));
+                .orElseThrow(() -> new ComponentCatalogEntryNotFoundException(
+                        "component", module, "Component not found: " + module));
         return catalogService.profilesContainingModule(module);
     }
 
@@ -92,7 +94,8 @@ public final class ActionGraphComponentCatalogController {
     ) {
         verifyToken(headers);
         return catalogService.profile(profile)
-                .orElseThrow(() -> new ComponentCatalogEntryNotFoundException("Profile not found: " + profile));
+                .orElseThrow(() -> new ComponentCatalogEntryNotFoundException(
+                        "profile", profile, "Profile not found: " + profile));
     }
 
     private void verifyToken(HttpHeaders headers) {

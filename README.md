@@ -27,6 +27,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional human-review governance extension for review attributes and risk-based approval routing
 - SLF4J API debug logging at planner, executor, compensation, and suspend/resume decision points without binding a logging implementation
 - Public contract Javadocs for core Action, Policy, Human Review, Suspension, Blackboard, and Trace APIs
+- Typed exception hierarchy for framework input, configuration, conflict, not-found, and integration failures
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory

@@ -1,7 +1,14 @@
 package com.actiongraph.catalog.spring;
 
-public final class ComponentCatalogEntryNotFoundException extends RuntimeException {
-    public ComponentCatalogEntryNotFoundException(String message) {
-        super(message);
+import com.actiongraph.exception.ActionGraphNotFoundException;
+
+/**
+ * Raised when a Spring component-catalog endpoint is asked for an unknown entry.
+ */
+public final class ComponentCatalogEntryNotFoundException extends ActionGraphNotFoundException {
+    private static final long serialVersionUID = 1L;
+
+    public ComponentCatalogEntryNotFoundException(String resourceType, String resourceId, String message) {
+        super(resourceType, resourceId, message);
     }
 }

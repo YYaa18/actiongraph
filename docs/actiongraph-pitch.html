@@ -753,7 +753,7 @@
         <span>审批申请已创建：APPROVAL-1，对应报价：QUOTE-1</span>
       </div>
       <div class="hud">
-        <div class="hud-item"><b>343</b><span>tests passing</span></div>
+        <div class="hud-item"><b>345</b><span>tests passing</span></div>
         <div class="hud-item"><b>10</b><span>modules</span></div>
         <div class="hud-item"><b>3</b><span>reference domains</span></div>
         <div class="hud-item"><b>~6000</b><span>runs/s smoke</span></div>
@@ -1013,11 +1013,11 @@
           <div><span class="log-ok">actiongraph-control-plane-api:test</span> component catalog + Java 8 HTTP client tests, 0 failures</div>
           <div><span class="log-ok">control-plane endpoint composition</span> main starter only, property-gated surfaces</div>
           <div><span class="log-ok">actiongraph-samples:test</span> 61 tests, 1 gated smoke skipped</div>
-          <div><span class="log-ok">BUILD SUCCESSFUL</span> 343 tests, 0 failures, 1 skipped</div>
+          <div><span class="log-ok">BUILD SUCCESSFUL</span> 345 tests, 0 failures, 1 skipped</div>
         </div>
       </div>
       <div class="layout-3" style="grid-template-columns:1fr;">
-        <div class="panel ok"><div class="metric green">343</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、主 Spring starter、Component Catalog、组件兼容性标签、发布面一致性守门、文档 artifact 名称守门、仓库治理文件守门、核心 API Javadoc 合同守门、SLF4J API 日志守门、Control Plane API、Java 8 聚合控制面 HTTP client、Java 8 runtime gateway、Java 8 .properties 聚合配置、Java 8 安全 GET 重试、Java 8 Runtime / Component Catalog / Human Review / Console HTTP client、共享密钥鉴权、仓储型人审、治理策略、结构化记忆、运行入口解释/启动/恢复端点、运行入口 SPI、批量目标解释 SPI、组件目录端点、审批任务/回调端点、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
+        <div class="panel ok"><div class="metric green">345</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、主 Spring starter、Component Catalog、组件兼容性标签、发布面一致性守门、文档 artifact 名称守门、仓库治理文件守门、核心 API Javadoc 合同守门、类型化异常层级、SLF4J API 日志守门、Control Plane API、Java 8 聚合控制面 HTTP client、Java 8 runtime gateway、Java 8 .properties 聚合配置、Java 8 安全 GET 重试、Java 8 Runtime / Component Catalog / Human Review / Console HTTP client、共享密钥鉴权、仓储型人审、治理策略、结构化记忆、运行入口解释/启动/恢复端点、运行入口 SPI、批量目标解释 SPI、组件目录端点、审批任务/回调端点、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
         <div class="panel ok"><div class="metric green">~6000</div><h3>并发冒烟</h3><p>200 虚拟线程并发 1 万次运行；重复 resume 只产生一次业务副作用。</p></div>
         <div class="panel ok"><div class="metric green">10</div><h3>工程模块</h3><p>bom / core / control-plane-api / human-review / governance / llm-deepseek / persistence-jdbc / spring-boot-starter / console / samples。公共内核已吸收注解适配器、目标解释契约、Blackboard seeder、运行入口服务和结构化记忆；主 Spring starter 收敛运行时默认值、JDBC、Memory、人审、治理、Console 与控制层端点。组件目录能力并入 control-plane-api，作为唯一 java8-client artifact；运行时和 Spring 生态是 java21-plus，样例是 sample-only。</p></div>
         <div class="panel ok"><div class="metric green">3</div><h3>参考业务域</h3><p>续约报价、订单取消、理赔资料预审三个不同领域接入，证明核心可复用；理赔预审作为 F1 试点准备样板，后续成败以真实/准真实环境验收为准。</p></div>

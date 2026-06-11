@@ -1,5 +1,7 @@
 package com.actiongraph.runtime;
 
+import com.actiongraph.exception.ActionGraphConflictException;
+
 import java.util.Objects;
 
 /**
@@ -10,7 +12,9 @@ import java.util.Objects;
  * failed. The run id may be missing, already completed, or currently claimed by
  * another worker.
  */
-public final class SuspendedRunNotClaimableException extends IllegalStateException {
+public final class SuspendedRunNotClaimableException extends ActionGraphConflictException {
+    private static final long serialVersionUID = 1L;
+
     private final String runId;
 
     public SuspendedRunNotClaimableException(String runId) {

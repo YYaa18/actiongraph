@@ -1,6 +1,14 @@
 package com.actiongraph.persistence.jdbc;
 
-public final class DisallowedBlackboardTypeException extends IllegalStateException {
+import com.actiongraph.exception.ActionGraphConfigurationException;
+
+/**
+ * Raised when a JDBC suspended-run snapshot contains a Blackboard type outside
+ * the configured allowlist.
+ */
+public final class DisallowedBlackboardTypeException extends ActionGraphConfigurationException {
+    private static final long serialVersionUID = 1L;
+
     private final String className;
 
     public DisallowedBlackboardTypeException(String className) {
