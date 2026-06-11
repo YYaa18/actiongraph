@@ -1,5 +1,12 @@
 import java.io.DataInputStream
 import java.io.FileInputStream
+import java.lang.reflect.Constructor
+import java.lang.reflect.Executable
+import java.lang.reflect.Field
+import java.lang.reflect.Method
+import java.lang.reflect.Modifier
+import java.net.URLClassLoader
+import org.gradle.api.tasks.SourceSetContainer
 
 plugins {
     java
@@ -15,12 +22,12 @@ val java8CompatibleModules = setOf(
 )
 
 val libraryModuleDescriptions = mapOf(
-    "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, trace, SLF4J API diagnostics, goal interpretation, runtime entry, and structured memory APIs.",
+    "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, trace, observability, SLF4J API diagnostics, goal interpretation, runtime entry, and structured memory APIs.",
     "actiongraph-control-plane-api" to "Java 8 compatible component catalog, control-plane contracts, runtime gateway interface, properties-based aggregate configuration, safe GET retries, lightweight aggregate and split HTTP clients, and shared-secret token verification.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, approval chains, and task query APIs for ActionGraph.",
     "actiongraph-llm-deepseek" to "Provider-neutral LLM goal interpretation support and DeepSeek-compatible client provider for ActionGraph.",
     "actiongraph-persistence-jdbc" to "JDBC persistence repositories for ActionGraph trace, suspended runs, memory, human review, and read models.",
-    "actiongraph-spring-boot-starter" to "Spring Boot auto-configuration for annotation-driven ActionGraph action registration, repositories, governance, memory, human review, and optional HTTP endpoints.",
+    "actiongraph-spring-boot-starter" to "Spring Boot auto-configuration for annotation-driven ActionGraph action registration, observability, repositories, governance, memory, human review, and optional HTTP endpoints.",
     "actiongraph-governance" to "Optional governance policies for masking, amount limits, rule-based permissions, review attributes, and approval routing.",
     "actiongraph-console" to "Reusable ActionGraph console query, JDBC read model, and audit export services."
 )
@@ -233,4 +240,174 @@ val verifyJava8MavenConsumer = tasks.register<Exec>("verifyJava8MavenConsumer") 
 
 tasks.named("check") {
     dependsOn(verifyJava8MavenConsumer)
+}
+
+val publicApiSnapshotFile = layout.projectDirectory.file("docs/api/public-api.snapshot")
+
+fun publicOrProtected(modifiers: Int): Boolean =
+        Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)
+
+fun stableModifiers(modifiers: Int, defaultMethod: Boolean = false): String {
+    val parts = mutableListOf<String>()
+    if (Modifier.isPublic(modifiers)) {
+        parts += "public"
+    } else if (Modifier.isProtected(modifiers)) {
+        parts += "protected"
+    }
+    if (Modifier.isStatic(modifiers)) {
+        parts += "static"
+    }
+    if (Modifier.isAbstract(modifiers)) {
+        parts += "abstract"
+    }
+    if (Modifier.isFinal(modifiers)) {
+        parts += "final"
+    }
+    if (Modifier.isSynchronized(modifiers)) {
+        parts += "synchronized"
+    }
+    if (Modifier.isNative(modifiers)) {
+        parts += "native"
+    }
+    if (Modifier.isStrict(modifiers)) {
+        parts += "strict"
+    }
+    if (defaultMethod) {
+        parts += "default"
+    }
+    return parts.joinToString(" ")
+}
+
+fun stableTypeName(type: Class<*>): String =
+        when {
+            type.isArray -> stableTypeName(type.componentType) + "[]"
+            else -> type.name
+        }
+
+fun executableSignature(executable: Executable): String {
+    val parameters = executable.parameterTypes.joinToString(",") { stableTypeName(it) }
+    val exceptions = executable.exceptionTypes
+            .map { stableTypeName(it) }
+            .sorted()
+            .joinToString(",")
+    return if (exceptions.isBlank()) "($parameters)" else "($parameters) throws $exceptions"
+}
+
+fun classKind(type: Class<*>): String =
+        when {
+            type.isAnnotation -> "annotation"
+            type.isEnum -> "enum"
+            type.isRecord -> "record"
+            type.isInterface -> "interface"
+            else -> "class"
+        }
+
+fun renderField(field: Field): String =
+        "  FIELD ${stableModifiers(field.modifiers)} ${stableTypeName(field.type)} ${field.name}"
+
+fun renderConstructor(constructor: Constructor<*>): String =
+        "  CONSTRUCTOR ${stableModifiers(constructor.modifiers)} ${constructor.name}${executableSignature(constructor)}"
+
+fun renderMethod(method: Method): String =
+        "  METHOD ${stableModifiers(method.modifiers, method.isDefault)} ${stableTypeName(method.returnType)} " +
+                "${method.name}${executableSignature(method)}"
+
+fun classNames(classesDir: File): List<String> =
+        if (!classesDir.exists()) {
+            emptyList()
+        } else {
+            classesDir.walkTopDown()
+                    .filter { it.isFile && it.extension == "class" }
+                    .map { it.relativeTo(classesDir).path }
+                    .filterNot { it.endsWith("module-info.class") || it.endsWith("package-info.class") }
+                    .map { it.removeSuffix(".class").replace(File.separatorChar, '.') }
+                    .sorted()
+                    .toList()
+        }
+
+fun renderPublicApiSnapshot(): String {
+    val lines = mutableListOf<String>()
+    lines += "# ActionGraph public API snapshot"
+    lines += "# Regenerate intentionally with: ./gradlew verifyPublicApiSnapshot -PupdatePublicApiSnapshot=true"
+    lines += "# This snapshot is generated from compiled public/protected class members."
+    lines += ""
+
+    libraryModuleDescriptions.keys.sorted().forEach { moduleName ->
+        val moduleProject = project(":$moduleName")
+        val sourceSets = moduleProject.extensions.getByType(SourceSetContainer::class.java)
+        val main = sourceSets.named("main").get()
+        val classesDirs = main.output.classesDirs.files.sortedBy { it.path }
+        val classpath = (classesDirs + main.compileClasspath.files + main.runtimeClasspath.files)
+                .distinct()
+                .map { it.toURI().toURL() }
+                .toTypedArray()
+        URLClassLoader(classpath, ClassLoader.getPlatformClassLoader()).use { loader ->
+            lines += "MODULE $moduleName"
+            classesDirs.flatMap(::classNames)
+                    .distinct()
+                    .forEach { className ->
+                        val type = Class.forName(className, false, loader)
+                        if (publicOrProtected(type.modifiers) && !type.isSynthetic) {
+                            lines += "CLASS ${stableModifiers(type.modifiers)} ${classKind(type)} ${type.name}"
+                            type.declaredFields
+                                    .filter { publicOrProtected(it.modifiers) && !it.isSynthetic }
+                                    .sortedWith(compareBy<Field> { it.name }.thenBy { stableTypeName(it.type) })
+                                    .mapTo(lines, ::renderField)
+                            type.declaredConstructors
+                                    .filter { publicOrProtected(it.modifiers) && !it.isSynthetic }
+                                    .sortedBy { executableSignature(it) }
+                                    .mapTo(lines, ::renderConstructor)
+                            type.declaredMethods
+                                    .filter { publicOrProtected(it.modifiers) && !it.isSynthetic && !it.isBridge }
+                                    .sortedWith(compareBy<Method> { it.name }
+                                            .thenBy { executableSignature(it) }
+                                            .thenBy { stableTypeName(it.returnType) })
+                                    .mapTo(lines, ::renderMethod)
+                        }
+                    }
+            lines += ""
+        }
+    }
+    return lines.joinToString(System.lineSeparator()) + System.lineSeparator()
+}
+
+val verifyPublicApiSnapshot = tasks.register("verifyPublicApiSnapshot") {
+    group = "verification"
+    description = "Verifies the published public/protected API surface matches the checked-in snapshot."
+    dependsOn(libraryModuleDescriptions.keys.map { ":$it:classes" })
+    inputs.files(libraryModuleDescriptions.keys.map { project(":$it").layout.buildDirectory.dir("classes/java/main") })
+    outputs.upToDateWhen { false }
+
+    doLast {
+        val generated = renderPublicApiSnapshot()
+        val snapshot = publicApiSnapshotFile.asFile
+        if (findProperty("updatePublicApiSnapshot") == "true") {
+            snapshot.parentFile.mkdirs()
+            snapshot.writeText(generated)
+            logger.lifecycle("Updated ${snapshot.relativeTo(projectDir)}")
+            return@doLast
+        }
+        if (!snapshot.exists()) {
+            throw GradleException(
+                    "Missing public API snapshot. Run ./gradlew verifyPublicApiSnapshot " +
+                            "-PupdatePublicApiSnapshot=true and review docs/api/public-api.snapshot."
+            )
+        }
+        val expected = snapshot.readText()
+        if (generated != expected) {
+            val generatedFile = layout.buildDirectory.file("reports/public-api/public-api.snapshot.actual")
+                    .get().asFile
+            generatedFile.parentFile.mkdirs()
+            generatedFile.writeText(generated)
+            throw GradleException(
+                    "Public API snapshot changed. Review ${generatedFile.relativeTo(projectDir)}. " +
+                            "If intentional, run ./gradlew verifyPublicApiSnapshot " +
+                            "-PupdatePublicApiSnapshot=true and document the compatibility impact."
+            )
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn(verifyPublicApiSnapshot)
 }

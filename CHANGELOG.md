@@ -13,6 +13,7 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 - Public contract Javadocs for core Action, Policy, Human Review, Suspension, Blackboard, and Trace APIs, including thread-safety, null, resume-claim, compensation, and audit-order semantics.
 - Typed ActionGraph exception hierarchy for input, configuration, conflict, not-found, and integration failures, plus a separate Java 8 control-plane API exception root.
 - Provider-neutral runtime observability SPI with Spring Boot wiring and optional Micrometer-backed observation sink.
+- Checked-in public API snapshot and Gradle verification task for compatibility-sensitive published module surfaces.
 
 ### Changed
 

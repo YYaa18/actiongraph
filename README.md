@@ -29,6 +29,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Public contract Javadocs for core Action, Policy, Human Review, Suspension, Blackboard, and Trace APIs
 - Typed exception hierarchy for framework input, configuration, conflict, not-found, and integration failures
 - Provider-neutral Observability SPI plus optional Spring Boot Micrometer observation sink
+- Public API snapshot verification for published module compatibility checks
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
@@ -246,6 +247,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Runtime API](docs/frameworkization/runtime-api.md)
 - [Runtime invocation SPI](docs/frameworkization/runtime-invocation-spi.md)
 - [Observability SPI and Micrometer](docs/frameworkization/observability-spi.md)
+- [Public API compatibility check](docs/frameworkization/public-api-compatibility.md)
 - [Component catalog](docs/frameworkization/component-catalog.md)
 - [Control-plane API contracts](docs/frameworkization/control-plane-api.md)
 - [Java 8 legacy integration](docs/frameworkization/java8-legacy-integration.md)

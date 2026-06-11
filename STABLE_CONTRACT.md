@@ -71,12 +71,28 @@ Any change to compatibility labels must be reflected in:
 - Java 8 Maven consumer examples;
 - README and frameworkization docs.
 
+## Public API Snapshot
+
+The root `check` task runs `verifyPublicApiSnapshot`, which compares the
+compiled public/protected API surface of published library modules with
+`docs/api/public-api.snapshot`.
+
+Intentional public API changes must update the snapshot explicitly:
+
+```bash
+./gradlew verifyPublicApiSnapshot -PupdatePublicApiSnapshot=true
+```
+
+Snapshot diffs must be reviewed with `CHANGELOG.md` updates and migration notes
+when compatibility is affected.
+
 ## Evidence
 
 Compatibility-sensitive changes should include at least one of:
 
 - source-level tests using the public interface;
 - Java 8 compilation tests for Java 8 artifacts;
+- public API snapshot verification;
 - component catalog or documentation guard tests;
 - migration notes in `CHANGELOG.md`;
 - explicit compatibility notes in `docs/frameworkization/`.
