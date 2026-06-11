@@ -8,6 +8,7 @@ import javax.tools.ToolProvider;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,22 +47,32 @@ class Java8ConsumerCompilationTest {
     }
 
     @Test
-    void rawHttpGatewayExampleDoesNotUseActionGraphOrJava8OnlyConveniences() throws Exception {
+    void rawHttpGatewayExampleDoesNotUseActionGraphJava7OrJava8Conveniences() throws Exception {
         Path sourceFile = repositoryRoot().resolve(
                 "docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java");
         String source = java.nio.file.Files.readString(sourceFile);
 
         assertThat(source).doesNotContain("import com.actiongraph.");
+        assertThat(source).doesNotContain("try (");
         assertThat(source).doesNotContain("->");
         assertThat(source).doesNotContain("::");
         assertThat(source).doesNotContain("java.util.function");
         assertThat(source).doesNotContain("java.util.stream");
         assertThat(source).doesNotContain("java.util.Optional");
+        assertThat(source).doesNotContain("java.util.Objects");
         assertThat(source).doesNotContain("java.time.");
         assertThat(source).doesNotContain("java.nio.");
         assertThat(source).doesNotContain("StandardCharsets");
+        assertThat(source).doesNotContain(".isBlank(");
         assertThat(source).doesNotContain("Map.of(");
         assertThat(source).doesNotContain("List.of(");
+        assertThat(source).doesNotContain("Set.of(");
+        assertThat(source).doesNotContain("var ");
+        assertThat(source).doesNotContain("record ");
+        assertNoPattern(source, "new\\s+[^;\\n]+<>\\s*\\(");
+        assertNoPattern(source, "catch\\s*\\([^)]*\\|[^)]*\\)");
+        assertNoPattern(source, "\\b0[bB][01_]+");
+        assertNoPattern(source, "\\d_\\d");
     }
 
     private void compileExample(String release, Path sourceFile, String classpath, String expectedClassFile) throws Exception {
@@ -109,5 +120,11 @@ class Java8ConsumerCompilationTest {
             current = current.getParent();
         }
         throw new IllegalStateException("Could not locate repository root");
+    }
+
+    private static void assertNoPattern(String source, String regex) {
+        assertThat(Pattern.compile(regex).matcher(source).find())
+                .as("source should not match %s", regex)
+                .isFalse();
     }
 }

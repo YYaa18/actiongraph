@@ -147,7 +147,7 @@ The catalog is part of the release contract, not only documentation. Tests verif
 - the documented Java 8 component catalog example can be consumed from standalone `javac --release 8` source
 - the documented Java 8 control-plane client example can be consumed from standalone `javac --release 8` source
 - the documented Java 8 Maven consumer can import the BOM and compile against the published Java 8 client artifacts
-- the documented older-than-Java-8 raw HTTP gateway example can be consumed from standalone `javac --release 8` source with an empty classpath and no ActionGraph imports
+- the documented older-than-Java-8 raw HTTP gateway example can be consumed from standalone `javac --release 8` source with an empty classpath, no ActionGraph imports, and no common Java 7/8+ conveniences
 
 Adding a module therefore requires updating the catalog, assigning compatibility, and deciding whether the artifact belongs in the BOM.
 
