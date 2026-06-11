@@ -8,6 +8,7 @@ import com.actiongraph.controlplane.api.ActionGraphConsoleHttpClient;
 import com.actiongraph.controlplane.api.ActionGraphHumanReviewHttpClient;
 import com.actiongraph.controlplane.api.ActionGraphRuntimeHttpClient;
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
+import com.actiongraph.controlplane.api.ControlPlaneHttpResponse;
 import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
 import com.actiongraph.controlplane.auth.SharedSecretTokenProtection;
 
@@ -68,6 +69,10 @@ public final class MavenJava8ActionGraphConsumerUsage {
 
     public static ControlPlaneErrorResponse unauthorized(String message) {
         return ControlPlaneErrorResponse.unauthorized(message);
+    }
+
+    public static boolean notClaimable(ControlPlaneHttpResponse response) {
+        return response.hasError(ControlPlaneErrorResponse.NOT_CLAIMABLE);
     }
 
     public static boolean tokenMatches(String expectedSecret, String actualToken) {

@@ -26,10 +26,7 @@ public final class LegacyActionGraphClientUsage {
         requestHeaders.put("X-Request-Id", environmentOrDefault("ACTIONGRAPH_REQUEST_ID", "REQ-LOCAL-1"));
 
         ControlPlaneHttpResponse response = client.start("Prepare renewal quote for C001", known, requestHeaders);
-        if (!response.successful()) {
-            throw new IOException("ActionGraph request failed: HTTP "
-                    + response.statusCode() + " " + response.body());
-        }
+        requireSuccessful(response);
         System.out.println(response.body());
     }
 
@@ -68,10 +65,30 @@ public final class LegacyActionGraphClientUsage {
         return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
     }
 
+    public static boolean resumeRunIfStillClaimable(
+            ActionGraphRuntimeHttpClient client,
+            String runId,
+            Map<String, String> requestHeaders
+    ) throws IOException {
+        ControlPlaneHttpResponse response = client.resume(runId, requestHeaders);
+        if (response.hasError(ControlPlaneErrorResponse.NOT_CLAIMABLE)) {
+            return false;
+        }
+        requireSuccessful(response);
+        return true;
+    }
+
     public static boolean tokenMatches(String expectedSecret, String actualToken) {
         SharedSecretTokenProtection protection =
                 new SharedSecretTokenProtection("X-ActionGraph-Runtime-Token", expectedSecret);
         return new ControlPlaneTokenVerifier().isAuthorized(protection, actualToken);
+    }
+
+    private static void requireSuccessful(ControlPlaneHttpResponse response) throws IOException {
+        if (!response.successful()) {
+            throw new IOException("ActionGraph request failed: HTTP "
+                    + response.statusCode() + " " + response.body());
+        }
     }
 
     private static String requireEnvironment(String name) {

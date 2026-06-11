@@ -753,7 +753,7 @@
         <span>审批申请已创建：APPROVAL-1，对应报价：QUOTE-1</span>
       </div>
       <div class="hud">
-        <div class="hud-item"><b>312</b><span>tests passing</span></div>
+        <div class="hud-item"><b>316</b><span>tests passing</span></div>
         <div class="hud-item"><b>29</b><span>modules</span></div>
         <div class="hud-item"><b>3</b><span>reference domains</span></div>
         <div class="hud-item"><b>~6000</b><span>runs/s smoke</span></div>
@@ -1025,14 +1025,14 @@
           <div><span class="log-ok">actiongraph-human-review-api-spring-boot-starter:test</span> 21 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-console:test</span> 9 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-console-spring-boot-starter:test</span> 25 tests, 0 failures</div>
-          <div><span class="log-ok">actiongraph-control-plane-api:test</span> 33 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-control-plane-api:test</span> 37 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-control-plane-spring-boot-starter:test</span> 2 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-samples:test</span> 61 tests, 1 gated smoke skipped</div>
-          <div><span class="log-ok">BUILD SUCCESSFUL</span> 312 tests, 0 failures, 1 skipped</div>
+          <div><span class="log-ok">BUILD SUCCESSFUL</span> 316 tests, 0 failures, 1 skipped</div>
         </div>
       </div>
       <div class="layout-3" style="grid-template-columns:1fr;">
-        <div class="panel ok"><div class="metric green">312</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、Spring starter、Memory starter、Runtime API starter、Component Catalog、组件兼容性标签、发布面一致性守门、Control Plane API、Java 8 Runtime HTTP client、Java 8 Component Catalog HTTP client、Java 8 Human Review HTTP client、Java 8 Console HTTP client、Pre-Java-8 Raw HTTP gateway、Java 8 消费者源码编译、Java 8 Maven BOM 消费者编译、Java 8 字节码与零依赖构建护栏、共享密钥鉴权、Human Review starter、Human Review API+Callback starter、Governance starter、人审治理扩展、核心 JDBC starter、Memory JDBC starter、Human Review JDBC、Console 查询/JDBC/export 库、Console Spring API/UI/export/JDBC starter、Control Plane 聚合 starter、运行入口解释/启动/恢复端点与鉴权、组件目录查询与鉴权、审批任务查询/决策端点与鉴权、审批回调端点与鉴权、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
+        <div class="panel ok"><div class="metric green">316</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、Spring starter、Memory starter、Runtime API starter、Component Catalog、组件兼容性标签、发布面一致性守门、Control Plane API、Java 8 Runtime HTTP client、Java 8 Component Catalog HTTP client、Java 8 Human Review HTTP client、Java 8 Console HTTP client、Pre-Java-8 Raw HTTP gateway、Java 8 消费者源码编译、Java 8 Maven BOM 消费者编译、Java 8 字节码与零依赖构建护栏、共享密钥鉴权、Human Review starter、Human Review API+Callback starter、Governance starter、人审治理扩展、核心 JDBC starter、Memory JDBC starter、Human Review JDBC、Console 查询/JDBC/export 库、Console Spring API/UI/export/JDBC starter、Control Plane 聚合 starter、运行入口解释/启动/恢复端点与鉴权、组件目录查询与鉴权、审批任务查询/决策端点与鉴权、审批回调端点与鉴权、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
         <div class="panel ok"><div class="metric green">~6000</div><h3>并发冒烟</h3><p>200 虚拟线程并发 1 万次运行；重复 resume 只产生一次业务副作用。</p></div>
         <div class="panel ok"><div class="metric green">29</div><h3>工程模块</h3><p>bom / core / annotations / memory / memory-jdbc / memory-spring-boot-starter / interpretation / runtime-api / runtime-api-spring-boot-starter / component-catalog / control-plane-api / component-catalog-spring-boot-starter / human-review / human-review-jdbc / human-review-spring-boot-starter / human-review-api-spring-boot-starter / governance / governance-human-review / governance-spring-boot-starter / governance-human-review-spring-boot-starter / llm / llm-deepseek / persistence-jdbc / spring-boot-starter / jdbc-spring-boot-starter / console / console-spring-boot-starter / control-plane-spring-boot-starter / samples；公共内核、注解适配、结构化记忆、目标解释、运行入口、组件目录、响应契约、共享认证、审批生态、基础治理、人审治理、LLM provider、基础设施适配和控制层生态组件可独立组合。组件目录提供 compatibility 标签：control-plane-api 是 java8-client，运行时和 Spring 生态是 java21-plus，样例是 sample-only；Console 生态已从 8 个公开坐标收敛为 2 个可选组件；Human Review 生态已从 7 个公开坐标收敛为 4 个可选组件；Memory 生态已从 4 个公开坐标收敛为 3 个可选组件；Control Plane 契约生态已从 2 个公开坐标收敛为 1 个 Java 8 组件。</p></div>
         <div class="panel ok"><div class="metric green">3</div><h3>参考业务域</h3><p>续约报价、订单取消、理赔资料预审三个不同领域接入，证明核心可复用并开始进入保险场景打穿。</p></div>

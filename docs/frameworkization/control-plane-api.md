@@ -61,6 +61,21 @@ Standard factories are provided for the current built-in endpoint codes:
 - `notFound(message)` -> `NOT_FOUND`
 - `unauthorized(message)` -> `UNAUTHORIZED`
 
+`ControlPlaneHttpResponse` still returns the raw body so Java 8 callers can keep their existing JSON stack, but it also exposes a zero-dependency helper for the standard error shape:
+
+```java
+ControlPlaneHttpResponse response = client.resume("RUN-1");
+if (response.hasError(ControlPlaneErrorResponse.NOT_CLAIMABLE)) {
+    // The suspended run was already claimed by another callback or retry.
+    return;
+}
+if (!response.successful()) {
+    throw new IllegalStateException(response.body());
+}
+```
+
+For non-error payloads such as Console CSV/JSONL exports or successful run responses, `response.error()` returns an empty string.
+
 ## Java 8 Runtime HTTP Client
 
 Legacy applications that cannot embed the runtime can call a separately deployed Runtime API through `ActionGraphRuntimeHttpClient`:
