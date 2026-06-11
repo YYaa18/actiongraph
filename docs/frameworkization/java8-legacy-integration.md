@@ -59,9 +59,13 @@ ControlPlaneHttpResponse modules = catalog.modulesByCompatibility("java8-client"
 if (modules.successful()) {
     System.out.println(modules.body());
 }
+ControlPlaneHttpResponse profiles = catalog.profilesForModule("actiongraph-control-plane-api", catalogHeaders);
+if (profiles.successful()) {
+    System.out.println(profiles.body());
+}
 ```
 
-That path is useful when a legacy gateway should query the deployed catalog endpoint without loading the local catalog model classes.
+That path is useful when a legacy gateway should query the deployed catalog endpoint without loading the local catalog model classes, or when a deployment check needs to reverse-map an artifact to recommended composition profiles.
 
 Java 8 approval portals or review callback adapters can use the same artifact to call deployed human-review endpoints:
 

@@ -141,6 +141,7 @@ class Java8ConsumerCompilationTest {
         AtomicReference<String> catalogPath = new AtomicReference<>();
         AtomicReference<String> modulesPath = new AtomicReference<>();
         AtomicReference<String> modulePath = new AtomicReference<>();
+        AtomicReference<String> moduleProfilesPath = new AtomicReference<>();
         AtomicReference<String> compatibilityPath = new AtomicReference<>();
         AtomicReference<String> profilesPath = new AtomicReference<>();
         AtomicReference<String> profilePath = new AtomicReference<>();
@@ -158,6 +159,9 @@ class Java8ConsumerCompilationTest {
             if (rawPath.equals("/actiongraph/components/modules")) {
                 modulesPath.set(rawPath);
                 send(exchange, 200, "[]");
+            } else if (rawPath.endsWith("/profiles")) {
+                moduleProfilesPath.set(rawPath);
+                send(exchange, 200, "[{\"name\":\"java8-legacy-client\"}]");
             } else {
                 modulePath.set(rawPath);
                 send(exchange, 200, "{\"module\":\"actiongraph module/alpha\"}");
@@ -192,6 +196,8 @@ class Java8ConsumerCompilationTest {
                         String.class, String.class, String.class, Map.class);
                 Method module = gateway.getMethod("componentModule", String.class, String.class,
                         String.class, Map.class);
+                Method moduleProfiles = gateway.getMethod("componentProfilesForModule", String.class, String.class,
+                        String.class, Map.class);
                 Method profiles = gateway.getMethod("componentProfiles", String.class, String.class, Map.class);
                 Method profile = gateway.getMethod("componentProfile", String.class, String.class,
                         String.class, Map.class);
@@ -201,6 +207,8 @@ class Java8ConsumerCompilationTest {
                 Object compatibilityResponse = compatibility.invoke(null, catalogBaseUrl(server), "catalog-secret",
                         "java 8+", extraHeaders);
                 Object moduleResponse = module.invoke(null, catalogBaseUrl(server), "catalog-secret",
+                        "actiongraph module/alpha", extraHeaders);
+                Object moduleProfilesResponse = moduleProfiles.invoke(null, catalogBaseUrl(server), "catalog-secret",
                         "actiongraph module/alpha", extraHeaders);
                 Object profilesResponse = profiles.invoke(null, catalogBaseUrl(server), "catalog-secret",
                         extraHeaders);
@@ -212,6 +220,8 @@ class Java8ConsumerCompilationTest {
                 assertThat(compatibilityResponse.getClass().getMethod("statusCode").invoke(compatibilityResponse))
                         .isEqualTo(200);
                 assertThat(moduleResponse.getClass().getMethod("statusCode").invoke(moduleResponse)).isEqualTo(200);
+                assertThat(moduleProfilesResponse.getClass().getMethod("statusCode").invoke(moduleProfilesResponse))
+                        .isEqualTo(200);
                 assertThat(profilesResponse.getClass().getMethod("statusCode").invoke(profilesResponse)).isEqualTo(200);
                 assertThat(profileResponse.getClass().getMethod("statusCode").invoke(profileResponse)).isEqualTo(200);
                 assertThat(catalogMethod.get()).isEqualTo("GET");
@@ -224,6 +234,8 @@ class Java8ConsumerCompilationTest {
                         .isEqualTo("/actiongraph/components/compatibility/java%208%2B");
                 assertThat(modulePath.get())
                         .isEqualTo("/actiongraph/components/modules/actiongraph%20module%2Falpha");
+                assertThat(moduleProfilesPath.get())
+                        .isEqualTo("/actiongraph/components/modules/actiongraph%20module%2Falpha/profiles");
                 assertThat(profilesPath.get()).isEqualTo("/actiongraph/components/profiles");
                 assertThat(profilePath.get()).isEqualTo("/actiongraph/components/profiles/pilot%20profile");
             } finally {

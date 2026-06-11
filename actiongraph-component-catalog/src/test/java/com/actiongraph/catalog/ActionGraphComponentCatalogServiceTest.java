@@ -187,6 +187,17 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())
                         .containsExactly("actiongraph-human-review", "actiongraph-human-review-api-spring-boot-starter"));
+        assertThat(service.profilesContainingModule("actiongraph-control-plane-api"))
+                .extracting(ActionGraphCompositionProfile::name)
+                .contains("control-plane-response-contracts", "ecosystem-introspection", "java8-legacy-client");
+        assertThat(service.profilesContainingModule("actiongraph-console"))
+                .extracting(ActionGraphCompositionProfile::name)
+                .contains("console-control-plane");
+        assertThat(service.profilesContainingModule("actiongraph-control-plane-spring-boot-starter"))
+                .extracting(ActionGraphCompositionProfile::name)
+                .contains("full-control-plane", "full-pilot-service");
+        assertThat(service.profilesContainingModule("missing")).isEmpty();
+        assertThat(service.profilesContainingModule(" ")).isEmpty();
     }
 
     @Test

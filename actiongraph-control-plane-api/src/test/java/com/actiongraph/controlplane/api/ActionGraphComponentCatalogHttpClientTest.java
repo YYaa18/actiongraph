@@ -70,10 +70,17 @@ class ActionGraphComponentCatalogHttpClientTest {
     void encodesPathSegmentsAndPreservesErrorBody() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
         AtomicReference<String> modulePath = new AtomicReference<>();
+        AtomicReference<String> moduleProfilesPath = new AtomicReference<>();
         AtomicReference<String> compatibilityPath = new AtomicReference<>();
         server.createContext("/actiongraph/components/modules", exchange -> {
-            modulePath.set(exchange.getRequestURI().getRawPath());
-            send(exchange, 404, "{\"error\":\"NOT_FOUND\",\"message\":\"missing\"}");
+            String rawPath = exchange.getRequestURI().getRawPath();
+            if (rawPath.endsWith("/profiles")) {
+                moduleProfilesPath.set(rawPath);
+                send(exchange, 200, "[{\"name\":\"java8-legacy-client\"}]");
+            } else {
+                modulePath.set(rawPath);
+                send(exchange, 404, "{\"error\":\"NOT_FOUND\",\"message\":\"missing\"}");
+            }
         });
         server.createContext("/actiongraph/components/compatibility", exchange -> {
             compatibilityPath.set(exchange.getRequestURI().getRawPath());
@@ -87,6 +94,7 @@ class ActionGraphComponentCatalogHttpClientTest {
 
             ControlPlaneHttpResponse missing = client.module("legacy client");
             ControlPlaneHttpResponse compatible = client.modulesByCompatibility("java8 client");
+            ControlPlaneHttpResponse profiles = client.profilesForModule("legacy client");
 
             assertThat(modulePath.get()).isEqualTo("/actiongraph/components/modules/legacy%20client");
             assertThat(missing.statusCode()).isEqualTo(404);
@@ -94,6 +102,8 @@ class ActionGraphComponentCatalogHttpClientTest {
             assertThat(missing.body()).contains("NOT_FOUND");
             assertThat(compatibilityPath.get()).isEqualTo("/actiongraph/components/compatibility/java8%20client");
             assertThat(compatible.body()).isEqualTo("[]");
+            assertThat(moduleProfilesPath.get()).isEqualTo("/actiongraph/components/modules/legacy%20client/profiles");
+            assertThat(profiles.body()).contains("java8-legacy-client");
         } finally {
             server.stop(0);
         }
@@ -142,6 +152,10 @@ class ActionGraphComponentCatalogHttpClientTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("catalogApiBaseUrl");
         assertThatThrownBy(() -> ActionGraphComponentCatalogHttpClient.builder("http://localhost").build().module(" "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("module");
+        assertThatThrownBy(() -> ActionGraphComponentCatalogHttpClient.builder("http://localhost").build()
+                .profilesForModule(" "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("module");
         assertThatThrownBy(() -> ActionGraphComponentCatalogHttpClient.builder("http://localhost").build().profile(" "))

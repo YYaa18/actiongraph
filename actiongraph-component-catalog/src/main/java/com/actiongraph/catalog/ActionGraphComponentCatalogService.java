@@ -41,6 +41,15 @@ public final class ActionGraphComponentCatalogService {
                 .collect(Collectors.toList());
     }
 
+    public List<ActionGraphCompositionProfile> profilesContainingModule(String module) {
+        if (isBlank(module)) {
+            return Collections.emptyList();
+        }
+        return catalog.profiles().stream()
+                .filter(profile -> profile.modules().contains(module))
+                .collect(Collectors.toList());
+    }
+
     public Optional<ActionGraphCompositionProfile> profile(String name) {
         return catalog.profile(name);
     }

@@ -11,7 +11,7 @@ No ActionGraph dependency is required.
 The template covers:
 
 - Runtime interpretation/start/resume calls
-- Component Catalog metadata, module, compatibility, and profile queries
+- Component Catalog metadata, module, compatibility, profile, and profile reverse-lookup queries
 - Human Review pending task query, stage decision, and callback calls
 - Console run list/run detail/trace queries
 - Console CSV and JSONL audit exports

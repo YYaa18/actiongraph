@@ -196,6 +196,8 @@ Non-Spring services, CLIs, gateways, deployment checks, and Java 8 estates can u
 Catalog starter: GET /actiongraph/components
 Catalog starter: GET /actiongraph/components/modules
 Catalog starter: GET /actiongraph/components/modules/{module}
+Catalog starter: GET /actiongraph/components/modules/{module}/profiles
+Catalog starter: GET /actiongraph/components/compatibility/{compatibility}
 Catalog starter: GET /actiongraph/components/profiles
 Catalog starter: GET /actiongraph/components/profiles/{profile}
 ```

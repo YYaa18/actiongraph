@@ -140,6 +140,17 @@ public final class RawHttpActionGraphGatewayUsage {
                 "application/json", 5000, 30000, extraHeaders);
     }
 
+    public static LegacyHttpResponse componentProfilesForModule(
+            String catalogApiBaseUrl,
+            String sharedSecret,
+            String module,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(catalogApiBaseUrl, sharedSecret, DEFAULT_CATALOG_TOKEN_HEADER,
+                "/modules/" + encodePathSegment(requireText(module, "module")) + "/profiles",
+                "application/json", 5000, 30000, extraHeaders);
+    }
+
     public static LegacyHttpResponse componentProfiles(
             String catalogApiBaseUrl,
             String sharedSecret,

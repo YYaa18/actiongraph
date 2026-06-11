@@ -23,6 +23,11 @@ public final class ActionGraphCatalogHttpClientUsage {
         ControlPlaneHttpResponse profile = client.profile("java8-legacy-client", requestHeaders);
         requireSuccessful(profile);
         System.out.println(profile.body());
+
+        ControlPlaneHttpResponse profilesForModule =
+                client.profilesForModule("actiongraph-control-plane-api", requestHeaders);
+        requireSuccessful(profilesForModule);
+        System.out.println(profilesForModule.body());
     }
 
     public static ActionGraphComponentCatalogHttpClient catalogClientFromEnvironment() {
@@ -45,6 +50,13 @@ public final class ActionGraphCatalogHttpClientUsage {
     public static String fetchModuleJson(ActionGraphComponentCatalogHttpClient client, String module)
             throws IOException {
         ControlPlaneHttpResponse response = client.module(module);
+        requireSuccessful(response);
+        return response.body();
+    }
+
+    public static String fetchProfilesForModuleJson(ActionGraphComponentCatalogHttpClient client, String module)
+            throws IOException {
+        ControlPlaneHttpResponse response = client.profilesForModule(module);
         requireSuccessful(response);
         return response.body();
     }

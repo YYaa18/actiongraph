@@ -70,6 +70,11 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.compatibility").value("java8-client"));
 
+                    mockMvc.perform(get("/internal/actiongraph/components/modules/actiongraph-control-plane-api/profiles"))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$[*].name", hasItem("control-plane-response-contracts")))
+                            .andExpect(jsonPath("$[*].name", hasItem("java8-legacy-client")));
+
                     mockMvc.perform(get("/internal/actiongraph/components/compatibility/java8-client"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$[*].module", hasItem("actiongraph-component-catalog")))
@@ -107,6 +112,9 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
                             .andExpect(status().isNotFound())
                             .andExpect(jsonPath("$.error").value("NOT_FOUND"));
                     mockMvc.perform(get("/actiongraph/components/profiles/missing"))
+                            .andExpect(status().isNotFound())
+                            .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+                    mockMvc.perform(get("/actiongraph/components/modules/missing/profiles"))
                             .andExpect(status().isNotFound())
                             .andExpect(jsonPath("$.error").value("NOT_FOUND"));
                 });

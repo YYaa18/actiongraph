@@ -8,6 +8,7 @@ It intentionally uses only:
 - Java 8 language features
 - JDK HTTP primitives through `ActionGraphComponentCatalogHttpClient`
 - raw JSON response bodies, so the host system can keep its existing JSON, logging, retry, and gateway stack
+- module/profile reverse lookups such as `profilesForModule`, so deployment checks can explain which recommended compositions include a chosen artifact
 
 The repository test suite compiles `src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java` with `javac --release 8`, so this example is kept in sync with the published Java 8 control-plane API.
 

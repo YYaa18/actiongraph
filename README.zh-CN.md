@@ -222,6 +222,8 @@ Runtime API Spring MVC starter 只会把 `actiongraph.runtime.api.trace-headers`
 Catalog starter: GET /actiongraph/components
 Catalog starter: GET /actiongraph/components/modules
 Catalog starter: GET /actiongraph/components/modules/{module}
+Catalog starter: GET /actiongraph/components/modules/{module}/profiles
+Catalog starter: GET /actiongraph/components/compatibility/{compatibility}
 Catalog starter: GET /actiongraph/components/profiles
 Catalog starter: GET /actiongraph/components/profiles/{profile}
 ```

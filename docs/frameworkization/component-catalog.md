@@ -96,11 +96,12 @@ GET /actiongraph/components
 GET /actiongraph/components/modules
 GET /actiongraph/components/compatibility/{compatibility}
 GET /actiongraph/components/modules/{module}
+GET /actiongraph/components/modules/{module}/profiles
 GET /actiongraph/components/profiles
 GET /actiongraph/components/profiles/{profile}
 ```
 
-The endpoint is read-only and property-gated. If `shared-secret` is configured, callers must send the configured token header.
+The endpoint is read-only and property-gated. If `shared-secret` is configured, callers must send the configured token header. `GET /modules/{module}/profiles` lets deployment checks reverse-map an artifact to recommended composition profiles; an unknown module returns `404 NOT_FOUND`.
 
 ## Composition Profiles
 

@@ -68,6 +68,17 @@ public final class ActionGraphComponentCatalogController {
                 .orElseThrow(() -> new ComponentCatalogEntryNotFoundException("Component not found: " + module));
     }
 
+    @GetMapping("/modules/{module}/profiles")
+    public List<ActionGraphCompositionProfile> profilesContainingModule(
+            @RequestHeader HttpHeaders headers,
+            @PathVariable("module") String module
+    ) {
+        verifyToken(headers);
+        catalogService.component(module)
+                .orElseThrow(() -> new ComponentCatalogEntryNotFoundException("Component not found: " + module));
+        return catalogService.profilesContainingModule(module);
+    }
+
     @GetMapping("/profiles")
     public List<ActionGraphCompositionProfile> profiles(@RequestHeader HttpHeaders headers) {
         verifyToken(headers);

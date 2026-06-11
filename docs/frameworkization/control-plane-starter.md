@@ -60,6 +60,8 @@ When the component catalog switch is enabled, the aggregate also exposes a read-
 GET /actiongraph/components
 GET /actiongraph/components/modules
 GET /actiongraph/components/modules/{module}
+GET /actiongraph/components/modules/{module}/profiles
+GET /actiongraph/components/compatibility/{compatibility}
 GET /actiongraph/components/profiles
 GET /actiongraph/components/profiles/{profile}
 ```

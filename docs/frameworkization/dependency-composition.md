@@ -159,11 +159,12 @@ GET /actiongraph/components
 GET /actiongraph/components/modules
 GET /actiongraph/components/compatibility/{compatibility}
 GET /actiongraph/components/modules/{module}
+GET /actiongraph/components/modules/{module}/profiles
 GET /actiongraph/components/profiles
 GET /actiongraph/components/profiles/{profile}
 ```
 
-It requires `actiongraph.component-catalog.enabled=true` and a servlet web application. It does not create runtime beans, repositories, LLM clients, action registries, review storage, approval callbacks, or console run repositories.
+It requires `actiongraph.component-catalog.enabled=true` and a servlet web application. The module profile reverse lookup helps deployment checks explain which recommended compositions include a chosen artifact. It does not create runtime beans, repositories, LLM clients, action registries, review storage, approval callbacks, or console run repositories.
 
 ## Spring Structured Memory
 

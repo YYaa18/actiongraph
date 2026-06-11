@@ -68,6 +68,15 @@ public final class ActionGraphComponentCatalogHttpClient {
         return get("/modules/" + encodePathSegment(requireText(module, "module")), requestHeaders);
     }
 
+    public ControlPlaneHttpResponse profilesForModule(String module) throws IOException {
+        return profilesForModule(module, null);
+    }
+
+    public ControlPlaneHttpResponse profilesForModule(String module, Map<String, String> requestHeaders)
+            throws IOException {
+        return get("/modules/" + encodePathSegment(requireText(module, "module")) + "/profiles", requestHeaders);
+    }
+
     public ControlPlaneHttpResponse profiles() throws IOException {
         return profiles(null);
     }

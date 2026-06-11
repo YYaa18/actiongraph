@@ -70,6 +70,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -142,6 +143,11 @@ class ActionGraphControlPlaneSpringBootStarterTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-spring-boot-starter"));
+
+            mockMvc.perform(get("/actiongraph/components/modules/actiongraph-control-plane-api/profiles")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[*].name", hasItem("java8-legacy-client")));
 
             mockMvc.perform(get("/actiongraph/human-review/tasks/pending"))
                     .andExpect(status().isOk())

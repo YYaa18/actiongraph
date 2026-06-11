@@ -138,10 +138,11 @@ The client uses only `HttpURLConnection`. It sends:
 - `GET /modules`
 - `GET /compatibility/{compatibility}`
 - `GET /modules/{module}`
+- `GET /modules/{module}/profiles`
 - `GET /profiles`
 - `GET /profiles/{profile}`
 
-The response body is raw JSON. This keeps old Java callers from depending on ActionGraph catalog model classes when they only need remote ecosystem discovery or dependency guidance.
+Use `profilesForModule(module)` when a deployment check or gateway needs to ask which composition profiles include a chosen artifact. The response body is raw JSON. This keeps old Java callers from depending on ActionGraph catalog model classes when they only need remote ecosystem discovery or dependency guidance.
 
 The catalog client supports the same default and per-request header API as the runtime client, so deployment probes and custom consoles can pass enterprise tracing and audit headers without adding an HTTP library.
 
