@@ -286,6 +286,38 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void springBootStarterConfigurationPropertiesAreEnabled() throws IOException {
+        Path root = repositoryRoot();
+        for (Path starter : springBootStarterDirectories(root)) {
+            Set<String> propertiesClasses = configurationPropertiesClasses(starter).stream()
+                    .map(this::simpleClassName)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            Set<String> enabledPropertiesClasses = enabledConfigurationPropertiesClasses(starter);
+
+            assertThat(enabledPropertiesClasses)
+                    .as(starter.getFileName()
+                            + " should enable every @ConfigurationProperties class it defines")
+                    .containsAll(propertiesClasses);
+        }
+    }
+
+    @Test
+    void springBootStarterWebAutoConfigurationsRemainPropertyGated() throws IOException {
+        Path root = repositoryRoot();
+        for (Path starter : springBootStarterDirectories(root)) {
+            for (Path sourceFile : javaSourceFiles(starter)) {
+                String source = Files.readString(sourceFile, StandardCharsets.UTF_8);
+                if (source.contains("@AutoConfiguration")
+                        && source.contains("@ConditionalOnWebApplication")) {
+                    assertThat(source)
+                            .as(sourceFile + " should require an explicit enabled=true property")
+                            .contains("@ConditionalOnProperty");
+                }
+            }
+        }
+    }
+
+    @Test
     void documentedActionGraphModuleReferencesResolveToCatalogEntries() throws IOException {
         Path root = repositoryRoot();
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
@@ -425,16 +457,44 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     private Set<String> annotatedAutoConfigurationClasses(Path starter) throws IOException {
+        return javaSourceFiles(starter).stream()
+                .filter(path -> contains(path, "@AutoConfiguration"))
+                .map(path -> toClassName(starter.resolve("src/main/java"), path))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private Set<String> configurationPropertiesClasses(Path starter) throws IOException {
+        return javaSourceFiles(starter).stream()
+                .filter(path -> contains(path, "@ConfigurationProperties"))
+                .map(path -> toClassName(starter.resolve("src/main/java"), path))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private Set<String> enabledConfigurationPropertiesClasses(Path starter) throws IOException {
+        Pattern pattern = Pattern.compile("@EnableConfigurationProperties\\((.*?)\\)", Pattern.DOTALL);
+        Set<String> classes = new LinkedHashSet<>();
+        for (Path sourceFile : javaSourceFiles(starter)) {
+            var matcher = pattern.matcher(Files.readString(sourceFile, StandardCharsets.UTF_8));
+            while (matcher.find()) {
+                var classMatcher = Pattern.compile("([A-Za-z0-9_$.]+)\\.class").matcher(matcher.group(1));
+                while (classMatcher.find()) {
+                    classes.add(simpleClassName(classMatcher.group(1)));
+                }
+            }
+        }
+        return classes;
+    }
+
+    private java.util.List<Path> javaSourceFiles(Path starter) throws IOException {
         Path sourceRoot = starter.resolve("src/main/java");
         if (!Files.isDirectory(sourceRoot)) {
-            return Set.of();
+            return java.util.List.of();
         }
         try (var paths = Files.walk(sourceRoot)) {
             return paths.filter(Files::isRegularFile)
                     .filter(path -> path.getFileName().toString().endsWith(".java"))
-                    .filter(path -> contains(path, "@AutoConfiguration"))
-                    .map(path -> toClassName(sourceRoot, path))
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
+                    .sorted()
+                    .collect(Collectors.toList());
         }
     }
 
@@ -468,6 +528,11 @@ class ActionGraphComponentCatalogServiceTest {
         String relative = sourceRoot.relativize(sourceFile).toString();
         return relative.substring(0, relative.length() - ".java".length())
                 .replace(java.io.File.separatorChar, '.');
+    }
+
+    private String simpleClassName(String className) {
+        int dot = className.lastIndexOf('.');
+        return dot >= 0 ? className.substring(dot + 1) : className;
     }
 
     private Set<String> parseJava8CompatibleModules(Path buildFile) throws IOException {
