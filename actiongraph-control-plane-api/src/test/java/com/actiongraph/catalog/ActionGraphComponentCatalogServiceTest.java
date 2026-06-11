@@ -359,12 +359,14 @@ class ActionGraphComponentCatalogServiceTest {
         String pilotPack = Files.readString(root.resolve("docs/f1-pilot-validation-pack.md"), StandardCharsets.UTF_8);
         String readinessStatus = Files.readString(root.resolve("docs/f1-readiness-status.md"),
                 StandardCharsets.UTF_8);
+        String pilotIssueTemplate = Files.readString(root.resolve(".github/ISSUE_TEMPLATE/f1-pilot-validation.yml"),
+                StandardCharsets.UTF_8);
         String chineseReadme = Files.readString(root.resolve("README.zh-CN.md"), StandardCharsets.UTF_8);
         String pitch = Files.readString(root.resolve("docs/actiongraph-pitch.html"), StandardCharsets.UTF_8);
         String moduleGovernance = Files.readString(root.resolve("docs/frameworkization/module-governance.md"),
                 StandardCharsets.UTF_8);
         String combined = strategy + "\n" + claimsNotes + "\n" + pilotPack + "\n" + readinessStatus + "\n"
-                + chineseReadme + "\n" + pitch + "\n" + moduleGovernance;
+                + pilotIssueTemplate + "\n" + chineseReadme + "\n" + pitch + "\n" + moduleGovernance;
 
         assertThat(strategy)
                 .contains("真实/准真实环境落地")
@@ -418,7 +420,16 @@ class ActionGraphComponentCatalogServiceTest {
                 .contains("| Business owner sign-off | Not done |")
                 .contains("| F1 achieved | Not done |")
                 .contains("pilot-ready, F1 open")
-                .contains("verifyJava8MavenConsumer");
+                .contains("verifyJava8MavenConsumer")
+                .contains(".github/ISSUE_TEMPLATE/f1-pilot-validation.yml");
+        assertThat(pilotIssueTemplate)
+                .contains("name: F1 pilot validation")
+                .contains("real or near-real pilot validation")
+                .contains("Local CSV runs, JSONL replay, generated reports, static console output")
+                .contains("Business sign-off")
+                .contains("Without this, F1 remains open")
+                .contains("Duplicate delivery is idempotent")
+                .contains("Bad token is rejected before state mutation");
         assertThat(chineseReadme)
                 .contains("F1 是否成立仍以真实/准真实环境落地、业务方续用意愿和案例证据为门槛")
                 .contains("样板域已冻结新增演示能力")

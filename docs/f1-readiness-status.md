@@ -13,6 +13,7 @@ This page is the current source of truth for the direction-correction work that 
 | Strategy wording guard | Done | Catalog tests reject wording that treats local samples as F1 completion |
 | Pilot validation pack | Done | `docs/f1-pilot-validation-pack.md` defines entry criteria, field mapping, approval integration, metrics, Go/No-Go, and exit artifacts |
 | Pilot evidence templates | Done | `docs/examples/f1-pilot-evidence-template/` contains sanitized templates for the F1 evidence folder |
+| Pilot tracking issue form | Done | `.github/ISSUE_TEMPLATE/f1-pilot-validation.yml` captures the external evidence needed to close F1 |
 | Real or near-real data source | Not done | Requires approved business data source, anonymized historical extract, reporting replica, or internal equivalent |
 | Real or shadow approval path | Not done | Requires pending/approve/deny/duplicate/wrong-stage/bad-token evidence from a real or shadow approval source |
 | Business owner sign-off | Not done | Requires continuation or rejection decision from the business owner |
@@ -35,11 +36,12 @@ Local CSV runs, JSONL callback replay, generated reports, static console output,
 ## Next External Actions
 
 1. Pick one pilot path: insurance claims-precheck, insurance renewal, or an internal process with equivalent data and approval semantics.
-2. Copy `docs/examples/f1-pilot-evidence-template/` into the approved internal evidence repository.
-3. Fill `01-data-source.md` and `02-field-mapping.csv` before running the pilot.
-4. Run the pilot against the approved data source and approval path.
-5. Export metrics and trace evidence into `04-run-metrics.csv` and `05-trace-audit-export.jsonl`.
-6. Record at least one compensation drill in `06-compensation-drill.md`.
-7. Capture the business continuation decision in `07-business-signoff.md`.
+2. Open an F1 pilot validation issue using `.github/ISSUE_TEMPLATE/f1-pilot-validation.yml`.
+3. Copy `docs/examples/f1-pilot-evidence-template/` into the approved internal evidence repository.
+4. Fill `01-data-source.md` and `02-field-mapping.csv` before running the pilot.
+5. Run the pilot against the approved data source and approval path.
+6. Export metrics and trace evidence into `04-run-metrics.csv` and `05-trace-audit-export.jsonl`.
+7. Record at least one compensation drill in `06-compensation-drill.md`.
+8. Capture the business continuation decision in `07-business-signoff.md`.
 
 Until these external actions are complete, the correct project status is **pilot-ready, F1 open**.

@@ -1,0 +1,137 @@
+name: F1 pilot validation
+description: Track a real or near-real F1 pilot without adding more sample-only features.
+title: "[F1 Pilot] <scenario> - <environment>"
+labels:
+  - f1-pilot
+  - validation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this issue only for real or near-real pilot validation.
+        Local CSV runs, JSONL replay, generated reports, static console output, and new sample-domain features do not close F1.
+
+        Evidence guidance:
+        - `docs/f1-readiness-status.md`
+        - `docs/f1-pilot-validation-pack.md`
+        - `docs/examples/f1-pilot-evidence-template/`
+
+  - type: dropdown
+    id: scenario
+    attributes:
+      label: Pilot scenario
+      options:
+        - Claims precheck
+        - Renewal quote
+        - Internal equivalent process
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment type
+      options:
+        - Real
+        - Near-real
+        - Shadow
+    validations:
+      required: true
+
+  - type: textarea
+    id: business-owner
+    attributes:
+      label: Business owner
+      description: Name the owning team or role. Do not include confidential personal data.
+      placeholder: "Team / role:"
+    validations:
+      required: true
+
+  - type: textarea
+    id: data-source
+    attributes:
+      label: Real or near-real data source
+      description: Describe the approved view, anonymized extract, reporting replica, or internal equivalent.
+      placeholder: |
+        Source type:
+        Read-only permission:
+        PII exposure:
+        Evidence location:
+    validations:
+      required: true
+
+  - type: textarea
+    id: field-mapping
+    attributes:
+      label: Field mapping evidence
+      description: Link or summarize the sanitized `02-field-mapping.csv` evidence.
+      placeholder: |
+        Mapping evidence:
+        Open mapping gaps:
+        Owner sign-off:
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: approval-path
+    attributes:
+      label: Approval integration evidence
+      options:
+        - label: Pending task query is exercised.
+        - label: Approve path resumes the same run id and creates exactly one downstream side effect.
+        - label: Deny path reaches terminal denial or compensation status and voids executed drafts.
+        - label: Duplicate delivery is idempotent.
+        - label: Wrong or stale stage is rejected before resume.
+        - label: Bad token is rejected before state mutation.
+
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Pilot metrics
+      description: Link or summarize `04-run-metrics.csv` and audit-chain verification.
+      placeholder: |
+        Total cases:
+        Completion rate:
+        Intercept rate:
+        Audit completeness:
+        Average runtime:
+        Review wait:
+    validations:
+      required: true
+
+  - type: textarea
+    id: compensation
+    attributes:
+      label: Compensation drill
+      description: Link or summarize `06-compensation-drill.md`.
+      placeholder: |
+        Run id:
+        Trigger:
+        Draft before:
+        Draft after:
+        Trace evidence:
+    validations:
+      required: true
+
+  - type: dropdown
+    id: go-no-go
+    attributes:
+      label: Go / No-Go
+      options:
+        - Go
+        - No-Go
+        - Continue pilot after fixes
+    validations:
+      required: true
+
+  - type: textarea
+    id: signoff
+    attributes:
+      label: Business sign-off
+      description: Link or summarize `07-business-signoff.md`. Without this, F1 remains open.
+      placeholder: |
+        Decision:
+        Sign-off evidence:
+        Follow-up owner:
+    validations:
+      required: true
