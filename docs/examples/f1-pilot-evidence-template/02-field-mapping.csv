@@ -1,0 +1,6 @@
+actiongraph_field,source_field_or_view,transform,pii_risk,owner_signoff,evidence_reference,notes
+claim_id,<source_field_or_view>,hash/tokenize/raw_business_key,low/medium/high,<owner>,<evidence>,<notes>
+claimed_amount,<source_field_or_view>,rounding/currency_normalization,low/medium/high,<owner>,<evidence>,<notes>
+missing_invoice,<source_field_or_view>,boolean_rule,low/medium/high,<owner>,<evidence>,<notes>
+closed,<source_field_or_view>,status_mapping,low/medium/high,<owner>,<evidence>,<notes>
+approval_fails,<source_field_or_view>,test_only_or_real_failure_marker,low/medium/high,<owner>,<evidence>,<notes>

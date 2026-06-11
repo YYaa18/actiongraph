@@ -36,6 +36,8 @@ f1-pilot-evidence/<pilot-id>/
 
 Do not commit customer data, secrets, raw identifiers, or screenshots with personal data. Store sensitive evidence in the approved internal evidence repository and commit only sanitized examples or templates.
 
+Sanitized templates are available in `docs/examples/f1-pilot-evidence-template/`. Copy that directory for each pilot run, fill only sanitized fields, and keep sensitive attachments in the approved internal evidence repository.
+
 ## Field Mapping Worksheet
 
 The data mapping must be reviewed before running the pilot.

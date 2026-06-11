@@ -1,0 +1,2 @@
+{"pilotId":"F1-YYYYMMDD-001","runId":"<sanitized-run-id>","eventSeq":1,"eventType":"RUN_STARTED","hash":"<hash>","prevHash":null,"sanitized":true}
+{"pilotId":"F1-YYYYMMDD-001","runId":"<sanitized-run-id>","eventSeq":2,"eventType":"PLAN_GENERATED","hash":"<hash>","prevHash":"<hash>","sanitized":true}

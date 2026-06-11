@@ -379,11 +379,41 @@ class ActionGraphComponentCatalogServiceTest {
                 .contains("Approval Integration Worksheet")
                 .contains("Go / No-Go")
                 .contains("Without the exit artifact, F1 remains open")
-                .contains("F1 is not achieved when the only evidence is a local CSV, JSONL replay");
+                .contains("F1 is not achieved when the only evidence is a local CSV, JSONL replay")
+                .contains("docs/examples/f1-pilot-evidence-template/");
+        Path evidenceTemplate = root.resolve("docs/examples/f1-pilot-evidence-template");
+        for (String template : java.util.List.of(
+                "00-summary.md",
+                "01-data-source.md",
+                "02-field-mapping.csv",
+                "03-approval-integration.md",
+                "04-run-metrics.csv",
+                "05-trace-audit-export.jsonl",
+                "06-compensation-drill.md",
+                "07-business-signoff.md")) {
+            assertThat(evidenceTemplate.resolve(template))
+                    .as("F1 pilot evidence template should include " + template)
+                    .exists();
+        }
+        assertThat(Files.readString(root.resolve("docs/examples/f1-pilot-evidence-template/00-summary.md"),
+                StandardCharsets.UTF_8))
+                .contains("Go / No-Go")
+                .contains("Real or near-real data source used")
+                .contains("No raw PII, tokens, or source credentials committed");
+        assertThat(Files.readString(root.resolve("docs/examples/f1-pilot-evidence-template/03-approval-integration.md"),
+                StandardCharsets.UTF_8))
+                .contains("Duplicate delivery")
+                .contains("Wrong stage")
+                .contains("Bad token");
+        assertThat(Files.readString(root.resolve("docs/examples/f1-pilot-evidence-template/07-business-signoff.md"),
+                StandardCharsets.UTF_8))
+                .contains("Business owner")
+                .contains("Business owner wants to continue");
         assertThat(chineseReadme)
                 .contains("F1 是否成立仍以真实/准真实环境落地、业务方续用意愿和案例证据为门槛")
                 .contains("样板域已冻结新增演示能力")
-                .contains("docs/f1-pilot-validation-pack.md");
+                .contains("docs/f1-pilot-validation-pack.md")
+                .contains("docs/examples/f1-pilot-evidence-template");
         assertThat(pitch)
                 .contains("F1 是否成立仍取决于真实/准真实环境落地、业务方续用意愿和案例证据");
         assertThat(moduleGovernance)

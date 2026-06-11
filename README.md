@@ -251,6 +251,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Claims precheck review callbacks](docs/frameworkization/claims-precheck-review-callbacks.md)
 - [Claims precheck read-only console](docs/frameworkization/claims-precheck-console.md)
 - [F1 pilot validation pack](docs/f1-pilot-validation-pack.md)
+- [F1 pilot evidence templates](docs/examples/f1-pilot-evidence-template)
 - [Dependency composition](docs/frameworkization/dependency-composition.md)
 - [Ecosystem modularity](docs/frameworkization/ecosystem-modularity.md)
 - [Framework notes](docs/frameworkization/)

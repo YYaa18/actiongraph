@@ -1,0 +1,2 @@
+pilot_id,total_cases,completed,intercepted,failed,audit_complete,intercept_rate,audit_completeness_rate,average_runtime_ms,average_business_action_ms,average_framework_ms,average_review_wait_ms,notes
+F1-YYYYMMDD-001,0,0,0,0,0,0.00,0.00,0.000,0.000,0.000,0.000,<sanitized notes>
