@@ -113,7 +113,7 @@ POST /actiongraph/runtime/runs/{runId}/resume
 
 It requires `actiongraph.runtime.api.enabled=true`, a servlet web application, `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. It does not create LLM clients, expose human-review task/callback endpoints, or expose Console endpoints.
 
-For runtime start/resume endpoints, `actiongraph.runtime.api.trace-headers` controls which inbound HTTP headers are copied into run trace metadata. Defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`; keep this list limited to non-sensitive audit and correlation identifiers.
+For runtime start/resume endpoints, `actiongraph.runtime.api.trace-headers` controls which inbound HTTP headers are copied into run trace metadata. Defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`; keep this list limited to non-sensitive audit and correlation identifiers. The configured Runtime API token header is hard-excluded from this metadata capture.
 
 ## Component Catalog
 

@@ -93,7 +93,7 @@ Example request:
 
 If `shared-secret` is configured, callers must include the configured token header. Missing or invalid tokens return `401 UNAUTHORIZED`.
 
-For `start` and `resume`, the Spring MVC controller copies only configured `trace-headers` into run metadata and stores them in trace data as `requestHeader.<Header-Name>`. The same keys are available to human-review task attributes when a run suspends. The defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`. The token header is not traced unless an application explicitly adds it to `trace-headers`; production deployments should keep this list limited to non-sensitive audit and correlation metadata.
+For `start` and `resume`, the Spring MVC controller copies only configured `trace-headers` into run metadata and stores them in trace data as `requestHeader.<Header-Name>`. The same keys are available to human-review task attributes when a run suspends. The defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`. The configured runtime token header is never traced, even if an application accidentally adds it to `trace-headers`; production deployments should still keep this list limited to non-sensitive audit and correlation metadata.
 
 ## Boundary
 

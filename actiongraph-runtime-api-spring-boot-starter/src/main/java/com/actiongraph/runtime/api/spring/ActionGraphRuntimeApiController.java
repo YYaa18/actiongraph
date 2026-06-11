@@ -74,12 +74,20 @@ public final class ActionGraphRuntimeApiController {
     private Map<String, String> traceMetadata(HttpHeaders headers) {
         Map<String, String> metadata = new LinkedHashMap<>();
         for (String headerName : properties.getTraceHeaders()) {
+            if (isTokenHeader(headerName)) {
+                continue;
+            }
             String value = headers.getFirst(headerName);
             if (value != null && !value.isBlank()) {
                 metadata.put("requestHeader." + headerName, value);
             }
         }
         return Map.copyOf(metadata);
+    }
+
+    private boolean isTokenHeader(String headerName) {
+        return headerName != null
+                && headerName.trim().equalsIgnoreCase(properties.getTokenHeader().trim());
     }
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)

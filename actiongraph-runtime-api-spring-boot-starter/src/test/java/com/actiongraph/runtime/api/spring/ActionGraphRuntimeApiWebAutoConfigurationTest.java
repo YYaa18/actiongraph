@@ -197,6 +197,47 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
     }
 
     @Test
+    void runtimeTokenHeaderIsNeverCopiedToRunTraceMetadata() {
+        contextRunner
+                .withBean(Action.class, () -> new FinishAction(false, new AtomicInteger()))
+                .withPropertyValues(
+                        "actiongraph.runtime.api.enabled=true",
+                        "actiongraph.runtime.api.token-header=X-Runtime-Secret",
+                        "actiongraph.runtime.api.shared-secret=runtime-secret",
+                        "actiongraph.runtime.api.trace-headers[0]=x-runtime-secret",
+                        "actiongraph.runtime.api.trace-headers[1]=X-Request-Id"
+                )
+                .run(context -> {
+                    MockMvc mockMvc = mockMvc(context);
+
+                    String response = mockMvc.perform(post("/actiongraph/runtime/runs")
+                                    .header("X-Runtime-Secret", "runtime-secret")
+                                    .header("X-Request-Id", "REQ-SAFE-TRACE-1")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                              "input": "finish",
+                                              "knownParameters": {"id": "I-1"}
+                                            }
+                                            """))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsString();
+                    String runId = response.replaceAll(".*\\\"runId\\\":\\\"([^\\\"]+)\\\".*", "$1");
+
+                    TraceRepository traceRepository = context.getBean(TraceRepository.class);
+                    assertThat(traceRepository.findByRun(runId))
+                            .filteredOn(event -> event.type() == TraceEventType.RUN_STARTED)
+                            .singleElement()
+                            .satisfies(event -> assertThat(event.data())
+                                    .containsEntry("requestHeader.X-Request-Id", "REQ-SAFE-TRACE-1")
+                                    .doesNotContainKey("requestHeader.x-runtime-secret")
+                                    .doesNotContainValue("runtime-secret"));
+                });
+    }
+
+    @Test
     void resumesSuspendedRunThroughCustomPath() {
         contextRunner
                 .withBean(Action.class, () -> new FinishAction(true, new AtomicInteger()))

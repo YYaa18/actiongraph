@@ -214,7 +214,7 @@ Runtime API starter: POST /actiongraph/runtime/runs
 Runtime API starter: POST /actiongraph/runtime/runs/{runId}/resume
 ```
 
-Runtime API Spring MVC starter 只会把 `actiongraph.runtime.api.trace-headers` 配置的请求头写入 `RUN_STARTED` / `RUN_RESUMED` Trace 元数据；默认包含 `X-Request-Id`、`X-Correlation-Id` 和 `X-Source-System`。
+Runtime API Spring MVC starter 只会把 `actiongraph.runtime.api.trace-headers` 配置的请求头写入 `RUN_STARTED` / `RUN_RESUMED` Trace 元数据；默认包含 `X-Request-Id`、`X-Correlation-Id` 和 `X-Source-System`。已配置的运行入口 token Header 即使被误加入 `trace-headers`，也不会被复制进 Trace 元数据。
 
 非 Spring 服务、CLI、企业网关、部署检查或 Java 8 老系统如果需要结构化读取 ActionGraph 的模块、能力标签、依赖提示、兼容性标签和推荐组合方案，可以直接依赖 `actiongraph-component-catalog`。Spring MVC 控制层需要只读目录端点时，再引入 `actiongraph-component-catalog-spring-boot-starter` 并启用 `actiongraph.component-catalog.enabled=true`：
 
@@ -228,7 +228,7 @@ Catalog starter: GET /actiongraph/components/profiles
 Catalog starter: GET /actiongraph/components/profiles/{profile}
 ```
 
-自研网关、endpoint adapter、Java 8 老系统、Java 8 审批门户或 Java 8 审计控制台如果需要复用控制层错误响应结构、通过 HTTP 调用已部署的 ActionGraph Runtime API、组件目录端点、人审任务查询/决策/回调端点、Console 只读运行/Trace 查询和 CSV/JSONL 审计导出端点，或复用共享密钥 token 校验，可以直接依赖 `actiongraph-control-plane-api`。它提供统一的 `ControlPlaneErrorResponse(error, message)`、可从一个 `/actiongraph` 根路径派生全部控制层端点的 `ActionGraphControlPlaneHttpClient`、可从 `.properties` / 配置中心键构建聚合客户端的 `ActionGraphControlPlaneHttpClientProperties`、针对查询类 GET 的可选安全重试、零外部依赖的 `ActionGraphRuntimeHttpClient` / `ActionGraphComponentCatalogHttpClient` / `ActionGraphHumanReviewHttpClient` / `ActionGraphConsoleHttpClient`，以及 `ControlPlaneTokenVerifier` / `SharedSecretTokenProperties`；内置 Runtime、Component Catalog、Human Review、Callback 和 Console starter 会传递依赖它。GET 重试默认关闭，仅覆盖组件目录、人审任务查询和 Console 只读查询；可能产生副作用的 POST 不会自动重试。token helper 负责校验 Header 名、在未配置 `shared-secret` 时跳过 token 读取、使用常量时间比较 token；它不是企业 IAM / RBAC 层，生产身份、权限和网关策略仍由接入系统或后续治理组件负责。服务端白名单接收的请求 Header 会作为 Trace metadata 写入审计链；高风险运行挂起人审时，同一批 metadata 也会进入审批任务 attributes，保证老系统交易流水号、来源系统和关联 ID 在审批链路中仍可见。
+自研网关、endpoint adapter、Java 8 老系统、Java 8 审批门户或 Java 8 审计控制台如果需要复用控制层错误响应结构、通过 HTTP 调用已部署的 ActionGraph Runtime API、组件目录端点、人审任务查询/决策/回调端点、Console 只读运行/Trace 查询和 CSV/JSONL 审计导出端点，或复用共享密钥 token 校验，可以直接依赖 `actiongraph-control-plane-api`。它提供统一的 `ControlPlaneErrorResponse(error, message)`、可从一个 `/actiongraph` 根路径派生全部控制层端点的 `ActionGraphControlPlaneHttpClient`、可从 `.properties` / 配置中心键构建聚合客户端的 `ActionGraphControlPlaneHttpClientProperties`、针对查询类 GET 的可选安全重试、零外部依赖的 `ActionGraphRuntimeHttpClient` / `ActionGraphComponentCatalogHttpClient` / `ActionGraphHumanReviewHttpClient` / `ActionGraphConsoleHttpClient`，以及 `ControlPlaneTokenVerifier` / `SharedSecretTokenProperties`；内置 Runtime、Component Catalog、Human Review、Callback 和 Console starter 会传递依赖它。GET 重试默认关闭，仅覆盖组件目录、人审任务查询和 Console 只读查询；可能产生副作用的 POST 不会自动重试。token helper 负责校验 Header 名、在未配置 `shared-secret` 时跳过 token 读取、使用常量时间比较 token；它不是企业 IAM / RBAC 层，生产身份、权限和网关策略仍由接入系统或后续治理组件负责。服务端白名单接收的请求 Header 会作为 Trace metadata 写入审计链；高风险运行挂起人审时，同一批 metadata 也会进入审批任务 attributes，保证老系统交易流水号、来源系统和关联 ID 在审批链路中仍可见。Runtime API starter 会额外硬排除已配置的 token Header，避免共享密钥进入审计链。
 
 组件目录会为每个模块暴露 `compatibility` 标签。当前 `actiongraph-component-catalog` 与 `actiongraph-control-plane-api` 是 `java8-client`，Java 8 应用可以直接引入；可嵌入 runtime、Spring、JDBC、治理、LLM、Console 与样例侧仍属于 `java21-plus` 或 `sample-only`，应部署在现代 ActionGraph 服务侧，老旧系统通过 HTTP、企业网关、ESB 或 Java 8+ sidecar 接入。
 
@@ -322,7 +322,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 ## 当前成熟度
 
-- 326 个自动化测试通过。
+- 327 个自动化测试通过。
 - 并发冒烟约 6000 runs/s；重复 resume 只产生一次业务副作用。
 - Gradle 模块已按 core、control-plane、governance、human-review、memory、console、starter 与 samples 等边界拆分。
 - 3 个参考业务域完整跑通。
