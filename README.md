@@ -25,6 +25,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Single-transaction amount limits with hard denial and review escalation
 - Reusable non-Spring governance policies for masking, amount limits, and rule-based permissions
 - Optional human-review governance extension for review attributes and risk-based approval routing
+- SLF4J API debug logging at planner, executor, compensation, and suspend/resume decision points without binding a logging implementation
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
@@ -51,7 +52,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | Module | Purpose |
 |---|---|
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | Core action, annotation adapter, planning, runtime, policy, trace, goal interpretation, runtime entry, and structured memory APIs |
+| `actiongraph-core` | Core action, annotation adapter, planning, runtime, policy, trace, SLF4J API diagnostics, goal interpretation, runtime entry, and structured memory APIs |
 | `actiongraph-control-plane-api` | Java 8 compatible component catalog, control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, rule-based permissions, amount review attributes, and risk-based approval routing |

@@ -1,14 +1,20 @@
 package com.actiongraph.runtime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class InMemorySuspendedRunRepository implements SuspendedRunRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(InMemorySuspendedRunRepository.class);
     private final ConcurrentHashMap<String, SuspendedRun> runs = new ConcurrentHashMap<>();
 
     @Override
     public void save(SuspendedRun run) {
         runs.put(run.runId(), run);
+        LOGGER.debug("Suspended run saved: runId={}, pendingActionId={}", run.runId(),
+                run.pendingActionId().value());
     }
 
     @Override
@@ -18,11 +24,14 @@ public final class InMemorySuspendedRunRepository implements SuspendedRunReposit
 
     @Override
     public Optional<SuspendedRun> claimForResume(String runId) {
-        return Optional.ofNullable(runs.remove(runId));
+        SuspendedRun claimed = runs.remove(runId);
+        LOGGER.debug("Suspended run claim attempted: runId={}, claimed={}", runId, claimed != null);
+        return Optional.ofNullable(claimed);
     }
 
     @Override
     public void delete(String runId) {
-        runs.remove(runId);
+        boolean removed = runs.remove(runId) != null;
+        LOGGER.debug("Suspended run delete attempted: runId={}, removed={}", runId, removed);
     }
 }

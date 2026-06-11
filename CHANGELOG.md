@@ -9,6 +9,7 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 ### Added
 
 - Apache 2.0 license, security policy, contribution guide, changelog, and stable contract documentation.
+- SLF4J API debug logging for planner, executor, compensation, trace flush, and suspend/resume decisions without binding a logging implementation.
 
 ### Changed
 

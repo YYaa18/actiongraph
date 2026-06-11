@@ -402,6 +402,52 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void coreLoggingUsesSlf4jApiWithoutBindingImplementation() throws IOException {
+        Path root = repositoryRoot();
+        String coreBuild = Files.readString(root.resolve("actiongraph-core/build.gradle.kts"),
+                StandardCharsets.UTF_8);
+        String bomBuild = Files.readString(root.resolve("actiongraph-bom/build.gradle.kts"),
+                StandardCharsets.UTF_8);
+        String planner = Files.readString(root.resolve(
+                "actiongraph-core/src/main/java/com/actiongraph/planning/GoapPlanner.java"),
+                StandardCharsets.UTF_8);
+        String executor = Files.readString(root.resolve(
+                "actiongraph-core/src/main/java/com/actiongraph/runtime/GoapExecutor.java"),
+                StandardCharsets.UTF_8);
+        String suspendedRuns = Files.readString(root.resolve(
+                "actiongraph-core/src/main/java/com/actiongraph/runtime/InMemorySuspendedRunRepository.java"),
+                StandardCharsets.UTF_8);
+        String coreSources = planner + "\n" + executor + "\n" + suspendedRuns;
+
+        assertThat(coreBuild)
+                .contains("implementation(\"org.slf4j:slf4j-api:")
+                .doesNotContain("slf4j-simple", "logback-classic", "log4j-core");
+        assertThat(bomBuild)
+                .contains("api(\"org.slf4j:slf4j-api:")
+                .doesNotContain("slf4j-simple", "logback-classic", "log4j-core");
+        assertThat(coreSources)
+                .contains("org.slf4j.Logger")
+                .contains("LoggerFactory.getLogger(GoapPlanner.class)")
+                .contains("LoggerFactory.getLogger(GoapExecutor.class)")
+                .contains("LoggerFactory.getLogger(InMemorySuspendedRunRepository.class)")
+                .contains("Planning goal")
+                .contains("Plan generated")
+                .contains("Policy evaluated")
+                .contains("Runtime guard failed")
+                .contains("Human review requested")
+                .contains("Compensation started")
+                .contains("Saving suspended run")
+                .contains("Suspended run claim attempted")
+                .contains("Run finished");
+        for (Path sourceFile : javaSourceFiles(root.resolve("actiongraph-core"))) {
+            String source = Files.readString(sourceFile, StandardCharsets.UTF_8);
+            assertThat(source)
+                    .as(sourceFile + " should not use console output for framework diagnostics")
+                    .doesNotContain("System.out", "System.err");
+        }
+    }
+
+    @Test
     void strategyDocumentsKeepF1AsRealWorldGateNotSampleCompletion() throws IOException {
         Path root = repositoryRoot();
         String strategy = Files.readString(root.resolve("docs/finance-strategy.md"), StandardCharsets.UTF_8);

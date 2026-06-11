@@ -1,6 +1,8 @@
 package com.actiongraph.planning;
 
 import com.actiongraph.action.Action;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 public final class GoapPlanner implements Planner {
     public static final int DEFAULT_MAX_DEPTH = 32;
     public static final int DEFAULT_MAX_EXPANSIONS = 10_000;
+    private static final Logger LOGGER = LoggerFactory.getLogger(GoapPlanner.class);
 
     private final int maxDepth;
     private final int maxExpansions;
@@ -45,12 +48,16 @@ public final class GoapPlanner implements Planner {
 
         Set<Condition> start = Set.copyOf(currentState);
         if (goal.isSatisfiedBy(start)) {
+            LOGGER.debug("Goal '{}' already satisfied by current state", goal.name());
             return Optional.of(new Plan(List.of()));
         }
 
         List<Action> orderedActions = actions.stream()
                 .sorted(Comparator.comparing(action -> action.id().value()))
                 .toList();
+        LOGGER.debug(
+                "Planning goal '{}' from {} conditions with {} candidate actions, maxDepth={}, maxExpansions={}",
+                goal.name(), start.size(), orderedActions.size(), maxDepth, maxExpansions);
 
         Queue<Node> queue = new ArrayDeque<>();
         Set<String> visited = new HashSet<>();
@@ -79,12 +86,18 @@ public final class GoapPlanner implements Planner {
                 List<PlanStep> nextPath = new ArrayList<>(node.path);
                 nextPath.add(new PlanStep(action.id()));
                 if (goal.isSatisfiedBy(nextState)) {
+                    LOGGER.debug(
+                            "Plan found for goal '{}' with {} steps after {} expansions; final action={}",
+                            goal.name(), nextPath.size(), expansions, action.id().value());
                     return Optional.of(new Plan(nextPath));
                 }
                 queue.add(new Node(Set.copyOf(nextState), List.copyOf(nextPath), node.depth + 1));
             }
         }
 
+        LOGGER.debug(
+                "No plan found for goal '{}' after {} expansions; visitedStates={}, queueRemaining={}",
+                goal.name(), expansions, visited.size(), queue.size());
         return Optional.empty();
     }
 
