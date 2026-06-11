@@ -87,6 +87,26 @@ HumanReviewTaskResponse decided = api.decide(
 );
 ```
 
+Java 8 approval portals or enterprise gateways that call a deployed Human Review API over HTTP should use the zero-dependency client from `actiongraph-control-plane-api` instead of loading the human-review model jar:
+
+```java
+ActionGraphHumanReviewHttpClient review = ActionGraphHumanReviewHttpClient
+        .builder("https://agent.example.com/actiongraph/human-review/tasks")
+        .sharedSecret(System.getenv("ACTIONGRAPH_REVIEW_TOKEN"))
+        .defaultHeader("X-Source-System", "legacy-approval")
+        .build();
+
+ControlPlaneHttpResponse pending = review.pendingTasks();
+ControlPlaneHttpResponse decided = review.decide(
+        "RUN-1",
+        "claim.approval.request",
+        Integer.valueOf(0),
+        "APPROVED",
+        "checker",
+        "Approved in legacy approval portal"
+);
+```
+
 ## JDBC Usage
 
 ```kotlin

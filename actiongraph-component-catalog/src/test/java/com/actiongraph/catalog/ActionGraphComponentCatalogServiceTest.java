@@ -73,7 +73,8 @@ class ActionGraphComponentCatalogServiceTest {
                     assertThat(component.compatibility()).isEqualTo(ComponentCompatibility.JAVA8_CLIENT.label());
                     assertThat(component.capabilities())
                             .contains("java8-runtime-client", "java8-component-catalog-client",
-                                    "http-audit-headers", "shared-secret-token-verification");
+                                    "java8-human-review-client", "http-audit-headers",
+                                    "shared-secret-token-verification");
                 });
         assertThat(service.component("actiongraph-component-catalog"))
                 .isPresent()
@@ -163,7 +164,7 @@ class ActionGraphComponentCatalogServiceTest {
                             .containsExactly("actiongraph-control-plane-api");
                     assertThat(profile.notes())
                             .anySatisfy(note -> assertThat(note)
-                                    .contains("ActionGraphComponentCatalogHttpClient"));
+                                    .contains("ActionGraphHumanReviewHttpClient"));
                 });
         assertThat(service.profile("java8-legacy-client"))
                 .isPresent()
@@ -172,7 +173,7 @@ class ActionGraphComponentCatalogServiceTest {
                     assertThat(profile.modules())
                             .containsExactly("actiongraph-component-catalog", "actiongraph-control-plane-api");
                     assertThat(profile.notes())
-                            .anySatisfy(note -> assertThat(note).contains("component catalog endpoints"));
+                            .anySatisfy(note -> assertThat(note).contains("human-review endpoints"));
                 });
         assertThat(service.profile("control-plane-shared" + "-auth"))
                 .isEmpty();

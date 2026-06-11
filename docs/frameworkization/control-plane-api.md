@@ -15,11 +15,12 @@ dependencies {
 
 The module has no Spring, JDBC, LLM, runtime, servlet, Jackson, OkHttp, or Apache HTTP Client dependency. Its main classes are compiled with `--release 8` so Java 8 applications can load the jar.
 
-CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the runtime HTTP client, component catalog HTTP client, response DTOs, shared-secret token verification, and exception type:
+CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the runtime HTTP client, component catalog HTTP client, human-review HTTP client, response DTOs, shared-secret token verification, and exception type:
 
 ```text
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
 docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
+docs/examples/java8-human-review-client/src/main/java/com/company/approval/ActionGraphHumanReviewClientUsage.java
 ```
 
 The root build also compiles a real Maven Java 8 consumer after publishing the BOM and Java 8 client artifacts to Maven Local:
@@ -127,6 +128,48 @@ The client uses only `HttpURLConnection`. It sends:
 The response body is raw JSON. This keeps old Java callers from depending on ActionGraph catalog model classes when they only need remote ecosystem discovery or dependency guidance.
 
 The catalog client supports the same default and per-request header API as the runtime client, so deployment probes and custom consoles can pass enterprise tracing and audit headers without adding an HTTP library.
+
+## Java 8 Human Review HTTP Client
+
+Java 8 approval portals, callback adapters, and enterprise gateways can query and decide deployed human-review tasks through `ActionGraphHumanReviewHttpClient`:
+
+```java
+ActionGraphHumanReviewHttpClient review = ActionGraphHumanReviewHttpClient
+        .builder("https://agent.example.com/actiongraph/human-review/tasks")
+        .callbackApiBaseUrl("https://agent.example.com/actiongraph/human-review/callbacks")
+        .sharedSecret(System.getenv("ACTIONGRAPH_REVIEW_TOKEN"))
+        .defaultHeader("X-Source-System", "legacy-approval")
+        .build();
+
+Map<String, String> requestHeaders = new HashMap<String, String>();
+requestHeaders.put("X-Request-Id", requestId);
+
+ControlPlaneHttpResponse pending = review.pendingTasks(requestHeaders);
+if (!pending.successful()) {
+    throw new IllegalStateException(pending.body());
+}
+System.out.println(pending.body());
+
+ControlPlaneHttpResponse decided = review.decide(
+        "RUN-1",
+        "claim.approval.request",
+        Integer.valueOf(0),
+        "APPROVED",
+        "checker",
+        "Approved in legacy approval portal",
+        requestHeaders
+);
+```
+
+The client uses only `HttpURLConnection`. It sends:
+
+- `GET /pending`
+- `GET /runs/{runId}`
+- `GET /runs/{runId}/actions/{actionId}`
+- `POST /runs/{runId}/actions/{actionId}/decision`
+- `POST` to the configured callback endpoint
+
+The default callback URL is derived by replacing a task base URL ending in `/tasks` with `/callbacks`. Set `callbackApiBaseUrl(...)` when enterprise routing exposes task and callback endpoints through different gateways. As with the runtime and catalog clients, response bodies are raw JSON and callers can pass default or per-request audit headers.
 
 ## Shared-Secret Token Verification
 

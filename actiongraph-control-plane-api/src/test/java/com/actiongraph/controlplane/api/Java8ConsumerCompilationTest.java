@@ -48,6 +48,16 @@ class Java8ConsumerCompilationTest {
     }
 
     @Test
+    void humanReviewHttpClientExampleCanBeCompiledByJava8ConsumerCode() throws Exception {
+        compileExample(
+                "8",
+                repositoryRoot().resolve(
+                        "docs/examples/java8-human-review-client/src/main/java/com/company/approval/ActionGraphHumanReviewClientUsage.java"),
+                mainClassesClasspath(),
+                "com/company/approval/ActionGraphHumanReviewClientUsage.class");
+    }
+
+    @Test
     void rawHttpGatewayExampleCanBeCompiledWithoutActionGraphClasspath() throws Exception {
         compileExample(
                 "8",
