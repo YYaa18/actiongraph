@@ -8,6 +8,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.TreeMap;
 
 public final class ActionGraphComponentCatalogHttpClient {
     public static final String DEFAULT_CATALOG_TOKEN_HEADER = "X-ActionGraph-Catalog-Token";
@@ -17,6 +19,7 @@ public final class ActionGraphComponentCatalogHttpClient {
     private final String sharedSecret;
     private final int connectTimeoutMillis;
     private final int readTimeoutMillis;
+    private final Map<String, String> defaultHeaders;
 
     private ActionGraphComponentCatalogHttpClient(Builder builder) {
         this.catalogApiBaseUrl = normalizeBaseUrl(builder.catalogApiBaseUrl);
@@ -24,6 +27,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         this.sharedSecret = builder.sharedSecret == null ? "" : builder.sharedSecret;
         this.connectTimeoutMillis = builder.connectTimeoutMillis;
         this.readTimeoutMillis = builder.readTimeoutMillis;
+        this.defaultHeaders = new TreeMap<String, String>(builder.defaultHeaders);
     }
 
     public static Builder builder(String catalogApiBaseUrl) {
@@ -63,6 +67,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         connection.setRequestMethod("GET");
         connection.setConnectTimeout(connectTimeoutMillis);
         connection.setReadTimeout(readTimeoutMillis);
+        applyDefaultHeaders(connection);
         connection.setRequestProperty("Accept", "application/json");
         if (!isBlank(sharedSecret)) {
             connection.setRequestProperty(tokenHeader, sharedSecret);
@@ -72,6 +77,12 @@ public final class ActionGraphComponentCatalogHttpClient {
         String body = readBody(statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream());
         connection.disconnect();
         return new ControlPlaneHttpResponse(statusCode, body);
+    }
+
+    private void applyDefaultHeaders(HttpURLConnection connection) {
+        for (Map.Entry<String, String> entry : defaultHeaders.entrySet()) {
+            connection.setRequestProperty(entry.getKey(), entry.getValue());
+        }
     }
 
     private static String readBody(InputStream stream) throws IOException {
@@ -125,6 +136,7 @@ public final class ActionGraphComponentCatalogHttpClient {
         private String sharedSecret = "";
         private int connectTimeoutMillis = 5000;
         private int readTimeoutMillis = 30000;
+        private final Map<String, String> defaultHeaders = new TreeMap<String, String>();
 
         private Builder(String catalogApiBaseUrl) {
             this.catalogApiBaseUrl = catalogApiBaseUrl;
@@ -153,6 +165,21 @@ public final class ActionGraphComponentCatalogHttpClient {
                 throw new IllegalArgumentException("readTimeoutMillis must not be negative");
             }
             this.readTimeoutMillis = readTimeoutMillis;
+            return this;
+        }
+
+        public Builder defaultHeader(String name, String value) {
+            this.defaultHeaders.put(requireText(name, "default header name"), value == null ? "" : value);
+            return this;
+        }
+
+        public Builder defaultHeaders(Map<String, String> headers) {
+            if (headers == null) {
+                return this;
+            }
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                defaultHeader(entry.getKey(), entry.getValue());
+            }
             return this;
         }
 

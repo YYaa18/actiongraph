@@ -38,6 +38,8 @@ public final class LegacyActionGraphClientUsage {
                 .builder(baseUrl)
                 .tokenHeader(ActionGraphRuntimeHttpClient.DEFAULT_RUNTIME_TOKEN_HEADER)
                 .sharedSecret(sharedSecret)
+                .defaultHeader("X-Source-System", environmentOrDefault("ACTIONGRAPH_SOURCE_SYSTEM", "legacy-crm"))
+                .defaultHeader("X-Request-Id", environmentOrDefault("ACTIONGRAPH_REQUEST_ID", "REQ-LOCAL-1"))
                 .connectTimeoutMillis(5000)
                 .readTimeoutMillis(30000)
                 .build();
@@ -75,6 +77,14 @@ public final class LegacyActionGraphClientUsage {
         String value = System.getenv(name);
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalStateException(name + " must be configured");
+        }
+        return value;
+    }
+
+    private static String environmentOrDefault(String name, String defaultValue) {
+        String value = System.getenv(name);
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
         }
         return value;
     }

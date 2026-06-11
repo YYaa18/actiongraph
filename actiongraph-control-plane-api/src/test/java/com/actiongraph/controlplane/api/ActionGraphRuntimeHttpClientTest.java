@@ -24,11 +24,15 @@ class ActionGraphRuntimeHttpClientTest {
         AtomicReference<String> method = new AtomicReference<>();
         AtomicReference<String> path = new AtomicReference<>();
         AtomicReference<String> token = new AtomicReference<>();
+        AtomicReference<String> sourceSystem = new AtomicReference<>();
+        AtomicReference<String> correlationId = new AtomicReference<>();
         AtomicReference<String> requestBody = new AtomicReference<>();
         server.createContext("/actiongraph/runtime/runs", exchange -> {
             method.set(exchange.getRequestMethod());
             path.set(exchange.getRequestURI().getPath());
             token.set(exchange.getRequestHeaders().getFirst("X-ActionGraph-Runtime-Token"));
+            sourceSystem.set(exchange.getRequestHeaders().getFirst("X-Source-System"));
+            correlationId.set(exchange.getRequestHeaders().getFirst("X-Correlation-Id"));
             requestBody.set(read(exchange));
             send(exchange, 200, "{\"disposition\":\"RUN_STARTED\"}");
         });
@@ -37,6 +41,8 @@ class ActionGraphRuntimeHttpClientTest {
             ActionGraphRuntimeHttpClient client = ActionGraphRuntimeHttpClient
                     .builder(baseUrl(server))
                     .sharedSecret("secret")
+                    .defaultHeader("X-Source-System", "legacy-crm")
+                    .defaultHeader("X-Correlation-Id", "REQ-20260611-0001")
                     .build();
             Map<String, String> known = new LinkedHashMap<>();
             known.put("customerId", "C001");
@@ -46,6 +52,8 @@ class ActionGraphRuntimeHttpClientTest {
             assertThat(method.get()).isEqualTo("POST");
             assertThat(path.get()).isEqualTo("/actiongraph/runtime/runs");
             assertThat(token.get()).isEqualTo("secret");
+            assertThat(sourceSystem.get()).isEqualTo("legacy-crm");
+            assertThat(correlationId.get()).isEqualTo("REQ-20260611-0001");
             assertThat(requestBody.get())
                     .contains("\"input\":\"帮客户 C001 生成续约报价\"")
                     .contains("\"knownParameters\":{\"customerId\":\"C001\"}");
@@ -112,6 +120,9 @@ class ActionGraphRuntimeHttpClientTest {
         assertThatThrownBy(() -> ActionGraphRuntimeHttpClient.builder("http://localhost").build().start(" "))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("input");
+        assertThatThrownBy(() -> ActionGraphRuntimeHttpClient.builder("http://localhost").defaultHeader(" ", "value"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("default header name");
     }
 
     private static String baseUrl(HttpServer server) {

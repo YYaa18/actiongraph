@@ -28,6 +28,8 @@ public final class ActionGraphCatalogHttpClientUsage {
                 .builder(baseUrl)
                 .tokenHeader(ActionGraphComponentCatalogHttpClient.DEFAULT_CATALOG_TOKEN_HEADER)
                 .sharedSecret(sharedSecret)
+                .defaultHeader("X-Source-System", environmentOrDefault("ACTIONGRAPH_SOURCE_SYSTEM", "deployment-check"))
+                .defaultHeader("X-Request-Id", environmentOrDefault("ACTIONGRAPH_REQUEST_ID", "REQ-CATALOG-LOCAL-1"))
                 .connectTimeoutMillis(5000)
                 .readTimeoutMillis(30000)
                 .build();
@@ -55,6 +57,14 @@ public final class ActionGraphCatalogHttpClientUsage {
         String value = System.getenv(name);
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalStateException(name + " must be configured");
+        }
+        return value;
+    }
+
+    private static String environmentOrDefault(String name, String defaultValue) {
+        String value = System.getenv(name);
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
         }
         return value;
     }

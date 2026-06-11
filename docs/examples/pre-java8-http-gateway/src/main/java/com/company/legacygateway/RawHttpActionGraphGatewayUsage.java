@@ -21,12 +21,16 @@ public final class RawHttpActionGraphGatewayUsage {
     public static void main(String[] args) throws Exception {
         Map<String, String> known = new HashMap<String, String>();
         known.put("customerId", "C001");
+        Map<String, String> auditHeaders = new HashMap<String, String>();
+        auditHeaders.put("X-Source-System", "legacy-core");
+        auditHeaders.put("X-Request-Id", "REQ-20260611-0001");
 
         LegacyHttpResponse response = start(
                 requireEnvironment("ACTIONGRAPH_RUNTIME_URL"),
                 System.getenv("ACTIONGRAPH_RUNTIME_TOKEN"),
                 "Prepare renewal quote for C001",
-                known);
+                known,
+                auditHeaders);
         if (!response.successful()) {
             throw new IOException("ActionGraph request failed: HTTP "
                     + response.statusCode() + " " + response.body());
@@ -40,8 +44,18 @@ public final class RawHttpActionGraphGatewayUsage {
             String input,
             Map<String, String> knownParameters
     ) throws IOException {
+        return interpret(runtimeApiBaseUrl, sharedSecret, input, knownParameters, null);
+    }
+
+    public static LegacyHttpResponse interpret(
+            String runtimeApiBaseUrl,
+            String sharedSecret,
+            String input,
+            Map<String, String> knownParameters,
+            Map<String, String> extraHeaders
+    ) throws IOException {
         return post(runtimeApiBaseUrl, sharedSecret, DEFAULT_RUNTIME_TOKEN_HEADER,
-                "/interpret", goalRequestJson(input, knownParameters), 5000, 30000);
+                "/interpret", goalRequestJson(input, knownParameters), 5000, 30000, extraHeaders);
     }
 
     public static LegacyHttpResponse start(
@@ -50,8 +64,18 @@ public final class RawHttpActionGraphGatewayUsage {
             String input,
             Map<String, String> knownParameters
     ) throws IOException {
+        return start(runtimeApiBaseUrl, sharedSecret, input, knownParameters, null);
+    }
+
+    public static LegacyHttpResponse start(
+            String runtimeApiBaseUrl,
+            String sharedSecret,
+            String input,
+            Map<String, String> knownParameters,
+            Map<String, String> extraHeaders
+    ) throws IOException {
         return post(runtimeApiBaseUrl, sharedSecret, DEFAULT_RUNTIME_TOKEN_HEADER,
-                "/runs", goalRequestJson(input, knownParameters), 5000, 30000);
+                "/runs", goalRequestJson(input, knownParameters), 5000, 30000, extraHeaders);
     }
 
     public static LegacyHttpResponse resume(
@@ -59,9 +83,18 @@ public final class RawHttpActionGraphGatewayUsage {
             String sharedSecret,
             String runId
     ) throws IOException {
+        return resume(runtimeApiBaseUrl, sharedSecret, runId, null);
+    }
+
+    public static LegacyHttpResponse resume(
+            String runtimeApiBaseUrl,
+            String sharedSecret,
+            String runId,
+            Map<String, String> extraHeaders
+    ) throws IOException {
         return post(runtimeApiBaseUrl, sharedSecret, DEFAULT_RUNTIME_TOKEN_HEADER,
                 "/runs/" + encodePathSegment(requireText(runId, "runId")) + "/resume",
-                "{}", 5000, 30000);
+                "{}", 5000, 30000, extraHeaders);
     }
 
     public static LegacyHttpResponse post(
@@ -72,6 +105,20 @@ public final class RawHttpActionGraphGatewayUsage {
             String jsonBody,
             int connectTimeoutMillis,
             int readTimeoutMillis
+    ) throws IOException {
+        return post(runtimeApiBaseUrl, sharedSecret, tokenHeader, path, jsonBody,
+                connectTimeoutMillis, readTimeoutMillis, null);
+    }
+
+    public static LegacyHttpResponse post(
+            String runtimeApiBaseUrl,
+            String sharedSecret,
+            String tokenHeader,
+            String path,
+            String jsonBody,
+            int connectTimeoutMillis,
+            int readTimeoutMillis,
+            Map<String, String> extraHeaders
     ) throws IOException {
         String baseUrl = normalizeBaseUrl(runtimeApiBaseUrl);
         String requestPath = path == null ? "" : path;
@@ -84,6 +131,7 @@ public final class RawHttpActionGraphGatewayUsage {
             connection.setRequestMethod("POST");
             connection.setConnectTimeout(connectTimeoutMillis);
             connection.setReadTimeout(readTimeoutMillis);
+            applyHeaders(connection, extraHeaders);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             if (!isBlank(sharedSecret)) {
@@ -105,6 +153,17 @@ public final class RawHttpActionGraphGatewayUsage {
             return new LegacyHttpResponse(statusCode, readBody(responseStream));
         } finally {
             connection.disconnect();
+        }
+    }
+
+    private static void applyHeaders(HttpURLConnection connection, Map<String, String> extraHeaders) {
+        if (extraHeaders == null) {
+            return;
+        }
+        for (Map.Entry<String, String> entry : extraHeaders.entrySet()) {
+            connection.setRequestProperty(
+                    requireText(entry.getKey(), "extra header name"),
+                    entry.getValue() == null ? "" : entry.getValue());
         }
     }
 

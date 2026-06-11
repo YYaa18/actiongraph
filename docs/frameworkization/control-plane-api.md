@@ -67,6 +67,8 @@ Legacy applications that cannot embed the runtime can call a separately deployed
 ActionGraphRuntimeHttpClient client = ActionGraphRuntimeHttpClient
         .builder("https://agent.example.com/actiongraph/runtime")
         .sharedSecret(System.getenv("ACTIONGRAPH_RUNTIME_TOKEN"))
+        .defaultHeader("X-Source-System", "legacy-crm")
+        .defaultHeader("X-Request-Id", requestId)
         .build();
 
 ControlPlaneHttpResponse response = client.start("帮客户 C001 生成续约报价");
@@ -84,6 +86,8 @@ The client uses only `HttpURLConnection`. It sends:
 
 The response body is returned as raw JSON so Java 8 callers can parse it with their existing stack, or simply forward it through an enterprise gateway without adding a new JSON dependency.
 
+`defaultHeader` / `defaultHeaders` are intended for enterprise gateway and audit metadata such as source system, tenant, branch, request id, or correlation id. Protocol headers (`Accept`, `Content-Type`) and the configured shared-secret token header are still owned by the client.
+
 For Java 6/7 estates, copy the raw HTTP gateway example instead of introducing this jar. It uses the same request shape and token header while leaving JSON parsing, logging, retries, and network policy under the host system's existing stack. Modern CI toolchains no longer provide a reliable Java 6/7 target here, so those estates should run their own platform compiler check after copying the file.
 
 ## Java 8 Component Catalog HTTP Client
@@ -94,6 +98,8 @@ Legacy deployment checks, enterprise gateways, and custom consoles can inspect a
 ActionGraphComponentCatalogHttpClient catalog = ActionGraphComponentCatalogHttpClient
         .builder("https://agent.example.com/actiongraph/components")
         .sharedSecret(System.getenv("ACTIONGRAPH_CATALOG_TOKEN"))
+        .defaultHeader("X-Source-System", "deployment-check")
+        .defaultHeader("X-Request-Id", requestId)
         .build();
 
 ControlPlaneHttpResponse response = catalog.modulesByCompatibility("java8-client");
@@ -113,6 +119,8 @@ The client uses only `HttpURLConnection`. It sends:
 - `GET /profiles/{profile}`
 
 The response body is raw JSON. This keeps old Java callers from depending on ActionGraph catalog model classes when they only need remote ecosystem discovery or dependency guidance.
+
+The catalog client supports the same `defaultHeader` / `defaultHeaders` API as the runtime client, so deployment probes and custom consoles can pass enterprise tracing and audit headers without adding an HTTP library.
 
 ## Shared-Secret Token Verification
 

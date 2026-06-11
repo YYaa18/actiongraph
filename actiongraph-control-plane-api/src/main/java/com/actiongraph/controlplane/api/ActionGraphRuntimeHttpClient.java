@@ -20,6 +20,7 @@ public final class ActionGraphRuntimeHttpClient {
     private final String sharedSecret;
     private final int connectTimeoutMillis;
     private final int readTimeoutMillis;
+    private final Map<String, String> defaultHeaders;
 
     private ActionGraphRuntimeHttpClient(Builder builder) {
         this.runtimeApiBaseUrl = normalizeBaseUrl(builder.runtimeApiBaseUrl);
@@ -27,6 +28,7 @@ public final class ActionGraphRuntimeHttpClient {
         this.sharedSecret = builder.sharedSecret == null ? "" : builder.sharedSecret;
         this.connectTimeoutMillis = builder.connectTimeoutMillis;
         this.readTimeoutMillis = builder.readTimeoutMillis;
+        this.defaultHeaders = new TreeMap<String, String>(builder.defaultHeaders);
     }
 
     public static Builder builder(String runtimeApiBaseUrl) {
@@ -62,6 +64,7 @@ public final class ActionGraphRuntimeHttpClient {
         connection.setRequestMethod("POST");
         connection.setConnectTimeout(connectTimeoutMillis);
         connection.setReadTimeout(readTimeoutMillis);
+        applyDefaultHeaders(connection);
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
         if (!isBlank(sharedSecret)) {
@@ -81,6 +84,12 @@ public final class ActionGraphRuntimeHttpClient {
         String body = readBody(statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream());
         connection.disconnect();
         return new ControlPlaneHttpResponse(statusCode, body);
+    }
+
+    private void applyDefaultHeaders(HttpURLConnection connection) {
+        for (Map.Entry<String, String> entry : defaultHeaders.entrySet()) {
+            connection.setRequestProperty(entry.getKey(), entry.getValue());
+        }
     }
 
     private static String goalRequestJson(String input, Map<String, String> knownParameters) {
@@ -194,6 +203,7 @@ public final class ActionGraphRuntimeHttpClient {
         private String sharedSecret = "";
         private int connectTimeoutMillis = 5000;
         private int readTimeoutMillis = 30000;
+        private final Map<String, String> defaultHeaders = new TreeMap<String, String>();
 
         private Builder(String runtimeApiBaseUrl) {
             this.runtimeApiBaseUrl = runtimeApiBaseUrl;
@@ -222,6 +232,21 @@ public final class ActionGraphRuntimeHttpClient {
                 throw new IllegalArgumentException("readTimeoutMillis must not be negative");
             }
             this.readTimeoutMillis = readTimeoutMillis;
+            return this;
+        }
+
+        public Builder defaultHeader(String name, String value) {
+            this.defaultHeaders.put(requireText(name, "default header name"), value == null ? "" : value);
+            return this;
+        }
+
+        public Builder defaultHeaders(Map<String, String> headers) {
+            if (headers == null) {
+                return this;
+            }
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                defaultHeader(entry.getKey(), entry.getValue());
+            }
             return this;
         }
 

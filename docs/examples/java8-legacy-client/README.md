@@ -20,5 +20,6 @@ dependencies {
 ```bash
 export ACTIONGRAPH_RUNTIME_URL=https://agent.example.com/actiongraph/runtime
 export ACTIONGRAPH_RUNTIME_TOKEN=runtime-shared-secret
+export ACTIONGRAPH_SOURCE_SYSTEM=legacy-crm
+export ACTIONGRAPH_REQUEST_ID=REQ-20260611-0001
 ```
-

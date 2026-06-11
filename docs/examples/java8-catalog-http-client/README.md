@@ -21,4 +21,6 @@ dependencies {
 ```bash
 export ACTIONGRAPH_CATALOG_URL=https://agent.example.com/actiongraph/components
 export ACTIONGRAPH_CATALOG_TOKEN=catalog-shared-secret
+export ACTIONGRAPH_SOURCE_SYSTEM=deployment-check
+export ACTIONGRAPH_REQUEST_ID=REQ-CATALOG-0001
 ```

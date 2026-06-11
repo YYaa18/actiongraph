@@ -4,6 +4,8 @@ This example is for legacy applications that cannot load any ActionGraph jar in-
 
 It intentionally uses only JDK HTTP APIs and returns raw JSON response bodies. The application can copy the class into its own gateway adapter, batch job, ESB plugin, or sidecar and keep using its existing JSON parser and audit logging.
 
+The template also accepts optional extra headers for enterprise audit and tracing metadata such as `X-Source-System`, `X-Request-Id`, branch id, tenant id, or an existing gateway correlation id.
+
 No ActionGraph dependency is required.
 
 ```bash

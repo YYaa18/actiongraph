@@ -137,7 +137,7 @@ dependencies {
 }
 ```
 
-`actiongraph-control-plane-api` provides `ControlPlaneErrorResponse`, standard error-code factories such as `unauthorized`, `badRequest`, `notFound`, `conflict`, and `notClaimable`, plus zero-dependency HTTP clients: `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`, and `ActionGraphComponentCatalogHttpClient` for inspecting deployed component catalog endpoints. It also provides shared-secret token verification through `ControlPlaneTokenVerifier`, `SharedSecretTokenProperties`, and `SharedSecretTokenProtection`. It is compiled with `--release 8` and has no Spring, JDBC, LLM, runtime, or JSON-library dependency. Built-in Spring MVC endpoint starters bring it transitively.
+`actiongraph-control-plane-api` provides `ControlPlaneErrorResponse`, standard error-code factories such as `unauthorized`, `badRequest`, `notFound`, `conflict`, and `notClaimable`, plus zero-dependency HTTP clients: `ActionGraphRuntimeHttpClient` for calling `/interpret`, `/runs`, and `/runs/{runId}/resume`, and `ActionGraphComponentCatalogHttpClient` for inspecting deployed component catalog endpoints. Both clients support default audit/tracing headers for enterprise gateways. It also provides shared-secret token verification through `ControlPlaneTokenVerifier`, `SharedSecretTokenProperties`, and `SharedSecretTokenProtection`. It is compiled with `--release 8` and has no Spring, JDBC, LLM, runtime, or JSON-library dependency. Built-in Spring MVC endpoint starters bring it transitively.
 
 ## Spring MVC Component Catalog API
 
