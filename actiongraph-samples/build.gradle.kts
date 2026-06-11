@@ -5,7 +5,6 @@ plugins {
 dependencies {
     implementation(project(":actiongraph-core"))
     implementation(project(":actiongraph-memory"))
-    implementation(project(":actiongraph-interpretation"))
     implementation(project(":actiongraph-human-review"))
     implementation(project(":actiongraph-governance"))
     implementation(project(":actiongraph-llm-deepseek"))

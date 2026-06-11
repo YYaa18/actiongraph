@@ -1,6 +1,6 @@
 # Runtime API
 
-`actiongraph-runtime-api` provides a reusable entry service for applications that want to expose ActionGraph runs through a gateway, CLI, worker, or custom controller without rewriting the same orchestration code.
+`actiongraph-core` provides a reusable entry service for applications that want to expose ActionGraph runs through a gateway, CLI, worker, or custom controller without rewriting the same orchestration code.
 
 It composes:
 
@@ -51,6 +51,7 @@ Add the optional starter only when an application should expose runtime entry en
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation("com.actiongraph:actiongraph-core")
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
 }

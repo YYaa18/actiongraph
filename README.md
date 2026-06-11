@@ -54,12 +54,10 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | Module | Purpose |
 |---|---|
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | Core action, planning, runtime, policy, and trace APIs |
+| `actiongraph-core` | Core action, planning, runtime, policy, trace, goal interpretation, and runtime entry APIs |
 | `actiongraph-annotations` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
 | `actiongraph-memory` | Optional structured memory records, repository contract, in-memory implementation, and Blackboard context loader |
 | `actiongraph-memory-spring-boot-starter` | Optional Spring Boot auto-configuration for structured memory and JDBC memory repository |
-| `actiongraph-interpretation` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
-| `actiongraph-runtime-api` | Reusable goal interpretation, start, and resume service |
 | `actiongraph-component-catalog` | Java 8 compatible machine-readable component catalog and composition profiles |
 | `actiongraph-control-plane-api` | Java 8 compatible control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
@@ -170,9 +168,7 @@ Non-Spring services can use `actiongraph-memory` directly when they want structu
 
 Spring services can add `actiongraph-memory-spring-boot-starter` when they want structured memory defaults and `MemoryContextLoader`. It provides an in-memory `MemoryRepository` by default and backs off to a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available.
 
-Non-Spring services can use `actiongraph-interpretation` directly when they want GoalCatalog metadata, rule-based goal interpreters, or Goal-to-Blackboard seeding without adopting an LLM provider.
-
-Non-Spring services can use `actiongraph-runtime-api` when an application gateway, CLI, or custom controller wants a stable service for `interpret`, `start`, and `resume` without adopting Spring MVC. It composes a `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry`, and its start/resume metadata overloads can record request ids or source systems in trace events. It does not provide an LLM provider, persistence, or HTTP endpoints by itself. Spring MVC applications can add `actiongraph-runtime-api-spring-boot-starter` and enable `actiongraph.runtime.api.enabled=true` to expose the same entry surface:
+Non-Spring services can use `actiongraph-core` directly when they want GoalCatalog metadata, rule-based goal interpreters, Goal-to-Blackboard seeding, or the stable `interpret` / `start` / `resume` entry service without adopting an LLM provider or Spring MVC. The entry service composes a `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry`, and its start/resume metadata overloads can record request ids or source systems in trace events. It does not provide an LLM provider, persistence, or HTTP endpoints by itself. Spring MVC applications can add `actiongraph-runtime-api-spring-boot-starter` and enable `actiongraph.runtime.api.enabled=true` to expose the same entry surface:
 
 ```text
 Runtime API starter: POST /actiongraph/runtime/interpret

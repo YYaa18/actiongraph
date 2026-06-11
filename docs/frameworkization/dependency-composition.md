@@ -59,11 +59,10 @@ Use this when a service wants GoalCatalog metadata, rule-based goal interpreters
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-core")
-    implementation("com.actiongraph:actiongraph-interpretation")
 }
 ```
 
-`actiongraph-interpretation` depends only on `actiongraph-core`. It provides `GoalCatalog`, `GoalDefinition`, `GoalInterpreter`, `GoalInterpretation`, `GoalParameters`, `GoalBlackboardSeeder`, and `GoalBlackboardSeederRegistry`.
+`actiongraph-core` provides `GoalCatalog`, `GoalDefinition`, `GoalInterpreter`, `GoalInterpretation`, `GoalParameters`, `GoalBlackboardSeeder`, and `GoalBlackboardSeederRegistry`.
 
 ## Custom Runtime Entry API
 
@@ -72,11 +71,11 @@ Use this when a gateway, CLI, or custom controller wants a stable service for go
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-runtime-api")
+    implementation("com.actiongraph:actiongraph-core")
 }
 ```
 
-`actiongraph-runtime-api` wraps `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` with `ActionGraphRuntimeApiService` plus stable response DTOs. Its start/resume metadata overloads write caller-provided request metadata into `RUN_STARTED` and `RUN_RESUMED` trace events through the executor's normal masking and hash-chain path. It does not provide an LLM provider, create repositories, register actions, or expose HTTP endpoints.
+`actiongraph-core` wraps `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` with `ActionGraphRuntimeApiService` plus stable response DTOs. Its start/resume metadata overloads write caller-provided request metadata into `RUN_STARTED` and `RUN_RESUMED` trace events through the executor's normal masking and hash-chain path. It does not provide an LLM provider, create repositories, register actions, or expose HTTP endpoints.
 
 ## Spring Business Runtime
 
@@ -317,7 +316,7 @@ dependencies {
 }
 ```
 
-`actiongraph-llm` depends on `actiongraph-core` and `actiongraph-interpretation`; it does not call any provider by itself.
+`actiongraph-llm` depends on `actiongraph-core`; it does not call any provider by itself.
 
 ## DeepSeek Natural-Language Entry
 

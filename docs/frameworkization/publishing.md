@@ -7,12 +7,10 @@ The runtime is split into publishable library modules plus a non-published actio
 | Module | Artifact | Purpose |
 |---|---|---|
 | `actiongraph-bom` | `com.actiongraph:actiongraph-bom:0.1.0` | BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, and trace APIs |
+| `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, trace, goal interpretation, and runtime entry APIs |
 | `actiongraph-annotations` | `com.actiongraph:actiongraph-annotations:0.1.0` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
 | `actiongraph-memory` | `com.actiongraph:actiongraph-memory:0.1.0` | Optional structured memory records, repository contract, in-memory implementation, and Blackboard context loader |
 | `actiongraph-memory-spring-boot-starter` | `com.actiongraph:actiongraph-memory-spring-boot-starter:0.1.0` | Optional Spring Boot structured memory and JDBC repository auto-configuration |
-| `actiongraph-interpretation` | `com.actiongraph:actiongraph-interpretation:0.1.0` | Optional goal interpretation contracts, GoalCatalog metadata, and Blackboard seeders |
-| `actiongraph-runtime-api` | `com.actiongraph:actiongraph-runtime-api:0.1.0` | Reusable goal interpretation, start, and resume service |
 | `actiongraph-component-catalog` | `com.actiongraph:actiongraph-component-catalog:0.1.0` | Java 8 compatible component metadata, compatibility labels, and composition profiles |
 | `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
@@ -106,16 +104,10 @@ Spring Boot structured memory auto-configuration adds:
 implementation("com.actiongraph:actiongraph-memory-spring-boot-starter")
 ```
 
-Goal interpretation contracts add:
+Goal interpretation contracts and runtime entry services add:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-interpretation")
-```
-
-Runtime entry services add:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-runtime-api")
+implementation("com.actiongraph:actiongraph-core")
 ```
 
 Component catalog metadata adds:

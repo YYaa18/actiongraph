@@ -17,7 +17,7 @@ dependencies {
 ActionGraphComponentCatalogService catalog =
         ActionGraphComponentCatalogService.defaultCatalog();
 
-catalog.component("actiongraph-runtime-api")
+catalog.component("actiongraph-core")
         .ifPresent(component -> System.out.println(component.capabilities()));
 
 catalog.profile("full-control-plane")
