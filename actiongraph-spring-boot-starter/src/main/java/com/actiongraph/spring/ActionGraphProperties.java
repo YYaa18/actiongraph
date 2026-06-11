@@ -1,6 +1,7 @@
 package com.actiongraph.spring;
 
 import com.actiongraph.api.Experimental;
+import com.actiongraph.controlplane.auth.SharedSecretTokenProperties;
 import com.actiongraph.durability.RecoveryPolicy;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.planning.GoapPlanner;
@@ -22,6 +23,7 @@ public class ActionGraphProperties {
     private final ExecutionProperties execution = new ExecutionProperties();
     private final LlmProperties llm = new LlmProperties();
     private final DurabilityProperties durability = new DurabilityProperties();
+    private final EventsProperties events = new EventsProperties();
 
     public PlannerProperties getPlanner() {
         return planner;
@@ -65,6 +67,14 @@ public class ActionGraphProperties {
     )
     public DurabilityProperties getDurability() {
         return durability;
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "External event ingress configuration is experimental until MS2 pilots complete."
+    )
+    public EventsProperties getEvents() {
+        return events;
     }
 
     public static final class PlannerProperties {
@@ -324,6 +334,94 @@ public class ActionGraphProperties {
                 throw new IllegalArgumentException(name + " must be positive");
             }
             return value;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "External event ingress configuration is experimental until MS2 pilots complete."
+    )
+    public static final class EventsProperties {
+        private Duration defaultTimeout = GoapExecutor.DEFAULT_EVENT_WAIT_TIMEOUT;
+        private Duration sweepPeriod = Duration.ofSeconds(60);
+        private final CallbackEndpointProperties callbackEndpoint = new CallbackEndpointProperties();
+
+        public Duration getDefaultTimeout() {
+            return defaultTimeout;
+        }
+
+        public void setDefaultTimeout(Duration defaultTimeout) {
+            this.defaultTimeout = DurabilityProperties.requirePositiveDuration(defaultTimeout, "defaultTimeout");
+        }
+
+        public Duration getSweepPeriod() {
+            return sweepPeriod;
+        }
+
+        public void setSweepPeriod(Duration sweepPeriod) {
+            Duration value = java.util.Objects.requireNonNull(sweepPeriod, "sweepPeriod");
+            if (value.isNegative()) {
+                throw new IllegalArgumentException("sweepPeriod must not be negative");
+            }
+            this.sweepPeriod = value;
+        }
+
+        public CallbackEndpointProperties getCallbackEndpoint() {
+            return callbackEndpoint;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "External event HTTP callbacks are experimental until MS2 pilots complete."
+    )
+    public static final class CallbackEndpointProperties implements SharedSecretTokenProperties {
+        private boolean enabled = false;
+        private String path = "/actiongraph/events";
+        private String tokenHeader = "X-ActionGraph-Event-Token";
+        private String sharedSecret = "";
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            if (path == null || path.isBlank()) {
+                throw new IllegalArgumentException("event callback endpoint path must not be blank");
+            }
+            this.path = path;
+        }
+
+        @Override
+        public String getTokenHeader() {
+            return tokenHeader;
+        }
+
+        public void setTokenHeader(String tokenHeader) {
+            if (tokenHeader == null || tokenHeader.isBlank()) {
+                throw new IllegalArgumentException("event callback endpoint token header must not be blank");
+            }
+            this.tokenHeader = tokenHeader;
+        }
+
+        @Override
+        public String getSharedSecret() {
+            return sharedSecret;
+        }
+
+        public void setSharedSecret(String sharedSecret) {
+            if (sharedSecret != null && sharedSecret.isBlank()) {
+                throw new IllegalArgumentException("event callback endpoint shared secret must not be blank");
+            }
+            this.sharedSecret = sharedSecret == null ? "" : sharedSecret;
         }
     }
 

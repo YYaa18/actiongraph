@@ -9,6 +9,9 @@ import com.actiongraph.action.annotation.AnnotatedActionFactory;
 import com.actiongraph.api.Experimental;
 import com.actiongraph.contribution.ActionGraphContribution;
 import com.actiongraph.durability.RunRecoverer;
+import com.actiongraph.events.EventApplier;
+import com.actiongraph.events.EventWaitSweeper;
+import com.actiongraph.events.ExternalEventGateway;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
@@ -187,7 +190,56 @@ public class ActionGraphAutoConfiguration {
                 .maxSteps(properties.getExecutor().getMaxSteps())
                 .durabilityEnabled(properties.getDurability().isEnabled())
                 .heartbeatInterval(properties.getDurability().getHeartbeatInterval())
+                .defaultEventWaitTimeout(properties.getEvents().getDefaultTimeout())
                 .build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @Experimental(
+            since = "0.2.0",
+            value = "External event gateway auto-configuration is experimental until MS2 pilots complete."
+    )
+    public ExternalEventGateway actionGraphExternalEventGateway(
+            GoapExecutor executor,
+            SuspendedRunRepository suspendedRunRepository,
+            ActionRegistry registry,
+            ObjectProvider<EventApplier> eventAppliers
+    ) {
+        return new ExternalEventGateway(
+                executor,
+                suspendedRunRepository,
+                registry.all(),
+                registry,
+                eventAppliers.orderedStream().toList()
+        );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @Experimental(
+            since = "0.2.0",
+            value = "External event wait sweeper auto-configuration is experimental until MS2 pilots complete."
+    )
+    public EventWaitSweeper actionGraphEventWaitSweeper(
+            GoapExecutor executor,
+            SuspendedRunRepository suspendedRunRepository,
+            ActionRegistry registry
+    ) {
+        return new EventWaitSweeper(executor, suspendedRunRepository, registry.all(), registry);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "actionGraphEventWaitSweeperLifecycle")
+    @Experimental(
+            since = "0.2.0",
+            value = "External event wait sweeping is experimental until MS2 pilots complete."
+    )
+    public SmartLifecycle actionGraphEventWaitSweeperLifecycle(
+            EventWaitSweeper sweeper,
+            ActionGraphProperties properties
+    ) {
+        return new EventWaitSweeperLifecycle(sweeper, properties.getEvents().getSweepPeriod());
     }
 
     @Bean
@@ -419,6 +471,56 @@ public class ActionGraphAutoConfiguration {
                         return;
                     } catch (RuntimeException ex) {
                         LOGGER.debug("ActionGraph recoverer iteration failed", ex);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void stop() {
+            running.set(false);
+            if (thread != null) {
+                thread.interrupt();
+            }
+        }
+
+        @Override
+        public boolean isRunning() {
+            return running.get();
+        }
+
+        @Override
+        public boolean isAutoStartup() {
+            return true;
+        }
+    }
+
+    private static final class EventWaitSweeperLifecycle implements SmartLifecycle {
+        private final EventWaitSweeper sweeper;
+        private final Duration period;
+        private final AtomicBoolean running = new AtomicBoolean(false);
+        private Thread thread;
+
+        private EventWaitSweeperLifecycle(EventWaitSweeper sweeper, Duration period) {
+            this.sweeper = sweeper;
+            this.period = period;
+        }
+
+        @Override
+        public void start() {
+            if (period.isZero() || !running.compareAndSet(false, true)) {
+                return;
+            }
+            thread = Thread.ofVirtual().name("actiongraph-event-wait-sweeper").start(() -> {
+                while (running.get()) {
+                    try {
+                        sweeper.sweepOne(Instant.now());
+                        Thread.sleep(period.toMillis());
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    } catch (RuntimeException ex) {
+                        LOGGER.debug("ActionGraph event wait sweeper iteration failed", ex);
                     }
                 }
             });

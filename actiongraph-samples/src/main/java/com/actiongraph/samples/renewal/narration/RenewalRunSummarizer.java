@@ -12,6 +12,7 @@ public final class RenewalRunSummarizer {
                     .orElse("Result: completed, but no approval request was found on the blackboard.");
             case HALTED_UNREACHABLE -> "Result: halted because no reachable plan remained. " + result.message();
             case SUSPENDED_PENDING_REVIEW -> "Result: suspended pending human review. " + result.message();
+            case SUSPENDED_WAITING_EVENT -> "Result: suspended waiting for an external event. " + result.message();
             case DENIED_BY_POLICY -> "Result: denied by policy. " + result.message();
             case FAILED_COMPENSATED -> "Result: failed, and all completed actions were compensated. " + result.message();
             case FAILED_COMPENSATION_INCOMPLETE -> "Result: failed, and some compensation failed. " + result.message();

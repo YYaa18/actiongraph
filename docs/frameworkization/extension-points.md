@@ -273,3 +273,88 @@ public final class ActionGraphIdempotencyInterceptor implements RequestIntercept
 The framework does not force this header because enterprise gateways and core
 systems often have their own idempotency fields. The important contract is the
 shape: run id + action id + attempt.
+
+## 7. External Event Ingress
+
+MS2 adds an optional event-wait boundary for long-running external systems:
+ticket callbacks, batch result notifications, payment confirmations, or any
+process where an Action submits work and later receives a correlated event.
+
+An Action can return `ActionResult.waiting(...)`:
+
+```java
+public ActionResult execute(ExecutionContext context) {
+    ApprovalCommand command = buildCommand(context.blackboard());
+    approvalClient.submit(command);
+
+    return ActionResult.waiting(
+            "approval.completed",
+            command.approvalId(),
+            Duration.ofHours(6),
+            "waiting for approval callback"
+    );
+}
+```
+
+The waiting Action is treated as completed for compensation purposes. If the
+event times out, its compensation method is called because the submission may
+already have reached the external system.
+
+The event fold-in is application code:
+
+```java
+public final class ApprovalCompletedApplier implements EventApplier {
+    public String eventType() {
+        return "approval.completed";
+    }
+
+    public void apply(EventPayload payload, Blackboard blackboard) {
+        ApprovalCallback callback = parse(payload.body());
+        blackboard.put(callback);
+        blackboard.addCondition(Condition.of("approval:COMPLETED"));
+    }
+}
+```
+
+Delivery semantics:
+
+1. `ExternalEventGateway` atomically claims a `WAITING_EVENT` snapshot by
+   `eventType + correlationId`;
+2. the registered `EventApplier` mutates the Blackboard;
+3. the gateway writes `EVENT_DELIVERED` trace and saves a `RUNNING` checkpoint;
+4. the executor continues the same run id, trace sequence, and compensation
+   stack.
+
+If the process crashes after step 3, MS1 recovery can continue from the
+checkpoint without re-delivering the event. If application parsing fails before
+the checkpoint, the waiting snapshot is restored and the transport can retry.
+
+Spring Boot creates `ExternalEventGateway` and `EventWaitSweeper` beans when the
+main starter is present. The HTTP callback endpoint is optional and disabled by
+default:
+
+```yaml
+actiongraph:
+  events:
+    default-timeout: 24h
+    sweep-period: 60s        # 0 disables the built-in sweeper
+    callback-endpoint:
+      enabled: true
+      path: /actiongraph/events
+      token-header: X-ActionGraph-Event-Token
+      shared-secret: ${ACTIONGRAPH_EVENT_CALLBACK_SECRET}
+```
+
+Endpoint shape:
+
+```text
+POST /actiongraph/events/{eventType}/{correlationId}
+X-ActionGraph-Event-Token: <shared secret>
+Content-Type: application/json
+
+{"decision":"APPROVED"}
+```
+
+Production systems can skip the HTTP controller entirely and call
+`ExternalEventGateway.deliver(...)` from a message listener or proprietary
+callback adapter.

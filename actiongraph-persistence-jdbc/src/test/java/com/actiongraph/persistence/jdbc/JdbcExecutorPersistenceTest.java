@@ -20,12 +20,15 @@ import com.actiongraph.policy.RepositoryBackedHumanReviewPolicy;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunStatus;
+import com.actiongraph.runtime.SnapshotState;
+import com.actiongraph.runtime.SuspendedRun;
 import com.actiongraph.trace.TraceEvent;
 import com.actiongraph.trace.TraceChainVerifier;
 import com.actiongraph.trace.TraceEventType;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +39,71 @@ class JdbcExecutorPersistenceTest {
     private static final Condition INPUT_PRESENT = Condition.of("durable-test:INPUT_PRESENT");
     private static final Condition DRAFTED = Condition.of("durable-test:DRAFTED");
     private static final Condition APPROVED = Condition.of("durable-test:APPROVED");
+
+    @Test
+    void jdbcRepositoryPersistsAndClaimsWaitingEvents() {
+        DataSource dataSource = JdbcTestDataSources.h2();
+        JdbcSuspendedRunRepository repository = new JdbcSuspendedRunRepository(dataSource);
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+        blackboard.put(new DurableInput("I-EVENT"));
+        blackboard.addCondition(INPUT_PRESENT);
+        Instant deadline = Instant.now().plusSeconds(3600);
+        SuspendedRun waiting = SuspendedRun.waitingForEvent(
+                "RUN-EVENT",
+                new Goal("eventGoal", Set.of(APPROVED)),
+                blackboard,
+                List.of(new ActionId("durable-test.draft")),
+                List.of(new ActionId("durable-test.draft")),
+                "waiting for external approval",
+                "approval.completed",
+                "APP-123",
+                deadline
+        );
+
+        repository.save(waiting);
+
+        assertThat(repository.findByRunId("RUN-EVENT")).get().satisfies(snapshot -> {
+            assertThat(snapshot.snapshotState()).isEqualTo(SnapshotState.WAITING_EVENT);
+            assertThat(snapshot.eventType()).isEqualTo("approval.completed");
+            assertThat(snapshot.eventCorrelationId()).isEqualTo("APP-123");
+            assertThat(snapshot.eventDeadline()).isEqualTo(deadline);
+        });
+        assertThat(repository.claimWaitingEvent("approval.completed", "missing")).isEmpty();
+
+        assertThat(repository.claimWaitingEvent("approval.completed", "APP-123"))
+                .get()
+                .satisfies(snapshot -> assertThat(snapshot.runId()).isEqualTo("RUN-EVENT"));
+        assertThat(repository.claimWaitingEvent("approval.completed", "APP-123")).isEmpty();
+    }
+
+    @Test
+    void jdbcRepositoryClaimsExpiredWaitingEvent() {
+        DataSource dataSource = JdbcTestDataSources.h2();
+        JdbcSuspendedRunRepository repository = new JdbcSuspendedRunRepository(dataSource);
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+        blackboard.addCondition(INPUT_PRESENT);
+        SuspendedRun waiting = SuspendedRun.waitingForEvent(
+                "RUN-EXPIRED",
+                new Goal("eventGoal", Set.of(APPROVED)),
+                blackboard,
+                List.of(new ActionId("durable-test.draft")),
+                List.of(new ActionId("durable-test.draft")),
+                "waiting for external approval",
+                "approval.completed",
+                "APP-456",
+                Instant.EPOCH
+        );
+
+        repository.save(waiting);
+
+        assertThat(repository.claimExpiredWaiting(Instant.now()))
+                .get()
+                .satisfies(snapshot -> {
+                    assertThat(snapshot.runId()).isEqualTo("RUN-EXPIRED");
+                    assertThat(snapshot.eventCorrelationId()).isEqualTo("APP-456");
+                });
+        assertThat(repository.claimExpiredWaiting(Instant.now())).isEmpty();
+    }
 
     @Test
     void resumeFromJdbcRestoresBlackboardTraceSequenceAndCompensationStack() {

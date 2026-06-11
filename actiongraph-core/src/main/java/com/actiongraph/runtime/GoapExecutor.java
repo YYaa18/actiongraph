@@ -9,6 +9,7 @@ import com.actiongraph.action.CompensationResult;
 import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.api.Experimental;
 import com.actiongraph.durability.RecoveryPolicy;
+import com.actiongraph.events.EventPayload;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.exception.ActionGraphIntegrationException;
 import com.actiongraph.observability.NoopObservationSink;
@@ -65,6 +66,7 @@ import java.util.stream.Collectors;
 public final class GoapExecutor implements Executor {
     public static final int DEFAULT_MAX_STEPS = 64;
     public static final Duration DEFAULT_HEARTBEAT_INTERVAL = Duration.ofSeconds(30);
+    public static final Duration DEFAULT_EVENT_WAIT_TIMEOUT = Duration.ofHours(24);
     private static final Logger LOGGER = LoggerFactory.getLogger(GoapExecutor.class);
 
     private final Planner planner;
@@ -78,6 +80,7 @@ public final class GoapExecutor implements Executor {
     private final int maxSteps;
     private final boolean durabilityEnabled;
     private final Duration heartbeatInterval;
+    private final Duration defaultEventWaitTimeout;
 
     public GoapExecutor() {
         this(new GoapPlanner(), new DefaultPolicyGuard(), new PendingHumanReviewPolicy(),
@@ -129,7 +132,8 @@ public final class GoapExecutor implements Executor {
     ) {
         this(planner, policyGuard, humanReviewPolicy, traceRepository, suspendedRunRepository,
                 NoopMaskingPolicy.INSTANCE, NoopReviewAttributeContributor.INSTANCE,
-                NoopObservationSink.INSTANCE, maxSteps, false, DEFAULT_HEARTBEAT_INTERVAL);
+                NoopObservationSink.INSTANCE, maxSteps, false,
+                DEFAULT_HEARTBEAT_INTERVAL, DEFAULT_EVENT_WAIT_TIMEOUT);
     }
 
     private GoapExecutor(
@@ -143,7 +147,8 @@ public final class GoapExecutor implements Executor {
             ObservationSink observationSink,
             int maxSteps,
             boolean durabilityEnabled,
-            Duration heartbeatInterval
+            Duration heartbeatInterval,
+            Duration defaultEventWaitTimeout
     ) {
         if (maxSteps <= 0) {
             throw new IllegalArgumentException("maxSteps must be > 0");
@@ -151,6 +156,10 @@ public final class GoapExecutor implements Executor {
         Duration validatedHeartbeatInterval = Objects.requireNonNull(heartbeatInterval, "heartbeatInterval");
         if (validatedHeartbeatInterval.isZero() || validatedHeartbeatInterval.isNegative()) {
             throw new IllegalArgumentException("heartbeatInterval must be positive");
+        }
+        Duration validatedEventWaitTimeout = Objects.requireNonNull(defaultEventWaitTimeout, "defaultEventWaitTimeout");
+        if (validatedEventWaitTimeout.isZero() || validatedEventWaitTimeout.isNegative()) {
+            throw new IllegalArgumentException("defaultEventWaitTimeout must be positive");
         }
         this.planner = Objects.requireNonNull(planner, "planner");
         this.policyGuard = Objects.requireNonNull(policyGuard, "policyGuard");
@@ -163,6 +172,7 @@ public final class GoapExecutor implements Executor {
         this.maxSteps = maxSteps;
         this.durabilityEnabled = durabilityEnabled;
         this.heartbeatInterval = validatedHeartbeatInterval;
+        this.defaultEventWaitTimeout = validatedEventWaitTimeout;
     }
 
     public static Builder builder() {
@@ -336,6 +346,100 @@ public final class GoapExecutor implements Executor {
         );
     }
 
+    @Experimental(
+            since = "0.2.0",
+            value = "External event resume entry point is experimental until MS2 event ingress pilots complete."
+    )
+    public RunResult resumeFromWaitingEvent(
+            SuspendedRun checkpoint,
+            Collection<Action> actions,
+            ActionRegistry registry,
+            String eventType,
+            String correlationId,
+            EventPayload payload
+    ) {
+        Objects.requireNonNull(checkpoint, "checkpoint");
+        Objects.requireNonNull(actions, "actions");
+        Objects.requireNonNull(registry, "registry");
+        Objects.requireNonNull(eventType, "eventType");
+        Objects.requireNonNull(correlationId, "correlationId");
+        Objects.requireNonNull(payload, "payload");
+        if (checkpoint.snapshotState() != SnapshotState.RUNNING) {
+            throw new IllegalArgumentException("Event resume requires a RUNNING checkpoint");
+        }
+
+        long runStartedAt = System.nanoTime();
+        RunTrace trace = new RunTrace(traceRepository, checkpoint.runId(), maskingPolicy, observationSink);
+        return runLoop(
+                checkpoint.runId(),
+                checkpoint.goal(),
+                checkpoint.blackboard(),
+                actions,
+                registry,
+                new ArrayList<>(checkpoint.executedActions()),
+                rehydrateCompensationStack(checkpoint, registry),
+                trace,
+                Map.of(),
+                runStartedAt,
+                true
+        );
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "External event trace checkpointing is experimental until MS2 event ingress pilots complete."
+    )
+    public void recordEventDelivered(
+            String runId,
+            String eventType,
+            String correlationId,
+            EventPayload payload
+    ) {
+        Objects.requireNonNull(runId, "runId");
+        Objects.requireNonNull(eventType, "eventType");
+        Objects.requireNonNull(correlationId, "correlationId");
+        Objects.requireNonNull(payload, "payload");
+        RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy, observationSink);
+        trace.append(TraceEventType.EVENT_DELIVERED, null, "External event delivered", Map.of(
+                "eventType", eventType,
+                "correlationId", correlationId,
+                "contentType", payload.contentType()
+        ));
+        trace.flush();
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "External event timeout handling is experimental until MS2 event ingress pilots complete."
+    )
+    public RunResult timeoutWaitingEvent(
+            SuspendedRun waitingRun,
+            Collection<Action> actions,
+            ActionRegistry registry
+    ) {
+        Objects.requireNonNull(waitingRun, "waitingRun");
+        Objects.requireNonNull(actions, "actions");
+        Objects.requireNonNull(registry, "registry");
+        if (waitingRun.snapshotState() != SnapshotState.WAITING_EVENT) {
+            throw new IllegalArgumentException("Only WAITING_EVENT snapshots can time out");
+        }
+
+        long runStartedAt = System.nanoTime();
+        RunTrace trace = new RunTrace(traceRepository, waitingRun.runId(), maskingPolicy, observationSink);
+        trace.append(TraceEventType.EVENT_WAIT_TIMED_OUT, null, "External event wait timed out", Map.of(
+                "eventType", waitingRun.eventType() == null ? "" : waitingRun.eventType(),
+                "correlationId", waitingRun.eventCorrelationId() == null ? "" : waitingRun.eventCorrelationId(),
+                "deadline", waitingRun.eventDeadline() == null ? "" : waitingRun.eventDeadline().toString()
+        ));
+        ExecutionContext context = new DefaultExecutionContext(waitingRun.blackboard(), traceRepository, waitingRun.runId());
+        boolean compensated = compensateAll(rehydrateCompensationStack(waitingRun, registry), context, trace);
+        RunStatus status = compensated
+                ? RunStatus.FAILED_COMPENSATED
+                : RunStatus.FAILED_COMPENSATION_INCOMPLETE;
+        return finish(trace, waitingRun.runId(), status, waitingRun.blackboard(), waitingRun.executedActions(),
+                "External event wait timed out", runStartedAt);
+    }
+
     private static Map<String, String> normalizeMetadata(Map<String, String> metadata) {
         Map<String, String> merged = new LinkedHashMap<>();
         if (metadata != null) {
@@ -445,6 +549,23 @@ public final class GoapExecutor implements Executor {
                 LOGGER.debug("Action succeeded: runId={}, actionId={}, addedConditions={}",
                         runId, action.id().value(), addedConditions.size());
                 traceBlackboardUpdate(trace, action, beforeObjects, blackboard.snapshotEntries(), addedConditions);
+                if (result.waiting()) {
+                    Instant deadline = Instant.now().plus(result.eventTimeout() == null
+                            ? defaultEventWaitTimeout
+                            : result.eventTimeout());
+                    String eventType = Objects.requireNonNull(result.eventType(), "eventType");
+                    String correlationId = Objects.requireNonNull(result.eventCorrelationId(), "eventCorrelationId");
+                    trace.append(TraceEventType.EVENT_WAIT_STARTED, action.id(), result.message(), Map.of(
+                            "eventType", eventType,
+                            "correlationId", correlationId,
+                            "deadline", deadline.toString()
+                    ));
+                    trace.flush();
+                    saveWaitingEventRun(runId, goal, blackboard, executedActionIds,
+                            compensationStack, result.message(), eventType, correlationId, deadline);
+                    return finish(trace, runId, RunStatus.SUSPENDED_WAITING_EVENT, blackboard, executedActionIds,
+                            result.message(), runStartedAt);
+                }
                 checkpointAfterAction(runId, goal, blackboard, executedActionIds, compensationStack, trace, action.id());
             } else {
                 if (outcome.timedOut()) {
@@ -844,6 +965,32 @@ public final class GoapExecutor implements Executor {
         ));
     }
 
+    private void saveWaitingEventRun(
+            String runId,
+            Goal goal,
+            Blackboard blackboard,
+            List<ActionId> executedActionIds,
+            Deque<Action> compensationStack,
+            String message,
+            String eventType,
+            String correlationId,
+            Instant deadline
+    ) {
+        LOGGER.debug("Saving event wait: runId={}, eventType={}, correlationId={}, deadline={}",
+                runId, eventType, correlationId, deadline);
+        suspendedRunRepository.save(SuspendedRun.waitingForEvent(
+                runId,
+                goal,
+                copyBlackboard(blackboard),
+                executedActionIds,
+                compensationStack.stream().map(Action::id).toList(),
+                message,
+                eventType,
+                correlationId,
+                deadline
+        ));
+    }
+
     private void saveInitialCheckpoint(
             String runId,
             Goal goal,
@@ -952,7 +1099,7 @@ public final class GoapExecutor implements Executor {
             String message,
             long runStartedAt
     ) {
-        if (status == RunStatus.SUSPENDED_PENDING_REVIEW) {
+        if (status == RunStatus.SUSPENDED_PENDING_REVIEW || status == RunStatus.SUSPENDED_WAITING_EVENT) {
             trace.append(TraceEventType.RUN_SUSPENDED, null, message, Map.of("status", status.name()));
         } else {
             suspendedRunRepository.delete(runId);
@@ -1196,6 +1343,7 @@ public final class GoapExecutor implements Executor {
         private int maxSteps = DEFAULT_MAX_STEPS;
         private boolean durabilityEnabled;
         private Duration heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
+        private Duration defaultEventWaitTimeout = DEFAULT_EVENT_WAIT_TIMEOUT;
 
         public Builder planner(Planner planner) {
             this.planner = Objects.requireNonNull(planner, "planner");
@@ -1260,6 +1408,15 @@ public final class GoapExecutor implements Executor {
             return this;
         }
 
+        @Experimental(
+                since = "0.2.0",
+                value = "External event waits are experimental until MS2 event ingress pilots complete."
+        )
+        public Builder defaultEventWaitTimeout(Duration defaultEventWaitTimeout) {
+            this.defaultEventWaitTimeout = Objects.requireNonNull(defaultEventWaitTimeout, "defaultEventWaitTimeout");
+            return this;
+        }
+
         public GoapExecutor build() {
             return new GoapExecutor(
                     planner,
@@ -1272,7 +1429,8 @@ public final class GoapExecutor implements Executor {
                     observationSink,
                     maxSteps,
                     durabilityEnabled,
-                    heartbeatInterval
+                    heartbeatInterval,
+                    defaultEventWaitTimeout
             );
         }
     }

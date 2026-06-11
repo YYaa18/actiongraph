@@ -446,7 +446,11 @@ CLASS public abstract interface com.actiongraph.action.ActionRegistry
   METHOD public abstract void register(com.actiongraph.action.Action)
 CLASS public final record com.actiongraph.action.ActionResult
   CONSTRUCTOR public com.actiongraph.action.ActionResult(boolean,java.lang.String,java.util.List)
+  CONSTRUCTOR public com.actiongraph.action.ActionResult(boolean,java.lang.String,java.util.List,java.lang.String,java.lang.String,java.time.Duration)
   METHOD public final boolean equals(java.lang.Object)
+  METHOD public java.lang.String eventCorrelationId()
+  METHOD public java.time.Duration eventTimeout()
+  METHOD public java.lang.String eventType()
   METHOD public static com.actiongraph.action.ActionResult fail(java.lang.String)
   METHOD public final int hashCode()
   METHOD public java.lang.String message()
@@ -454,6 +458,8 @@ CLASS public final record com.actiongraph.action.ActionResult
   METHOD public java.util.List producedConditions()
   METHOD public boolean success()
   METHOD public final java.lang.String toString()
+  METHOD public boolean waiting()
+  METHOD public static com.actiongraph.action.ActionResult waiting(java.lang.String,java.lang.String,java.time.Duration,java.lang.String)
 CLASS public final enum com.actiongraph.action.ActionRiskLevel
   FIELD public static final com.actiongraph.action.ActionRiskLevel HIGH
   FIELD public static final com.actiongraph.action.ActionRiskLevel LOW
@@ -529,6 +535,32 @@ CLASS public final class com.actiongraph.durability.RunRecoverer
   CONSTRUCTOR public com.actiongraph.durability.RunRecoverer(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,java.util.Collection,com.actiongraph.action.ActionRegistry,com.actiongraph.durability.RecoveryPolicy)
   METHOD public int recoverAvailable(java.time.Instant,int)
   METHOD public java.util.Optional recoverOne(java.time.Instant)
+CLASS public final enum com.actiongraph.events.DeliveryResult
+  FIELD public static final com.actiongraph.events.DeliveryResult ALREADY_HANDLED
+  FIELD public static final com.actiongraph.events.DeliveryResult APPLIER_MISSING
+  FIELD public static final com.actiongraph.events.DeliveryResult NOT_FOUND
+  FIELD public static final com.actiongraph.events.DeliveryResult RESUMED
+  METHOD public static com.actiongraph.events.DeliveryResult valueOf(java.lang.String)
+  METHOD public static com.actiongraph.events.DeliveryResult[] values()
+CLASS public abstract interface com.actiongraph.events.EventApplier
+  METHOD public abstract void apply(com.actiongraph.events.EventPayload,com.actiongraph.runtime.Blackboard)
+  METHOD public abstract java.lang.String eventType()
+CLASS public final record com.actiongraph.events.EventPayload
+  CONSTRUCTOR public com.actiongraph.events.EventPayload(java.lang.String,java.lang.String,java.util.Map)
+  METHOD public java.util.Map attributes()
+  METHOD public java.lang.String body()
+  METHOD public java.lang.String contentType()
+  METHOD public static com.actiongraph.events.EventPayload empty()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public final java.lang.String toString()
+CLASS public final class com.actiongraph.events.EventWaitSweeper
+  CONSTRUCTOR public com.actiongraph.events.EventWaitSweeper(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,java.util.Collection,com.actiongraph.action.ActionRegistry)
+  METHOD public int sweepOnce(java.time.Instant)
+  METHOD public java.util.Optional sweepOne(java.time.Instant)
+CLASS public final class com.actiongraph.events.ExternalEventGateway
+  CONSTRUCTOR public com.actiongraph.events.ExternalEventGateway(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,java.util.Collection,com.actiongraph.action.ActionRegistry,java.util.Collection)
+  METHOD public com.actiongraph.events.DeliveryResult deliver(java.lang.String,java.lang.String,com.actiongraph.events.EventPayload)
 CLASS public class com.actiongraph.exception.ActionGraphConfigurationException
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphConfigurationException(java.lang.String)
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphConfigurationException(java.lang.String,java.lang.Throwable)
@@ -878,6 +910,7 @@ CLASS public final record com.actiongraph.runtime.DefaultExecutionContext
 CLASS public abstract interface com.actiongraph.runtime.Executor
   METHOD public abstract com.actiongraph.runtime.RunResult run(com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.Collection,com.actiongraph.action.ActionRegistry)
 CLASS public final class com.actiongraph.runtime.GoapExecutor
+  FIELD public static final java.time.Duration DEFAULT_EVENT_WAIT_TIMEOUT
   FIELD public static final java.time.Duration DEFAULT_HEARTBEAT_INTERVAL
   FIELD public static final int DEFAULT_MAX_STEPS
   CONSTRUCTOR public com.actiongraph.runtime.GoapExecutor()
@@ -887,16 +920,20 @@ CLASS public final class com.actiongraph.runtime.GoapExecutor
   CONSTRUCTOR public com.actiongraph.runtime.GoapExecutor(com.actiongraph.planning.Planner,com.actiongraph.policy.ExecutionPolicyGuard,com.actiongraph.trace.TraceRepository)
   CONSTRUCTOR public com.actiongraph.runtime.GoapExecutor(com.actiongraph.planning.Planner,com.actiongraph.policy.ExecutionPolicyGuard,com.actiongraph.trace.TraceRepository,int)
   METHOD public static com.actiongraph.runtime.GoapExecutor$Builder builder()
+  METHOD public void recordEventDelivered(java.lang.String,java.lang.String,java.lang.String,com.actiongraph.events.EventPayload)
   METHOD public com.actiongraph.runtime.RunResult recover(com.actiongraph.runtime.SuspendedRun,java.util.Collection,com.actiongraph.action.ActionRegistry,com.actiongraph.durability.RecoveryPolicy)
   METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,java.util.Collection,com.actiongraph.action.ActionRegistry)
   METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,java.util.Collection,com.actiongraph.action.ActionRegistry,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult resumeFromWaitingEvent(com.actiongraph.runtime.SuspendedRun,java.util.Collection,com.actiongraph.action.ActionRegistry,java.lang.String,java.lang.String,com.actiongraph.events.EventPayload)
   METHOD public com.actiongraph.runtime.RunResult run(com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.Collection,com.actiongraph.action.ActionRegistry)
   METHOD public com.actiongraph.runtime.RunResult run(com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.Collection,com.actiongraph.action.ActionRegistry,java.util.Map)
   METHOD public com.actiongraph.runtime.SuspendedRunRepository suspendedRunRepository()
+  METHOD public com.actiongraph.runtime.RunResult timeoutWaitingEvent(com.actiongraph.runtime.SuspendedRun,java.util.Collection,com.actiongraph.action.ActionRegistry)
   METHOD public com.actiongraph.trace.TraceRepository traceRepository()
 CLASS public static final class com.actiongraph.runtime.GoapExecutor$Builder
   CONSTRUCTOR public com.actiongraph.runtime.GoapExecutor$Builder()
   METHOD public com.actiongraph.runtime.GoapExecutor build()
+  METHOD public com.actiongraph.runtime.GoapExecutor$Builder defaultEventWaitTimeout(java.time.Duration)
   METHOD public com.actiongraph.runtime.GoapExecutor$Builder durabilityEnabled(boolean)
   METHOD public com.actiongraph.runtime.GoapExecutor$Builder heartbeatInterval(java.time.Duration)
   METHOD public com.actiongraph.runtime.GoapExecutor$Builder humanReviewPolicy(com.actiongraph.policy.HumanReviewPolicy)
@@ -923,8 +960,10 @@ CLASS public final class com.actiongraph.runtime.InMemoryBlackboard
   METHOD public synchronized java.util.Map snapshotObjects()
 CLASS public final class com.actiongraph.runtime.InMemorySuspendedRunRepository
   CONSTRUCTOR public com.actiongraph.runtime.InMemorySuspendedRunRepository()
+  METHOD public java.util.Optional claimExpiredWaiting(java.time.Instant)
   METHOD public java.util.Optional claimForResume(java.lang.String)
   METHOD public java.util.Optional claimStaleRunning(java.time.Instant)
+  METHOD public java.util.Optional claimWaitingEvent(java.lang.String,java.lang.String)
   METHOD public void delete(java.lang.String)
   METHOD public java.util.Optional findByRunId(java.lang.String)
   METHOD public void heartbeat(java.lang.String)
@@ -948,6 +987,7 @@ CLASS public final enum com.actiongraph.runtime.RunStatus
   FIELD public static final com.actiongraph.runtime.RunStatus FAILED_COMPENSATION_INCOMPLETE
   FIELD public static final com.actiongraph.runtime.RunStatus HALTED_UNREACHABLE
   FIELD public static final com.actiongraph.runtime.RunStatus SUSPENDED_PENDING_REVIEW
+  FIELD public static final com.actiongraph.runtime.RunStatus SUSPENDED_WAITING_EVENT
   METHOD public static com.actiongraph.runtime.RunStatus valueOf(java.lang.String)
   METHOD public static com.actiongraph.runtime.RunStatus[] values()
 CLASS public final record com.actiongraph.runtime.RuntimeState
@@ -959,14 +999,19 @@ CLASS public final record com.actiongraph.runtime.RuntimeState
 CLASS public final enum com.actiongraph.runtime.SnapshotState
   FIELD public static final com.actiongraph.runtime.SnapshotState RUNNING
   FIELD public static final com.actiongraph.runtime.SnapshotState SUSPENDED
+  FIELD public static final com.actiongraph.runtime.SnapshotState WAITING_EVENT
   METHOD public static com.actiongraph.runtime.SnapshotState valueOf(java.lang.String)
   METHOD public static com.actiongraph.runtime.SnapshotState[] values()
 CLASS public final record com.actiongraph.runtime.SuspendedRun
   CONSTRUCTOR public com.actiongraph.runtime.SuspendedRun(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,com.actiongraph.action.ActionId,java.lang.String)
   CONSTRUCTOR public com.actiongraph.runtime.SuspendedRun(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,com.actiongraph.action.ActionId,java.lang.String,com.actiongraph.runtime.SnapshotState,java.time.Instant,com.actiongraph.action.ActionId)
+  CONSTRUCTOR public com.actiongraph.runtime.SuspendedRun(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,com.actiongraph.action.ActionId,java.lang.String,com.actiongraph.runtime.SnapshotState,java.time.Instant,com.actiongraph.action.ActionId,java.lang.String,java.lang.String,java.time.Instant)
   METHOD public com.actiongraph.runtime.Blackboard blackboard()
   METHOD public java.util.List compensationStack()
   METHOD public final boolean equals(java.lang.Object)
+  METHOD public java.lang.String eventCorrelationId()
+  METHOD public java.time.Instant eventDeadline()
+  METHOD public java.lang.String eventType()
   METHOD public java.util.List executedActions()
   METHOD public com.actiongraph.planning.Goal goal()
   METHOD public final int hashCode()
@@ -977,12 +1022,15 @@ CLASS public final record com.actiongraph.runtime.SuspendedRun
   METHOD public java.lang.String runId()
   METHOD public com.actiongraph.runtime.SnapshotState snapshotState()
   METHOD public final java.lang.String toString()
+  METHOD public static com.actiongraph.runtime.SuspendedRun waitingForEvent(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,java.lang.String,java.lang.String,java.lang.String,java.time.Instant)
 CLASS public final class com.actiongraph.runtime.SuspendedRunNotClaimableException
   CONSTRUCTOR public com.actiongraph.runtime.SuspendedRunNotClaimableException(java.lang.String)
   METHOD public java.lang.String runId()
 CLASS public abstract interface com.actiongraph.runtime.SuspendedRunRepository
+  METHOD public default java.util.Optional claimExpiredWaiting(java.time.Instant)
   METHOD public abstract java.util.Optional claimForResume(java.lang.String)
   METHOD public default java.util.Optional claimStaleRunning(java.time.Instant)
+  METHOD public default java.util.Optional claimWaitingEvent(java.lang.String,java.lang.String)
   METHOD public abstract void delete(java.lang.String)
   METHOD public abstract java.util.Optional findByRunId(java.lang.String)
   METHOD public default void heartbeat(java.lang.String)
@@ -1113,6 +1161,9 @@ CLASS public final enum com.actiongraph.trace.TraceEventType
   FIELD public static final com.actiongraph.trace.TraceEventType BLACKBOARD_UPDATED
   FIELD public static final com.actiongraph.trace.TraceEventType COMPENSATED
   FIELD public static final com.actiongraph.trace.TraceEventType COMPENSATION_ERROR
+  FIELD public static final com.actiongraph.trace.TraceEventType EVENT_DELIVERED
+  FIELD public static final com.actiongraph.trace.TraceEventType EVENT_WAIT_STARTED
+  FIELD public static final com.actiongraph.trace.TraceEventType EVENT_WAIT_TIMED_OUT
   FIELD public static final com.actiongraph.trace.TraceEventType GOAL_SATISFIED
   FIELD public static final com.actiongraph.trace.TraceEventType HUMAN_REVIEW_DECIDED
   FIELD public static final com.actiongraph.trace.TraceEventType HUMAN_REVIEW_REQUESTED
@@ -1527,8 +1578,10 @@ CLASS public final class com.actiongraph.persistence.jdbc.JdbcSuspendedRunReposi
   CONSTRUCTOR public com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository(javax.sql.DataSource,java.lang.String,java.time.Duration,com.actiongraph.persistence.jdbc.BlackboardTypeRegistry)
   CONSTRUCTOR public com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository(javax.sql.DataSource,java.time.Duration)
   CONSTRUCTOR public com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository(javax.sql.DataSource,java.time.Duration,com.actiongraph.persistence.jdbc.BlackboardTypeRegistry)
+  METHOD public java.util.Optional claimExpiredWaiting(java.time.Instant)
   METHOD public java.util.Optional claimForResume(java.lang.String)
   METHOD public java.util.Optional claimStaleRunning(java.time.Instant)
+  METHOD public java.util.Optional claimWaitingEvent(java.lang.String,java.lang.String)
   METHOD public void delete(java.lang.String)
   METHOD public java.util.Optional findByRunId(java.lang.String)
   METHOD public void heartbeat(java.lang.String)
@@ -1682,6 +1735,22 @@ CLASS public class com.actiongraph.console.spring.ActionGraphConsoleServiceAutoC
 CLASS public class com.actiongraph.console.spring.ActionGraphConsoleUiAutoConfiguration
   CONSTRUCTOR public com.actiongraph.console.spring.ActionGraphConsoleUiAutoConfiguration()
   METHOD public com.actiongraph.console.spring.ActionGraphConsolePageController actionGraphConsolePageController(com.actiongraph.console.spring.ActionGraphConsoleProperties)
+CLASS public final class com.actiongraph.events.spring.ActionGraphEventCallbackController
+  CONSTRUCTOR public com.actiongraph.events.spring.ActionGraphEventCallbackController(com.actiongraph.events.ExternalEventGateway,com.actiongraph.spring.ActionGraphProperties)
+  METHOD public com.actiongraph.events.spring.ActionGraphEventCallbackController$EventCallbackResponse handle(org.springframework.http.HttpHeaders,java.lang.String,java.lang.String,java.lang.String)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.IllegalArgumentException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
+CLASS public static final record com.actiongraph.events.spring.ActionGraphEventCallbackController$EventCallbackResponse
+  CONSTRUCTOR public com.actiongraph.events.spring.ActionGraphEventCallbackController$EventCallbackResponse(java.lang.String,java.lang.String,com.actiongraph.events.DeliveryResult)
+  METHOD public java.lang.String correlationId()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public java.lang.String eventType()
+  METHOD public final int hashCode()
+  METHOD public com.actiongraph.events.DeliveryResult result()
+  METHOD public final java.lang.String toString()
+CLASS public class com.actiongraph.events.spring.ActionGraphEventCallbackWebAutoConfiguration
+  CONSTRUCTOR public com.actiongraph.events.spring.ActionGraphEventCallbackWebAutoConfiguration()
+  METHOD public com.actiongraph.events.spring.ActionGraphEventCallbackController actionGraphEventCallbackController(com.actiongraph.events.ExternalEventGateway,com.actiongraph.spring.ActionGraphProperties)
 CLASS public class com.actiongraph.governance.humanreview.spring.ActionGraphGovernanceHumanReviewAutoConfiguration
   CONSTRUCTOR public com.actiongraph.governance.humanreview.spring.ActionGraphGovernanceHumanReviewAutoConfiguration()
   METHOD public com.actiongraph.policy.ApprovalChainResolver actionGraphApprovalChainResolver(com.actiongraph.governance.spring.ActionGraphGovernanceProperties)
@@ -1891,7 +1960,10 @@ CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   METHOD public com.actiongraph.action.ActionRegistry actionGraphActionRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.DataMaskingPolicy actionGraphDataMaskingPolicy()
   METHOD public com.actiongraph.llm.LlmClient actionGraphDeepSeekLlmClient(com.actiongraph.spring.ActionGraphProperties)
+  METHOD public com.actiongraph.events.EventWaitSweeper actionGraphEventWaitSweeper(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.action.ActionRegistry)
+  METHOD public org.springframework.context.SmartLifecycle actionGraphEventWaitSweeperLifecycle(com.actiongraph.events.EventWaitSweeper,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.runtime.GoapExecutor actionGraphExecutor(com.actiongraph.planning.Planner,com.actiongraph.policy.ExecutionPolicyGuard,com.actiongraph.policy.HumanReviewPolicy,com.actiongraph.trace.TraceRepository,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.policy.DataMaskingPolicy,com.actiongraph.policy.ReviewAttributeContributor,com.actiongraph.observability.ObservationSink,com.actiongraph.spring.ActionGraphProperties)
+  METHOD public com.actiongraph.events.ExternalEventGateway actionGraphExternalEventGateway(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.interpretation.GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.interpretation.GoalCatalog actionGraphGoalCatalog(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.policy.HumanReviewPolicy actionGraphHumanReviewPolicy()
@@ -1910,6 +1982,7 @@ CLASS public class com.actiongraph.spring.ActionGraphProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ActionsProperties getActions()
   METHOD public com.actiongraph.spring.ActionGraphProperties$DurabilityProperties getDurability()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$EventsProperties getEvents()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ExecutionProperties getExecution()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ExecutorProperties getExecutor()
   METHOD public com.actiongraph.spring.ActionGraphProperties$LlmProperties getLlm()
@@ -1919,6 +1992,16 @@ CLASS public static final class com.actiongraph.spring.ActionGraphProperties$Act
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ActionsProperties()
   METHOD public boolean isAutoRegisterAnnotated()
   METHOD public void setAutoRegisterAnnotated(boolean)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$CallbackEndpointProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$CallbackEndpointProperties()
+  METHOD public java.lang.String getPath()
+  METHOD public java.lang.String getSharedSecret()
+  METHOD public java.lang.String getTokenHeader()
+  METHOD public boolean isEnabled()
+  METHOD public void setEnabled(boolean)
+  METHOD public void setPath(java.lang.String)
+  METHOD public void setSharedSecret(java.lang.String)
+  METHOD public void setTokenHeader(java.lang.String)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$DurabilityProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$DurabilityProperties()
   METHOD public java.time.Duration getHeartbeatInterval()
@@ -1931,6 +2014,13 @@ CLASS public static final class com.actiongraph.spring.ActionGraphProperties$Dur
   METHOD public void setRecovererPeriod(java.time.Duration)
   METHOD public void setRecovery(com.actiongraph.durability.RecoveryPolicy)
   METHOD public void setStaleAfter(java.time.Duration)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$EventsProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$EventsProperties()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$CallbackEndpointProperties getCallbackEndpoint()
+  METHOD public java.time.Duration getDefaultTimeout()
+  METHOD public java.time.Duration getSweepPeriod()
+  METHOD public void setDefaultTimeout(java.time.Duration)
+  METHOD public void setSweepPeriod(java.time.Duration)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ExecutionPolicyProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ExecutionPolicyProperties()
   METHOD public java.lang.String getActionId()

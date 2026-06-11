@@ -25,9 +25,13 @@ public final class InMemorySuspendedRunRepository implements SuspendedRunReposit
 
     @Override
     public void save(SuspendedRun run) {
-        runs.put(run.runId(), suspended(run));
-        LOGGER.debug("Suspended run saved: runId={}, pendingActionId={}", run.runId(),
-                run.pendingActionId() == null ? "" : run.pendingActionId().value());
+        runs.put(run.runId(), pausable(run));
+        LOGGER.debug("Suspended run saved: runId={}, state={}, pendingActionId={}, eventType={}, correlationId={}",
+                run.runId(),
+                run.snapshotState(),
+                run.pendingActionId() == null ? "" : run.pendingActionId().value(),
+                run.eventType() == null ? "" : run.eventType(),
+                run.eventCorrelationId() == null ? "" : run.eventCorrelationId());
     }
 
     @Override
@@ -60,6 +64,58 @@ public final class InMemorySuspendedRunRepository implements SuspendedRunReposit
         SuspendedRun claimed = claimedRef.get();
         LOGGER.debug("Suspended run claim attempted: runId={}, claimed={}", runId, claimed != null);
         return Optional.ofNullable(claimed);
+    }
+
+    @Override
+    public Optional<SuspendedRun> claimWaitingEvent(String eventType, String correlationId) {
+        if (eventType == null || eventType.isBlank()) {
+            throw new IllegalArgumentException("eventType must not be blank");
+        }
+        if (correlationId == null || correlationId.isBlank()) {
+            throw new IllegalArgumentException("correlationId must not be blank");
+        }
+        for (String runId : runs.keySet()) {
+            AtomicReference<SuspendedRun> claimedRef = new AtomicReference<>();
+            runs.compute(runId, (id, current) -> {
+                if (current == null || !matchesWaitingEvent(current, eventType, correlationId)) {
+                    return current;
+                }
+                claimedRef.set(current);
+                return null;
+            });
+            SuspendedRun claimed = claimedRef.get();
+            if (claimed != null) {
+                LOGGER.debug("Waiting event claimed: runId={}, eventType={}, correlationId={}",
+                        claimed.runId(), eventType, correlationId);
+                return Optional.of(claimed);
+            }
+        }
+        LOGGER.debug("Waiting event claim missed: eventType={}, correlationId={}", eventType, correlationId);
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<SuspendedRun> claimExpiredWaiting(Instant now) {
+        for (String runId : runs.keySet()) {
+            AtomicReference<SuspendedRun> claimedRef = new AtomicReference<>();
+            runs.compute(runId, (id, current) -> {
+                if (current == null
+                        || current.snapshotState() != SnapshotState.WAITING_EVENT
+                        || current.eventDeadline() == null
+                        || current.eventDeadline().isAfter(now)) {
+                    return current;
+                }
+                claimedRef.set(current);
+                return null;
+            });
+            SuspendedRun claimed = claimedRef.get();
+            if (claimed != null) {
+                LOGGER.debug("Expired waiting event claimed: runId={}, eventType={}, correlationId={}",
+                        claimed.runId(), claimed.eventType(), claimed.eventCorrelationId());
+                return Optional.of(claimed);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -135,8 +191,17 @@ public final class InMemorySuspendedRunRepository implements SuspendedRunReposit
         LOGGER.debug("Suspended run delete attempted: runId={}, removed={}", runId, removed);
     }
 
-    private SuspendedRun suspended(SuspendedRun run) {
+    private boolean matchesWaitingEvent(SuspendedRun run, String eventType, String correlationId) {
+        return run.snapshotState() == SnapshotState.WAITING_EVENT
+                && eventType.equals(run.eventType())
+                && correlationId.equals(run.eventCorrelationId());
+    }
+
+    private SuspendedRun pausable(SuspendedRun run) {
         if (run.snapshotState() == SnapshotState.SUSPENDED) {
+            return run;
+        }
+        if (run.snapshotState() == SnapshotState.WAITING_EVENT) {
             return run;
         }
         if (run.pendingActionId() == null) {

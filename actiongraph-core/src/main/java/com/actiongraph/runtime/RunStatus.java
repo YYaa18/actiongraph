@@ -14,6 +14,8 @@ public enum RunStatus {
     HALTED_UNREACHABLE,
     /** The run is paused and waiting for an external human-review decision. */
     SUSPENDED_PENDING_REVIEW,
+    /** The run is paused and waiting for an external system event. */
+    SUSPENDED_WAITING_EVENT,
     /** Policy or human review denied the run and compensation completed. */
     DENIED_BY_POLICY,
     /** Execution failed and all required compensation completed. */

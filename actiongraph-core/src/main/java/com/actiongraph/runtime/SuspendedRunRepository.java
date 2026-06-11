@@ -69,6 +69,40 @@ public interface SuspendedRunRepository {
     Optional<SuspendedRun> claimForResume(String runId);
 
     /**
+     * Atomically claims a run waiting for an external event.
+     *
+     * <p>Only one delivery attempt may receive a snapshot for a given event
+     * key. Implementations should leave enough state behind to recover claims
+     * abandoned by a crashed process, or use a short-lived in-memory claim when
+     * durability is not required.
+     *
+     * @param eventType external event type; never blank
+     * @param correlationId external event correlation id; never blank
+     * @return claimed snapshot, or empty when no waiting run can be claimed
+     */
+    @Experimental(
+            since = "0.2.0",
+            value = "External event waits are experimental until MS2 event ingress pilots complete."
+    )
+    default Optional<SuspendedRun> claimWaitingEvent(String eventType, String correlationId) {
+        throw new UnsupportedOperationException("claimWaitingEvent is not supported by this repository");
+    }
+
+    /**
+     * Atomically claims one expired event wait for timeout handling.
+     *
+     * @param now current time used for deadline comparison
+     * @return claimed snapshot, or empty when none are expired
+     */
+    @Experimental(
+            since = "0.2.0",
+            value = "External event waits are experimental until MS2 event ingress pilots complete."
+    )
+    default Optional<SuspendedRun> claimExpiredWaiting(Instant now) {
+        throw new UnsupportedOperationException("claimExpiredWaiting is not supported by this repository");
+    }
+
+    /**
      * Records the action currently being invoked.
      *
      * @param runId run id; never blank

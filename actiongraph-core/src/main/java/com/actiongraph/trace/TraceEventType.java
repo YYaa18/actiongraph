@@ -29,6 +29,21 @@ public enum TraceEventType {
     POLICY_DENIED,
     HUMAN_REVIEW_REQUESTED,
     HUMAN_REVIEW_DECIDED,
+    @Experimental(
+            since = "0.2.0",
+            value = "External event trace events are experimental until MS2 event ingress pilots complete."
+    )
+    EVENT_WAIT_STARTED,
+    @Experimental(
+            since = "0.2.0",
+            value = "External event trace events are experimental until MS2 event ingress pilots complete."
+    )
+    EVENT_DELIVERED,
+    @Experimental(
+            since = "0.2.0",
+            value = "External event trace events are experimental until MS2 event ingress pilots complete."
+    )
+    EVENT_WAIT_TIMED_OUT,
     RUNTIME_GUARD_FAILED,
     ACTION_STARTED,
     @Experimental(

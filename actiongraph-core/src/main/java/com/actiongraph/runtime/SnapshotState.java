@@ -17,5 +17,7 @@ public enum SnapshotState {
     /** The run is active; this row is a crash-recovery checkpoint. */
     RUNNING,
     /** The run is paused for human review and must be resumed explicitly. */
-    SUSPENDED
+    SUSPENDED,
+    /** The run is paused until a correlated external event is delivered. */
+    WAITING_EVENT
 }

@@ -379,7 +379,7 @@ public final class ClaimsPrecheckBatchReportWriter {
     private String statusClass(ClaimsPrecheckCaseResult result) {
         return switch (result.status()) {
             case COMPLETED -> "ok";
-            case HALTED_UNREACHABLE, SUSPENDED_PENDING_REVIEW -> "warn";
+            case HALTED_UNREACHABLE, SUSPENDED_PENDING_REVIEW, SUSPENDED_WAITING_EVENT -> "warn";
             case DENIED_BY_POLICY, FAILED_COMPENSATED, FAILED_COMPENSATION_INCOMPLETE -> "bad";
         };
     }

@@ -32,6 +32,9 @@ import java.util.Objects;
  * @param snapshotState visible snapshot state
  * @param heartbeatAt last executor heartbeat for running checkpoints
  * @param inFlightActionId action whose outcome is unknown after a crash
+ * @param eventType external event type for WAITING_EVENT snapshots
+ * @param eventCorrelationId external event correlation id for WAITING_EVENT snapshots
+ * @param eventDeadline wait deadline for WAITING_EVENT snapshots
  */
 public record SuspendedRun(
         String runId,
@@ -55,7 +58,22 @@ public record SuspendedRun(
                 since = "0.2.0",
                 value = "In-flight action recovery is experimental until MS1 crash-recovery pilots complete."
         )
-        @Nullable ActionId inFlightActionId
+        @Nullable ActionId inFlightActionId,
+        @Experimental(
+                since = "0.2.0",
+                value = "External event waits are experimental until MS2 event ingress pilots complete."
+        )
+        @Nullable String eventType,
+        @Experimental(
+                since = "0.2.0",
+                value = "External event waits are experimental until MS2 event ingress pilots complete."
+        )
+        @Nullable String eventCorrelationId,
+        @Experimental(
+                since = "0.2.0",
+                value = "External event waits are experimental until MS2 event ingress pilots complete."
+        )
+        @Nullable Instant eventDeadline
 ) {
     public SuspendedRun {
         if (runId == null || runId.isBlank()) {
@@ -74,6 +92,30 @@ public record SuspendedRun(
         if (snapshotState == SnapshotState.RUNNING && pendingActionId != null) {
             throw new IllegalArgumentException("pendingActionId must be null for RUNNING checkpoints");
         }
+        if (snapshotState == SnapshotState.WAITING_EVENT) {
+            if (pendingActionId != null) {
+                throw new IllegalArgumentException("pendingActionId must be null for WAITING_EVENT snapshots");
+            }
+            if (inFlightActionId != null) {
+                throw new IllegalArgumentException("inFlightActionId must be null for WAITING_EVENT snapshots");
+            }
+            if (eventType == null || eventType.isBlank()) {
+                throw new IllegalArgumentException("eventType must not be blank for WAITING_EVENT snapshots");
+            }
+            if (eventCorrelationId == null || eventCorrelationId.isBlank()) {
+                throw new IllegalArgumentException("eventCorrelationId must not be blank for WAITING_EVENT snapshots");
+            }
+            eventType = eventType.trim();
+            eventCorrelationId = eventCorrelationId.trim();
+            Objects.requireNonNull(eventDeadline, "eventDeadline");
+        } else {
+            eventType = null;
+            eventCorrelationId = null;
+            eventDeadline = null;
+        }
+        if (snapshotState != SnapshotState.RUNNING && inFlightActionId != null) {
+            throw new IllegalArgumentException("inFlightActionId is only valid for RUNNING checkpoints");
+        }
     }
 
     public SuspendedRun(
@@ -86,6 +128,38 @@ public record SuspendedRun(
             String message
     ) {
         this(runId, goal, blackboard, executedActions, compensationStack, pendingActionId, message,
-                SnapshotState.SUSPENDED, Instant.now(), null);
+                SnapshotState.SUSPENDED, Instant.now(), null, null, null, null);
+    }
+
+    public SuspendedRun(
+            String runId,
+            Goal goal,
+            Blackboard blackboard,
+            List<ActionId> executedActions,
+            List<ActionId> compensationStack,
+            @Nullable ActionId pendingActionId,
+            String message,
+            SnapshotState snapshotState,
+            Instant heartbeatAt,
+            @Nullable ActionId inFlightActionId
+    ) {
+        this(runId, goal, blackboard, executedActions, compensationStack, pendingActionId, message,
+                snapshotState, heartbeatAt, inFlightActionId, null, null, null);
+    }
+
+    public static SuspendedRun waitingForEvent(
+            String runId,
+            Goal goal,
+            Blackboard blackboard,
+            List<ActionId> executedActions,
+            List<ActionId> compensationStack,
+            String message,
+            String eventType,
+            String eventCorrelationId,
+            Instant eventDeadline
+    ) {
+        return new SuspendedRun(runId, goal, blackboard, executedActions, compensationStack,
+                null, message, SnapshotState.WAITING_EVENT, Instant.now(), null,
+                eventType, eventCorrelationId, eventDeadline);
     }
 }
