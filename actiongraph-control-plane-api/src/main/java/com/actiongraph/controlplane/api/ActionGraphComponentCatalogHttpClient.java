@@ -19,6 +19,8 @@ public final class ActionGraphComponentCatalogHttpClient {
     private final String sharedSecret;
     private final int connectTimeoutMillis;
     private final int readTimeoutMillis;
+    private final int maxGetRetries;
+    private final int getRetryBackoffMillis;
     private final Map<String, String> defaultHeaders;
 
     private ActionGraphComponentCatalogHttpClient(Builder builder) {
@@ -27,6 +29,8 @@ public final class ActionGraphComponentCatalogHttpClient {
         this.sharedSecret = builder.sharedSecret == null ? "" : builder.sharedSecret;
         this.connectTimeoutMillis = builder.connectTimeoutMillis;
         this.readTimeoutMillis = builder.readTimeoutMillis;
+        this.maxGetRetries = builder.maxGetRetries;
+        this.getRetryBackoffMillis = builder.getRetryBackoffMillis;
         this.defaultHeaders = new TreeMap<String, String>(builder.defaultHeaders);
     }
 
@@ -102,6 +106,24 @@ public final class ActionGraphComponentCatalogHttpClient {
         if (!requestPath.isEmpty() && !requestPath.startsWith("/")) {
             requestPath = "/" + requestPath;
         }
+        int attempt = 0;
+        while (true) {
+            try {
+                ControlPlaneHttpResponse response = getOnce(requestPath, requestHeaders);
+                if (!isRetriableGetStatus(response.statusCode()) || attempt >= maxGetRetries) {
+                    return response;
+                }
+            } catch (IOException ex) {
+                if (attempt >= maxGetRetries) {
+                    throw ex;
+                }
+            }
+            attempt++;
+            sleepBeforeRetry();
+        }
+    }
+
+    private ControlPlaneHttpResponse getOnce(String requestPath, Map<String, String> requestHeaders) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(catalogApiBaseUrl + requestPath).openConnection();
         try {
             connection.setRequestMethod("GET");
@@ -119,6 +141,18 @@ public final class ActionGraphComponentCatalogHttpClient {
             return new ControlPlaneHttpResponse(statusCode, body);
         } finally {
             connection.disconnect();
+        }
+    }
+
+    private void sleepBeforeRetry() throws IOException {
+        if (getRetryBackoffMillis <= 0) {
+            return;
+        }
+        try {
+            Thread.sleep(getRetryBackoffMillis);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while waiting to retry GET request", ex);
         }
     }
 
@@ -178,12 +212,18 @@ public final class ActionGraphComponentCatalogHttpClient {
         return value == null || value.trim().isEmpty();
     }
 
+    private static boolean isRetriableGetStatus(int statusCode) {
+        return statusCode == 429 || statusCode == 502 || statusCode == 503 || statusCode == 504;
+    }
+
     public static final class Builder {
         private final String catalogApiBaseUrl;
         private String tokenHeader = DEFAULT_CATALOG_TOKEN_HEADER;
         private String sharedSecret = "";
         private int connectTimeoutMillis = 5000;
         private int readTimeoutMillis = 30000;
+        private int maxGetRetries = 0;
+        private int getRetryBackoffMillis = 0;
         private final Map<String, String> defaultHeaders = new TreeMap<String, String>();
 
         private Builder(String catalogApiBaseUrl) {
@@ -213,6 +253,22 @@ public final class ActionGraphComponentCatalogHttpClient {
                 throw new IllegalArgumentException("readTimeoutMillis must not be negative");
             }
             this.readTimeoutMillis = readTimeoutMillis;
+            return this;
+        }
+
+        public Builder maxGetRetries(int maxGetRetries) {
+            if (maxGetRetries < 0) {
+                throw new IllegalArgumentException("maxGetRetries must not be negative");
+            }
+            this.maxGetRetries = maxGetRetries;
+            return this;
+        }
+
+        public Builder getRetryBackoffMillis(int getRetryBackoffMillis) {
+            if (getRetryBackoffMillis < 0) {
+                throw new IllegalArgumentException("getRetryBackoffMillis must not be negative");
+            }
+            this.getRetryBackoffMillis = getRetryBackoffMillis;
             return this;
         }
 

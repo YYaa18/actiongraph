@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -130,6 +131,44 @@ class ActionGraphHumanReviewHttpClientTest {
     }
 
     @Test
+    void retriesTransientGetFailuresButNotPostDecisions() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        AtomicInteger pendingAttempts = new AtomicInteger();
+        AtomicInteger decisionAttempts = new AtomicInteger();
+        server.createContext("/actiongraph/human-review/tasks/pending", exchange -> {
+            if (pendingAttempts.incrementAndGet() == 1) {
+                send(exchange, 502, "{\"error\":\"BAD_GATEWAY\"}");
+            } else {
+                send(exchange, 200, "[{\"runId\":\"RUN-1\"}]");
+            }
+        });
+        server.createContext("/actiongraph/human-review/tasks/runs", exchange -> {
+            decisionAttempts.incrementAndGet();
+            read(exchange);
+            send(exchange, 503, "{\"error\":\"UNAVAILABLE\"}");
+        });
+        server.start();
+        try {
+            ActionGraphHumanReviewHttpClient client = ActionGraphHumanReviewHttpClient
+                    .builder(baseTaskUrl(server))
+                    .maxGetRetries(3)
+                    .getRetryBackoffMillis(0)
+                    .build();
+
+            ControlPlaneHttpResponse pending = client.pendingTasks();
+            ControlPlaneHttpResponse decision = client.decide(
+                    "RUN-1", "claim.approval.request", 0, "APPROVED", "checker", "approved");
+
+            assertThat(pending.successful()).isTrue();
+            assertThat(pendingAttempts.get()).isEqualTo(2);
+            assertThat(decision.statusCode()).isEqualTo(503);
+            assertThat(decisionAttempts.get()).isEqualTo(1);
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
     void validatesRequiredFieldsBeforeSending() {
         assertThatThrownBy(() -> ActionGraphHumanReviewHttpClient.builder(" ").build())
                 .isInstanceOf(IllegalArgumentException.class)
@@ -150,6 +189,14 @@ class ActionGraphHumanReviewHttpClientTest {
                 .decide("RUN-1", "action", 0, " ", "checker", "comment"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("decision");
+        assertThatThrownBy(() -> ActionGraphHumanReviewHttpClient.builder("http://localhost/tasks")
+                .maxGetRetries(-1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maxGetRetries");
+        assertThatThrownBy(() -> ActionGraphHumanReviewHttpClient.builder("http://localhost/tasks")
+                .getRetryBackoffMillis(-1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("getRetryBackoffMillis");
     }
 
     private static String baseTaskUrl(HttpServer server) {

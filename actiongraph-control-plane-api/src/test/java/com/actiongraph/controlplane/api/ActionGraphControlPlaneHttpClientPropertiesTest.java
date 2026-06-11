@@ -11,6 +11,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +27,7 @@ class ActionGraphControlPlaneHttpClientPropertiesTest {
         AtomicReference<String> runtimeRequestId = new AtomicReference<>();
         AtomicReference<String> catalogPath = new AtomicReference<>();
         AtomicReference<String> catalogSource = new AtomicReference<>();
+        AtomicInteger catalogAttempts = new AtomicInteger();
         AtomicReference<String> reviewPath = new AtomicReference<>();
         AtomicReference<String> consolePath = new AtomicReference<>();
 
@@ -40,7 +42,11 @@ class ActionGraphControlPlaneHttpClientPropertiesTest {
         server.createContext("/actiongraph/components/modules", exchange -> {
             catalogPath.set(exchange.getRequestURI().getPath());
             catalogSource.set(exchange.getRequestHeaders().getFirst("X-Source-System"));
-            send(exchange, 200, "[]");
+            if (catalogAttempts.incrementAndGet() == 1) {
+                send(exchange, 503, "{\"error\":\"UNAVAILABLE\"}");
+            } else {
+                send(exchange, 200, "[]");
+            }
         });
         server.createContext("/actiongraph/human-review/tasks/pending", exchange -> {
             reviewPath.set(exchange.getRequestURI().getPath());
@@ -59,6 +65,8 @@ class ActionGraphControlPlaneHttpClientPropertiesTest {
             properties.setProperty("actiongraph.control-plane.default-header.X-Request-Id", "DEFAULT-REQ");
             properties.setProperty("actiongraph.control-plane.connect-timeout-millis", "5000");
             properties.setProperty("actiongraph.control-plane.read-timeout-millis", "30000");
+            properties.setProperty("actiongraph.control-plane.max-get-retries", "1");
+            properties.setProperty("actiongraph.control-plane.get-retry-backoff-millis", "0");
 
             ActionGraphControlPlaneHttpClient client = ActionGraphControlPlaneHttpClientProperties.build(properties);
 
@@ -79,6 +87,7 @@ class ActionGraphControlPlaneHttpClientPropertiesTest {
             assertThat(runtimeRequestId.get()).isEqualTo("REQ-1");
             assertThat(catalogPath.get()).isEqualTo("/actiongraph/components/modules");
             assertThat(catalogSource.get()).isEqualTo("legacy-properties");
+            assertThat(catalogAttempts.get()).isEqualTo(2);
             assertThat(reviewPath.get()).isEqualTo("/actiongraph/human-review/tasks/pending");
             assertThat(consolePath.get()).isEqualTo("/actiongraph/console/runs");
         } finally {
@@ -143,6 +152,22 @@ class ActionGraphControlPlaneHttpClientPropertiesTest {
         assertThatThrownBy(() -> ActionGraphControlPlaneHttpClientProperties.build(negative))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("readTimeoutMillis must not be negative");
+
+        Properties invalidRetries = new Properties();
+        invalidRetries.setProperty("actiongraph.control-plane.base-url", "http://127.0.0.1/actiongraph");
+        invalidRetries.setProperty("actiongraph.control-plane.max-get-retries", "many");
+
+        assertThatThrownBy(() -> ActionGraphControlPlaneHttpClientProperties.build(invalidRetries))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("max-get-retries must be an integer");
+
+        Properties negativeBackoff = new Properties();
+        negativeBackoff.setProperty("actiongraph.control-plane.base-url", "http://127.0.0.1/actiongraph");
+        negativeBackoff.setProperty("actiongraph.control-plane.get-retry-backoff-millis", "-1");
+
+        assertThatThrownBy(() -> ActionGraphControlPlaneHttpClientProperties.build(negativeBackoff))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("getRetryBackoffMillis must not be negative");
     }
 
     private static String actionGraphBaseUrl(HttpServer server) {

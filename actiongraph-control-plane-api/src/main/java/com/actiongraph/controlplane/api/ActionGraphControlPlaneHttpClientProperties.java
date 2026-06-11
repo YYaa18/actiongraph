@@ -145,6 +145,18 @@ public final class ActionGraphControlPlaneHttpClientProperties {
                 builder.readTimeoutMillis(value);
             }
         });
+        applyInt("max-get-retries", new IntSetter() {
+            @Override
+            public void set(int value) {
+                builder.maxGetRetries(value);
+            }
+        });
+        applyInt("get-retry-backoff-millis", new IntSetter() {
+            @Override
+            public void set(int value) {
+                builder.getRetryBackoffMillis(value);
+            }
+        });
         applyDefaultHeaders(builder);
         return builder.build();
     }

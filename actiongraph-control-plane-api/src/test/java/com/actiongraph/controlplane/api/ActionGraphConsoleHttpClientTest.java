@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -133,6 +134,35 @@ class ActionGraphConsoleHttpClientTest {
     }
 
     @Test
+    void retriesTransientGetFailuresForAuditQueries() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        AtomicInteger attempts = new AtomicInteger();
+        server.createContext("/actiongraph/console/runs/RUN-1/trace/export.jsonl", exchange -> {
+            if (attempts.incrementAndGet() == 1) {
+                send(exchange, 504, "{\"error\":\"GATEWAY_TIMEOUT\"}");
+            } else {
+                send(exchange, 200, "{\"seq\":1}\n");
+            }
+        });
+        server.start();
+        try {
+            ActionGraphConsoleHttpClient client = ActionGraphConsoleHttpClient
+                    .builder(baseUrl(server))
+                    .maxGetRetries(2)
+                    .getRetryBackoffMillis(0)
+                    .build();
+
+            ControlPlaneHttpResponse response = client.traceJsonl("RUN-1");
+
+            assertThat(response.successful()).isTrue();
+            assertThat(response.body()).contains("\"seq\":1");
+            assertThat(attempts.get()).isEqualTo(2);
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
     void validatesRequiredFieldsBeforeSending() {
         assertThatThrownBy(() -> ActionGraphConsoleHttpClient.builder(" ").build())
                 .isInstanceOf(IllegalArgumentException.class)
@@ -157,6 +187,14 @@ class ActionGraphConsoleHttpClientTest {
                 .get("/runs", Collections.singletonMap(" ", "value")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("request header name");
+        assertThatThrownBy(() -> ActionGraphConsoleHttpClient.builder("http://localhost/console")
+                .maxGetRetries(-1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maxGetRetries");
+        assertThatThrownBy(() -> ActionGraphConsoleHttpClient.builder("http://localhost/console")
+                .getRetryBackoffMillis(-1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("getRetryBackoffMillis");
     }
 
     private static String baseUrl(HttpServer server) {

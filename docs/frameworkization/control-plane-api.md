@@ -1,6 +1,6 @@
 # Control-Plane API Contracts
 
-`actiongraph-control-plane-api` is a small Java 8 compatible component for shared response contracts, lightweight aggregate and split control-plane HTTP clients, and shared-secret token verification.
+`actiongraph-control-plane-api` is a small Java 8 compatible component for shared response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate and split control-plane HTTP clients, and shared-secret token verification.
 
 It exists so built-in Spring MVC endpoint starters, custom gateways, CLIs, legacy Java 8 applications, and enterprise control-plane services can speak the same minimal protocol without depending on Spring Web or third-party JSON libraries.
 
@@ -15,7 +15,7 @@ dependencies {
 
 The module has no Spring, JDBC, LLM, runtime, servlet, Jackson, OkHttp, or Apache HTTP Client dependency. Its main classes are compiled with `--release 8` so Java 8 applications can load the jar.
 
-CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the aggregate control-plane HTTP client, properties-based aggregate configuration, runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, response DTOs, shared-secret token verification, and exception type:
+CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the aggregate control-plane HTTP client, properties-based aggregate configuration, GET-only retry configuration, runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, response DTOs, shared-secret token verification, and exception type:
 
 ```text
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
@@ -86,6 +86,8 @@ ActionGraphControlPlaneHttpClient client = ActionGraphControlPlaneHttpClient
         .builder("https://agent.example.com/actiongraph")
         .sharedSecret(System.getenv("ACTIONGRAPH_CONTROL_PLANE_TOKEN"))
         .defaultHeader("X-Source-System", "legacy-core")
+        .maxGetRetries(2)
+        .getRetryBackoffMillis(200)
         .build();
 
 Map<String, String> requestHeaders = new HashMap<String, String>();
@@ -126,6 +128,8 @@ ActionGraphControlPlaneHttpClient client = ActionGraphControlPlaneHttpClient
 
 Unconfigured surfaces stay unavailable: `hasCatalog()` / `hasHumanReview()` / `hasConsole()` report what was configured, and the corresponding getter fails fast if a legacy application calls a surface that its gateway did not enable. This keeps the control layer composable while still giving old systems a single client object when that is convenient.
 
+`maxGetRetries` is intentionally GET-only. It retries transient IO failures and HTTP `429`, `502`, `503`, or `504` responses for component catalog reads, human-review task queries, and Console/audit reads. It does not retry Runtime start/resume, review decision, callback, or other POST operations because those calls can create side effects. The default is `0`, so retry behavior is opt-in.
+
 ## Java 8 Properties Configuration
 
 Traditional Java 8 applications often receive configuration through `.properties` files, configuration centers, or database-backed gateway tables. `ActionGraphControlPlaneHttpClientProperties` translates those string keys into the same aggregate client without adding Spring Boot or a third-party configuration library:
@@ -137,6 +141,8 @@ properties.setProperty("actiongraph.control-plane.shared-secret", "control-plane
 properties.setProperty("actiongraph.control-plane.default-header.X-Source-System", "legacy-core");
 properties.setProperty("actiongraph.control-plane.connect-timeout-millis", "5000");
 properties.setProperty("actiongraph.control-plane.read-timeout-millis", "30000");
+properties.setProperty("actiongraph.control-plane.max-get-retries", "2");
+properties.setProperty("actiongraph.control-plane.get-retry-backoff-millis", "200");
 
 ActionGraphControlPlaneHttpClient client =
         ActionGraphControlPlaneHttpClientProperties.build(properties);
@@ -149,6 +155,8 @@ Supported aggregate keys:
 - `actiongraph.control-plane.token-header`
 - `actiongraph.control-plane.connect-timeout-millis`
 - `actiongraph.control-plane.read-timeout-millis`
+- `actiongraph.control-plane.max-get-retries`
+- `actiongraph.control-plane.get-retry-backoff-millis`
 - `actiongraph.control-plane.default-header.<Header-Name>`
 
 Supported split gateway keys:
@@ -167,7 +175,7 @@ Supported split gateway keys:
 - `actiongraph.control-plane.console.shared-secret`
 - `actiongraph.control-plane.console.token-header`
 
-Blank values are ignored, invalid integer timeouts fail fast, and unconfigured surfaces keep the same fail-fast behavior as the builder API. Use `ActionGraphControlPlaneHttpClientProperties.build(properties, "legacy.actiongraph")` when a host system requires a custom key prefix.
+Blank values are ignored, invalid integer timeouts or retry values fail fast, and unconfigured surfaces keep the same fail-fast behavior as the builder API. Use `ActionGraphControlPlaneHttpClientProperties.build(properties, "legacy.actiongraph")` when a host system requires a custom key prefix.
 
 ## Java 8 Runtime HTTP Client
 

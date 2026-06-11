@@ -49,6 +49,8 @@ public final class MavenJava8ActionGraphConsumerUsage {
                 .builder(actionGraphBaseUrl)
                 .sharedSecret(token)
                 .defaultHeader("X-Source-System", "legacy-maven-app")
+                .maxGetRetries(2)
+                .getRetryBackoffMillis(200)
                 .build();
     }
 
@@ -57,6 +59,7 @@ public final class MavenJava8ActionGraphConsumerUsage {
                 .builder(catalogUrl)
                 .sharedSecret(token)
                 .defaultHeader("X-Source-System", "legacy-maven-app")
+                .maxGetRetries(2)
                 .build();
     }
 
@@ -65,6 +68,7 @@ public final class MavenJava8ActionGraphConsumerUsage {
                 .builder(tasksUrl)
                 .sharedSecret(token)
                 .defaultHeader("X-Source-System", "legacy-maven-app")
+                .maxGetRetries(2)
                 .build();
     }
 
@@ -73,6 +77,7 @@ public final class MavenJava8ActionGraphConsumerUsage {
                 .builder(consoleUrl)
                 .sharedSecret(token)
                 .defaultHeader("X-Source-System", "legacy-maven-app")
+                .maxGetRetries(2)
                 .build();
     }
 

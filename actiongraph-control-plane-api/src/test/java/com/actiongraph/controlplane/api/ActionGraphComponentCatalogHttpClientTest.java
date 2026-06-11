@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -147,6 +148,35 @@ class ActionGraphComponentCatalogHttpClientTest {
     }
 
     @Test
+    void retriesTransientGetFailures() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        AtomicInteger attempts = new AtomicInteger();
+        server.createContext("/actiongraph/components/modules", exchange -> {
+            if (attempts.incrementAndGet() == 1) {
+                send(exchange, 503, "{\"error\":\"UNAVAILABLE\"}");
+            } else {
+                send(exchange, 200, "[{\"module\":\"actiongraph-control-plane-api\"}]");
+            }
+        });
+        server.start();
+        try {
+            ActionGraphComponentCatalogHttpClient client = ActionGraphComponentCatalogHttpClient
+                    .builder(baseUrl(server))
+                    .maxGetRetries(1)
+                    .getRetryBackoffMillis(0)
+                    .build();
+
+            ControlPlaneHttpResponse response = client.modules();
+
+            assertThat(response.successful()).isTrue();
+            assertThat(response.body()).contains("actiongraph-control-plane-api");
+            assertThat(attempts.get()).isEqualTo(2);
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
     void validatesRequiredFieldsBeforeSending() {
         assertThatThrownBy(() -> ActionGraphComponentCatalogHttpClient.builder(" ").build())
                 .isInstanceOf(IllegalArgumentException.class)
@@ -168,6 +198,14 @@ class ActionGraphComponentCatalogHttpClientTest {
                 .get("/modules", Collections.singletonMap(" ", "value")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("request header name");
+        assertThatThrownBy(() -> ActionGraphComponentCatalogHttpClient.builder("http://localhost")
+                .maxGetRetries(-1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maxGetRetries");
+        assertThatThrownBy(() -> ActionGraphComponentCatalogHttpClient.builder("http://localhost")
+                .getRetryBackoffMillis(-1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("getRetryBackoffMillis");
     }
 
     private static String baseUrl(HttpServer server) {

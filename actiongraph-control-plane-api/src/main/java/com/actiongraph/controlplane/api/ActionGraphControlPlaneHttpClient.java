@@ -48,6 +48,8 @@ public final class ActionGraphControlPlaneHttpClient {
                 .sharedSecret(builder.catalogSharedSecret)
                 .connectTimeoutMillis(builder.connectTimeoutMillis)
                 .readTimeoutMillis(builder.readTimeoutMillis)
+                .maxGetRetries(builder.maxGetRetries)
+                .getRetryBackoffMillis(builder.getRetryBackoffMillis)
                 .defaultHeaders(builder.defaultHeaders)
                 .build();
         if (isBlank(reviewTaskApiBaseUrl)) {
@@ -59,6 +61,8 @@ public final class ActionGraphControlPlaneHttpClient {
                     .sharedSecret(builder.reviewSharedSecret)
                     .connectTimeoutMillis(builder.connectTimeoutMillis)
                     .readTimeoutMillis(builder.readTimeoutMillis)
+                    .maxGetRetries(builder.maxGetRetries)
+                    .getRetryBackoffMillis(builder.getRetryBackoffMillis)
                     .defaultHeaders(builder.defaultHeaders);
             if (!isBlank(reviewCallbackApiBaseUrl)) {
                 reviewBuilder.callbackApiBaseUrl(reviewCallbackApiBaseUrl);
@@ -71,6 +75,8 @@ public final class ActionGraphControlPlaneHttpClient {
                 .sharedSecret(builder.consoleSharedSecret)
                 .connectTimeoutMillis(builder.connectTimeoutMillis)
                 .readTimeoutMillis(builder.readTimeoutMillis)
+                .maxGetRetries(builder.maxGetRetries)
+                .getRetryBackoffMillis(builder.getRetryBackoffMillis)
                 .defaultHeaders(builder.defaultHeaders)
                 .build();
     }
@@ -171,6 +177,8 @@ public final class ActionGraphControlPlaneHttpClient {
         private String consoleSharedSecret = "";
         private int connectTimeoutMillis = 5000;
         private int readTimeoutMillis = 30000;
+        private int maxGetRetries = 0;
+        private int getRetryBackoffMillis = 0;
         private final Map<String, String> defaultHeaders = new TreeMap<String, String>();
 
         private Builder(String actionGraphBaseUrl) {
@@ -277,6 +285,22 @@ public final class ActionGraphControlPlaneHttpClient {
                 throw new IllegalArgumentException("readTimeoutMillis must not be negative");
             }
             this.readTimeoutMillis = readTimeoutMillis;
+            return this;
+        }
+
+        public Builder maxGetRetries(int maxGetRetries) {
+            if (maxGetRetries < 0) {
+                throw new IllegalArgumentException("maxGetRetries must not be negative");
+            }
+            this.maxGetRetries = maxGetRetries;
+            return this;
+        }
+
+        public Builder getRetryBackoffMillis(int getRetryBackoffMillis) {
+            if (getRetryBackoffMillis < 0) {
+                throw new IllegalArgumentException("getRetryBackoffMillis must not be negative");
+            }
+            this.getRetryBackoffMillis = getRetryBackoffMillis;
             return this;
         }
 

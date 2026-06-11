@@ -6,7 +6,7 @@ It intentionally uses:
 
 - Maven BOM import for `com.actiongraph:actiongraph-bom`
 - `actiongraph-component-catalog`
-- `actiongraph-control-plane-api` aggregate control-plane, runtime, component catalog, human-review, and console HTTP clients
+- `actiongraph-control-plane-api` aggregate control-plane, runtime, component catalog, human-review, and console HTTP clients with GET-only retry configuration
 - Maven Compiler Plugin with `release=8`
 - no Spring, JDBC, LLM, servlet, JSON, or third-party HTTP dependency
 

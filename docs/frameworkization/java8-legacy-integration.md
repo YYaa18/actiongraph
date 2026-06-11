@@ -52,6 +52,8 @@ ActionGraphControlPlaneHttpClient controlPlane = ActionGraphControlPlaneHttpClie
         .builder("https://agent.example.com/actiongraph")
         .sharedSecret("control-plane-shared-secret")
         .defaultHeader("X-Source-System", "legacy-core")
+        .maxGetRetries(2)
+        .getRetryBackoffMillis(200)
         .build();
 
 ControlPlaneHttpResponse moduleProfiles =
@@ -66,6 +68,8 @@ ControlPlaneHttpResponse traceExport =
 
 When enterprise routing exposes each surface separately, use the same facade with split base URLs and per-surface secrets. Unconfigured surfaces stay unavailable, so a project that only calls runtime endpoints can configure only `runtimeApiBaseUrl(...)` and still keep catalog, review, and console disabled.
 
+Optional GET retries are available for transient read-side failures. They apply to component catalog reads, human-review task queries, and Console/audit reads on IO failures or HTTP `429`, `502`, `503`, and `504`. They do not retry Runtime start/resume, review decisions, callbacks, or other POST calls, because those operations can create side effects. Defaults are `maxGetRetries=0` and `getRetryBackoffMillis=0`.
+
 For projects that standardize on `.properties` configuration, the same aggregate client can be built without hard-coded builder chains:
 
 ```java
@@ -73,12 +77,14 @@ Properties properties = new Properties();
 properties.setProperty("actiongraph.control-plane.base-url", "https://agent.example.com/actiongraph");
 properties.setProperty("actiongraph.control-plane.shared-secret", "control-plane-shared-secret");
 properties.setProperty("actiongraph.control-plane.default-header.X-Source-System", "legacy-core");
+properties.setProperty("actiongraph.control-plane.max-get-retries", "2");
+properties.setProperty("actiongraph.control-plane.get-retry-backoff-millis", "200");
 
 ActionGraphControlPlaneHttpClient controlPlane =
         ActionGraphControlPlaneHttpClientProperties.build(properties);
 ```
 
-The properties adapter supports aggregate keys such as `actiongraph.control-plane.base-url`, `actiongraph.control-plane.shared-secret`, `actiongraph.control-plane.token-header`, timeout keys, and `actiongraph.control-plane.default-header.<Header-Name>`. Split gateways can use per-surface keys such as `actiongraph.control-plane.runtime.base-url`, `actiongraph.control-plane.catalog.base-url`, `actiongraph.control-plane.review.tasks-base-url`, `actiongraph.control-plane.review.callback-base-url`, and `actiongraph.control-plane.console.base-url`, with matching per-surface secret and token-header keys.
+The properties adapter supports aggregate keys such as `actiongraph.control-plane.base-url`, `actiongraph.control-plane.shared-secret`, `actiongraph.control-plane.token-header`, timeout keys, GET retry keys, and `actiongraph.control-plane.default-header.<Header-Name>`. Split gateways can use per-surface keys such as `actiongraph.control-plane.runtime.base-url`, `actiongraph.control-plane.catalog.base-url`, `actiongraph.control-plane.review.tasks-base-url`, `actiongraph.control-plane.review.callback-base-url`, and `actiongraph.control-plane.console.base-url`, with matching per-surface secret and token-header keys.
 
 The same artifact also includes a Java 8 Component Catalog HTTP client for remote ecosystem discovery:
 
@@ -156,7 +162,7 @@ docs/examples/java8-human-review-client/src/main/java/com/company/approval/Actio
 docs/examples/java8-console-client/src/main/java/com/company/audit/ActionGraphConsoleClientUsage.java
 ```
 
-The test suite compiles the standalone source examples with `javac --release 8`, so those examples are both documentation and compatibility evidence. The root build also runs `verifyJava8MavenConsumer`: it publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles the Maven example with Maven Compiler Plugin `release=8`. Together, these gates prove both source compatibility and real Maven BOM consumption for Java 8 callers. The examples demonstrate aggregate control-plane configuration, properties-based aggregate configuration, split endpoint configuration, runtime start/resume calls, catalog metadata calls, human-review task query/decision/callback calls, console run/trace/audit-export calls, default headers, per-request audit headers, response handling, standard control-plane error-code detection, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
+The test suite compiles the standalone source examples with `javac --release 8`, so those examples are both documentation and compatibility evidence. The root build also runs `verifyJava8MavenConsumer`: it publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles the Maven example with Maven Compiler Plugin `release=8`. Together, these gates prove both source compatibility and real Maven BOM consumption for Java 8 callers. The examples demonstrate aggregate control-plane configuration, properties-based aggregate configuration, split endpoint configuration, GET-only transient retry configuration, runtime start/resume calls, catalog metadata calls, human-review task query/decision/callback calls, console run/trace/audit-export calls, default headers, per-request audit headers, response handling, standard control-plane error-code detection, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
 
 ## Raw HTTP Gateway Contract Reference
 
@@ -188,7 +194,7 @@ Current labels:
 | `java21-plus` | Requires the modern ActionGraph service runtime side |
 | `sample-only` | Demonstration code, not a supported library dependency |
 
-Today, `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` modules. They are safe for Java 8 projects to import directly. `actiongraph-control-plane-api` covers the aggregate control-plane facade plus runtime, component catalog, human-review, and console HTTP clients. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts; deploy those on the modern ActionGraph service side and let old applications call them over HTTP.
+Today, `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` modules. They are safe for Java 8 projects to import directly. `actiongraph-control-plane-api` covers the aggregate control-plane facade, properties-based aggregate configuration, GET-only retry knobs, and runtime, component catalog, human-review, and console HTTP clients. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts; deploy those on the modern ActionGraph service side and let old applications call them over HTTP.
 
 ## Non-Goals
 
