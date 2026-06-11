@@ -316,20 +316,19 @@ class ActionGraphComponentCatalogServiceTest {
         return modules;
     }
 
-    private java.util.List<Path> documentationFiles(Path root) {
-        return java.util.List.of(
-                root.resolve("README.md"),
-                root.resolve("README.zh-CN.md"),
-                root.resolve("docs/frameworkization/component-catalog.md"),
-                root.resolve("docs/frameworkization/control-plane-api.md"),
-                root.resolve("docs/frameworkization/control-plane-starter.md"),
-                root.resolve("docs/frameworkization/dependency-composition.md"),
-                root.resolve("docs/frameworkization/ecosystem-modularity.md"),
-                root.resolve("docs/frameworkization/human-review.md"),
-                root.resolve("docs/frameworkization/java8-legacy-integration.md"),
-                root.resolve("docs/frameworkization/jdbc-persistence.md"),
-                root.resolve("docs/frameworkization/publishing.md"),
-                root.resolve("docs/frameworkization/spring-boot-starter.md")
-        );
+    private java.util.List<Path> documentationFiles(Path root) throws IOException {
+        java.util.List<Path> documents = new java.util.ArrayList<>();
+        documents.add(root.resolve("README.md"));
+        documents.add(root.resolve("README.zh-CN.md"));
+        try (var paths = Files.walk(root.resolve("docs"))) {
+            paths.filter(Files::isRegularFile)
+                    .filter(path -> {
+                        String fileName = path.getFileName().toString();
+                        return fileName.endsWith(".md") || fileName.endsWith(".html");
+                    })
+                    .sorted()
+                    .forEach(documents::add);
+        }
+        return documents;
     }
 }
