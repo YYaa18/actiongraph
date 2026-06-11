@@ -1,12 +1,14 @@
 package com.company.controlplane;
 
 import com.actiongraph.controlplane.api.ActionGraphControlPlaneHttpClient;
+import com.actiongraph.controlplane.api.ActionGraphControlPlaneHttpClientProperties;
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
 import com.actiongraph.controlplane.api.ControlPlaneHttpResponse;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public final class ActionGraphControlPlaneClientUsage {
     private ActionGraphControlPlaneClientUsage() {
@@ -51,6 +53,10 @@ public final class ActionGraphControlPlaneClientUsage {
                 .consoleSharedSecret(System.getenv("ACTIONGRAPH_CONSOLE_TOKEN"))
                 .defaultHeader("X-Source-System", environmentOrDefault("ACTIONGRAPH_SOURCE_SYSTEM", "legacy-core"))
                 .build();
+    }
+
+    public static ActionGraphControlPlaneHttpClient clientFromProperties(Properties properties) {
+        return ActionGraphControlPlaneHttpClientProperties.build(properties);
     }
 
     public static boolean resumeIfClaimable(

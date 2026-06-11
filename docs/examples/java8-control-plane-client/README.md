@@ -27,3 +27,25 @@ export ACTIONGRAPH_REQUEST_ID=REQ-20260611-0001
 ```
 
 If enterprise routing exposes each surface through a different gateway, use the split base URL builder methods instead: `runtimeApiBaseUrl`, `catalogApiBaseUrl`, `reviewTaskApiBaseUrl`, `reviewCallbackApiBaseUrl`, and `consoleApiBaseUrl`.
+
+Traditional Java 8 applications can also build the same aggregate client from `java.util.Properties`, which maps well to `.properties` files, configuration centers, and gateway tables:
+
+```properties
+actiongraph.control-plane.base-url=https://agent.example.com/actiongraph
+actiongraph.control-plane.shared-secret=control-plane-shared-secret
+actiongraph.control-plane.default-header.X-Source-System=legacy-core
+actiongraph.control-plane.connect-timeout-millis=5000
+actiongraph.control-plane.read-timeout-millis=30000
+```
+
+```java
+Properties properties = new Properties();
+properties.setProperty("actiongraph.control-plane.base-url", "https://agent.example.com/actiongraph");
+properties.setProperty("actiongraph.control-plane.shared-secret", "control-plane-shared-secret");
+properties.setProperty("actiongraph.control-plane.default-header.X-Source-System", "legacy-core");
+
+ActionGraphControlPlaneHttpClient client =
+        ActionGraphControlPlaneHttpClientProperties.build(properties);
+```
+
+For split gateways, use keys such as `actiongraph.control-plane.runtime.base-url`, `actiongraph.control-plane.catalog.base-url`, `actiongraph.control-plane.review.tasks-base-url`, `actiongraph.control-plane.review.callback-base-url`, and `actiongraph.control-plane.console.base-url`. Per-surface secrets and token header names are available through keys like `actiongraph.control-plane.runtime.shared-secret` and `actiongraph.control-plane.runtime.token-header`.

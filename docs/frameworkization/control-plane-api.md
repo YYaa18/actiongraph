@@ -15,7 +15,7 @@ dependencies {
 
 The module has no Spring, JDBC, LLM, runtime, servlet, Jackson, OkHttp, or Apache HTTP Client dependency. Its main classes are compiled with `--release 8` so Java 8 applications can load the jar.
 
-CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the aggregate control-plane HTTP client, runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, response DTOs, shared-secret token verification, and exception type:
+CI also compiles the documented Java 8 consumer examples with `javac --release 8` against this module. The compiled examples cover the aggregate control-plane HTTP client, properties-based aggregate configuration, runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, response DTOs, shared-secret token verification, and exception type:
 
 ```text
 docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionGraphClientUsage.java
@@ -125,6 +125,49 @@ ActionGraphControlPlaneHttpClient client = ActionGraphControlPlaneHttpClient
 ```
 
 Unconfigured surfaces stay unavailable: `hasCatalog()` / `hasHumanReview()` / `hasConsole()` report what was configured, and the corresponding getter fails fast if a legacy application calls a surface that its gateway did not enable. This keeps the control layer composable while still giving old systems a single client object when that is convenient.
+
+## Java 8 Properties Configuration
+
+Traditional Java 8 applications often receive configuration through `.properties` files, configuration centers, or database-backed gateway tables. `ActionGraphControlPlaneHttpClientProperties` translates those string keys into the same aggregate client without adding Spring Boot or a third-party configuration library:
+
+```java
+Properties properties = new Properties();
+properties.setProperty("actiongraph.control-plane.base-url", "https://agent.example.com/actiongraph");
+properties.setProperty("actiongraph.control-plane.shared-secret", "control-plane-shared-secret");
+properties.setProperty("actiongraph.control-plane.default-header.X-Source-System", "legacy-core");
+properties.setProperty("actiongraph.control-plane.connect-timeout-millis", "5000");
+properties.setProperty("actiongraph.control-plane.read-timeout-millis", "30000");
+
+ActionGraphControlPlaneHttpClient client =
+        ActionGraphControlPlaneHttpClientProperties.build(properties);
+```
+
+Supported aggregate keys:
+
+- `actiongraph.control-plane.base-url`
+- `actiongraph.control-plane.shared-secret`
+- `actiongraph.control-plane.token-header`
+- `actiongraph.control-plane.connect-timeout-millis`
+- `actiongraph.control-plane.read-timeout-millis`
+- `actiongraph.control-plane.default-header.<Header-Name>`
+
+Supported split gateway keys:
+
+- `actiongraph.control-plane.runtime.base-url`
+- `actiongraph.control-plane.runtime.shared-secret`
+- `actiongraph.control-plane.runtime.token-header`
+- `actiongraph.control-plane.catalog.base-url`
+- `actiongraph.control-plane.catalog.shared-secret`
+- `actiongraph.control-plane.catalog.token-header`
+- `actiongraph.control-plane.review.tasks-base-url`
+- `actiongraph.control-plane.review.callback-base-url`
+- `actiongraph.control-plane.review.shared-secret`
+- `actiongraph.control-plane.review.token-header`
+- `actiongraph.control-plane.console.base-url`
+- `actiongraph.control-plane.console.shared-secret`
+- `actiongraph.control-plane.console.token-header`
+
+Blank values are ignored, invalid integer timeouts fail fast, and unconfigured surfaces keep the same fail-fast behavior as the builder API. Use `ActionGraphControlPlaneHttpClientProperties.build(properties, "legacy.actiongraph")` when a host system requires a custom key prefix.
 
 ## Java 8 Runtime HTTP Client
 
