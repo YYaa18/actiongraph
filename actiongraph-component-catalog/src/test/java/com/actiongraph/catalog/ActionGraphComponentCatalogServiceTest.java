@@ -60,7 +60,8 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(component -> assertThat(component.capabilities())
                         .contains("runtime-entry-service", "runtime-request-trace-metadata",
-                                "goal-interpretation", "blackboard-seeding"));
+                                "goal-interpretation", "blackboard-seeding",
+                                "structured-memory", "context-loading"));
         assertThat(service.component("actiongraph-component-catalog-spring-boot-starter"))
                 .isPresent()
                 .get()
@@ -124,11 +125,13 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(component -> {
                     assertThat(component.requires())
-                            .containsExactly("actiongraph-memory", "actiongraph-persistence-jdbc",
+                            .containsExactly("actiongraph-core", "actiongraph-persistence-jdbc",
                                     "actiongraph-jdbc-spring-boot-starter");
                     assertThat(component.capabilities())
                             .contains("spring-memory-autoconfiguration", "spring-jdbc-memory-repository");
                 });
+        assertThat(service.component("actiongraph-memory"))
+                .isEmpty();
         assertThat(service.component("actiongraph-memory-jdbc" + "-spring-boot-starter"))
                 .isEmpty();
         assertThat(service.component("actiongraph-memory-jdbc"))

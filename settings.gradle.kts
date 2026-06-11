@@ -3,7 +3,6 @@ rootProject.name = "actiongraph"
 include("actiongraph-core")
 include("actiongraph-bom")
 include("actiongraph-annotations")
-include("actiongraph-memory")
 include("actiongraph-memory-spring-boot-starter")
 include("actiongraph-component-catalog")
 include("actiongraph-control-plane-api")

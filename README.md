@@ -54,9 +54,8 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | Module | Purpose |
 |---|---|
 | `actiongraph-bom` | Maven/Gradle BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | Core action, planning, runtime, policy, trace, goal interpretation, and runtime entry APIs |
+| `actiongraph-core` | Core action, planning, runtime, policy, trace, goal interpretation, runtime entry, and structured memory APIs |
 | `actiongraph-annotations` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
-| `actiongraph-memory` | Optional structured memory records, repository contract, in-memory implementation, and Blackboard context loader |
 | `actiongraph-memory-spring-boot-starter` | Optional Spring Boot auto-configuration for structured memory and JDBC memory repository |
 | `actiongraph-component-catalog` | Java 8 compatible machine-readable component catalog and composition profiles |
 | `actiongraph-control-plane-api` | Java 8 compatible control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
@@ -164,7 +163,7 @@ When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph
 
 Non-Spring services can use `actiongraph-governance` directly when they want packaged masking, amount-limit, rule-based permission policies, review attributes, or risk-based approval-chain routing without Spring auto-configuration.
 
-Non-Spring services can use `actiongraph-memory` directly when they want structured long-term memory without adopting Spring, JDBC, or LLM modules.
+Non-Spring services can use `actiongraph-core` directly when they want structured long-term memory without adopting Spring, JDBC, or LLM modules.
 
 Spring services can add `actiongraph-memory-spring-boot-starter` when they want structured memory defaults and `MemoryContextLoader`. It provides an in-memory `MemoryRepository` by default and backs off to a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available.
 

@@ -4,7 +4,6 @@ plugins {
 
 dependencies {
     api(project(":actiongraph-core"))
-    api(project(":actiongraph-memory"))
     api(project(":actiongraph-human-review"))
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")

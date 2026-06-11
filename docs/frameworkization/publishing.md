@@ -7,9 +7,8 @@ The runtime is split into publishable library modules plus a non-published actio
 | Module | Artifact | Purpose |
 |---|---|---|
 | `actiongraph-bom` | `com.actiongraph:actiongraph-bom:0.1.0` | BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, trace, goal interpretation, and runtime entry APIs |
+| `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, trace, goal interpretation, runtime entry, and structured memory APIs |
 | `actiongraph-annotations` | `com.actiongraph:actiongraph-annotations:0.1.0` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
-| `actiongraph-memory` | `com.actiongraph:actiongraph-memory:0.1.0` | Optional structured memory records, repository contract, in-memory implementation, and Blackboard context loader |
 | `actiongraph-memory-spring-boot-starter` | `com.actiongraph:actiongraph-memory-spring-boot-starter:0.1.0` | Optional Spring Boot structured memory and JDBC repository auto-configuration |
 | `actiongraph-component-catalog` | `com.actiongraph:actiongraph-component-catalog:0.1.0` | Java 8 compatible component metadata, compatibility labels, and composition profiles |
 | `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
@@ -92,11 +91,7 @@ Pure Java annotation-based action registration adds:
 implementation("com.actiongraph:actiongraph-annotations")
 ```
 
-Structured memory context adds:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-memory")
-```
+Structured memory context is part of `actiongraph-core`.
 
 Spring Boot structured memory auto-configuration adds:
 

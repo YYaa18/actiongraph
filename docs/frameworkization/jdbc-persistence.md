@@ -50,7 +50,7 @@ dependencies {
 }
 ```
 
-The low-level JDBC module depends on `actiongraph-core`, `actiongraph-memory`, `actiongraph-human-review`, Jackson, and standard JDBC APIs. Applications provide the JDBC driver and `DataSource`. Use this artifact directly for non-Spring services or when repository construction needs full manual control.
+The low-level JDBC module depends on `actiongraph-core`, `actiongraph-human-review`, Jackson, and standard JDBC APIs. Applications provide the JDBC driver and `DataSource`. Use this artifact directly for non-Spring services or when repository construction needs full manual control.
 
 ## Repositories
 

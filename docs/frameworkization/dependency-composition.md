@@ -45,11 +45,10 @@ Use this when a service wants ActionGraph structured long-term memory without ad
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
     implementation("com.actiongraph:actiongraph-core")
-    implementation("com.actiongraph:actiongraph-memory")
 }
 ```
 
-`actiongraph-memory` depends only on `actiongraph-core`. It provides `MemoryScope`, `MemoryRecord`, `MemoryRepository`, `InMemoryMemoryRepository`, `MemoryContext`, and `MemoryContextLoader`.
+`actiongraph-core` provides `MemoryScope`, `MemoryRecord`, `MemoryRepository`, `InMemoryMemoryRepository`, `MemoryContext`, and `MemoryContextLoader`.
 
 ## Goal Interpretation Contracts
 
@@ -176,7 +175,7 @@ dependencies {
 }
 ```
 
-The memory starter brings `actiongraph-memory` and `actiongraph-persistence-jdbc` transitively. It creates an in-memory `MemoryRepository` by default and creates a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available. It backs off if the application provides its own `MemoryRepository`.
+The memory starter brings `actiongraph-core` and `actiongraph-persistence-jdbc` transitively. It creates an in-memory `MemoryRepository` by default and creates a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available. It backs off if the application provides its own `MemoryRepository`.
 
 ## Repository-Backed Human Review
 

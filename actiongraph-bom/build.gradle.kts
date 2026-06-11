@@ -6,7 +6,6 @@ dependencies {
     constraints {
         api(project(":actiongraph-core"))
         api(project(":actiongraph-annotations"))
-        api(project(":actiongraph-memory"))
         api(project(":actiongraph-memory-spring-boot-starter"))
         api(project(":actiongraph-component-catalog"))
         api(project(":actiongraph-control-plane-api"))

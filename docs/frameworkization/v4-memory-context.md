@@ -1,6 +1,6 @@
 # v4 Structured Memory And Context
 
-v4 memory is implemented as structured records first in the optional `actiongraph-memory` module. There is no vector store or embedding dependency in the runtime kernel.
+v4 memory is implemented as structured records in `actiongraph-core`. There is no vector store or embedding dependency in the runtime kernel.
 
 ## Core Types
 
