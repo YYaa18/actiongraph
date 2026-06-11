@@ -51,7 +51,7 @@ class Java8ComponentCatalogCompilationTest {
         Path current = Path.of("").toAbsolutePath();
         while (current != null) {
             if (java.nio.file.Files.exists(current.resolve("settings.gradle.kts"))
-                    && java.nio.file.Files.isDirectory(current.resolve("actiongraph-component-catalog"))) {
+                    && java.nio.file.Files.isDirectory(current.resolve("actiongraph-control-plane-api"))) {
                 return current;
             }
             current = current.getParent();

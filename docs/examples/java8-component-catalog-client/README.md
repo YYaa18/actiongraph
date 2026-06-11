@@ -4,7 +4,7 @@ This example is a copy-paste starting point for Java 8 deployment checks, enterp
 
 It intentionally uses only:
 
-- `actiongraph-component-catalog`
+- `actiongraph-control-plane-api`
 - Java 8 language features
 - local in-process metadata from `ActionGraphComponentCatalogService`
 
@@ -13,6 +13,6 @@ The repository test suite compiles `src/main/java/com/company/deployment/ActionG
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-component-catalog")
+    implementation("com.actiongraph:actiongraph-control-plane-api")
 }
 ```

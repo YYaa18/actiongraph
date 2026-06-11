@@ -30,10 +30,6 @@
     <dependencies>
         <dependency>
             <groupId>com.actiongraph</groupId>
-            <artifactId>actiongraph-component-catalog</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.actiongraph</groupId>
             <artifactId>actiongraph-control-plane-api</artifactId>
         </dependency>
     </dependencies>

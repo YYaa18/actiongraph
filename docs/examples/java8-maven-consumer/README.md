@@ -5,8 +5,7 @@ This example proves that a Java 8 Maven project can import the ActionGraph BOM a
 It intentionally uses:
 
 - Maven BOM import for `com.actiongraph:actiongraph-bom`
-- `actiongraph-component-catalog`
-- `actiongraph-control-plane-api` aggregate control-plane, runtime, component catalog, human-review, and console HTTP clients with GET-only retry configuration
+- `actiongraph-control-plane-api` local component catalog plus aggregate control-plane, runtime, component catalog, human-review, and console HTTP clients with GET-only retry configuration
 - Maven Compiler Plugin with `source=1.8` and `target=1.8`, so the example works when Maven itself runs on JDK 8
 - no Spring, JDBC, LLM, servlet, JSON, or third-party HTTP dependency
 

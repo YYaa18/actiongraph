@@ -65,7 +65,7 @@ GET /actiongraph/components/profiles
 GET /actiongraph/components/profiles/{profile}
 ```
 
-Use `actiongraph.component-catalog.path`, `actiongraph.component-catalog.token-header`, and `actiongraph.component-catalog.shared-secret` to customize path and access control. The catalog endpoints do not execute runs, approve tasks, create repositories, or inspect application secrets; they return static module and composition metadata from `actiongraph-component-catalog`.
+Use `actiongraph.component-catalog.path`, `actiongraph.component-catalog.token-header`, and `actiongraph.component-catalog.shared-secret` to customize path and access control. The catalog endpoints do not execute runs, approve tasks, create repositories, or inspect application secrets; they return static module and composition metadata from `actiongraph-control-plane-api`.
 
 ## Boundary
 

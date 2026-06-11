@@ -1,6 +1,6 @@
 # Component Catalog
 
-`actiongraph-component-catalog` is a reusable, Java 8 compatible, non-Spring metadata component for ActionGraph's ecosystem modules.
+The component catalog is a reusable, Java 8 compatible, non-Spring metadata API inside `actiongraph-control-plane-api`.
 
 It turns the module split into a machine-readable API: deployment checks, CLIs, enterprise gateways, custom consoles, or docs generators can query which modules exist, what capability tags they provide, what they require, which compatibility level they target, and which composition profiles are recommended.
 
@@ -9,7 +9,7 @@ It turns the module split into a machine-readable API: deployment checks, CLIs, 
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-component-catalog")
+    implementation("com.actiongraph:actiongraph-control-plane-api")
 }
 ```
 
@@ -27,7 +27,7 @@ catalog.componentsByCompatibility("java8-client")
         .forEach(component -> System.out.println(component.module()));
 ```
 
-The pure Java module is compiled with `--release 8` and has no dependency on Spring, JDBC, LLM providers, runtime repositories, or business samples.
+The control-plane API module is compiled with `--release 8` and has no dependency on Spring, JDBC, LLM providers, runtime repositories, or business samples.
 
 A Java 8 client template lives at:
 
@@ -130,7 +130,7 @@ Every component includes a `compatibility` value. Current labels are:
 | Label | Meaning |
 |---|---|
 | `no-runtime-code` | No loadable runtime classes, such as the BOM |
-| `java8-client` | Java 8 loadable client/control-plane helper; currently `actiongraph-component-catalog` and `actiongraph-control-plane-api` |
+| `java8-client` | Java 8 loadable client/control-plane helper; currently `actiongraph-control-plane-api` |
 | `java8-runtime` | Reserved for a future embeddable Java 8 runtime slice |
 | `java21-plus` | Current runtime, framework, infrastructure, governance, provider, and Spring modules |
 | `sample-only` | Demonstration code only |

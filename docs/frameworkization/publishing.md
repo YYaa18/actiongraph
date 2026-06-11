@@ -9,8 +9,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-bom` | `com.actiongraph:actiongraph-bom:0.1.0` | BOM for aligning ActionGraph module versions |
 | `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, planning, runtime, policy, trace, goal interpretation, runtime entry, and structured memory APIs |
 | `actiongraph-annotations` | `com.actiongraph:actiongraph-annotations:0.1.0` | Optional pure Java annotations and adapter for registering ordinary methods as Actions |
-| `actiongraph-component-catalog` | `com.actiongraph:actiongraph-component-catalog:0.1.0` | Java 8 compatible component metadata, compatibility labels, and composition profiles |
-| `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
+| `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible component metadata, compatibility labels, composition profiles, control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional LLM package with provider-neutral goal interpretation, prompt rendering, structured output parsing, and a DeepSeek-compatible client |
@@ -43,7 +42,7 @@ Java 8 client compatibility includes a Maven consumption gate:
 ./gradlew verifyJava8MavenConsumer
 ```
 
-That task publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles `docs/examples/java8-maven-consumer` with Maven Compiler Plugin `source=1.8` / `target=1.8`. The CI workflow also compiles the same consumer after switching to a real JDK 8, proving that a legacy Maven application can import the BOM and omit individual ActionGraph versions while consuming the Java 8 client artifacts.
+That task publishes `actiongraph-bom` and `actiongraph-control-plane-api` to Maven Local, then compiles `docs/examples/java8-maven-consumer` with Maven Compiler Plugin `source=1.8` / `target=1.8`. The CI workflow also compiles the same consumer after switching to a real JDK 8, proving that a legacy Maven application can import the BOM and omit individual ActionGraph versions while consuming the Java 8 client artifact.
 
 GitHub Actions also runs the CI workflow on every push to `main` and every pull request:
 
@@ -90,13 +89,7 @@ Goal interpretation contracts and runtime entry services add:
 implementation("com.actiongraph:actiongraph-core")
 ```
 
-Component catalog metadata adds:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-component-catalog")
-```
-
-Control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification add:
+Component catalog metadata, control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification add:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-control-plane-api")

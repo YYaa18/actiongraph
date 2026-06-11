@@ -11,15 +11,13 @@ version = "0.1.0"
 val platformModuleName = "actiongraph-bom"
 
 val java8CompatibleModules = setOf(
-    "actiongraph-component-catalog",
     "actiongraph-control-plane-api"
 )
 
 val libraryModuleDescriptions = mapOf(
     "actiongraph-core" to "Core GOAP agent runtime with actions, planning, execution, policy, trace, goal interpretation, runtime entry, and structured memory APIs.",
     "actiongraph-annotations" to "Optional pure Java annotation adapter for ActionGraph action registration.",
-    "actiongraph-component-catalog" to "Java 8 compatible machine-readable ActionGraph component catalog and composition profile service.",
-    "actiongraph-control-plane-api" to "Java 8 compatible control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate and split HTTP clients, and shared-secret token verification.",
+    "actiongraph-control-plane-api" to "Java 8 compatible component catalog, control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate and split HTTP clients, and shared-secret token verification.",
     "actiongraph-human-review" to "Optional repository-backed human review tasks, callbacks, approval chains, and task query APIs for ActionGraph.",
     "actiongraph-llm-deepseek" to "Provider-neutral LLM goal interpretation support and DeepSeek-compatible client provider for ActionGraph.",
     "actiongraph-persistence-jdbc" to "JDBC persistence repositories for ActionGraph trace, suspended runs, memory, human review, and read models.",
@@ -220,7 +218,6 @@ val verifyJava8MavenConsumer = tasks.register<Exec>("verifyJava8MavenConsumer") 
     description = "Verifies a Java 8 Maven consumer can import the BOM and Java 8 ActionGraph client artifacts."
     dependsOn(
             ":actiongraph-bom:publishToMavenLocal",
-            ":actiongraph-component-catalog:publishToMavenLocal",
             ":actiongraph-control-plane-api:publishToMavenLocal"
     )
     workingDir = java8MavenConsumerDir.asFile

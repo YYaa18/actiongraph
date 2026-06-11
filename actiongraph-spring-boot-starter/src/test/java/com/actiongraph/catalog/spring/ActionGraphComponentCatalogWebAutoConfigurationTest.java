@@ -42,10 +42,10 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
                     MockMvc mockMvc = mockMvc(context);
 
                     mockMvc.perform(get("/actiongraph/components")
-                                    .accept(MediaType.APPLICATION_JSON))
+                            .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.components[*].module", hasItem("actiongraph-core")))
-                            .andExpect(jsonPath("$.components[*].module", hasItem("actiongraph-component-catalog")))
+                            .andExpect(jsonPath("$.components[*].module", hasItem("actiongraph-control-plane-api")))
                             .andExpect(jsonPath("$.profiles[*].name", hasItem("full-control-plane")));
                 });
     }
@@ -77,15 +77,13 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
 
                     mockMvc.perform(get("/internal/actiongraph/components/compatibility/java8-client"))
                             .andExpect(status().isOk())
-                            .andExpect(jsonPath("$[*].module", hasItem("actiongraph-component-catalog")))
                             .andExpect(jsonPath("$[*].module", hasItem("actiongraph-control-plane-api")))
                             .andExpect(jsonPath("$[0].compatibility").value("java8-client"));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/ecosystem-introspection"))
                             .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.modules[0]").value("actiongraph-component-catalog"))
-                            .andExpect(jsonPath("$.modules[1]").value("actiongraph-control-plane-api"))
-                            .andExpect(jsonPath("$.modules[2]").value("actiongraph-spring-boot-starter"));
+                            .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-api"))
+                            .andExpect(jsonPath("$.modules[1]").value("actiongraph-spring-boot-starter"));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/control-plane-response-contracts"))
                             .andExpect(status().isOk())
@@ -100,8 +98,7 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/java8-legacy-client"))
                             .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.modules[0]").value("actiongraph-component-catalog"))
-                            .andExpect(jsonPath("$.modules[1]").value("actiongraph-control-plane-api"));
+                            .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-api"));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/control-plane-shared" + "-auth"))
                             .andExpect(status().isNotFound());

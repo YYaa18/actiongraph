@@ -9,7 +9,7 @@ ActionGraph keeps the runtime framework, Java 8 client surface, and optional con
 | Version platform | `actiongraph-bom` | Aligns all ActionGraph module versions for mix-and-match adoption |
 | Runtime kernel | `actiongraph-core` | Action SPI, planner, executor, policy, trace, goal interpretation contracts, Blackboard seeders, runtime entry service, structured memory contracts |
 | Pure Java adapters | `actiongraph-annotations`, `actiongraph-human-review`, `actiongraph-governance`, `actiongraph-llm-deepseek`, `actiongraph-persistence-jdbc` | Annotation action registration, human-review model/services, governance policies, LLM interpretation, provider access, and low-level durable repositories |
-| Java 8 client surface | `actiongraph-component-catalog`, `actiongraph-control-plane-api` | Component metadata, composition profiles, Java 8 HTTP clients, shared response DTOs, shared-secret token verification |
+| Java 8 client surface | `actiongraph-control-plane-api` | Component metadata, composition profiles, Java 8 HTTP clients, shared response DTOs, shared-secret token verification |
 | Spring ecosystem | `actiongraph-spring-boot-starter`, `actiongraph-console-spring-boot-starter` | Main Spring integration, opt-in runtime/catalog/review endpoints, JDBC/memory/human-review/governance wiring, and optional Console UI/API/export endpoints |
 | Console services | `actiongraph-console` | Read-only run query service, JDBC read model, CSV/JSONL audit export |
 | Samples | `actiongraph-samples` | Reference domains and batch demos; not published as a library |
@@ -21,7 +21,7 @@ The component catalog exposes a machine-readable `compatibility` label for each 
 | Label | Current Use |
 |---|---|
 | `no-runtime-code` | `actiongraph-bom` |
-| `java8-client` | `actiongraph-component-catalog`, `actiongraph-control-plane-api` |
+| `java8-client` | `actiongraph-control-plane-api` |
 | `java8-runtime` | Reserved for a future embeddable Java 8 runtime slice |
 | `java21-plus` | Current runtime, framework, infrastructure, governance, provider, and Spring ecosystem modules |
 | `sample-only` | `actiongraph-samples` |
@@ -40,7 +40,7 @@ The module catalog is checked against `settings.gradle.kts`, the module governan
 - Non-Spring masking, amount-limit, rule-based permission, review-attribute, and approval-routing policies add `actiongraph-governance`.
 - Durable non-Spring/manual runtimes add `actiongraph-persistence-jdbc`, which provides trace, suspended-run, trace read-model, memory, and human-review repositories.
 - Provider-neutral natural-language goal interpretation and DeepSeek-compatible model access add `actiongraph-llm-deepseek`.
-- Java 8 gateways, approval portals, audit consoles, and legacy systems add `actiongraph-component-catalog` and/or `actiongraph-control-plane-api`.
+- Java 8 gateways, approval portals, audit consoles, and legacy systems add `actiongraph-control-plane-api`.
 - Spring Boot business services add `actiongraph-spring-boot-starter`. It provides runtime defaults, annotation scanning, structured memory defaults, repository-backed human review, governance wiring, JDBC wiring, and runtime/catalog/review HTTP endpoints behind property gates.
 - Spring MVC operational monitoring adds `actiongraph-console-spring-boot-starter`, which exposes Console API, page, export endpoints, and optional JDBC repository auto-configuration behind property gates.
 - A single-deployment control plane should usually use `actiongraph-spring-boot-starter` plus `actiongraph-console-spring-boot-starter`, then enable only the surfaces it owns.
@@ -49,9 +49,7 @@ The module catalog is checked against `settings.gradle.kts`, the module governan
 
 `actiongraph-core` is the public runtime kernel. It must remain free of Spring, JDBC drivers, LLM providers, and sample-domain dependencies.
 
-`actiongraph-control-plane-api` is a Java 8 compatible ecosystem utility. It exposes response DTO contracts, aggregate and split HTTP clients, properties-based aggregate configuration, safe GET retries, and shared-secret token verification. It must not depend on Spring, runtime repositories, LLM providers, governance, endpoint modules, or third-party HTTP/JSON libraries.
-
-`actiongraph-component-catalog` is Java 8 compatible metadata. It can be used by CLIs, deployment checks, enterprise gateways, or custom consoles without loading the runtime.
+`actiongraph-control-plane-api` is a Java 8 compatible ecosystem utility. It exposes component metadata, composition profiles, response DTO contracts, aggregate and split HTTP clients, properties-based aggregate configuration, safe GET retries, and shared-secret token verification. It must not depend on Spring, runtime repositories, LLM providers, governance, endpoint modules, or third-party HTTP/JSON libraries.
 
 `actiongraph-spring-boot-starter` is the main Spring integration surface. It may auto-configure runtime beans, memory, repository-backed human review, governance policies, JDBC repositories, and runtime/catalog/review HTTP endpoints, but every endpoint must remain opt-in through its own `enabled` property. It must not create business actions, LLM clients, or domain-specific interpreters.
 

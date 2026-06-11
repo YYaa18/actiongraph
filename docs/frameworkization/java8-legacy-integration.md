@@ -8,15 +8,14 @@ Java 8 is the official legacy support target. ActionGraph does not claim Java 6/
 
 | Level | Supported Runtime | Intended Use |
 |---|---|---|
-| Java 8 component catalog | Java 8+ | Legacy systems, gateways, or deployment checks inspect ActionGraph module metadata through `actiongraph-component-catalog` |
-| Java 8 HTTP clients | Java 8+ | Legacy systems call deployed Runtime API, Component Catalog, Human Review, and Console endpoints through `actiongraph-control-plane-api` |
+| Java 8 component catalog and HTTP clients | Java 8+ | Legacy systems, gateways, or deployment checks inspect ActionGraph module metadata and call deployed Runtime API, Component Catalog, Human Review, and Console endpoints through `actiongraph-control-plane-api` |
 | Java 8 embeddable core | Target, not yet complete | Future narrowed core/annotations/governance packages compiled with `--release 8` |
 | Modern service runtime | Java 21+ build today | ActionGraph runtime service, Spring Boot starters, JDBC persistence, console, samples, and CI |
 | Java 6/7 or non-Java runtimes | Not an official ActionGraph artifact target | Use a platform gateway, ESB adapter, or sidecar over HTTP; do not embed ActionGraph jars in-process |
 
 ## Current Java 8 Artifact
 
-`actiongraph-control-plane-api` is compiled with `--release 8` and has no runtime dependencies. It includes a lightweight aggregate control-plane HTTP client plus individual Runtime, Component Catalog, Human Review, and Console HTTP clients.
+`actiongraph-control-plane-api` is compiled with `--release 8` and has no runtime dependencies. It includes local component catalog metadata, a lightweight aggregate control-plane HTTP client, and individual Runtime, Component Catalog, Human Review, and Console HTTP clients.
 
 ```kotlin
 dependencies {
@@ -162,7 +161,7 @@ docs/examples/java8-human-review-client/src/main/java/com/company/approval/Actio
 docs/examples/java8-console-client/src/main/java/com/company/audit/ActionGraphConsoleClientUsage.java
 ```
 
-The test suite compiles the standalone source examples with `javac --release 8`, so those examples are both documentation and compatibility evidence. The root build also runs `verifyJava8MavenConsumer`: it publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles the Maven example with Maven Compiler Plugin `source=1.8` / `target=1.8`. The CI workflow additionally switches to a real JDK 8 after the Gradle build and compiles the same Maven consumer again. Together, these gates prove source compatibility, real Maven BOM consumption, and actual JDK 8 build usability for Java 8 callers. The examples demonstrate aggregate control-plane configuration, properties-based aggregate configuration, split endpoint configuration, GET-only transient retry configuration, runtime start/resume calls, catalog metadata calls, human-review task query/decision/callback calls, console run/trace/audit-export calls, default headers, per-request audit headers, response handling, standard control-plane error-code detection, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
+The test suite compiles the standalone source examples with `javac --release 8`, so those examples are both documentation and compatibility evidence. The root build also runs `verifyJava8MavenConsumer`: it publishes `actiongraph-bom` and `actiongraph-control-plane-api` to Maven Local, then compiles the Maven example with Maven Compiler Plugin `source=1.8` / `target=1.8`. The CI workflow additionally switches to a real JDK 8 after the Gradle build and compiles the same Maven consumer again. Together, these gates prove source compatibility, real Maven BOM consumption, and actual JDK 8 build usability for Java 8 callers. The examples demonstrate aggregate control-plane configuration, properties-based aggregate configuration, split endpoint configuration, GET-only transient retry configuration, runtime start/resume calls, catalog metadata calls, human-review task query/decision/callback calls, console run/trace/audit-export calls, default headers, per-request audit headers, response handling, standard control-plane error-code detection, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
 
 ## Raw HTTP Gateway Contract Reference
 
@@ -178,7 +177,7 @@ The test suite compiles that exact file with `javac --release 8` and an empty cl
 
 ## Machine-Readable Compatibility
 
-`actiongraph-component-catalog` now exposes a `compatibility` label for every public component. The built-in Spring catalog endpoint also supports filtering:
+`actiongraph-control-plane-api` now exposes a local component catalog with a `compatibility` label for every public component. The built-in Spring catalog endpoint also supports filtering:
 
 ```text
 GET /actiongraph/components/compatibility/java8-client
@@ -194,7 +193,7 @@ Current labels:
 | `java21-plus` | Requires the modern ActionGraph service runtime side |
 | `sample-only` | Demonstration code, not a supported library dependency |
 
-Today, `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` modules. They are safe for Java 8 projects to import directly. `actiongraph-control-plane-api` covers the aggregate control-plane facade, properties-based aggregate configuration, GET-only retry knobs, and runtime, component catalog, human-review, and console HTTP clients. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts; deploy those on the modern ActionGraph service side and let old applications call them over HTTP.
+Today, `actiongraph-control-plane-api` is the Java 8 client module. It is safe for Java 8 projects to import directly and covers local component metadata, the aggregate control-plane facade, properties-based aggregate configuration, GET-only retry knobs, and runtime, component catalog, human-review, and console HTTP clients. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts; deploy those on the modern ActionGraph service side and let old applications call them over HTTP.
 
 ## Non-Goals
 

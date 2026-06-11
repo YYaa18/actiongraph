@@ -25,7 +25,6 @@ class ActionGraphComponentCatalogServiceTest {
                 .contains(
                         "actiongraph-core",
                         "actiongraph-human-review",
-                        "actiongraph-component-catalog",
                         "actiongraph-control-plane-api",
                         "actiongraph-console",
                         "actiongraph-spring-boot-starter",
@@ -35,7 +34,6 @@ class ActionGraphComponentCatalogServiceTest {
                 .filteredOn(component -> component.kind() == ComponentKind.CONTROL_PLANE)
                 .extracting(ActionGraphComponent::module)
                 .contains(
-                        "actiongraph-component-catalog",
                         "actiongraph-control-plane-api",
                         "actiongraph-console",
                         "actiongraph-console-spring-boot-starter"
@@ -48,8 +46,7 @@ class ActionGraphComponentCatalogServiceTest {
                 .satisfies(component -> {
                     assertThat(component.requires())
                             .containsExactly("actiongraph-core", "actiongraph-annotations",
-                                    "actiongraph-component-catalog", "actiongraph-control-plane-api",
-                                    "actiongraph-governance", "actiongraph-human-review",
+                                    "actiongraph-control-plane-api", "actiongraph-governance", "actiongraph-human-review",
                                     "actiongraph-persistence-jdbc");
                     assertThat(component.capabilities())
                             .contains("spring-runtime-autoconfiguration", "action-scanning",
@@ -80,19 +77,14 @@ class ActionGraphComponentCatalogServiceTest {
                 .satisfies(component -> {
                     assertThat(component.compatibility()).isEqualTo(ComponentCompatibility.JAVA8_CLIENT.label());
                     assertThat(component.capabilities())
-                            .contains("java8-control-plane-client", "java8-runtime-client",
+                            .contains("component-catalog", "composition-profiles",
+                                    "java8-control-plane-client", "java8-runtime-client",
                                     "java8-component-catalog-client",
                                     "java8-human-review-client", "java8-console-client", "http-audit-headers",
                                     "shared-secret-token-verification");
                 });
         assertThat(service.component("actiongraph-component-catalog"))
-                .isPresent()
-                .get()
-                .satisfies(component -> {
-                    assertThat(component.compatibility()).isEqualTo(ComponentCompatibility.JAVA8_CLIENT.label());
-                    assertThat(component.capabilities())
-                            .contains("component-catalog", "composition-profiles");
-                });
+                .isEmpty();
         assertThat(service.component("actiongraph-core"))
                 .isPresent()
                 .get()
@@ -110,7 +102,7 @@ class ActionGraphComponentCatalogServiceTest {
                         .isEqualTo(ComponentCompatibility.NO_RUNTIME_CODE.label()));
         assertThat(service.componentsByCompatibility(ComponentCompatibility.JAVA8_CLIENT.label()))
                 .extracting(ActionGraphComponent::module)
-                .containsExactly("actiongraph-component-catalog", "actiongraph-control-plane-api");
+                .containsExactly("actiongraph-control-plane-api");
         assertThat(service.componentsByCompatibility(ComponentCompatibility.JAVA8_RUNTIME.label()))
                 .isEmpty();
         assertThat(service.componentsByCompatibility(null)).isEmpty();
@@ -188,9 +180,9 @@ class ActionGraphComponentCatalogServiceTest {
                 .get()
                 .satisfies(profile -> {
                     assertThat(profile.modules())
-                            .containsExactly("actiongraph-component-catalog", "actiongraph-control-plane-api");
+                            .containsExactly("actiongraph-control-plane-api");
                     assertThat(profile.notes())
-                            .anySatisfy(note -> assertThat(note).contains("console endpoints"));
+                            .anySatisfy(note -> assertThat(note).contains("component-catalog"));
                 });
         assertThat(service.profile("control-plane-shared" + "-auth"))
                 .isEmpty();
@@ -446,7 +438,7 @@ class ActionGraphComponentCatalogServiceTest {
         Path current = Path.of("").toAbsolutePath();
         while (current != null) {
             if (Files.exists(current.resolve("settings.gradle.kts"))
-                    && Files.isDirectory(current.resolve("actiongraph-component-catalog"))) {
+                    && Files.isDirectory(current.resolve("actiongraph-control-plane-api"))) {
                 return current;
             }
             current = current.getParent();

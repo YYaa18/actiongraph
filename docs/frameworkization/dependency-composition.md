@@ -49,16 +49,13 @@ It does not create business Actions, LLM clients, or domain-specific interpreter
 
 ## Java 8 Legacy Clients
 
-Java 8 applications should not embed the modern runtime today. They should use the deployed ActionGraph service over HTTP through these Java 8 compatible artifacts:
+Java 8 applications should not embed the modern runtime today. They should use the deployed ActionGraph service over HTTP through the Java 8 compatible control-plane artifact:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-component-catalog")
 implementation("com.actiongraph:actiongraph-control-plane-api")
 ```
 
-`actiongraph-component-catalog` exposes module metadata, compatibility labels, and composition profiles.
-
-`actiongraph-control-plane-api` exposes response DTOs, aggregate and split HTTP clients, `.properties` based aggregate configuration, safe GET retries for read surfaces, audit/tracing headers, and shared-secret token verification. It has no Spring, JDBC, LLM, runtime, JSON-library, or third-party HTTP dependency.
+`actiongraph-control-plane-api` exposes module metadata, compatibility labels, composition profiles, response DTOs, aggregate and split HTTP clients, `.properties` based aggregate configuration, safe GET retries for read surfaces, audit/tracing headers, and shared-secret token verification. It has no Spring, JDBC, LLM, runtime, JSON-library, or third-party HTTP dependency.
 
 ## Human Review And Governance
 

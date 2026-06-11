@@ -1010,10 +1010,9 @@
           <div><span class="log-ok">actiongraph-governance:test</span> includes human-review governance policies</div>
           <div><span class="log-ok">actiongraph-llm-deepseek:test</span> LLM interpretation + DeepSeek client tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-persistence-jdbc:test</span> 31 tests, 0 failures</div>
-          <div><span class="log-ok">actiongraph-component-catalog:test</span> 8 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-console:test</span> 9 tests, 0 failures</div>
           <div><span class="log-ok">actiongraph-console-spring-boot-starter:test</span> 25 tests, 0 failures</div>
-          <div><span class="log-ok">actiongraph-control-plane-api:test</span> 47 tests, 0 failures</div>
+          <div><span class="log-ok">actiongraph-control-plane-api:test</span> component catalog + Java 8 HTTP client tests, 0 failures</div>
           <div><span class="log-ok">control-plane endpoint composition</span> main starter + optional console starter, property-gated surfaces</div>
           <div><span class="log-ok">actiongraph-samples:test</span> 61 tests, 1 gated smoke skipped</div>
           <div><span class="log-ok">BUILD SUCCESSFUL</span> 333 tests, 0 failures, 1 skipped</div>
@@ -1022,7 +1021,7 @@
       <div class="layout-3" style="grid-template-columns:1fr;">
         <div class="panel ok"><div class="metric green">333</div><h3>自动化测试</h3><p>覆盖 planner、executor、guard、compensation、suspend/resume、JDBC、挂起快照类型白名单与格式版本校验、JDBC 运行摘要分页/筛选/Trace 详情查询、主 Spring starter、Component Catalog、组件兼容性标签、发布面一致性守门、文档 artifact 名称守门、Control Plane API、Java 8 聚合控制面 HTTP client、Java 8 .properties 聚合配置、Java 8 安全 GET 重试、Java 8 Runtime / Component Catalog / Human Review / Console HTTP client、共享密钥鉴权、仓储型人审、治理策略、结构化记忆、运行入口解释/启动/恢复端点、组件目录端点、审批任务/回调端点、只读 Console 页面和 HTTP 端点、中文注解值、敏感数据脱敏、审计链防篡改、多级审批、单笔额度策略、理赔资料预审场景、F1 CSV/JDBC 样本、PostgreSQL 脱敏视图契约、JSONL 审批回调重放与 Markdown/CSV/HTML 报告输出。</p></div>
         <div class="panel ok"><div class="metric green">~6000</div><h3>并发冒烟</h3><p>200 虚拟线程并发 1 万次运行；重复 resume 只产生一次业务副作用。</p></div>
-        <div class="panel ok"><div class="metric green">13</div><h3>工程模块</h3><p>bom / core / annotations / component-catalog / control-plane-api / human-review / governance / llm-deepseek / persistence-jdbc / spring-boot-starter / console / console-spring-boot-starter / samples。公共内核已吸收目标解释契约、Blackboard seeder、运行入口服务和结构化记忆；主 Spring starter 收敛运行时默认值、JDBC、Memory、人审、治理与控制层端点，Console 保留为唯一可选 UI/API starter。组件目录提供 compatibility 标签：component-catalog 与 control-plane-api 是 java8-client，运行时和 Spring 生态是 java21-plus，样例是 sample-only。</p></div>
+        <div class="panel ok"><div class="metric green">12</div><h3>工程模块</h3><p>bom / core / annotations / control-plane-api / human-review / governance / llm-deepseek / persistence-jdbc / spring-boot-starter / console / console-spring-boot-starter / samples。公共内核已吸收目标解释契约、Blackboard seeder、运行入口服务和结构化记忆；主 Spring starter 收敛运行时默认值、JDBC、Memory、人审、治理与控制层端点，Console 保留为唯一可选 UI/API starter。组件目录能力并入 control-plane-api，作为唯一 java8-client artifact；运行时和 Spring 生态是 java21-plus，样例是 sample-only。</p></div>
         <div class="panel ok"><div class="metric green">3</div><h3>参考业务域</h3><p>续约报价、订单取消、理赔资料预审三个不同领域接入，证明核心可复用并开始进入保险场景打穿。</p></div>
       </div>
     </div>
