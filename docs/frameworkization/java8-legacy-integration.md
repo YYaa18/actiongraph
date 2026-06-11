@@ -118,7 +118,7 @@ The test suite compiles the standalone source examples with `javac --release 8`,
 
 ## Older-Than-Java-8 HTTP Gateway Example
 
-Java 6/7 applications should not load ActionGraph jars in-process. They can still call the same deployed Runtime, Human Review, and Console APIs over HTTP from an existing gateway, ESB adapter, batch job, or sidecar.
+Java 6/7 applications should not load ActionGraph jars in-process. They can still call the same deployed Runtime, Component Catalog, Human Review, and Console APIs over HTTP from an existing gateway, ESB adapter, batch job, or sidecar.
 
 A raw HTTP template lives at:
 
@@ -126,7 +126,7 @@ A raw HTTP template lives at:
 docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java
 ```
 
-The test suite compiles that exact file with `javac --release 8` and an empty classpath, scans the source to keep ActionGraph imports, Java 8 conveniences, and common Java 7+ language/library features out of the template, then invokes the compiled class against a local HTTP server to prove optional audit/tracing headers are actually sent. It demonstrates the same `/interpret`, `/runs`, `/runs/{runId}/resume`, human-review task/decision/callback, and Console run/trace/export contracts with shared-secret header forwarding plus optional audit/tracing headers. This is not a full Java 6/7 bootclasspath check because modern CI toolchains no longer provide reliable Java 6/7 targets; Java 6/7 estates should run their own platform compiler check after copying the file, or reuse the HTTP shape through an enterprise gateway, ESB, or Java 8+ sidecar.
+The test suite compiles that exact file with `javac --release 8` and an empty classpath, scans the source to keep ActionGraph imports, Java 8 conveniences, and common Java 7+ language/library features out of the template, then invokes the compiled class against a local HTTP server to prove optional audit/tracing headers are actually sent. It demonstrates the same `/interpret`, `/runs`, `/runs/{runId}/resume`, component catalog metadata/module/compatibility/profile, human-review task/decision/callback, and Console run/trace/export contracts with shared-secret header forwarding plus optional audit/tracing headers. This is not a full Java 6/7 bootclasspath check because modern CI toolchains no longer provide reliable Java 6/7 targets; Java 6/7 estates should run their own platform compiler check after copying the file, or reuse the HTTP shape through an enterprise gateway, ESB, or Java 8+ sidecar.
 
 ## Machine-Readable Compatibility
 
@@ -165,4 +165,4 @@ Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Com
 
 This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.
 
-The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, default audit headers, per-request audit headers, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The root `check` task also runs the Maven consumer gate described above, so BOM import and published POM consumption stay covered. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, scans for ActionGraph imports, Java 8 conveniences, and common Java 7+ syntax/library features, and invokes the compiled template against a local server for runtime, review, and console calls. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.
+The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, default audit headers, per-request audit headers, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The root `check` task also runs the Maven consumer gate described above, so BOM import and published POM consumption stay covered. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, scans for ActionGraph imports, Java 8 conveniences, and common Java 7+ syntax/library features, and invokes the compiled template against a local server for runtime, catalog, review, and console calls. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.

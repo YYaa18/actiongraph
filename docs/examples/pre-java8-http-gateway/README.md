@@ -11,6 +11,7 @@ No ActionGraph dependency is required.
 The template covers:
 
 - Runtime interpretation/start/resume calls
+- Component Catalog metadata, module, compatibility, and profile queries
 - Human Review pending task query, stage decision, and callback calls
 - Console run list/run detail/trace queries
 - Console CSV and JSONL audit exports
@@ -18,6 +19,8 @@ The template covers:
 ```bash
 export ACTIONGRAPH_RUNTIME_URL=https://agent.example.com/actiongraph/runtime
 export ACTIONGRAPH_RUNTIME_TOKEN=runtime-shared-secret
+export ACTIONGRAPH_CATALOG_URL=https://agent.example.com/actiongraph/components
+export ACTIONGRAPH_CATALOG_TOKEN=catalog-shared-secret
 export ACTIONGRAPH_REVIEW_TASKS_URL=https://agent.example.com/actiongraph/human-review/tasks
 export ACTIONGRAPH_REVIEW_CALLBACK_URL=https://agent.example.com/actiongraph/human-review/callbacks
 export ACTIONGRAPH_REVIEW_TOKEN=review-shared-secret

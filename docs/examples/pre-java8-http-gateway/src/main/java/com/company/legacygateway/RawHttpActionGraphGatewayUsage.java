@@ -14,6 +14,7 @@ import java.util.TreeMap;
 
 public final class RawHttpActionGraphGatewayUsage {
     public static final String DEFAULT_RUNTIME_TOKEN_HEADER = "X-ActionGraph-Runtime-Token";
+    public static final String DEFAULT_CATALOG_TOKEN_HEADER = "X-ActionGraph-Catalog-Token";
     public static final String DEFAULT_REVIEW_TOKEN_HEADER = "X-ActionGraph-Review-Token";
     public static final String DEFAULT_CONSOLE_TOKEN_HEADER = "X-ActionGraph-Console-Token";
 
@@ -97,6 +98,66 @@ public final class RawHttpActionGraphGatewayUsage {
         return post(runtimeApiBaseUrl, sharedSecret, DEFAULT_RUNTIME_TOKEN_HEADER,
                 "/runs/" + encodePathSegment(requireText(runId, "runId")) + "/resume",
                 "{}", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse componentCatalog(
+            String catalogApiBaseUrl,
+            String sharedSecret,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(catalogApiBaseUrl, sharedSecret, DEFAULT_CATALOG_TOKEN_HEADER,
+                "", "application/json", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse componentModules(
+            String catalogApiBaseUrl,
+            String sharedSecret,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(catalogApiBaseUrl, sharedSecret, DEFAULT_CATALOG_TOKEN_HEADER,
+                "/modules", "application/json", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse componentModulesByCompatibility(
+            String catalogApiBaseUrl,
+            String sharedSecret,
+            String compatibility,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(catalogApiBaseUrl, sharedSecret, DEFAULT_CATALOG_TOKEN_HEADER,
+                "/compatibility/" + encodePathSegment(requireText(compatibility, "compatibility")),
+                "application/json", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse componentModule(
+            String catalogApiBaseUrl,
+            String sharedSecret,
+            String module,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(catalogApiBaseUrl, sharedSecret, DEFAULT_CATALOG_TOKEN_HEADER,
+                "/modules/" + encodePathSegment(requireText(module, "module")),
+                "application/json", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse componentProfiles(
+            String catalogApiBaseUrl,
+            String sharedSecret,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(catalogApiBaseUrl, sharedSecret, DEFAULT_CATALOG_TOKEN_HEADER,
+                "/profiles", "application/json", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse componentProfile(
+            String catalogApiBaseUrl,
+            String sharedSecret,
+            String profile,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(catalogApiBaseUrl, sharedSecret, DEFAULT_CATALOG_TOKEN_HEADER,
+                "/profiles/" + encodePathSegment(requireText(profile, "profile")),
+                "application/json", 5000, 30000, extraHeaders);
     }
 
     public static LegacyHttpResponse pendingReviewTasks(

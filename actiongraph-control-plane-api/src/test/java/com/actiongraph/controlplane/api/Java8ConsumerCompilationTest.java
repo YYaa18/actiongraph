@@ -126,6 +126,115 @@ class Java8ConsumerCompilationTest {
     }
 
     @Test
+    void rawHttpGatewayExampleCallsComponentCatalogEndpoints() throws Exception {
+        Path outputDir = compileExample(
+                "8",
+                repositoryRoot().resolve(
+                        "docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java"),
+                emptyClasspath().toString(),
+                "com/company/legacygateway/RawHttpActionGraphGatewayUsage.class");
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        AtomicReference<String> catalogMethod = new AtomicReference<>();
+        AtomicReference<String> catalogToken = new AtomicReference<>();
+        AtomicReference<String> catalogRequestId = new AtomicReference<>();
+        AtomicReference<String> catalogAccept = new AtomicReference<>();
+        AtomicReference<String> catalogPath = new AtomicReference<>();
+        AtomicReference<String> modulesPath = new AtomicReference<>();
+        AtomicReference<String> modulePath = new AtomicReference<>();
+        AtomicReference<String> compatibilityPath = new AtomicReference<>();
+        AtomicReference<String> profilesPath = new AtomicReference<>();
+        AtomicReference<String> profilePath = new AtomicReference<>();
+        server.createContext("/actiongraph/components", exchange -> {
+            catalogMethod.set(exchange.getRequestMethod());
+            catalogToken.set(exchange.getRequestHeaders().getFirst("X-ActionGraph-Catalog-Token"));
+            catalogRequestId.set(exchange.getRequestHeaders().getFirst("X-Request-Id"));
+            catalogAccept.set(exchange.getRequestHeaders().getFirst("Accept"));
+            catalogPath.set(exchange.getRequestURI().getRawPath());
+            exchange.getRequestBody().close();
+            send(exchange, 200, "{\"components\":[]}");
+        });
+        server.createContext("/actiongraph/components/modules", exchange -> {
+            String rawPath = exchange.getRequestURI().getRawPath();
+            if (rawPath.equals("/actiongraph/components/modules")) {
+                modulesPath.set(rawPath);
+                send(exchange, 200, "[]");
+            } else {
+                modulePath.set(rawPath);
+                send(exchange, 200, "{\"module\":\"actiongraph module/alpha\"}");
+            }
+        });
+        server.createContext("/actiongraph/components/compatibility", exchange -> {
+            compatibilityPath.set(exchange.getRequestURI().getRawPath());
+            send(exchange, 200, "[]");
+        });
+        server.createContext("/actiongraph/components/profiles", exchange -> {
+            String rawPath = exchange.getRequestURI().getRawPath();
+            if (rawPath.equals("/actiongraph/components/profiles")) {
+                profilesPath.set(rawPath);
+                send(exchange, 200, "[]");
+            } else {
+                profilePath.set(rawPath);
+                send(exchange, 200, "{\"name\":\"pilot profile\"}");
+            }
+        });
+        server.start();
+        try {
+            URLClassLoader loader = new URLClassLoader(new URL[]{outputDir.toUri().toURL()}, null);
+            try {
+                Class<?> gateway = Class.forName(
+                        "com.company.legacygateway.RawHttpActionGraphGatewayUsage", true, loader);
+                Map<String, String> extraHeaders = new HashMap<>();
+                extraHeaders.put("X-Request-Id", "REQ-RAW-CATALOG-1");
+
+                Method catalog = gateway.getMethod("componentCatalog", String.class, String.class, Map.class);
+                Method modules = gateway.getMethod("componentModules", String.class, String.class, Map.class);
+                Method compatibility = gateway.getMethod("componentModulesByCompatibility",
+                        String.class, String.class, String.class, Map.class);
+                Method module = gateway.getMethod("componentModule", String.class, String.class,
+                        String.class, Map.class);
+                Method profiles = gateway.getMethod("componentProfiles", String.class, String.class, Map.class);
+                Method profile = gateway.getMethod("componentProfile", String.class, String.class,
+                        String.class, Map.class);
+
+                Object catalogResponse = catalog.invoke(null, catalogBaseUrl(server), "catalog-secret", extraHeaders);
+                Object modulesResponse = modules.invoke(null, catalogBaseUrl(server), "catalog-secret", extraHeaders);
+                Object compatibilityResponse = compatibility.invoke(null, catalogBaseUrl(server), "catalog-secret",
+                        "java 8+", extraHeaders);
+                Object moduleResponse = module.invoke(null, catalogBaseUrl(server), "catalog-secret",
+                        "actiongraph module/alpha", extraHeaders);
+                Object profilesResponse = profiles.invoke(null, catalogBaseUrl(server), "catalog-secret",
+                        extraHeaders);
+                Object profileResponse = profile.invoke(null, catalogBaseUrl(server), "catalog-secret",
+                        "pilot profile", extraHeaders);
+
+                assertThat(catalogResponse.getClass().getMethod("statusCode").invoke(catalogResponse)).isEqualTo(200);
+                assertThat(modulesResponse.getClass().getMethod("statusCode").invoke(modulesResponse)).isEqualTo(200);
+                assertThat(compatibilityResponse.getClass().getMethod("statusCode").invoke(compatibilityResponse))
+                        .isEqualTo(200);
+                assertThat(moduleResponse.getClass().getMethod("statusCode").invoke(moduleResponse)).isEqualTo(200);
+                assertThat(profilesResponse.getClass().getMethod("statusCode").invoke(profilesResponse)).isEqualTo(200);
+                assertThat(profileResponse.getClass().getMethod("statusCode").invoke(profileResponse)).isEqualTo(200);
+                assertThat(catalogMethod.get()).isEqualTo("GET");
+                assertThat(catalogToken.get()).isEqualTo("catalog-secret");
+                assertThat(catalogRequestId.get()).isEqualTo("REQ-RAW-CATALOG-1");
+                assertThat(catalogAccept.get()).isEqualTo("application/json");
+                assertThat(catalogPath.get()).isEqualTo("/actiongraph/components");
+                assertThat(modulesPath.get()).isEqualTo("/actiongraph/components/modules");
+                assertThat(compatibilityPath.get())
+                        .isEqualTo("/actiongraph/components/compatibility/java%208%2B");
+                assertThat(modulePath.get())
+                        .isEqualTo("/actiongraph/components/modules/actiongraph%20module%2Falpha");
+                assertThat(profilesPath.get()).isEqualTo("/actiongraph/components/profiles");
+                assertThat(profilePath.get()).isEqualTo("/actiongraph/components/profiles/pilot%20profile");
+            } finally {
+                loader.close();
+            }
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
     void rawHttpGatewayExampleCallsReviewAndConsoleEndpoints() throws Exception {
         Path outputDir = compileExample(
                 "8",
@@ -293,6 +402,10 @@ class Java8ConsumerCompilationTest {
 
     private static String callbackBaseUrl(HttpServer server) {
         return "http://127.0.0.1:" + server.getAddress().getPort() + "/actiongraph/human-review/callbacks";
+    }
+
+    private static String catalogBaseUrl(HttpServer server) {
+        return "http://127.0.0.1:" + server.getAddress().getPort() + "/actiongraph/components";
     }
 
     private static String consoleBaseUrl(HttpServer server) {
