@@ -53,8 +53,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-control-plane-api` | Java 8 compatible control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, rule-based permissions, amount review attributes, and risk-based approval routing |
-| `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
-| `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
+| `actiongraph-llm-deepseek` | Optional LLM package with provider-neutral goal interpretation, GoalCatalog prompt rendering, structured output parsing, and a DeepSeek-compatible client |
 | `actiongraph-persistence-jdbc` | JDBC repositories for trace, suspended runs, trace read model, structured memory, and human-review tasks |
 | `actiongraph-spring-boot-starter` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review HTTP endpoints |
 | `actiongraph-console` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |

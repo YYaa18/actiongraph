@@ -51,7 +51,6 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 | `actiongraph-core` | keep-target | `actiongraph-core` |
 | `actiongraph-governance` | keep-target | `actiongraph-governance` |
 | `actiongraph-human-review` | keep-target | `actiongraph-human-review` |
-| `actiongraph-llm` | merge-planned | `actiongraph-llm-deepseek` |
 | `actiongraph-llm-deepseek` | keep-target | `actiongraph-llm-deepseek` |
 | `actiongraph-persistence-jdbc` | keep-target | `actiongraph-persistence-jdbc` |
 | `actiongraph-samples` | sample-only | `actiongraph-samples` |
@@ -60,6 +59,6 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 
 ## Freeze Notes
 
-- The ledger does not mean the current 14-module surface is final; it documents the temporary state so growth is visible.
+- The ledger does not mean the current 13-module surface is final; it documents the temporary state so growth is visible.
 - Consolidation should happen by moving implementation into target modules, keeping compatibility shims only when a consumer migration requires them.
 - Sample-domain growth is not a substitute for F1 validation. Claims precheck is frozen except for real/near-real integration fixes and evidence.

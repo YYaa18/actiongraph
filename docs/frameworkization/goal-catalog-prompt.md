@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Domain code should not hand-write LLM goal interpretation prompts. A domain now registers goal metadata in a `GoalCatalog` from `actiongraph-core`, and the provider-neutral `actiongraph-llm` module renders a consistent prompt.
+Domain code should not hand-write LLM goal interpretation prompts. A domain now registers goal metadata in a `GoalCatalog` from `actiongraph-core`, and the optional `actiongraph-llm-deepseek` module renders a consistent prompt while also supplying the DeepSeek-compatible client.
 
 ## Domain Registration
 
@@ -39,7 +39,7 @@ The prompt renderer includes:
 - the expected JSON shape
 - missing field behavior
 
-Provider modules such as `actiongraph-llm-deepseek` supply `LlmClient` implementations only; they do not own prompt shape or parser semantics.
+Custom providers should supply `LlmClient` implementations only; they do not own prompt shape or parser semantics.
 
 ## Current Migration State
 

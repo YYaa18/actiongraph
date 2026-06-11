@@ -109,19 +109,13 @@ Runtime start/resume endpoints support whitelisted request-header capture throug
 
 ## LLM Providers
 
-Provider-neutral interpretation support lives in `actiongraph-llm`:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-llm")
-```
-
-DeepSeek-compatible model access adds the provider module:
+Provider-neutral goal interpretation support and DeepSeek-compatible model access live in the optional LLM provider module:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-llm-deepseek")
 ```
 
-The LLM interpreter produces goals and parameters only. It does not generate plans or execute actions.
+The LLM interpreter produces goals and parameters only. It does not generate plans or execute actions. Custom providers can implement `LlmClient` from this module while keeping the planner and executor dependency surface unchanged.
 
 ## Console
 

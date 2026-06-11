@@ -63,6 +63,8 @@ class ActionGraphComponentCatalogServiceTest {
                 .isEmpty();
         assertThat(service.component("actiongraph-interpretation"))
                 .isEmpty();
+        assertThat(service.component("actiongraph-llm"))
+                .isEmpty();
         assertThat(service.component("actiongraph-core"))
                 .isPresent()
                 .get()

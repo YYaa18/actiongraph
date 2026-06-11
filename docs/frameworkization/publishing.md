@@ -13,8 +13,7 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
-| `actiongraph-llm` | `com.actiongraph:actiongraph-llm:0.1.0` | Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing |
-| `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional DeepSeek-compatible LLM client |
+| `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional LLM package with provider-neutral goal interpretation, prompt rendering, structured output parsing, and a DeepSeek-compatible client |
 | `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace, suspended-run, trace read-model, structured-memory, and human-review repositories |
 | `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review HTTP endpoints |
 | `actiongraph-console` | `com.actiongraph:actiongraph-console:0.1.0` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
@@ -111,13 +110,7 @@ Repository-backed human review adds:
 implementation("com.actiongraph:actiongraph-human-review")
 ```
 
-Provider-neutral LLM-backed goal interpretation adds:
-
-```kotlin
-implementation("com.actiongraph:actiongraph-llm")
-```
-
-DeepSeek-compatible LLM access adds:
+Provider-neutral LLM-backed goal interpretation and DeepSeek-compatible LLM access add:
 
 ```kotlin
 implementation("com.actiongraph:actiongraph-llm-deepseek")
