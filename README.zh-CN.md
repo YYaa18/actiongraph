@@ -274,15 +274,15 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 ## 当前成熟度
 
-- 328 个自动化测试通过。
+- 334 个自动化测试通过。
 - 并发冒烟约 6000 runs/s；重复 resume 只产生一次业务副作用。
-- Gradle 模块已按 core、control-plane、governance、human-review、memory、console、starter 与 samples 等边界拆分。
+- Gradle 模块已收敛到 10 个：core、control-plane-api、governance、human-review、persistence-jdbc、llm-deepseek、console、spring-boot-starter、bom 与 samples。
 - 3 个参考业务域完整跑通。
 - 支持模块发布到 Maven Local / 私服。
 - 支持 Spring Boot 注解式接入。
 - 支持 suspend / resume、JDBC persistence、human review、structured memory。
 - F0 内核金融化完成：Trace/审批预览敏感数据脱敏、审计链防篡改、多级审批链、单笔额度策略。
-- F1 已进入场景打穿：理赔资料预审 + 赔付申请草稿样板域已跑通，可从 CSV 或 JDBC 样本、PostgreSQL 脱敏视图映射、外部审批决策或 JSONL 回调输出带批次、环境、样本来源、限额参数、审批模式和耗时拆分的 Markdown/CSV/HTML 指标报告。
+- F1 试点准备已具备工程样板：理赔资料预审 + 赔付申请草稿样板域已跑通，并支持 CSV / JDBC 样本、PostgreSQL 脱敏视图映射、外部审批决策、JSONL 回调和 Markdown/CSV/HTML 指标报告。F1 是否成立仍以真实/准真实环境落地、业务方续用意愿和案例证据为门槛；样板域已冻结新增演示能力，只允许补缺陷、真实/准真实适配和验收证据。
 
 ## 文档
 

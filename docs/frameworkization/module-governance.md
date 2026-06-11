@@ -52,6 +52,6 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 
 ## Freeze Notes
 
-- The ledger does not mean the current 11-module surface is final; it documents the temporary state so growth is visible.
+- The ledger documents the current 10-module surface so growth is visible and reviewable.
 - Consolidation should happen by moving implementation into target modules, keeping compatibility shims only when a consumer migration requires them.
 - Sample-domain growth is not a substitute for F1 validation. Claims precheck is frozen except for real/near-real integration fixes and evidence.

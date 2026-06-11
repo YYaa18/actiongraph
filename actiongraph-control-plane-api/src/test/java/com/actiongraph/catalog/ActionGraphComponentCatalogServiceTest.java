@@ -352,6 +352,42 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void strategyDocumentsKeepF1AsRealWorldGateNotSampleCompletion() throws IOException {
+        Path root = repositoryRoot();
+        String strategy = Files.readString(root.resolve("docs/finance-strategy.md"), StandardCharsets.UTF_8);
+        String claimsNotes = Files.readString(root.resolve("docs/f1-claims-precheck-notes.md"), StandardCharsets.UTF_8);
+        String chineseReadme = Files.readString(root.resolve("README.zh-CN.md"), StandardCharsets.UTF_8);
+        String pitch = Files.readString(root.resolve("docs/actiongraph-pitch.html"), StandardCharsets.UTF_8);
+        String moduleGovernance = Files.readString(root.resolve("docs/frameworkization/module-governance.md"),
+                StandardCharsets.UTF_8);
+        String combined = strategy + "\n" + claimsNotes + "\n" + chineseReadme + "\n" + pitch + "\n"
+                + moduleGovernance;
+
+        assertThat(strategy)
+                .contains("真实/准真实环境落地")
+                .contains("业务方愿意续用并出具案例")
+                .contains("理赔预审样板域从现在起冻结新增演示能力");
+        assertThat(claimsNotes)
+                .contains("样板域从现在起冻结新增功能")
+                .contains("真实/准真实环境对接")
+                .contains("新的报表、控制台页面、模拟输入和样例流程必须等真实试点反馈后再定");
+        assertThat(chineseReadme)
+                .contains("F1 是否成立仍以真实/准真实环境落地、业务方续用意愿和案例证据为门槛")
+                .contains("样板域已冻结新增演示能力");
+        assertThat(pitch)
+                .contains("F1 是否成立仍取决于真实/准真实环境落地、业务方续用意愿和案例证据");
+        assertThat(moduleGovernance)
+                .contains("current 10-module surface")
+                .doesNotContain("current 11-module surface");
+        assertThat(combined)
+                .doesNotContain("F1 已进入场景打穿")
+                .doesNotContain("F1 场景打穿已有")
+                .doesNotContain("当前 11")
+                .doesNotContain("29</b><span>modules")
+                .doesNotContain("328</b><span>tests passing");
+    }
+
+    @Test
     void compatibilityLabelsAreFromClosedSet() {
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
         Set<String> validLabels = Arrays.stream(ComponentCompatibility.values())
