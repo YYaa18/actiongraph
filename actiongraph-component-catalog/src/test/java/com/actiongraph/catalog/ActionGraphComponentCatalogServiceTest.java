@@ -272,6 +272,20 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void springBootStarterAutoConfigurationImportsMatchAnnotatedClasses() throws IOException {
+        Path root = repositoryRoot();
+        for (Path starter : springBootStarterDirectories(root)) {
+            Set<String> annotatedAutoConfigurations = annotatedAutoConfigurationClasses(starter);
+            Set<String> importedAutoConfigurations = autoConfigurationImports(starter);
+
+            assertThat(importedAutoConfigurations)
+                    .as(starter.getFileName()
+                            + " AutoConfiguration.imports should match @AutoConfiguration classes")
+                    .containsExactlyInAnyOrderElementsOf(annotatedAutoConfigurations);
+        }
+    }
+
+    @Test
     void documentedActionGraphModuleReferencesResolveToCatalogEntries() throws IOException {
         Path root = repositoryRoot();
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
@@ -398,6 +412,62 @@ class ActionGraphComponentCatalogServiceTest {
                     .forEach(documents::add);
         }
         return documents;
+    }
+
+    private java.util.List<Path> springBootStarterDirectories(Path root) throws IOException {
+        try (var paths = Files.list(root)) {
+            return paths.filter(Files::isDirectory)
+                    .filter(path -> path.getFileName().toString().startsWith("actiongraph-"))
+                    .filter(path -> path.getFileName().toString().endsWith("-spring-boot-starter"))
+                    .sorted()
+                    .collect(Collectors.toList());
+        }
+    }
+
+    private Set<String> annotatedAutoConfigurationClasses(Path starter) throws IOException {
+        Path sourceRoot = starter.resolve("src/main/java");
+        if (!Files.isDirectory(sourceRoot)) {
+            return Set.of();
+        }
+        try (var paths = Files.walk(sourceRoot)) {
+            return paths.filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".java"))
+                    .filter(path -> contains(path, "@AutoConfiguration"))
+                    .map(path -> toClassName(sourceRoot, path))
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+        }
+    }
+
+    private Set<String> autoConfigurationImports(Path starter) throws IOException {
+        Path importsFile = starter.resolve(
+                "src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports"
+        );
+        if (!Files.exists(importsFile)) {
+            return Set.of();
+        }
+        java.util.List<String> lines = Files.readAllLines(importsFile, StandardCharsets.UTF_8).stream()
+                .map(String::trim)
+                .filter(line -> !line.isEmpty())
+                .filter(line -> !line.startsWith("#"))
+                .collect(Collectors.toList());
+        assertThat(lines)
+                .as(importsFile + " should not contain duplicate auto-configuration entries")
+                .doesNotHaveDuplicates();
+        return new LinkedHashSet<>(lines);
+    }
+
+    private boolean contains(Path file, String text) {
+        try {
+            return Files.readString(file, StandardCharsets.UTF_8).contains(text);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Cannot read " + file, ex);
+        }
+    }
+
+    private String toClassName(Path sourceRoot, Path sourceFile) {
+        String relative = sourceRoot.relativize(sourceFile).toString();
+        return relative.substring(0, relative.length() - ".java".length())
+                .replace(java.io.File.separatorChar, '.');
     }
 
     private Set<String> parseJava8CompatibleModules(Path buildFile) throws IOException {
