@@ -356,12 +356,13 @@ class ActionGraphComponentCatalogServiceTest {
         Path root = repositoryRoot();
         String strategy = Files.readString(root.resolve("docs/finance-strategy.md"), StandardCharsets.UTF_8);
         String claimsNotes = Files.readString(root.resolve("docs/f1-claims-precheck-notes.md"), StandardCharsets.UTF_8);
+        String pilotPack = Files.readString(root.resolve("docs/f1-pilot-validation-pack.md"), StandardCharsets.UTF_8);
         String chineseReadme = Files.readString(root.resolve("README.zh-CN.md"), StandardCharsets.UTF_8);
         String pitch = Files.readString(root.resolve("docs/actiongraph-pitch.html"), StandardCharsets.UTF_8);
         String moduleGovernance = Files.readString(root.resolve("docs/frameworkization/module-governance.md"),
                 StandardCharsets.UTF_8);
-        String combined = strategy + "\n" + claimsNotes + "\n" + chineseReadme + "\n" + pitch + "\n"
-                + moduleGovernance;
+        String combined = strategy + "\n" + claimsNotes + "\n" + pilotPack + "\n" + chineseReadme + "\n"
+                + pitch + "\n" + moduleGovernance;
 
         assertThat(strategy)
                 .contains("真实/准真实环境落地")
@@ -370,10 +371,19 @@ class ActionGraphComponentCatalogServiceTest {
         assertThat(claimsNotes)
                 .contains("样板域从现在起冻结新增功能")
                 .contains("真实/准真实环境对接")
-                .contains("新的报表、控制台页面、模拟输入和样例流程必须等真实试点反馈后再定");
+                .contains("新的报表、控制台页面、模拟输入和样例流程必须等真实试点反馈后再定")
+                .contains("docs/f1-pilot-validation-pack.md");
+        assertThat(pilotPack)
+                .contains("Entry Criteria")
+                .contains("Field Mapping Worksheet")
+                .contains("Approval Integration Worksheet")
+                .contains("Go / No-Go")
+                .contains("Without the exit artifact, F1 remains open")
+                .contains("F1 is not achieved when the only evidence is a local CSV, JSONL replay");
         assertThat(chineseReadme)
                 .contains("F1 是否成立仍以真实/准真实环境落地、业务方续用意愿和案例证据为门槛")
-                .contains("样板域已冻结新增演示能力");
+                .contains("样板域已冻结新增演示能力")
+                .contains("docs/f1-pilot-validation-pack.md");
         assertThat(pitch)
                 .contains("F1 是否成立仍取决于真实/准真实环境落地、业务方续用意愿和案例证据");
         assertThat(moduleGovernance)

@@ -306,6 +306,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 - [理赔预审 PostgreSQL 映射](docs/frameworkization/claims-precheck-postgresql.md)
 - [理赔预审审批回调重放](docs/frameworkization/claims-precheck-review-callbacks.md)
 - [理赔预审只读 Console](docs/frameworkization/claims-precheck-console.md)
+- [F1 试点验收包](docs/f1-pilot-validation-pack.md)
 - [依赖组合指南](docs/frameworkization/dependency-composition.md)
 - [生态组件模块化](docs/frameworkization/ecosystem-modularity.md)
 - [技术汇报演示文档](docs/actiongraph-pitch.html)
