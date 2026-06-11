@@ -76,7 +76,7 @@ dependencies {
 }
 ```
 
-`actiongraph-runtime-api` wraps `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` with `ActionGraphRuntimeApiService` plus stable response DTOs. It does not provide an LLM provider, create repositories, register actions, or expose HTTP endpoints.
+`actiongraph-runtime-api` wraps `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` with `ActionGraphRuntimeApiService` plus stable response DTOs. Its start/resume metadata overloads write caller-provided request metadata into `RUN_STARTED` and `RUN_RESUMED` trace events through the executor's normal masking and hash-chain path. It does not provide an LLM provider, create repositories, register actions, or expose HTTP endpoints.
 
 ## Spring Business Runtime
 
@@ -112,6 +112,8 @@ POST /actiongraph/runtime/runs/{runId}/resume
 ```
 
 It requires `actiongraph.runtime.api.enabled=true`, a servlet web application, `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. It does not create LLM clients, expose human-review task/callback endpoints, or expose Console endpoints.
+
+For runtime start/resume endpoints, `actiongraph.runtime.api.trace-headers` controls which inbound HTTP headers are copied into run trace metadata. Defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`; keep this list limited to non-sensitive audit and correlation identifiers.
 
 ## Component Catalog
 

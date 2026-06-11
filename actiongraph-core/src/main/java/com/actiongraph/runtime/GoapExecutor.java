@@ -146,6 +146,16 @@ public final class GoapExecutor implements Executor {
 
     @Override
     public RunResult run(Goal goal, Blackboard initial, Collection<Action> actions, ActionRegistry registry) {
+        return run(goal, initial, actions, registry, Map.of());
+    }
+
+    public RunResult run(
+            Goal goal,
+            Blackboard initial,
+            Collection<Action> actions,
+            ActionRegistry registry,
+            Map<String, String> runMetadata
+    ) {
         Objects.requireNonNull(goal, "goal");
         Objects.requireNonNull(initial, "initial");
         Objects.requireNonNull(actions, "actions");
@@ -153,10 +163,10 @@ public final class GoapExecutor implements Executor {
 
         String runId = UUID.randomUUID().toString();
         RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy);
-        trace.append(TraceEventType.RUN_STARTED, null, "Run started", Map.of(
+        trace.append(TraceEventType.RUN_STARTED, null, "Run started", traceData(runMetadata, Map.of(
                 "goal", goal.name(),
                 "targetConditions", conditionKeys(goal.targetConditions())
-        ));
+        )));
         return runLoop(
                 runId,
                 goal,
@@ -170,6 +180,15 @@ public final class GoapExecutor implements Executor {
     }
 
     public RunResult resume(String runId, Collection<Action> actions, ActionRegistry registry) {
+        return resume(runId, actions, registry, Map.of());
+    }
+
+    public RunResult resume(
+            String runId,
+            Collection<Action> actions,
+            ActionRegistry registry,
+            Map<String, String> runMetadata
+    ) {
         Objects.requireNonNull(runId, "runId");
         Objects.requireNonNull(actions, "actions");
         Objects.requireNonNull(registry, "registry");
@@ -177,9 +196,9 @@ public final class GoapExecutor implements Executor {
         SuspendedRun suspendedRun = suspendedRunRepository.claimForResume(runId)
                 .orElseThrow(() -> new SuspendedRunNotClaimableException(runId));
         RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy);
-        trace.append(TraceEventType.RUN_RESUMED, suspendedRun.pendingActionId(), "Run resumed", Map.of(
+        trace.append(TraceEventType.RUN_RESUMED, suspendedRun.pendingActionId(), "Run resumed", traceData(runMetadata, Map.of(
                 "pendingActionId", suspendedRun.pendingActionId().value()
-        ));
+        )));
         return runLoop(
                 runId,
                 suspendedRun.goal(),
@@ -190,6 +209,20 @@ public final class GoapExecutor implements Executor {
                 rehydrateCompensationStack(suspendedRun, registry),
                 trace
         );
+    }
+
+    private static Map<String, String> traceData(Map<String, String> metadata, Map<String, String> data) {
+        Map<String, String> merged = new LinkedHashMap<>();
+        if (metadata != null) {
+            metadata.forEach((key, value) -> {
+                if (key == null || key.isBlank()) {
+                    throw new IllegalArgumentException("run metadata key must not be blank");
+                }
+                merged.put(key, value == null ? "" : value);
+            });
+        }
+        merged.putAll(data);
+        return merged;
     }
 
     private RunResult runLoop(

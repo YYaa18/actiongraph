@@ -26,7 +26,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
-- Reusable runtime API service for goal interpretation, start, and resume gateways
+- Reusable runtime API service for goal interpretation, start, resume, and request metadata trace capture
 - Java 8 compatible machine-readable component catalog and composition profiles
 - Java 8 compatible control-plane contracts plus lightweight runtime and component catalog HTTP clients
 - Machine-readable compatibility labels for distinguishing Java 8 client artifacts from modern runtime modules
@@ -37,7 +37,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional governance Spring Boot starter for masking, amount limits, and rule-based permissions
 - Optional human-review governance Spring Boot starter for review attributes and approval-chain routing
 - Optional human-review Spring Boot starter with repository-backed review policy support
-- Optional runtime API Spring Boot starter with goal interpretation, start, and resume endpoints
+- Optional runtime API Spring Boot starter with goal interpretation, start, resume, and trace-header capture endpoints
 - Optional component catalog Spring Boot starter with read-only ecosystem introspection endpoints
 - Optional human-review API Spring Boot starter with task query and decision endpoints
 - Optional human-review callback Spring Boot starter with approval callback endpoint support
@@ -180,13 +180,15 @@ Spring services can add `actiongraph-memory-spring-boot-starter` when they want 
 
 Non-Spring services can use `actiongraph-interpretation` directly when they want GoalCatalog metadata, rule-based goal interpreters, or Goal-to-Blackboard seeding without adopting an LLM provider.
 
-Non-Spring services can use `actiongraph-runtime-api` when an application gateway, CLI, or custom controller wants a stable service for `interpret`, `start`, and `resume` without adopting Spring MVC. It composes a `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry`, but it does not provide an LLM provider, persistence, or HTTP endpoints by itself. Spring MVC applications can add `actiongraph-runtime-api-spring-boot-starter` and enable `actiongraph.runtime.api.enabled=true` to expose the same entry surface:
+Non-Spring services can use `actiongraph-runtime-api` when an application gateway, CLI, or custom controller wants a stable service for `interpret`, `start`, and `resume` without adopting Spring MVC. It composes a `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry`, and its start/resume metadata overloads can record request ids or source systems in trace events. It does not provide an LLM provider, persistence, or HTTP endpoints by itself. Spring MVC applications can add `actiongraph-runtime-api-spring-boot-starter` and enable `actiongraph.runtime.api.enabled=true` to expose the same entry surface:
 
 ```text
 Runtime API starter: POST /actiongraph/runtime/interpret
 Runtime API starter: POST /actiongraph/runtime/runs
 Runtime API starter: POST /actiongraph/runtime/runs/{runId}/resume
 ```
+
+The Runtime API Spring MVC starter captures only configured `actiongraph.runtime.api.trace-headers` into `RUN_STARTED` / `RUN_RESUMED` trace metadata. Defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`.
 
 Non-Spring services, CLIs, gateways, deployment checks, and Java 8 estates can use `actiongraph-component-catalog` when they need a structured list of ActionGraph modules, capability tags, dependency hints, compatibility labels, and recommended composition profiles. Spring MVC control-plane services can add `actiongraph-component-catalog-spring-boot-starter` and enable `actiongraph.component-catalog.enabled=true` to expose the same read-only catalog:
 

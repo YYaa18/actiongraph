@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.LinkedHashMap;
 
 @RestController
 @RequestMapping("${actiongraph.runtime.api.path:/actiongraph/runtime}")
@@ -54,7 +55,7 @@ public final class ActionGraphRuntimeApiController {
             @RequestBody RuntimeGoalRequest request
     ) {
         verifyToken(headers);
-        return apiService.start(request.input(), request.knownParametersOrEmpty());
+        return apiService.start(request.input(), request.knownParametersOrEmpty(), traceMetadata(headers));
     }
 
     @PostMapping("/runs/{runId}/resume")
@@ -63,11 +64,22 @@ public final class ActionGraphRuntimeApiController {
             @PathVariable("runId") String runId
     ) {
         verifyToken(headers);
-        return apiService.resume(runId);
+        return apiService.resume(runId, traceMetadata(headers));
     }
 
     private void verifyToken(HttpHeaders headers) {
         TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
+    }
+
+    private Map<String, String> traceMetadata(HttpHeaders headers) {
+        Map<String, String> metadata = new LinkedHashMap<>();
+        for (String headerName : properties.getTraceHeaders()) {
+            String value = headers.getFirst(headerName);
+            if (value != null && !value.isBlank()) {
+                metadata.put("requestHeader." + headerName, value);
+            }
+        }
+        return Map.copyOf(metadata);
     }
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)

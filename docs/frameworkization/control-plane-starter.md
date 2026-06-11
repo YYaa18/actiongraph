@@ -24,6 +24,8 @@ The aggregate does not include runtime action registration, runtime JDBC reposit
 
 All built-in endpoint starters share `actiongraph-control-plane-api` for error response contracts, Java 8 compatible Runtime and Component Catalog HTTP client support, and shared-secret token checks. The API component keeps the JSON error shape, header lookup, disabled-secret semantics, and constant-time comparison consistent across Runtime API, Component Catalog, Human Review API, callback, and Console endpoints. These are still lightweight control-plane utilities; enterprise identity, gateway policy, RBAC, tenant checks, and rate limits remain outside this aggregate.
 
+Runtime start/resume endpoints also support whitelisted request-header capture into trace metadata through `actiongraph.runtime.api.trace-headers`. This is intended for non-sensitive audit identifiers such as request id, correlation id, or source system. Sensitive headers, including shared-secret tokens, should stay out of that list.
+
 ## Endpoint Switches
 
 Each endpoint surface still uses its own explicit property switch:
@@ -33,6 +35,10 @@ actiongraph:
   runtime:
     api:
       enabled: true
+      trace-headers:
+        - X-Request-Id
+        - X-Correlation-Id
+        - X-Source-System
   component-catalog:
     enabled: true
   human-review:

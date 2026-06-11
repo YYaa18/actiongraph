@@ -57,10 +57,22 @@ public final class ActionGraphRuntimeApiService {
     }
 
     public RuntimeStartResponse start(String input, Map<String, String> knownParameters) {
-        return start(interpretGoal(input, knownParameters));
+        return start(input, knownParameters, Map.of());
+    }
+
+    public RuntimeStartResponse start(
+            String input,
+            Map<String, String> knownParameters,
+            Map<String, String> runMetadata
+    ) {
+        return start(interpretGoal(input, knownParameters), runMetadata);
     }
 
     public RuntimeStartResponse start(GoalInterpretation interpretation) {
+        return start(interpretation, Map.of());
+    }
+
+    public RuntimeStartResponse start(GoalInterpretation interpretation, Map<String, String> runMetadata) {
         Objects.requireNonNull(interpretation, "interpretation");
         RuntimeInterpretationResponse interpretationResponse = RuntimeInterpretationResponse.from(interpretation);
         if (!interpretation.isReady()) {
@@ -76,16 +88,22 @@ public final class ActionGraphRuntimeApiService {
                 interpretation.goal().orElseThrow(),
                 blackboard,
                 registry.all(),
-                registry
+                registry,
+                safeStringMap(runMetadata, "run metadata key")
         );
         return RuntimeStartResponse.runStarted(interpretationResponse, RuntimeRunResponse.from(result));
     }
 
     public RuntimeRunResponse resume(String runId) {
+        return resume(runId, Map.of());
+    }
+
+    public RuntimeRunResponse resume(String runId, Map<String, String> runMetadata) {
         if (runId == null || runId.isBlank()) {
             throw new IllegalArgumentException("runId must not be blank");
         }
-        return RuntimeRunResponse.from(executor.resume(runId, registry.all(), registry));
+        return RuntimeRunResponse.from(executor.resume(runId, registry.all(), registry,
+                safeStringMap(runMetadata, "run metadata key")));
     }
 
     private GoalInterpretation interpretGoal(String input, Map<String, String> knownParameters) {
@@ -99,5 +117,21 @@ public final class ActionGraphRuntimeApiService {
             return interpreter.interpret(input);
         }
         return interpreter.interpret(input, GoalParameters.of(safeKnownParameters));
+    }
+
+    private static Map<String, String> safeStringMap(Map<String, String> values, String keyName) {
+        if (values == null || values.isEmpty()) {
+            return Map.of();
+        }
+        values.forEach((key, value) -> {
+            if (key == null || key.isBlank()) {
+                throw new IllegalArgumentException(keyName + " must not be blank");
+            }
+        });
+        return values.entrySet().stream()
+                .collect(java.util.stream.Collectors.toUnmodifiableMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue() == null ? "" : entry.getValue()
+                ));
     }
 }

@@ -24,6 +24,7 @@ import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemorySuspendedRunRepository;
 import com.actiongraph.runtime.RunStatus;
+import com.actiongraph.trace.TraceEventType;
 import com.actiongraph.trace.InMemoryTraceRepository;
 import org.junit.jupiter.api.Test;
 
@@ -60,6 +61,28 @@ class ActionGraphRuntimeApiServiceTest {
     }
 
     @Test
+    void startRecordsRunMetadataInRunStartedTrace() {
+        InMemoryTraceRepository traceRepository = new InMemoryTraceRepository();
+        DefaultActionRegistry registry = registry(new FinishAction(false, new AtomicInteger()));
+        ActionGraphRuntimeApiService service = service(registry, new AutoApproveHumanReviewPolicy(), null,
+                traceRepository);
+
+        RuntimeStartResponse response = service.start("finish", Map.of("id", "I-1"), Map.of(
+                "requestHeader.X-Request-Id", "REQ-1",
+                "requestHeader.X-Source-System", "legacy-crm"
+        ));
+        String runId = response.run().orElseThrow().runId();
+
+        assertThat(traceRepository.findByRun(runId))
+                .filteredOn(event -> event.type() == TraceEventType.RUN_STARTED)
+                .singleElement()
+                .satisfies(event -> assertThat(event.data())
+                        .containsEntry("requestHeader.X-Request-Id", "REQ-1")
+                        .containsEntry("requestHeader.X-Source-System", "legacy-crm")
+                        .containsEntry("goal", "finish test workflow"));
+    }
+
+    @Test
     void returnsClarificationWithoutExecutingWhenRequiredParametersAreMissing() {
         AtomicInteger executions = new AtomicInteger();
         DefaultActionRegistry registry = registry(new FinishAction(false, executions));
@@ -93,6 +116,25 @@ class ActionGraphRuntimeApiServiceTest {
     }
 
     @Test
+    void resumeRecordsRunMetadataInRunResumedTrace() {
+        InMemoryTraceRepository traceRepository = new InMemoryTraceRepository();
+        DefaultActionRegistry registry = registry(new FinishAction(true, new AtomicInteger()));
+        InMemorySuspendedRunRepository suspendedRuns = new InMemorySuspendedRunRepository();
+        ActionGraphRuntimeApiService service = service(registry, new PendingHumanReviewPolicy(), suspendedRuns,
+                traceRepository);
+        String runId = service.start("finish", Map.of("id", "I-1")).run().orElseThrow().runId();
+
+        service.resume(runId, Map.of("requestHeader.X-Request-Id", "REQ-RESUME-1"));
+
+        assertThat(traceRepository.findByRun(runId))
+                .filteredOn(event -> event.type() == TraceEventType.RUN_RESUMED)
+                .singleElement()
+                .satisfies(event -> assertThat(event.data())
+                        .containsEntry("requestHeader.X-Request-Id", "REQ-RESUME-1")
+                        .containsEntry("pendingActionId", "runtime-api-test.finish"));
+    }
+
+    @Test
     void validatesInputAndResumeRunId() {
         ActionGraphRuntimeApiService service = service(registry(new FinishAction(false, new AtomicInteger())),
                 new AutoApproveHumanReviewPolicy(), null);
@@ -110,6 +152,15 @@ class ActionGraphRuntimeApiServiceTest {
             com.actiongraph.policy.HumanReviewPolicy humanReviewPolicy,
             InMemorySuspendedRunRepository suspendedRuns
     ) {
+        return service(registry, humanReviewPolicy, suspendedRuns, new InMemoryTraceRepository());
+    }
+
+    private static ActionGraphRuntimeApiService service(
+            DefaultActionRegistry registry,
+            com.actiongraph.policy.HumanReviewPolicy humanReviewPolicy,
+            InMemorySuspendedRunRepository suspendedRuns,
+            InMemoryTraceRepository traceRepository
+    ) {
         GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
         seeders.register(new TestSeeder());
         return new ActionGraphRuntimeApiService(
@@ -119,7 +170,7 @@ class ActionGraphRuntimeApiServiceTest {
                         new GoapPlanner(),
                         new DefaultPolicyGuard(),
                         humanReviewPolicy,
-                        new InMemoryTraceRepository(),
+                        traceRepository,
                         suspendedRuns == null ? new InMemorySuspendedRunRepository() : suspendedRuns
                 ),
                 registry

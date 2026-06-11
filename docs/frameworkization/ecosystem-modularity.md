@@ -64,7 +64,7 @@ The Memory JDBC modules provide durable `MemoryRepository` storage without forci
 
 The Interpretation module provides GoalCatalog metadata, GoalInterpreter contracts, interpretation results, missing-field clarification types, and Blackboard seeders. It depends only on core planning/runtime types and can be used without LLM providers.
 
-The Runtime API module composes interpretation, Blackboard seeding, `GoapExecutor`, and `ActionRegistry` into stable `interpret`, `start`, and `resume` service methods for gateways, CLIs, or custom controllers. It depends on core and interpretation contracts, but it does not provide an LLM provider, create repositories, or expose HTTP endpoints.
+The Runtime API module composes interpretation, Blackboard seeding, `GoapExecutor`, and `ActionRegistry` into stable `interpret`, `start`, and `resume` service methods for gateways, CLIs, or custom controllers. Start/resume metadata overloads let those callers place request ids, source systems, or correlation ids into `RUN_STARTED` and `RUN_RESUMED` trace events. It depends on core and interpretation contracts, but it does not provide an LLM provider, create repositories, or expose HTTP endpoints.
 
 The Component Catalog module publishes static ActionGraph module metadata, capability tags, dependency hints, and composition profiles. It is Java 8 compatible, has no runtime dependency, and can be used by CLIs, deployment checks, enterprise gateways, or custom consoles. The Component Catalog Spring Boot starter exposes that metadata through read-only HTTP endpoints and remains opt-in through its own property switch.
 

@@ -90,6 +90,8 @@ The response body is returned as raw JSON so Java 8 callers can parse it with th
 
 `defaultHeader` / `defaultHeaders` are intended for stable enterprise gateway and audit metadata such as source system, tenant, or branch. Each high-level call also accepts per-request headers for transaction-scoped metadata such as request id, trace id, or correlation id. Per-request headers override default headers with the same name. Protocol headers (`Accept`, `Content-Type`) and the configured shared-secret token header are still owned by the client.
 
+When these requests hit the built-in Runtime API Spring MVC starter, only headers configured in `actiongraph.runtime.api.trace-headers` are copied into run trace metadata. The default whitelist captures `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`.
+
 For Java 6/7 estates, copy the raw HTTP gateway example instead of introducing this jar. It uses the same request shape and token header while leaving JSON parsing, logging, retries, and network policy under the host system's existing stack. Modern CI toolchains no longer provide a reliable Java 6/7 target here, so those estates should run their own platform compiler check after copying the file.
 
 ## Java 8 Component Catalog HTTP Client

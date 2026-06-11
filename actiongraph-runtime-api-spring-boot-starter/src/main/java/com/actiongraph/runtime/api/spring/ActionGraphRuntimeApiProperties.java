@@ -3,12 +3,20 @@ package com.actiongraph.runtime.api.spring;
 import com.actiongraph.controlplane.auth.SharedSecretTokenProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @ConfigurationProperties(prefix = "actiongraph.runtime.api")
 public class ActionGraphRuntimeApiProperties implements SharedSecretTokenProperties {
     private boolean enabled = false;
     private String path = "/actiongraph/runtime";
     private String tokenHeader = "X-ActionGraph-Runtime-Token";
     private String sharedSecret = "";
+    private List<String> traceHeaders = new ArrayList<>(List.of(
+            "X-Request-Id",
+            "X-Correlation-Id",
+            "X-Source-System"
+    ));
 
     public boolean isEnabled() {
         return enabled;
@@ -53,5 +61,24 @@ public class ActionGraphRuntimeApiProperties implements SharedSecretTokenPropert
 
     public boolean hasSharedSecret() {
         return !sharedSecret.isBlank();
+    }
+
+    public List<String> getTraceHeaders() {
+        return List.copyOf(traceHeaders);
+    }
+
+    public void setTraceHeaders(List<String> traceHeaders) {
+        if (traceHeaders == null) {
+            this.traceHeaders = new ArrayList<>();
+            return;
+        }
+        List<String> safeHeaders = new ArrayList<>();
+        for (String traceHeader : traceHeaders) {
+            if (traceHeader == null || traceHeader.isBlank()) {
+                throw new IllegalArgumentException("runtime API trace header names must not be blank");
+            }
+            safeHeaders.add(traceHeader);
+        }
+        this.traceHeaders = safeHeaders;
     }
 }

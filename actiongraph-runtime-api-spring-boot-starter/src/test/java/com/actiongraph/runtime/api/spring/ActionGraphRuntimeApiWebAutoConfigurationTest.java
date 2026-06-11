@@ -18,6 +18,8 @@ import com.actiongraph.planning.Goal;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.api.ActionGraphRuntimeApiService;
 import com.actiongraph.spring.ActionGraphAutoConfiguration;
+import com.actiongraph.trace.TraceEventType;
+import com.actiongraph.trace.TraceRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
@@ -125,7 +127,9 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
                 .run(context -> {
                     MockMvc mockMvc = mockMvc(context);
 
-                    mockMvc.perform(post("/actiongraph/runtime/runs")
+                    String response = mockMvc.perform(post("/actiongraph/runtime/runs")
+                                    .header("X-Request-Id", "REQ-SPRING-1")
+                                    .header("X-Source-System", "legacy-crm")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content("""
                                             {
@@ -137,9 +141,58 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
                             .andExpect(jsonPath("$.disposition").value("RUN_STARTED"))
                             .andExpect(jsonPath("$.interpretation.ready").value(true))
                             .andExpect(jsonPath("$.run.status").value("COMPLETED"))
-                            .andExpect(jsonPath("$.run.executedActions[0]").value("runtime-api-spring-test.finish"));
+                            .andExpect(jsonPath("$.run.executedActions[0]").value("runtime-api-spring-test.finish"))
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsString();
+                    String runId = response.replaceAll(".*\\\"runId\\\":\\\"([^\\\"]+)\\\".*", "$1");
+
+                    TraceRepository traceRepository = context.getBean(TraceRepository.class);
+                    assertThat(traceRepository.findByRun(runId))
+                            .filteredOn(event -> event.type() == TraceEventType.RUN_STARTED)
+                            .singleElement()
+                            .satisfies(event -> assertThat(event.data())
+                                    .containsEntry("requestHeader.X-Request-Id", "REQ-SPRING-1")
+                                    .containsEntry("requestHeader.X-Source-System", "legacy-crm"));
 
                     assertThat(executions).hasValue(1);
+                });
+    }
+
+    @Test
+    void customTraceHeadersControlWhichHeadersEnterRunTrace() {
+        contextRunner
+                .withBean(Action.class, () -> new FinishAction(false, new AtomicInteger()))
+                .withPropertyValues(
+                        "actiongraph.runtime.api.enabled=true",
+                        "actiongraph.runtime.api.trace-headers[0]=X-Transaction-Id"
+                )
+                .run(context -> {
+                    MockMvc mockMvc = mockMvc(context);
+
+                    String response = mockMvc.perform(post("/actiongraph/runtime/runs")
+                                    .header("X-Request-Id", "REQ-IGNORED")
+                                    .header("X-Transaction-Id", "TX-1001")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                              "input": "finish",
+                                              "knownParameters": {"id": "I-1"}
+                                            }
+                                            """))
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsString();
+                    String runId = response.replaceAll(".*\\\"runId\\\":\\\"([^\\\"]+)\\\".*", "$1");
+
+                    TraceRepository traceRepository = context.getBean(TraceRepository.class);
+                    assertThat(traceRepository.findByRun(runId))
+                            .filteredOn(event -> event.type() == TraceEventType.RUN_STARTED)
+                            .singleElement()
+                            .satisfies(event -> assertThat(event.data())
+                                    .containsEntry("requestHeader.X-Transaction-Id", "TX-1001")
+                                    .doesNotContainKey("requestHeader.X-Request-Id"));
                 });
     }
 
@@ -168,10 +221,18 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
                             .getContentAsString();
                     String runId = startBody.replaceAll(".*\\\"runId\\\":\\\"([^\\\"]+)\\\".*", "$1");
 
-                    mockMvc.perform(post("/internal/actiongraph-runtime/runs/{runId}/resume", runId))
+                    mockMvc.perform(post("/internal/actiongraph-runtime/runs/{runId}/resume", runId)
+                                    .header("X-Request-Id", "REQ-RESUME-SPRING-1"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.runId").value(runId))
                             .andExpect(jsonPath("$.status").value("SUSPENDED_PENDING_REVIEW"));
+
+                    TraceRepository traceRepository = context.getBean(TraceRepository.class);
+                    assertThat(traceRepository.findByRun(runId))
+                            .filteredOn(event -> event.type() == TraceEventType.RUN_RESUMED)
+                            .singleElement()
+                            .satisfies(event -> assertThat(event.data())
+                                    .containsEntry("requestHeader.X-Request-Id", "REQ-RESUME-SPRING-1"));
                 });
     }
 

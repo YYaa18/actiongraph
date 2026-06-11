@@ -50,8 +50,17 @@ class ActionGraphComponentCatalogServiceTest {
         assertThat(service.component("actiongraph-runtime-api-spring-boot-starter"))
                 .isPresent()
                 .get()
-                .satisfies(component -> assertThat(component.requires())
-                        .containsExactly("actiongraph-runtime-api", "actiongraph-control-plane-api"));
+                .satisfies(component -> {
+                    assertThat(component.requires())
+                            .containsExactly("actiongraph-runtime-api", "actiongraph-control-plane-api");
+                    assertThat(component.capabilities())
+                            .contains("runtime-http-api", "runtime-request-trace-metadata");
+                });
+        assertThat(service.component("actiongraph-runtime-api"))
+                .isPresent()
+                .get()
+                .satisfies(component -> assertThat(component.capabilities())
+                        .contains("runtime-entry-service", "runtime-request-trace-metadata"));
         assertThat(service.component("actiongraph-component-catalog-spring-boot-starter"))
                 .isPresent()
                 .get()
