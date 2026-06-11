@@ -267,11 +267,11 @@ Use this when a non-Spring service already uses `actiongraph-human-review` and w
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-governance-human-review")
+    implementation("com.actiongraph:actiongraph-governance")
 }
 ```
 
-`actiongraph-governance-human-review` depends on `actiongraph-governance` and `actiongraph-human-review`. It provides `AmountAttributeContributor` and `RiskBasedChainResolver` without forcing those human-review contracts into the base governance library.
+`actiongraph-governance` provides `AmountAttributeContributor` and `RiskBasedChainResolver` together with masking, amount-limit, and permission policies.
 
 ## Spring Boot Governance Policies
 

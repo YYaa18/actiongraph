@@ -127,6 +127,8 @@ class ActionGraphComponentCatalogServiceTest {
                 });
         assertThat(service.component("actiongraph-memory-jdbc" + "-spring-boot-starter"))
                 .isEmpty();
+        assertThat(service.component("actiongraph-governance-human-review"))
+                .isEmpty();
         assertThat(service.component("actiongraph-human-review-api-spring-boot-starter"))
                 .isPresent()
                 .get()

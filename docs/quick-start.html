@@ -192,8 +192,7 @@
   <tr><td><code>com.actiongraph:actiongraph-human-review</code></td><td>审批任务仓储 / 审批链 / 回调处理 / 查询决策服务 / repository-backed policy</td><td>非 Spring 服务需要对接外部审批系统时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-llm</code></td><td>通用 LLM 解释器 + GoalCatalog prompt 渲染 + 结构化输出解析</td><td>接入非 DeepSeek 模型或自定义 LLM provider 时</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>DeepSeek 兼容客户端</td><td>使用 DeepSeek 兼容接口时，会传递引入 actiongraph-llm</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-governance</code></td><td>脱敏 / 额度 / 规则权限策略库</td><td>非 Spring 服务需要复用基础治理策略时引入</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-governance-human-review</code></td><td>额度审批属性 / 多级审批路由</td><td>非 Spring 服务需要人审治理增强时引入</td></tr>
+  <tr><td><code>com.actiongraph:actiongraph-governance</code></td><td>脱敏 / 额度 / 规则权限 / 额度审批属性 / 多级审批路由</td><td>非 Spring 服务需要复用治理策略时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-governance-spring-boot-starter</code></td><td>脱敏 / 额度 / 规则权限自动装配</td><td>需要基础治理策略时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-governance-human-review-spring-boot-starter</code></td><td>额度审批属性 / 多级审批路由自动装配</td><td>需要人审治理增强时按需引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-persistence-jdbc</code></td><td>Trace / 挂起 / Trace read model 的核心 JDBC 仓储</td><td>非 Spring 或完全手工接线时使用</td></tr>

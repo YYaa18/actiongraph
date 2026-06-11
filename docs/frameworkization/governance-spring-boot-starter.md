@@ -71,4 +71,4 @@ With this extension, amounts above `review-limit` are copied into `HumanReviewRe
 
 Neither starter registers actions, executes runs, persists state, or exposes HTTP endpoints. They only contribute policy beans that the base executor and human-review components already consume.
 
-Non-Spring services can depend on `actiongraph-governance` and `actiongraph-governance-human-review` directly and wire the same policy implementations by hand.
+Non-Spring services can depend on `actiongraph-governance` directly and wire the same policy implementations by hand.

@@ -10,6 +10,5 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.0")
 
     testImplementation(project(":actiongraph-governance"))
-    testImplementation(project(":actiongraph-governance-human-review"))
     testImplementation("com.h2database:h2:2.2.224")
 }

@@ -63,8 +63,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-component-catalog` | Java 8 compatible machine-readable component catalog and composition profiles |
 | `actiongraph-control-plane-api` | Java 8 compatible control-plane response contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
-| `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
-| `actiongraph-governance-human-review` | Optional non-Spring human-review governance extension for amount review attributes and risk-based approval routing |
+| `actiongraph-governance` | Optional non-Spring governance policies for masking, amount limits, rule-based permissions, amount review attributes, and risk-based approval routing |
 | `actiongraph-llm` | Provider-neutral LLM goal interpretation, GoalCatalog prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | Optional DeepSeek-compatible LLM client; brings `actiongraph-llm` transitively |
 | `actiongraph-persistence-jdbc` | Core JDBC repositories for trace, suspended runs, and trace read model |
@@ -167,7 +166,7 @@ actiongraph:
 
 When `actiongraph-jdbc-spring-boot-starter` is on the classpath and `actiongraph.persistence.jdbc.enabled=true`, Spring Boot applications with a `DataSource` automatically get JDBC-backed trace, suspended-run, and trace read-model repositories. `actiongraph-memory-spring-boot-starter` includes property-gated JDBC memory repository auto-configuration, and `actiongraph-human-review-spring-boot-starter` includes the property-gated JDBC human-review repository auto-configuration. Non-Spring services can still use `actiongraph-persistence-jdbc`, `actiongraph-memory-jdbc`, and `actiongraph-human-review-jdbc` directly and wire repositories by hand.
 
-Non-Spring services can use `actiongraph-governance` directly when they want packaged masking, amount-limit, or rule-based permission policies without Spring auto-configuration. Add `actiongraph-governance-human-review` only when review attributes or risk-based approval-chain routing are needed.
+Non-Spring services can use `actiongraph-governance` directly when they want packaged masking, amount-limit, rule-based permission policies, review attributes, or risk-based approval-chain routing without Spring auto-configuration.
 
 Non-Spring services can use `actiongraph-memory` directly when they want structured long-term memory without adopting Spring, JDBC, or LLM modules.
 
@@ -203,7 +202,7 @@ The component catalog exposes a `compatibility` label for each module. Today `ac
 
 Non-Spring services can use `actiongraph-human-review` directly when they need external approval task storage, callback handling, multi-stage approval chains, or a stable task query/decision service without Spring MVC.
 
-When `actiongraph-governance-spring-boot-starter` is on the classpath, masking and amount-limit permission rules are activated. Add `actiongraph-governance-human-review-spring-boot-starter` when those limit rules should also enrich human-review requests or when `actiongraph.human-review.risk-based-approval-chain=true` should route approval stages. Without these modules, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and safe pending human review.
+When `actiongraph-governance-spring-boot-starter` is on the classpath, masking and amount-limit permission rules are activated. Add `actiongraph-governance-human-review-spring-boot-starter` when those limit rules should also enrich human-review requests or when `actiongraph.human-review.risk-based-approval-chain=true` should route approval stages. Without these starter modules, the base Spring starter keeps neutral defaults: no masking, default permission allow, no amount escalation, and safe pending human review.
 
 When `actiongraph-human-review-spring-boot-starter` is on the classpath, Spring services get repository-backed human review defaults. The starter supplies an in-memory `HumanReviewRepository` by default, and supplies a durable JDBC `HumanReviewRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available. Add `actiongraph-human-review-api-spring-boot-starter` in a Spring MVC application to expose both pending-task/run-task/detail/decision endpoints and external approval callback endpoints; each surface still requires its own `actiongraph.human-review.*.enabled=true` switch.
 

@@ -17,7 +17,6 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
 | `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
 | `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
-| `actiongraph-governance-human-review` | `com.actiongraph:actiongraph-governance-human-review:0.1.0` | Optional non-Spring human-review governance policies for amount review attributes and approval routing |
 | `actiongraph-llm` | `com.actiongraph:actiongraph-llm:0.1.0` | Provider-neutral LLM goal interpretation, prompt rendering, and structured output parsing |
 | `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional DeepSeek-compatible LLM client |
 | `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | Core JDBC trace, suspended-run, and trace read-model repositories |
@@ -162,7 +161,7 @@ implementation("com.actiongraph:actiongraph-governance")
 Non-Spring human-review governance policies add:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-governance-human-review")
+implementation("com.actiongraph:actiongraph-governance")
 ```
 
 Spring Boot governance auto-configuration adds:
