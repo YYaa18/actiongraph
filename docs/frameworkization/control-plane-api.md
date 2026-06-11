@@ -31,10 +31,10 @@ The root build also compiles a real Maven Java 8 consumer after publishing the B
 docs/examples/java8-maven-consumer
 ```
 
-Systems that cannot depend on Java 8 artifacts should call ActionGraph over HTTP through an enterprise gateway, ESB, or sidecar. The repository keeps a raw HTTP contract reference that imports no ActionGraph classes and is compiled in CI with `javac --release 8` and an empty classpath, but Java-before-8 source/binary compatibility is not an official support target:
+Java 8 applications, enterprise gateways, ESB adapters, sidecars, and non-Java callers can speak the deployed ActionGraph HTTP contract directly when they do not want to load the Java 8 client jar. The repository keeps a raw HTTP contract reference that imports no ActionGraph classes and is compiled in CI with `javac --release 8` and an empty classpath; Java 6/7 source or binary compatibility is not an official support target:
 
 ```text
-docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java
+docs/examples/raw-http-gateway-contract/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java
 ```
 
 ## Error Response

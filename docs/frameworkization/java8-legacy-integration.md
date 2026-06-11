@@ -2,7 +2,7 @@
 
 Many financial systems still run on Java 8. ActionGraph therefore makes Java 8 client integration an explicit supported boundary instead of pretending every module can run inside legacy estates.
 
-Java 8 is the official legacy support target. Systems older than Java 8 should integrate through HTTP via an enterprise gateway, ESB, or sidecar owned by that estate; ActionGraph does not claim Java 6/7 source or binary compatibility.
+Java 8 is the official legacy support target. ActionGraph does not claim Java 6/7 source or binary compatibility; estates that cannot run Java 8 artifacts should keep the ActionGraph-facing code in an HTTP gateway, ESB adapter, or sidecar.
 
 ## Compatibility Levels
 
@@ -12,7 +12,7 @@ Java 8 is the official legacy support target. Systems older than Java 8 should i
 | Java 8 HTTP clients | Java 8+ | Legacy systems call deployed Runtime API, Component Catalog, Human Review, and Console endpoints through `actiongraph-control-plane-api` |
 | Java 8 embeddable core | Target, not yet complete | Future narrowed core/annotations/governance packages compiled with `--release 8` |
 | Modern service runtime | Java 21+ build today | ActionGraph runtime service, Spring Boot starters, JDBC persistence, console, samples, and CI |
-| Older than Java 8 | Not an official ActionGraph target | Use platform gateway, ESB, or a Java 8+ sidecar over HTTP; do not embed jars in-process |
+| Java 6/7 or non-Java runtimes | Not an official ActionGraph artifact target | Use a platform gateway, ESB adapter, or sidecar over HTTP; do not embed ActionGraph jars in-process |
 
 ## Current Java 8 Artifact
 
@@ -166,15 +166,15 @@ The test suite compiles the standalone source examples with `javac --release 8`,
 
 ## Raw HTTP Gateway Contract Reference
 
-Applications that cannot load the Java 8 client jar should call the same deployed Runtime, Component Catalog, Human Review, and Console APIs over HTTP from an existing gateway, ESB adapter, batch job, or sidecar. This path is a protocol reference, not an official Java-before-8 compatibility target.
+Java 8 applications, enterprise gateways, ESB adapters, sidecars, and non-Java callers can call the same deployed Runtime, Component Catalog, Human Review, and Console APIs over HTTP without loading the client jar. This path is a protocol reference and does not expand ActionGraph's official artifact compatibility beyond Java 8.
 
 A raw HTTP template lives at:
 
 ```text
-docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java
+docs/examples/raw-http-gateway-contract/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java
 ```
 
-The test suite compiles that exact file with `javac --release 8` and an empty classpath, scans the source to keep ActionGraph imports and Java 8 library dependencies out of the template, then invokes the compiled class against a local HTTP server to prove optional audit/tracing headers are actually sent. It demonstrates the same `/interpret`, `/runs`, `/runs/{runId}/resume`, component catalog metadata/module/compatibility/profile, human-review task/decision/callback, and Console run/trace/export contracts with shared-secret header forwarding plus optional audit/tracing headers. This gate keeps the HTTP contract honest without expanding the supported Java matrix below Java 8.
+The test suite compiles that exact file with `javac --release 8` and an empty classpath, scans the source to keep ActionGraph imports and post-Java-8 APIs out of the template, then invokes the compiled class against a local HTTP server to prove optional audit/tracing headers are actually sent. It demonstrates the same `/interpret`, `/runs`, `/runs/{runId}/resume`, component catalog metadata/module/compatibility/profile, human-review task/decision/callback, and Console run/trace/export contracts with shared-secret header forwarding plus optional audit/tracing headers. This gate keeps the HTTP contract honest while the supported Java artifact target remains Java 8.
 
 ## Machine-Readable Compatibility
 
@@ -198,7 +198,7 @@ Today, `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `
 
 ## Non-Goals
 
-- Java-before-8 source/binary compatibility is not a product target. Those systems should integrate over HTTP through an estate-owned gateway or sidecar.
+- Java 6/7 source or binary compatibility is not a product target. Those systems should integrate over HTTP through an estate-owned gateway or sidecar.
 - Spring Boot 3 starters are not Java 8 artifacts.
 - The current core runtime still contains Java 16+ language features and Java 21 bytecode, and is not yet an embeddable Java 8 jar.
 
@@ -213,4 +213,4 @@ Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Com
 
 This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.
 
-The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the aggregate control-plane facade, runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, default audit headers, per-request audit headers, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The root `check` task also runs the Maven consumer gate described above, so BOM import and published POM consumption stay covered. The same test suite compiles the raw HTTP gateway contract reference with `javac --release 8` and an empty classpath, scans for ActionGraph imports and Java 8 library dependencies, and invokes the compiled template against a local server for runtime, catalog, review, and console calls. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the HTTP fallback aligned without treating Java-before-8 as a supported runtime target.
+The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the aggregate control-plane facade, runtime HTTP client, component catalog HTTP client, human-review HTTP client, console HTTP client, default audit headers, per-request audit headers, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The root `check` task also runs the Maven consumer gate described above, so BOM import and published POM consumption stay covered. The same test suite compiles the raw HTTP gateway contract reference with `javac --release 8` and an empty classpath, scans for ActionGraph imports and post-Java-8 APIs, and invokes the compiled template against a local server for runtime, catalog, review, and console calls. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the HTTP fallback aligned without treating Java 6/7 as supported artifact targets.

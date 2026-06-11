@@ -289,7 +289,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 - [Java 8 human-review HTTP client example](docs/examples/java8-human-review-client)
 - [Java 8 console HTTP client example](docs/examples/java8-console-client)
 - [Java 8 legacy client example](docs/examples/java8-legacy-client)
-- [Raw HTTP gateway contract reference](docs/examples/pre-java8-http-gateway)
+- [Raw HTTP gateway contract reference](docs/examples/raw-http-gateway-contract)
 - [Control-plane starter](docs/frameworkization/control-plane-starter.md)
 - [Governance Spring Boot starter](docs/frameworkization/governance-spring-boot-starter.md)
 - [Claims precheck PostgreSQL mapping](docs/frameworkization/claims-precheck-postgresql.md)

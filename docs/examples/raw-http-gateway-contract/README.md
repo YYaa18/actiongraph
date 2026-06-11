@@ -1,6 +1,6 @@
 # Raw HTTP Gateway Contract Reference
 
-This example is for applications or enterprise gateways that cannot load the Java 8 `actiongraph-control-plane-api` jar in-process.
+This example is for Java 8 applications, enterprise gateways, ESB adapters, sidecars, or non-Java callers that choose to speak the deployed ActionGraph HTTP contract directly instead of loading the `actiongraph-control-plane-api` jar in-process.
 
 It intentionally uses only JDK HTTP APIs and returns raw JSON response bodies. The application can copy the class into its own gateway adapter, batch job, ESB plugin, or sidecar and keep using its existing JSON parser and audit logging.
 
@@ -28,4 +28,4 @@ export ACTIONGRAPH_CONSOLE_URL=https://agent.example.com/actiongraph/console
 export ACTIONGRAPH_CONSOLE_TOKEN=console-shared-secret
 ```
 
-The repository test suite compiles `src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java` with `javac --release 8` and an empty classpath, then scans the source to keep ActionGraph imports and Java 8 library dependencies out of the template. This keeps the HTTP contract aligned without expanding ActionGraph's official support target below Java 8. Systems older than Java 8 should keep this logic in an enterprise gateway, ESB, or Java 8+ sidecar owned by that estate.
+The repository test suite compiles `src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java` with `javac --release 8` and an empty classpath, then scans the source to keep ActionGraph imports and post-Java-8 APIs out of the template. This keeps the HTTP contract aligned while the official source and binary compatibility target remains Java 8.
