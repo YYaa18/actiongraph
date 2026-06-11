@@ -39,8 +39,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional human-review Spring Boot starter with repository-backed review policy support
 - Optional runtime API Spring Boot starter with goal interpretation, start, resume, and trace-header capture endpoints
 - Optional component catalog Spring Boot starter with read-only ecosystem introspection endpoints
-- Optional human-review API Spring Boot starter with task query and decision endpoints
-- Optional human-review callback Spring Boot starter with approval callback endpoint support
+- Optional human-review API Spring Boot starter with task query, decision, and approval callback endpoints
 - Optional control-plane aggregate Spring Boot starter for runtime, component catalog, human-review, callback, and console endpoints
 - Reusable console library for read-only run monitoring, JDBC read models, and CSV/JSONL audit evidence
 - Optional console Spring Boot starter for JSON API, built-in UI, audit exports, and JDBC read-model repository auto-configuration

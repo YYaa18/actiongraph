@@ -227,6 +227,25 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void documentedActionGraphModuleReferencesResolveToCatalogEntries() throws IOException {
+        Path root = repositoryRoot();
+        ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
+        Set<String> catalogModules = service.components().stream()
+                .map(ActionGraphComponent::module)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        Set<String> documentedModules = new LinkedHashSet<>();
+        for (Path document : documentationFiles(root)) {
+            documentedModules.addAll(parseModules(document,
+                    "(?<![A-Za-z0-9_./-])(actiongraph-[a-z0-9]+(?:-[a-z0-9]+)*)(?![A-Za-z0-9_./-])"));
+        }
+
+        assertThat(documentedModules)
+                .as("documented ActionGraph artifact names should be real catalog modules")
+                .isSubsetOf(catalogModules);
+    }
+
+    @Test
     void compatibilityLabelsAreFromClosedSet() {
         ActionGraphComponentCatalogService service = ActionGraphComponentCatalogService.defaultCatalog();
         Set<String> validLabels = Arrays.stream(ComponentCompatibility.values())
@@ -295,5 +314,22 @@ class ActionGraphComponentCatalogServiceTest {
             modules.add(matcher.group(1));
         }
         return modules;
+    }
+
+    private java.util.List<Path> documentationFiles(Path root) {
+        return java.util.List.of(
+                root.resolve("README.md"),
+                root.resolve("README.zh-CN.md"),
+                root.resolve("docs/frameworkization/component-catalog.md"),
+                root.resolve("docs/frameworkization/control-plane-api.md"),
+                root.resolve("docs/frameworkization/control-plane-starter.md"),
+                root.resolve("docs/frameworkization/dependency-composition.md"),
+                root.resolve("docs/frameworkization/ecosystem-modularity.md"),
+                root.resolve("docs/frameworkization/human-review.md"),
+                root.resolve("docs/frameworkization/java8-legacy-integration.md"),
+                root.resolve("docs/frameworkization/jdbc-persistence.md"),
+                root.resolve("docs/frameworkization/publishing.md"),
+                root.resolve("docs/frameworkization/spring-boot-starter.md")
+        );
     }
 }
