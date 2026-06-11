@@ -18,7 +18,7 @@
 <meta name="twitter:image" content="assets/actiongraph-hero.jpg">
 <link rel="canonical" href="./">
 <link rel="preload" as="image" href="assets/actiongraph-hero.jpg" fetchpriority="high">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23143c27'/%3E%3Cpath d='M32 12l18 10v20L32 52 14 42V22l18-10z' fill='none' stroke='%239df0b2' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M22 32h20M32 22v20' stroke='%239df0b2' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" href="assets/actiongraph-mark.svg" type="image/svg+xml">
 <style>
   :root {
     --page: #ffffff;
@@ -93,27 +93,13 @@
   .brand {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    font-weight: 800;
-    color: var(--ink);
-    white-space: nowrap;
+    flex: 0 0 auto;
   }
 
-  .brand-mark {
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    border-radius: 8px;
-    background: #11251b;
-    color: #9df0b2;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-  }
-
-  .brand-mark svg {
-    width: 23px;
-    height: 23px;
-    stroke-width: 1.8;
+  .brand-logo {
+    display: block;
+    width: 184px;
+    height: auto;
   }
 
   .nav-links {
@@ -1117,6 +1103,19 @@
 
   .footer a:hover { color: #9df0b2; }
 
+  .footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .footer-brand img {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+
   @media (max-width: 1120px) {
     .nav-links { display: none; }
     .mobile-toggle { display: grid; place-items: center; }
@@ -1159,8 +1158,7 @@
     :root { --header: 66px; }
     .nav-shell { width: min(calc(100% - 28px), var(--max)); gap: 12px; }
     .nav-actions .button:not(.primary) { display: none; }
-    .brand { font-size: 15px; }
-    .brand-mark { width: 32px; height: 32px; }
+    .brand-logo { width: 156px; }
     .hero {
       min-height: 690px;
       background-image:
@@ -1234,14 +1232,7 @@
 <header class="site-header" id="top">
   <div class="nav-shell">
     <a class="brand" href="#top" aria-label="ActionGraph 首页">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M12 3l7 4v10l-7 4-7-4V7l7-4z"></path>
-          <path d="M8 12h8"></path>
-          <path d="M12 8v8"></path>
-        </svg>
-      </span>
-      <span>ActionGraph</span>
+      <img class="brand-logo" src="assets/actiongraph-logo.svg" alt="ActionGraph">
     </a>
     <nav class="nav-links" aria-label="主导航">
       <a href="#why">为什么</a>
@@ -2114,7 +2105,10 @@ actiongraph.limits.rules:
 <footer class="footer">
   <div class="footer-grid">
     <div>
-      <b>ActionGraph</b>
+      <div class="footer-brand">
+        <img src="assets/actiongraph-mark.svg" alt="" aria-hidden="true">
+        <b>ActionGraph</b>
+      </div>
       <p>Typed GOAP runtime for governed business action execution in Java. Built for deterministic planning, human review, compensation, audit evidence, and legacy-friendly control-plane integration.</p>
     </div>
     <div>
