@@ -23,6 +23,8 @@ When a high-risk action requires review:
 6. Calling `resume(runId, actions, registry)` asks the same policy again.
 7. The recorded decision either advances to the next approval stage, lets execution continue after the final stage, or denies the action and triggers compensation.
 
+`HumanReviewRequest.attributes` combines run metadata from the Runtime API with review-specific attributes from `ReviewAttributeContributor`. Runtime metadata commonly contains whitelisted gateway headers such as `requestHeader.X-Request-Id`, `requestHeader.X-Correlation-Id`, or `requestHeader.X-Source-System`, which is especially useful when a Java 8 legacy application calls ActionGraph over HTTP. Review-specific attributes win on key collisions, and the merged map passes through the executor's `DataMaskingPolicy` before it is stored on the review task.
+
 ## In-Memory Usage
 
 ```java

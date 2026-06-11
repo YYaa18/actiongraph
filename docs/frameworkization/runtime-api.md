@@ -42,7 +42,7 @@ RuntimeRunResponse resumed = api.resume(
 
 `start` returns `CLARIFICATION_REQUIRED` when the interpreter needs more parameters and does not execute any business Action in that branch. When the interpretation is ready, the service seeds a fresh Blackboard and runs the supplied `GoapExecutor` until the run reaches a terminal status or suspends.
 
-The metadata overloads write caller-provided request metadata into `RUN_STARTED` and `RUN_RESUMED` trace events. These values go through the executor's configured `DataMaskingPolicy` and are included in the trace hash chain. Use this for gateway request ids, source system ids, tenant ids, or correlation ids when a custom controller or worker owns the HTTP layer.
+The metadata overloads write caller-provided request metadata into `RUN_STARTED` and `RUN_RESUMED` trace events. When a high-risk action requires human review, the same metadata is merged into `HumanReviewRequest.attributes` before the review task is stored, with review-specific attributes taking precedence on key collisions. These values go through the executor's configured `DataMaskingPolicy` and are included in the trace hash chain. Use this for gateway request ids, source system ids, tenant ids, or correlation ids when a custom controller or worker owns the HTTP layer.
 
 ## Spring MVC Starter
 
@@ -93,7 +93,7 @@ Example request:
 
 If `shared-secret` is configured, callers must include the configured token header. Missing or invalid tokens return `401 UNAUTHORIZED`.
 
-For `start` and `resume`, the Spring MVC controller copies only configured `trace-headers` into run metadata and stores them in trace data as `requestHeader.<Header-Name>`. The defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`. The token header is not traced unless an application explicitly adds it to `trace-headers`; production deployments should keep this list limited to non-sensitive audit and correlation metadata.
+For `start` and `resume`, the Spring MVC controller copies only configured `trace-headers` into run metadata and stores them in trace data as `requestHeader.<Header-Name>`. The same keys are available to human-review task attributes when a run suspends. The defaults are `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System`. The token header is not traced unless an application explicitly adds it to `trace-headers`; production deployments should keep this list limited to non-sensitive audit and correlation metadata.
 
 ## Boundary
 

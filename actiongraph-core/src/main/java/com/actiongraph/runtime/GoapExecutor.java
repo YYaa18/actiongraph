@@ -161,9 +161,10 @@ public final class GoapExecutor implements Executor {
         Objects.requireNonNull(actions, "actions");
         Objects.requireNonNull(registry, "registry");
 
+        Map<String, String> normalizedRunMetadata = normalizeMetadata(runMetadata);
         String runId = UUID.randomUUID().toString();
         RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy);
-        trace.append(TraceEventType.RUN_STARTED, null, "Run started", traceData(runMetadata, Map.of(
+        trace.append(TraceEventType.RUN_STARTED, null, "Run started", traceData(normalizedRunMetadata, Map.of(
                 "goal", goal.name(),
                 "targetConditions", conditionKeys(goal.targetConditions())
         )));
@@ -175,7 +176,8 @@ public final class GoapExecutor implements Executor {
                 registry,
                 new ArrayList<>(),
                 new ArrayDeque<>(),
-                trace
+                trace,
+                normalizedRunMetadata
         );
     }
 
@@ -193,10 +195,11 @@ public final class GoapExecutor implements Executor {
         Objects.requireNonNull(actions, "actions");
         Objects.requireNonNull(registry, "registry");
 
+        Map<String, String> normalizedRunMetadata = normalizeMetadata(runMetadata);
         SuspendedRun suspendedRun = suspendedRunRepository.claimForResume(runId)
                 .orElseThrow(() -> new SuspendedRunNotClaimableException(runId));
         RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy);
-        trace.append(TraceEventType.RUN_RESUMED, suspendedRun.pendingActionId(), "Run resumed", traceData(runMetadata, Map.of(
+        trace.append(TraceEventType.RUN_RESUMED, suspendedRun.pendingActionId(), "Run resumed", traceData(normalizedRunMetadata, Map.of(
                 "pendingActionId", suspendedRun.pendingActionId().value()
         )));
         return runLoop(
@@ -207,11 +210,12 @@ public final class GoapExecutor implements Executor {
                 registry,
                 new ArrayList<>(suspendedRun.executedActions()),
                 rehydrateCompensationStack(suspendedRun, registry),
-                trace
+                trace,
+                normalizedRunMetadata
         );
     }
 
-    private static Map<String, String> traceData(Map<String, String> metadata, Map<String, String> data) {
+    private static Map<String, String> normalizeMetadata(Map<String, String> metadata) {
         Map<String, String> merged = new LinkedHashMap<>();
         if (metadata != null) {
             metadata.forEach((key, value) -> {
@@ -221,6 +225,11 @@ public final class GoapExecutor implements Executor {
                 merged.put(key, value == null ? "" : value);
             });
         }
+        return Map.copyOf(merged);
+    }
+
+    private static Map<String, String> traceData(Map<String, String> metadata, Map<String, String> data) {
+        Map<String, String> merged = new LinkedHashMap<>(metadata);
         merged.putAll(data);
         return merged;
     }
@@ -233,7 +242,8 @@ public final class GoapExecutor implements Executor {
             ActionRegistry registry,
             List<ActionId> executedActionIds,
             Deque<Action> compensationStack,
-            RunTrace trace
+            RunTrace trace,
+            Map<String, String> runMetadata
     ) {
         ExecutionContext context = new DefaultExecutionContext(blackboard, traceRepository, runId);
         List<Action> allActions = List.copyOf(actions);
@@ -247,7 +257,8 @@ public final class GoapExecutor implements Executor {
                 return finish(trace, runId, RunStatus.COMPLETED, blackboard, executedActionIds, "Goal satisfied");
             }
 
-            Selection selection = selectNextAction(runId, goal, state, blackboard, allActions, registry, trace);
+            Selection selection = selectNextAction(
+                    runId, goal, state, blackboard, allActions, registry, trace, runMetadata);
             if (selection.halted()) {
                 if (selection.status() == RunStatus.SUSPENDED_PENDING_REVIEW) {
                     trace.flush();
@@ -313,7 +324,8 @@ public final class GoapExecutor implements Executor {
             Blackboard blackboard,
             List<Action> allActions,
             ActionRegistry registry,
-            RunTrace trace
+            RunTrace trace,
+            Map<String, String> runMetadata
     ) {
         Set<ActionId> excluded = new LinkedHashSet<>();
         ActionId guardBlockedAction = null;
@@ -368,9 +380,7 @@ public final class GoapExecutor implements Executor {
                                         .collect(Collectors.joining(","))
                         ));
                 trace.flush();
-                Map<String, String> attributes = maskingPolicy.maskData(
-                        reviewAttributeContributor.contribute(action, blackboard)
-                );
+                Map<String, String> attributes = reviewAttributes(action, blackboard, runMetadata);
                 HumanReviewResult review = humanReviewPolicy.review(new HumanReviewRequest(
                         runId,
                         action.id(),
@@ -408,6 +418,19 @@ public final class GoapExecutor implements Executor {
 
             return Selection.action(action);
         }
+    }
+
+    private Map<String, String> reviewAttributes(
+            Action action,
+            Blackboard blackboard,
+            Map<String, String> runMetadata
+    ) {
+        Map<String, String> attributes = new LinkedHashMap<>(runMetadata);
+        Map<String, String> contributed = reviewAttributeContributor.contribute(action, blackboard);
+        if (contributed != null) {
+            contributed.forEach((key, value) -> attributes.put(key, value == null ? "" : value));
+        }
+        return maskingPolicy.maskData(attributes);
     }
 
     private boolean compensateAll(Deque<Action> compensationStack, ExecutionContext context, RunTrace trace) {

@@ -41,7 +41,7 @@ if (response.successful()) {
 
 The client uses only JDK `HttpURLConnection` and returns the raw JSON body. It accepts default HTTP headers for stable enterprise metadata such as source system, tenant, or branch, and per-request headers for transaction metadata such as request id, trace id, or correlation id. This keeps legacy projects free to use their existing JSON library, gateway wrapper, or audit logging rules.
 
-If the deployed Runtime API uses the built-in Spring MVC starter, the default server-side trace-header whitelist records `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System` into `RUN_STARTED` / `RUN_RESUMED` trace events. Deployments can change that list with `actiongraph.runtime.api.trace-headers`; keep it limited to non-sensitive audit and correlation metadata.
+If the deployed Runtime API uses the built-in Spring MVC starter, the default server-side trace-header whitelist records `X-Request-Id`, `X-Correlation-Id`, and `X-Source-System` into `RUN_STARTED` / `RUN_RESUMED` trace events. The same run metadata is also copied into `HumanReviewRequest.attributes` when a high-risk action suspends for external approval, so approval portals can display the legacy transaction id, correlation id, and source system without recomputing them. Deployments can change the whitelist with `actiongraph.runtime.api.trace-headers`; keep it limited to non-sensitive audit and correlation metadata.
 
 The same artifact also includes a Java 8 Component Catalog HTTP client for remote ecosystem discovery:
 
@@ -105,7 +105,7 @@ Current labels:
 | `java21-plus` | Requires the modern ActionGraph service runtime side |
 | `sample-only` | Demonstration code, not a supported library dependency |
 
-Today, `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` modules. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts.
+Today, `actiongraph-component-catalog` and `actiongraph-control-plane-api` are `java8-client` modules. They are safe for Java 8 projects to import directly. `actiongraph-core`, Spring starters, JDBC modules, governance modules, LLM modules, Console, and samples are not Java 8 embeddable artifacts; deploy those on the modern ActionGraph service side and let old applications call them over HTTP.
 
 ## Non-Goals
 

@@ -226,9 +226,9 @@ Catalog starter: GET /actiongraph/components/profiles
 Catalog starter: GET /actiongraph/components/profiles/{profile}
 ```
 
-自研网关、endpoint adapter 或 Java 8 老系统如果需要复用控制层错误响应结构、通过 HTTP 调用已部署的 ActionGraph Runtime API 或组件目录端点，或复用共享密钥 token 校验，可以直接依赖 `actiongraph-control-plane-api`。它提供统一的 `ControlPlaneErrorResponse(error, message)`、零外部依赖的 `ActionGraphRuntimeHttpClient` / `ActionGraphComponentCatalogHttpClient`，以及 `ControlPlaneTokenVerifier` / `SharedSecretTokenProperties`；内置 Runtime、Component Catalog、Human Review、Callback 和 Console starter 会传递依赖它。token helper 负责校验 Header 名、在未配置 `shared-secret` 时跳过 token 读取、使用常量时间比较 token；它不是企业 IAM / RBAC 层，生产身份、权限和网关策略仍由接入系统或后续治理组件负责。
+自研网关、endpoint adapter 或 Java 8 老系统如果需要复用控制层错误响应结构、通过 HTTP 调用已部署的 ActionGraph Runtime API 或组件目录端点，或复用共享密钥 token 校验，可以直接依赖 `actiongraph-control-plane-api`。它提供统一的 `ControlPlaneErrorResponse(error, message)`、零外部依赖的 `ActionGraphRuntimeHttpClient` / `ActionGraphComponentCatalogHttpClient`，以及 `ControlPlaneTokenVerifier` / `SharedSecretTokenProperties`；内置 Runtime、Component Catalog、Human Review、Callback 和 Console starter 会传递依赖它。token helper 负责校验 Header 名、在未配置 `shared-secret` 时跳过 token 读取、使用常量时间比较 token；它不是企业 IAM / RBAC 层，生产身份、权限和网关策略仍由接入系统或后续治理组件负责。服务端白名单接收的请求 Header 会作为 Trace metadata 写入审计链；高风险运行挂起人审时，同一批 metadata 也会进入审批任务 attributes，保证老系统交易流水号、来源系统和关联 ID 在审批链路中仍可见。
 
-组件目录会为每个模块暴露 `compatibility` 标签。当前 `actiongraph-component-catalog` 与 `actiongraph-control-plane-api` 是 `java8-client`；可嵌入 runtime、Spring、JDBC、治理、LLM、Console 与样例侧仍属于 `java21-plus` 或 `sample-only`，老旧系统应通过 HTTP、网关、ESB 或 Java 8+ sidecar 接入。
+组件目录会为每个模块暴露 `compatibility` 标签。当前 `actiongraph-component-catalog` 与 `actiongraph-control-plane-api` 是 `java8-client`，Java 8 应用可以直接引入；可嵌入 runtime、Spring、JDBC、治理、LLM、Console 与样例侧仍属于 `java21-plus` 或 `sample-only`，应部署在现代 ActionGraph 服务侧，老旧系统通过 HTTP、企业网关、ESB 或 Java 8+ sidecar 接入。
 
 非 Spring 服务如果需要审批任务仓储、审批链、审批回调处理或稳定的任务查询与决策服务，可以直接依赖 `actiongraph-human-review`，不需要引入 Spring MVC endpoint。
 
