@@ -2,6 +2,17 @@ package com.actiongraph.runtime;
 
 import java.util.Objects;
 
+/**
+ * Typed Blackboard key for addressing multiple values of the same Java type.
+ *
+ * <p>The key combines a value type with an application-defined id. The default
+ * id mirrors the simple type-based accessors, while named ids let domains store
+ * separate values such as multiple contracts, claims, accounts, or documents.
+ *
+ * @param type value type; never {@code null}
+ * @param id stable non-blank key id
+ * @param <T> value type
+ */
 public record BlackboardKey<T>(Class<T> type, String id) {
     public static final String DEFAULT_ID = "default";
 

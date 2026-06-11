@@ -6,6 +6,15 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * In-memory suspended-run repository for tests, demos, and single-process
+ * development.
+ *
+ * <p>The implementation is thread-safe within one JVM. {@link #claimForResume(String)}
+ * uses {@link ConcurrentHashMap#remove(Object)} as an atomic claim, so duplicate
+ * resume attempts in the same process cannot receive the same snapshot. It is
+ * not durable and must not be used as the only production persistence layer.
+ */
 public final class InMemorySuspendedRunRepository implements SuspendedRunRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemorySuspendedRunRepository.class);
     private final ConcurrentHashMap<String, SuspendedRun> runs = new ConcurrentHashMap<>();

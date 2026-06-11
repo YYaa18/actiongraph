@@ -2,6 +2,12 @@ package com.actiongraph.policy;
 
 import java.util.Map;
 
+/**
+ * Masking policy that returns input values unchanged.
+ *
+ * <p>This is appropriate only when upstream data is already safe for audit and
+ * display. It is immutable and safe to share across concurrent runs.
+ */
 public final class NoopMaskingPolicy implements DataMaskingPolicy {
     public static final NoopMaskingPolicy INSTANCE = new NoopMaskingPolicy();
 

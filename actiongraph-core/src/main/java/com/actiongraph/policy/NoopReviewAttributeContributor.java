@@ -5,6 +5,11 @@ import com.actiongraph.runtime.Blackboard;
 
 import java.util.Map;
 
+/**
+ * Review attribute contributor that adds no attributes.
+ *
+ * <p>The singleton is immutable and safe to share across concurrent runs.
+ */
 public enum NoopReviewAttributeContributor implements ReviewAttributeContributor {
     INSTANCE;
 

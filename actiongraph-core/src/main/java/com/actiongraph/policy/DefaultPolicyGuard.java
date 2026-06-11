@@ -7,6 +7,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Default policy guard that composes zero or more {@link PermissionPolicy}
+ * instances and then honors the action's human-review requirement.
+ *
+ * <p>The guard is immutable after construction and safe to share across
+ * concurrent runs when its contained policies are also safe to share.
+ */
 public final class DefaultPolicyGuard implements ExecutionPolicyGuard {
     private final List<PermissionPolicy> permissionPolicies;
 

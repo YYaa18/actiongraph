@@ -3,7 +3,21 @@ package com.actiongraph.trace;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Verifies ordering and hash-chain integrity for trace events from one run.
+ *
+ * <p>The verifier is stateless and safe to reuse across concurrent calls. It
+ * expects events to be supplied in run sequence order; repositories should
+ * return that order from {@link TraceRepository#findByRun(String)}.
+ */
 public final class TraceChainVerifier {
+    /**
+     * Verifies that all events belong to one run, are ordered by increasing
+     * sequence, and have valid hash links.
+     *
+     * @param events trace events for one run; never {@code null}
+     * @return verification result
+     */
     public ChainVerification verify(List<TraceEvent> events) {
         Objects.requireNonNull(events, "events");
         String previousHash = "";
@@ -40,6 +54,13 @@ public final class TraceChainVerifier {
         return new ChainVerification(false, firstBrokenSeq, message);
     }
 
+    /**
+     * Verification outcome.
+     *
+     * @param valid whether the chain is valid
+     * @param firstBrokenSeq first invalid sequence, or {@code 0} when valid
+     * @param message human-readable result detail
+     */
     public record ChainVerification(boolean valid, long firstBrokenSeq, String message) {
     }
 }

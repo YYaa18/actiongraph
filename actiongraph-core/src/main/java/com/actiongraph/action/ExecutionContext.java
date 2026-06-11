@@ -3,10 +3,36 @@ package com.actiongraph.action;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.trace.TraceRepository;
 
+/**
+ * Per-run execution context passed to Actions and compensations.
+ *
+ * <p>The context is scoped to one run and should not be retained by long-lived
+ * application objects after the action returns. It exposes the current
+ * Blackboard, trace repository, and run id for correlation.
+ */
 public interface ExecutionContext {
+    /**
+     * Current run Blackboard. It is mutable and scoped to this run; applications
+     * should not share it across independent runs or threads.
+     *
+     * @return current Blackboard, never {@code null}
+     */
     Blackboard blackboard();
 
+    /**
+     * Trace repository for the current runtime. Action code should prefer
+     * returning {@link ActionResult} details over writing ad hoc trace events,
+     * but the repository is exposed for advanced integrations.
+     *
+     * @return trace repository, never {@code null}
+     */
     TraceRepository trace();
 
+    /**
+     * Stable run id used by trace, suspended-run snapshots, and external
+     * review callbacks.
+     *
+     * @return non-blank run id
+     */
     String runId();
 }

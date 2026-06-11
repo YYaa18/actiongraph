@@ -24,6 +24,7 @@ The following are public API after 1.0 unless documented otherwise:
 - public and protected types in `com.actiongraph.action`, `com.actiongraph.planning`, `com.actiongraph.runtime`, `com.actiongraph.runtime.api`, `com.actiongraph.runtime.api.batch`, `com.actiongraph.policy`, `com.actiongraph.trace`, `com.actiongraph.interpretation`, and `com.actiongraph.memory`;
 - Java 8 control-plane API and HTTP gateway types in `actiongraph-control-plane-api`;
 - SLF4J API remains the logging facade; ActionGraph library modules must not bind a logging implementation for applications;
+- public APIs must document compatibility-sensitive semantics in Javadoc, including null handling, thread-safety expectations, failure outcomes, compensation behavior, audit ordering, and resume-claim concurrency where applicable;
 - Spring Boot configuration properties and documented `actiongraph.*` property names;
 - SQL schema expectations documented for JDBC persistence;
 - JSON request and response shapes documented for built-in HTTP endpoints.

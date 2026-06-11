@@ -8,10 +8,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Deterministic SHA-256 hasher for trace-chain events.
+ *
+ * <p>The hasher canonicalizes the masked event payload by sorting data keys and
+ * normalizing optional text to empty strings. It is stateless and safe to call
+ * concurrently.
+ */
 public final class TraceHasher {
     private TraceHasher() {
     }
 
+    /**
+     * Computes the hash for an event using its stored payload and previous hash.
+     *
+     * @param event event to hash; never {@code null}
+     * @return lowercase hexadecimal SHA-256 hash
+     */
     public static String hash(TraceEvent event) {
         Objects.requireNonNull(event, "event");
         return hash(
@@ -26,6 +39,11 @@ public final class TraceHasher {
         );
     }
 
+    /**
+     * Computes the hash for a trace payload.
+     *
+     * @return lowercase hexadecimal SHA-256 hash
+     */
     public static String hash(
             String runId,
             long seq,

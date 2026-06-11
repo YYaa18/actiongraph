@@ -448,6 +448,61 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void corePublicContractsDocumentThreadSafetyNullAndLifecycleSemantics() throws IOException {
+        Path root = repositoryRoot();
+        java.util.List<String> contractFiles = java.util.List.of(
+                "actiongraph-core/src/main/java/com/actiongraph/action/Action.java",
+                "actiongraph-core/src/main/java/com/actiongraph/action/ActionRegistry.java",
+                "actiongraph-core/src/main/java/com/actiongraph/action/ExecutionContext.java",
+                "actiongraph-core/src/main/java/com/actiongraph/runtime/Blackboard.java",
+                "actiongraph-core/src/main/java/com/actiongraph/runtime/SuspendedRunRepository.java",
+                "actiongraph-core/src/main/java/com/actiongraph/trace/TraceRepository.java",
+                "actiongraph-core/src/main/java/com/actiongraph/policy/ExecutionPolicyGuard.java",
+                "actiongraph-core/src/main/java/com/actiongraph/policy/HumanReviewPolicy.java",
+                "actiongraph-core/src/main/java/com/actiongraph/policy/HumanReviewRequest.java",
+                "actiongraph-core/src/main/java/com/actiongraph/policy/DataMaskingPolicy.java",
+                "actiongraph-core/src/main/java/com/actiongraph/trace/TraceEvent.java"
+        );
+
+        for (String contractFile : contractFiles) {
+            assertThat(readSource(root, contractFile))
+                    .as(contractFile + " should have public contract Javadocs")
+                    .contains("/**");
+        }
+
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/action/Action.java"))
+                .contains("storing per-run mutable state")
+                .contains("Null contract")
+                .contains("best-effort compensation")
+                .contains("intentionally invisible to the planner");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/runtime/Blackboard.java"))
+                .contains("Mutable per-run working memory")
+                .contains("Do not share")
+                .contains("required to be thread-safe")
+                .contains("return empty collections");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/runtime/SuspendedRunRepository.java"))
+                .contains("claimForResume")
+                .contains("atomic claim")
+                .contains("concurrent approval callbacks cannot execute the same pending action twice");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/trace/TraceRepository.java"))
+                .contains("appendAll")
+                .contains("preserve the order")
+                .contains("commit a batch atomically");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/policy/HumanReviewPolicy.java"))
+                .contains("must not execute the business action itself")
+                .contains("Thread-safety");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/policy/DataMaskingPolicy.java"))
+                .contains("return non-null values")
+                .contains("masking before hash calculation");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/policy/ExecutionPolicyGuard.java"))
+                .contains("execute the action")
+                .contains("return a non-null");
+        assertThat(readSource(root, "actiongraph-core/src/main/java/com/actiongraph/trace/TraceEvent.java"))
+                .contains("tamper-evident chain")
+                .contains("should already be masked");
+    }
+
+    @Test
     void strategyDocumentsKeepF1AsRealWorldGateNotSampleCompletion() throws IOException {
         Path root = repositoryRoot();
         String strategy = Files.readString(root.resolve("docs/finance-strategy.md"), StandardCharsets.UTF_8);
@@ -826,5 +881,9 @@ class ActionGraphComponentCatalogServiceTest {
             modules.add(moduleMatcher.group(1));
         }
         return modules;
+    }
+
+    private String readSource(Path root, String relativePath) throws IOException {
+        return Files.readString(root.resolve(relativePath), StandardCharsets.UTF_8);
     }
 }

@@ -7,6 +7,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Default construction-time {@link ActionRegistry} implementation.
+ *
+ * <p>The registry preserves registration order for stable inspection but
+ * returns snapshots to callers. It is intended to be populated during
+ * application startup and then shared read-only. Concurrent mutation is not
+ * supported.
+ */
 public final class DefaultActionRegistry implements ActionRegistry {
     private final Map<ActionId, Action> actions = new LinkedHashMap<>();
 

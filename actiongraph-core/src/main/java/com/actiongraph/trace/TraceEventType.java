@@ -1,5 +1,12 @@
 package com.actiongraph.trace;
 
+/**
+ * Stable taxonomy of runtime audit events.
+ *
+ * <p>Event names are consumed by tests, control planes, dashboards, and
+ * persisted audit queries. Additions are compatibility-sensitive and should be
+ * documented in the changelog.
+ */
 public enum TraceEventType {
     RUN_STARTED,
     RUN_RESUMED,
