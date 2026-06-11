@@ -25,14 +25,14 @@ class ActionGraphRuntimeHttpClientTest {
         AtomicReference<String> path = new AtomicReference<>();
         AtomicReference<String> token = new AtomicReference<>();
         AtomicReference<String> sourceSystem = new AtomicReference<>();
-        AtomicReference<String> correlationId = new AtomicReference<>();
+        AtomicReference<String> requestId = new AtomicReference<>();
         AtomicReference<String> requestBody = new AtomicReference<>();
         server.createContext("/actiongraph/runtime/runs", exchange -> {
             method.set(exchange.getRequestMethod());
             path.set(exchange.getRequestURI().getPath());
             token.set(exchange.getRequestHeaders().getFirst("X-ActionGraph-Runtime-Token"));
             sourceSystem.set(exchange.getRequestHeaders().getFirst("X-Source-System"));
-            correlationId.set(exchange.getRequestHeaders().getFirst("X-Correlation-Id"));
+            requestId.set(exchange.getRequestHeaders().getFirst("X-Request-Id"));
             requestBody.set(read(exchange));
             send(exchange, 200, "{\"disposition\":\"RUN_STARTED\"}");
         });
@@ -42,18 +42,20 @@ class ActionGraphRuntimeHttpClientTest {
                     .builder(baseUrl(server))
                     .sharedSecret("secret")
                     .defaultHeader("X-Source-System", "legacy-crm")
-                    .defaultHeader("X-Correlation-Id", "REQ-20260611-0001")
+                    .defaultHeader("X-Request-Id", "DEFAULT-REQUEST")
                     .build();
             Map<String, String> known = new LinkedHashMap<>();
             known.put("customerId", "C001");
+            Map<String, String> requestHeaders = new LinkedHashMap<>();
+            requestHeaders.put("X-Request-Id", "REQ-20260611-0001");
 
-            ControlPlaneHttpResponse response = client.start("帮客户 C001 生成续约报价", known);
+            ControlPlaneHttpResponse response = client.start("帮客户 C001 生成续约报价", known, requestHeaders);
 
             assertThat(method.get()).isEqualTo("POST");
             assertThat(path.get()).isEqualTo("/actiongraph/runtime/runs");
             assertThat(token.get()).isEqualTo("secret");
             assertThat(sourceSystem.get()).isEqualTo("legacy-crm");
-            assertThat(correlationId.get()).isEqualTo("REQ-20260611-0001");
+            assertThat(requestId.get()).isEqualTo("REQ-20260611-0001");
             assertThat(requestBody.get())
                     .contains("\"input\":\"帮客户 C001 生成续约报价\"")
                     .contains("\"knownParameters\":{\"customerId\":\"C001\"}");
@@ -123,6 +125,10 @@ class ActionGraphRuntimeHttpClientTest {
         assertThatThrownBy(() -> ActionGraphRuntimeHttpClient.builder("http://localhost").defaultHeader(" ", "value"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("default header name");
+        assertThatThrownBy(() -> ActionGraphRuntimeHttpClient.builder("http://localhost").build()
+                .post("/runs", "{}", Collections.singletonMap(" ", "value")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("request header name");
     }
 
     private static String baseUrl(HttpServer server) {

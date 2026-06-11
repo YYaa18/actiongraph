@@ -40,7 +40,15 @@ public final class ActionGraphRuntimeHttpClient {
     }
 
     public ControlPlaneHttpResponse interpret(String input, Map<String, String> knownParameters) throws IOException {
-        return post("/interpret", goalRequestJson(input, knownParameters));
+        return interpret(input, knownParameters, null);
+    }
+
+    public ControlPlaneHttpResponse interpret(
+            String input,
+            Map<String, String> knownParameters,
+            Map<String, String> requestHeaders
+    ) throws IOException {
+        return post("/interpret", goalRequestJson(input, knownParameters), requestHeaders);
     }
 
     public ControlPlaneHttpResponse start(String input) throws IOException {
@@ -48,14 +56,31 @@ public final class ActionGraphRuntimeHttpClient {
     }
 
     public ControlPlaneHttpResponse start(String input, Map<String, String> knownParameters) throws IOException {
-        return post("/runs", goalRequestJson(input, knownParameters));
+        return start(input, knownParameters, null);
+    }
+
+    public ControlPlaneHttpResponse start(
+            String input,
+            Map<String, String> knownParameters,
+            Map<String, String> requestHeaders
+    ) throws IOException {
+        return post("/runs", goalRequestJson(input, knownParameters), requestHeaders);
     }
 
     public ControlPlaneHttpResponse resume(String runId) throws IOException {
-        return post("/runs/" + encodePathSegment(requireText(runId, "runId")) + "/resume", "{}");
+        return resume(runId, null);
+    }
+
+    public ControlPlaneHttpResponse resume(String runId, Map<String, String> requestHeaders) throws IOException {
+        return post("/runs/" + encodePathSegment(requireText(runId, "runId")) + "/resume", "{}", requestHeaders);
     }
 
     public ControlPlaneHttpResponse post(String path, String jsonBody) throws IOException {
+        return post(path, jsonBody, null);
+    }
+
+    public ControlPlaneHttpResponse post(String path, String jsonBody, Map<String, String> requestHeaders)
+            throws IOException {
         String requestPath = path == null ? "" : path;
         if (!requestPath.startsWith("/")) {
             requestPath = "/" + requestPath;
@@ -64,7 +89,8 @@ public final class ActionGraphRuntimeHttpClient {
         connection.setRequestMethod("POST");
         connection.setConnectTimeout(connectTimeoutMillis);
         connection.setReadTimeout(readTimeoutMillis);
-        applyDefaultHeaders(connection);
+        applyHeaders(connection, defaultHeaders);
+        applyHeaders(connection, requestHeaders);
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
         if (!isBlank(sharedSecret)) {
@@ -86,9 +112,14 @@ public final class ActionGraphRuntimeHttpClient {
         return new ControlPlaneHttpResponse(statusCode, body);
     }
 
-    private void applyDefaultHeaders(HttpURLConnection connection) {
-        for (Map.Entry<String, String> entry : defaultHeaders.entrySet()) {
-            connection.setRequestProperty(entry.getKey(), entry.getValue());
+    private static void applyHeaders(HttpURLConnection connection, Map<String, String> headers) {
+        if (headers == null) {
+            return;
+        }
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            connection.setRequestProperty(
+                    requireText(entry.getKey(), "request header name"),
+                    entry.getValue() == null ? "" : entry.getValue());
         }
     }
 

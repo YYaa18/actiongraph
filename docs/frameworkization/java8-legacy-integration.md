@@ -28,16 +28,18 @@ ActionGraphRuntimeHttpClient client = ActionGraphRuntimeHttpClient
         .builder("https://agent.example.com/actiongraph/runtime")
         .sharedSecret("runtime-shared-secret")
         .defaultHeader("X-Source-System", "legacy-crm")
-        .defaultHeader("X-Request-Id", "REQ-20260611-0001")
         .build();
 
-ControlPlaneHttpResponse response = client.start("帮客户 C001 生成续约报价");
+Map<String, String> requestHeaders = new HashMap<String, String>();
+requestHeaders.put("X-Request-Id", "REQ-20260611-0001");
+
+ControlPlaneHttpResponse response = client.start("帮客户 C001 生成续约报价", null, requestHeaders);
 if (response.successful()) {
     System.out.println(response.body());
 }
 ```
 
-The client uses only JDK `HttpURLConnection` and returns the raw JSON body. It also accepts default HTTP headers for enterprise metadata such as source system, tenant, branch, request id, or correlation id. This keeps legacy projects free to use their existing JSON library, gateway wrapper, or audit logging rules.
+The client uses only JDK `HttpURLConnection` and returns the raw JSON body. It accepts default HTTP headers for stable enterprise metadata such as source system, tenant, or branch, and per-request headers for transaction metadata such as request id, trace id, or correlation id. This keeps legacy projects free to use their existing JSON library, gateway wrapper, or audit logging rules.
 
 The same artifact also includes a Java 8 Component Catalog HTTP client for remote ecosystem discovery:
 
@@ -46,10 +48,12 @@ ActionGraphComponentCatalogHttpClient catalog = ActionGraphComponentCatalogHttpC
         .builder("https://agent.example.com/actiongraph/components")
         .sharedSecret("catalog-shared-secret")
         .defaultHeader("X-Source-System", "deployment-check")
-        .defaultHeader("X-Request-Id", "REQ-CATALOG-0001")
         .build();
 
-ControlPlaneHttpResponse modules = catalog.modulesByCompatibility("java8-client");
+Map<String, String> catalogHeaders = new HashMap<String, String>();
+catalogHeaders.put("X-Request-Id", "REQ-CATALOG-0001");
+
+ControlPlaneHttpResponse modules = catalog.modulesByCompatibility("java8-client", catalogHeaders);
 if (modules.successful()) {
     System.out.println(modules.body());
 }
@@ -67,7 +71,7 @@ docs/examples/java8-legacy-client/src/main/java/com/company/legacy/LegacyActionG
 docs/examples/java8-catalog-http-client/src/main/java/com/company/deployment/ActionGraphCatalogHttpClientUsage.java
 ```
 
-The test suite compiles the standalone source examples with `javac --release 8`, so those examples are both documentation and compatibility evidence. The root build also runs `verifyJava8MavenConsumer`: it publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles the Maven example with Maven Compiler Plugin `release=8`. Together, these gates prove both source compatibility and real Maven BOM consumption for Java 8 callers. The examples demonstrate runtime start calls, catalog metadata calls, response handling, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
+The test suite compiles the standalone source examples with `javac --release 8`, so those examples are both documentation and compatibility evidence. The root build also runs `verifyJava8MavenConsumer`: it publishes `actiongraph-bom`, `actiongraph-component-catalog`, and `actiongraph-control-plane-api` to Maven Local, then compiles the Maven example with Maven Compiler Plugin `release=8`. Together, these gates prove both source compatibility and real Maven BOM consumption for Java 8 callers. The examples demonstrate runtime start calls, catalog metadata calls, default headers, per-request audit headers, response handling, shared-secret header verification, and mapping an unauthorized token exception to a standard control-plane error response.
 
 ## Older-Than-Java-8 HTTP Gateway Example
 
@@ -79,7 +83,7 @@ A raw HTTP template lives at:
 docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java
 ```
 
-The test suite compiles that exact file with `javac --release 8` and an empty classpath, then scans the source to keep ActionGraph imports, Java 8 conveniences, and common Java 7+ language/library features out of the template. It demonstrates the same `/interpret`, `/runs`, and `/runs/{runId}/resume` contract with shared-secret header forwarding plus optional audit/tracing headers. This is not a full Java 6/7 bootclasspath check because modern CI toolchains no longer provide reliable Java 6/7 targets; Java 6/7 estates should run their own platform compiler check after copying the file, or reuse the HTTP shape through an enterprise gateway, ESB, or Java 8+ sidecar.
+The test suite compiles that exact file with `javac --release 8` and an empty classpath, scans the source to keep ActionGraph imports, Java 8 conveniences, and common Java 7+ language/library features out of the template, then invokes the compiled class against a local HTTP server to prove optional audit/tracing headers are actually sent. It demonstrates the same `/interpret`, `/runs`, and `/runs/{runId}/resume` contract with shared-secret header forwarding plus optional audit/tracing headers. This is not a full Java 6/7 bootclasspath check because modern CI toolchains no longer provide reliable Java 6/7 targets; Java 6/7 estates should run their own platform compiler check after copying the file, or reuse the HTTP shape through an enterprise gateway, ESB, or Java 8+ sidecar.
 
 ## Machine-Readable Compatibility
 
@@ -118,4 +122,4 @@ Modules listed in the root `java8CompatibleModules` set also run `verifyJava8Com
 
 This keeps the Java 8 client promise enforceable in CI instead of relying on manual `javap` checks.
 
-The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the runtime HTTP client, component catalog HTTP client, default audit headers, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The root `check` task also runs the Maven consumer gate described above, so BOM import and published POM consumption stay covered. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, then scans for ActionGraph imports, Java 8 conveniences, and common Java 7+ syntax/library features. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.
+The control-plane API tests also compile the documented Java 8 client examples with `javac --release 8`. Those sources use the runtime HTTP client, component catalog HTTP client, default audit headers, per-request audit headers, error DTO, shared-secret token verifier, token properties interface, and unauthorized exception. The root `check` task also runs the Maven consumer gate described above, so BOM import and published POM consumption stay covered. The same test suite compiles the raw HTTP gateway example with `javac --release 8` and an empty classpath, scans for ActionGraph imports, Java 8 conveniences, and common Java 7+ syntax/library features, and invokes the compiled template against a local server. These gates catch public API signatures that would be awkwardly compatible as bytecode but unusable from Java 8 source code, and keep the older-than-Java-8 HTTP fallback honest.

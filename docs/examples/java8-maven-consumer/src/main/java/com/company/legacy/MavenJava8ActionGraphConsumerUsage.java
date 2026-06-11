@@ -37,7 +37,6 @@ public final class MavenJava8ActionGraphConsumerUsage {
                 .builder(runtimeUrl)
                 .sharedSecret(token)
                 .defaultHeader("X-Source-System", "legacy-maven-app")
-                .defaultHeader("X-Request-Id", "REQ-MAVEN-LOCAL-1")
                 .build();
     }
 
@@ -46,7 +45,6 @@ public final class MavenJava8ActionGraphConsumerUsage {
                 .builder(catalogUrl)
                 .sharedSecret(token)
                 .defaultHeader("X-Source-System", "legacy-maven-app")
-                .defaultHeader("X-Request-Id", "REQ-CATALOG-MAVEN-LOCAL-1")
                 .build();
     }
 

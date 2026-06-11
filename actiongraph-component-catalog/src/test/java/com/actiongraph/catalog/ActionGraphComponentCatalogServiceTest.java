@@ -64,7 +64,7 @@ class ActionGraphComponentCatalogServiceTest {
                     assertThat(component.compatibility()).isEqualTo(ComponentCompatibility.JAVA8_CLIENT.label());
                     assertThat(component.capabilities())
                             .contains("java8-runtime-client", "java8-component-catalog-client",
-                                    "shared-secret-token-verification");
+                                    "http-audit-headers", "shared-secret-token-verification");
                 });
         assertThat(service.component("actiongraph-component-catalog"))
                 .isPresent()

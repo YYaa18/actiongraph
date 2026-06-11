@@ -4,6 +4,8 @@ import com.actiongraph.controlplane.api.ActionGraphComponentCatalogHttpClient;
 import com.actiongraph.controlplane.api.ControlPlaneHttpResponse;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class ActionGraphCatalogHttpClientUsage {
     private ActionGraphCatalogHttpClientUsage() {
@@ -11,12 +13,14 @@ public final class ActionGraphCatalogHttpClientUsage {
 
     public static void main(String[] args) throws Exception {
         ActionGraphComponentCatalogHttpClient client = catalogClientFromEnvironment();
+        Map<String, String> requestHeaders = new HashMap<String, String>();
+        requestHeaders.put("X-Request-Id", environmentOrDefault("ACTIONGRAPH_REQUEST_ID", "REQ-CATALOG-LOCAL-1"));
 
-        ControlPlaneHttpResponse java8Modules = client.modulesByCompatibility("java8-client");
+        ControlPlaneHttpResponse java8Modules = client.modulesByCompatibility("java8-client", requestHeaders);
         requireSuccessful(java8Modules);
         System.out.println(java8Modules.body());
 
-        ControlPlaneHttpResponse profile = client.profile("java8-legacy-client");
+        ControlPlaneHttpResponse profile = client.profile("java8-legacy-client", requestHeaders);
         requireSuccessful(profile);
         System.out.println(profile.body());
     }
@@ -29,7 +33,6 @@ public final class ActionGraphCatalogHttpClientUsage {
                 .tokenHeader(ActionGraphComponentCatalogHttpClient.DEFAULT_CATALOG_TOKEN_HEADER)
                 .sharedSecret(sharedSecret)
                 .defaultHeader("X-Source-System", environmentOrDefault("ACTIONGRAPH_SOURCE_SYSTEM", "deployment-check"))
-                .defaultHeader("X-Request-Id", environmentOrDefault("ACTIONGRAPH_REQUEST_ID", "REQ-CATALOG-LOCAL-1"))
                 .connectTimeoutMillis(5000)
                 .readTimeoutMillis(30000)
                 .build();

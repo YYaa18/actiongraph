@@ -22,8 +22,10 @@ public final class LegacyActionGraphClientUsage {
 
         Map<String, String> known = new HashMap<String, String>();
         known.put("customerId", "C001");
+        Map<String, String> requestHeaders = new HashMap<String, String>();
+        requestHeaders.put("X-Request-Id", environmentOrDefault("ACTIONGRAPH_REQUEST_ID", "REQ-LOCAL-1"));
 
-        ControlPlaneHttpResponse response = client.start("Prepare renewal quote for C001", known);
+        ControlPlaneHttpResponse response = client.start("Prepare renewal quote for C001", known, requestHeaders);
         if (!response.successful()) {
             throw new IOException("ActionGraph request failed: HTTP "
                     + response.statusCode() + " " + response.body());
@@ -39,7 +41,6 @@ public final class LegacyActionGraphClientUsage {
                 .tokenHeader(ActionGraphRuntimeHttpClient.DEFAULT_RUNTIME_TOKEN_HEADER)
                 .sharedSecret(sharedSecret)
                 .defaultHeader("X-Source-System", environmentOrDefault("ACTIONGRAPH_SOURCE_SYSTEM", "legacy-crm"))
-                .defaultHeader("X-Request-Id", environmentOrDefault("ACTIONGRAPH_REQUEST_ID", "REQ-LOCAL-1"))
                 .connectTimeoutMillis(5000)
                 .readTimeoutMillis(30000)
                 .build();

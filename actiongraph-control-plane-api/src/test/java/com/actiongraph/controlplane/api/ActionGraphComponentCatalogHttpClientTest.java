@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -41,14 +42,14 @@ class ActionGraphComponentCatalogHttpClientTest {
         try {
             Map<String, String> defaultHeaders = new LinkedHashMap<>();
             defaultHeaders.put("X-Source-System", "deployment-check");
-            defaultHeaders.put("X-Request-Id", "REQ-CATALOG-1");
+            defaultHeaders.put("X-Request-Id", "DEFAULT-CATALOG-REQUEST");
             ActionGraphComponentCatalogHttpClient client = ActionGraphComponentCatalogHttpClient
                     .builder(baseUrl(server))
                     .sharedSecret("catalog-secret")
                     .defaultHeaders(defaultHeaders)
                     .build();
 
-            ControlPlaneHttpResponse response = client.modules();
+            ControlPlaneHttpResponse response = client.modules(Collections.singletonMap("X-Request-Id", "REQ-CATALOG-1"));
 
             assertThat(method.get()).isEqualTo("GET");
             assertThat(path.get()).isEqualTo("/actiongraph/components/modules");
@@ -149,6 +150,10 @@ class ActionGraphComponentCatalogHttpClientTest {
         assertThatThrownBy(() -> ActionGraphComponentCatalogHttpClient.builder("http://localhost").defaultHeader(" ", "value"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("default header name");
+        assertThatThrownBy(() -> ActionGraphComponentCatalogHttpClient.builder("http://localhost").build()
+                .get("/modules", Collections.singletonMap(" ", "value")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("request header name");
     }
 
     private static String baseUrl(HttpServer server) {

@@ -3,11 +3,22 @@ package com.actiongraph.controlplane.api;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.sun.net.httpserver.HttpServer;
+
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,6 +58,54 @@ class Java8ConsumerCompilationTest {
     }
 
     @Test
+    void rawHttpGatewayExampleSendsExtraAuditHeaders() throws Exception {
+        Path outputDir = compileExample(
+                "8",
+                repositoryRoot().resolve(
+                        "docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java"),
+                emptyClasspath().toString(),
+                "com/company/legacygateway/RawHttpActionGraphGatewayUsage.class");
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        AtomicReference<String> sourceSystem = new AtomicReference<>();
+        AtomicReference<String> requestId = new AtomicReference<>();
+        AtomicReference<String> token = new AtomicReference<>();
+        server.createContext("/actiongraph/runtime/runs", exchange -> {
+            sourceSystem.set(exchange.getRequestHeaders().getFirst("X-Source-System"));
+            requestId.set(exchange.getRequestHeaders().getFirst("X-Request-Id"));
+            token.set(exchange.getRequestHeaders().getFirst("X-ActionGraph-Runtime-Token"));
+            exchange.getRequestBody().close();
+            send(exchange, 200, "{\"disposition\":\"RUN_STARTED\"}");
+        });
+        server.start();
+        try {
+            URLClassLoader loader = new URLClassLoader(new URL[]{outputDir.toUri().toURL()}, null);
+            try {
+                Class<?> gateway = Class.forName(
+                        "com.company.legacygateway.RawHttpActionGraphGatewayUsage", true, loader);
+                Method start = gateway.getMethod("start", String.class, String.class, String.class,
+                        Map.class, Map.class);
+                Map<String, String> known = new HashMap<>();
+                known.put("customerId", "C001");
+                Map<String, String> extraHeaders = new HashMap<>();
+                extraHeaders.put("X-Source-System", "legacy-core");
+                extraHeaders.put("X-Request-Id", "REQ-RAW-1");
+
+                Object response = start.invoke(null, baseUrl(server), "secret", "Prepare renewal quote for C001",
+                        known, extraHeaders);
+
+                assertThat(response.getClass().getMethod("statusCode").invoke(response)).isEqualTo(200);
+                assertThat(sourceSystem.get()).isEqualTo("legacy-core");
+                assertThat(requestId.get()).isEqualTo("REQ-RAW-1");
+                assertThat(token.get()).isEqualTo("secret");
+            } finally {
+                loader.close();
+            }
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
     void rawHttpGatewayExampleDoesNotUseActionGraphJava7OrJava8Conveniences() throws Exception {
         Path sourceFile = repositoryRoot().resolve(
                 "docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java");
@@ -75,7 +134,7 @@ class Java8ConsumerCompilationTest {
         assertNoPattern(source, "\\d_\\d");
     }
 
-    private void compileExample(String release, Path sourceFile, String classpath, String expectedClassFile) throws Exception {
+    private Path compileExample(String release, Path sourceFile, String classpath, String expectedClassFile) throws Exception {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         assertThat(compiler).as("JDK compiler must be available").isNotNull();
 
@@ -94,6 +153,23 @@ class Java8ConsumerCompilationTest {
                 .as(new String(stderr.toByteArray(), StandardCharsets.UTF_8))
                 .isZero();
         assertThat(outputDir.resolve(expectedClassFile)).exists();
+        return outputDir;
+    }
+
+    private static String baseUrl(HttpServer server) {
+        return "http://127.0.0.1:" + server.getAddress().getPort() + "/actiongraph/runtime";
+    }
+
+    private static void send(com.sun.net.httpserver.HttpExchange exchange, int status, String body) throws IOException {
+        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        exchange.sendResponseHeaders(status, bytes.length);
+        OutputStream responseBody = exchange.getResponseBody();
+        try {
+            responseBody.write(bytes);
+        } finally {
+            responseBody.close();
+        }
     }
 
     private String mainClassesClasspath() throws Exception {

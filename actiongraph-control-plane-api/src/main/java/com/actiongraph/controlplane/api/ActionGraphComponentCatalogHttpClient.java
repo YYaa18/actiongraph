@@ -35,30 +35,60 @@ public final class ActionGraphComponentCatalogHttpClient {
     }
 
     public ControlPlaneHttpResponse catalog() throws IOException {
-        return get("");
+        return catalog(null);
+    }
+
+    public ControlPlaneHttpResponse catalog(Map<String, String> requestHeaders) throws IOException {
+        return get("", requestHeaders);
     }
 
     public ControlPlaneHttpResponse modules() throws IOException {
-        return get("/modules");
+        return modules(null);
+    }
+
+    public ControlPlaneHttpResponse modules(Map<String, String> requestHeaders) throws IOException {
+        return get("/modules", requestHeaders);
     }
 
     public ControlPlaneHttpResponse modulesByCompatibility(String compatibility) throws IOException {
-        return get("/compatibility/" + encodePathSegment(requireText(compatibility, "compatibility")));
+        return modulesByCompatibility(compatibility, null);
+    }
+
+    public ControlPlaneHttpResponse modulesByCompatibility(String compatibility, Map<String, String> requestHeaders)
+            throws IOException {
+        return get("/compatibility/" + encodePathSegment(requireText(compatibility, "compatibility")),
+                requestHeaders);
     }
 
     public ControlPlaneHttpResponse module(String module) throws IOException {
-        return get("/modules/" + encodePathSegment(requireText(module, "module")));
+        return module(module, null);
+    }
+
+    public ControlPlaneHttpResponse module(String module, Map<String, String> requestHeaders) throws IOException {
+        return get("/modules/" + encodePathSegment(requireText(module, "module")), requestHeaders);
     }
 
     public ControlPlaneHttpResponse profiles() throws IOException {
-        return get("/profiles");
+        return profiles(null);
+    }
+
+    public ControlPlaneHttpResponse profiles(Map<String, String> requestHeaders) throws IOException {
+        return get("/profiles", requestHeaders);
     }
 
     public ControlPlaneHttpResponse profile(String profile) throws IOException {
-        return get("/profiles/" + encodePathSegment(requireText(profile, "profile")));
+        return profile(profile, null);
+    }
+
+    public ControlPlaneHttpResponse profile(String profile, Map<String, String> requestHeaders) throws IOException {
+        return get("/profiles/" + encodePathSegment(requireText(profile, "profile")), requestHeaders);
     }
 
     public ControlPlaneHttpResponse get(String path) throws IOException {
+        return get(path, null);
+    }
+
+    public ControlPlaneHttpResponse get(String path, Map<String, String> requestHeaders) throws IOException {
         String requestPath = path == null ? "" : path;
         if (!requestPath.isEmpty() && !requestPath.startsWith("/")) {
             requestPath = "/" + requestPath;
@@ -67,7 +97,8 @@ public final class ActionGraphComponentCatalogHttpClient {
         connection.setRequestMethod("GET");
         connection.setConnectTimeout(connectTimeoutMillis);
         connection.setReadTimeout(readTimeoutMillis);
-        applyDefaultHeaders(connection);
+        applyHeaders(connection, defaultHeaders);
+        applyHeaders(connection, requestHeaders);
         connection.setRequestProperty("Accept", "application/json");
         if (!isBlank(sharedSecret)) {
             connection.setRequestProperty(tokenHeader, sharedSecret);
@@ -79,9 +110,14 @@ public final class ActionGraphComponentCatalogHttpClient {
         return new ControlPlaneHttpResponse(statusCode, body);
     }
 
-    private void applyDefaultHeaders(HttpURLConnection connection) {
-        for (Map.Entry<String, String> entry : defaultHeaders.entrySet()) {
-            connection.setRequestProperty(entry.getKey(), entry.getValue());
+    private static void applyHeaders(HttpURLConnection connection, Map<String, String> headers) {
+        if (headers == null) {
+            return;
+        }
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            connection.setRequestProperty(
+                    requireText(entry.getKey(), "request header name"),
+                    entry.getValue() == null ? "" : entry.getValue());
         }
     }
 
