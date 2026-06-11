@@ -7,6 +7,7 @@ import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.net.URLClassLoader
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.JavaExec
 
 plugins {
     java
@@ -17,6 +18,7 @@ version = "0.1.0"
 
 val platformModuleName = "actiongraph-bom"
 val jspecifyVersion = "1.0.0"
+val japicmpVersion = "0.26.1"
 
 val java8CompatibleModules = setOf(
     "actiongraph-control-plane-api"
@@ -250,6 +252,56 @@ tasks.named("check") {
 }
 
 val publicApiSnapshotFile = layout.projectDirectory.file("docs/api/public-api.snapshot")
+val binaryCompatibilityReportDir = layout.buildDirectory.dir("reports/binary-compatibility")
+val binaryCompatibilityBaselineVersion =
+        providers.gradleProperty("actionGraphBaselineVersion")
+                .orElse(providers.environmentVariable("ACTIONGRAPH_BASELINE_VERSION"))
+val binaryCompatibilityBaselineRepositoryUrl =
+        providers.gradleProperty("actionGraphBaselineRepositoryUrl")
+                .orElse(providers.environmentVariable("ACTIONGRAPH_BASELINE_REPOSITORY_URL"))
+val useMavenLocalBinaryCompatibilityBaseline =
+        providers.gradleProperty("actionGraphUseMavenLocalBaseline")
+                .map(String::toBoolean)
+                .orElse(false)
+val binaryCompatibilityExcludes = listOf(
+        "@com.actiongraph.api.Experimental",
+        "@com.actiongraph.api.Internal",
+        "com.actiongraph.memory.*",
+        "com.actiongraph.runtime.api.batch.*",
+        "com.actiongraph.llm.*",
+        "com.actiongraph.runtime.DefaultExecutionContext",
+        "com.actiongraph.console.ConsolePageRenderer",
+        "com.actiongraph.persistence.jdbc.PersistenceJsonCodec"
+)
+
+repositories {
+    if (useMavenLocalBinaryCompatibilityBaseline.get()) {
+        mavenLocal()
+    }
+    mavenCentral()
+    binaryCompatibilityBaselineRepositoryUrl.orNull?.let { repositoryUrl ->
+        maven {
+            name = "actionGraphBinaryCompatibilityBaseline"
+            url = uri(repositoryUrl)
+        }
+    }
+}
+
+val japicmpCli by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    description = "JApiCmp CLI used by verifyBinaryCompatibility."
+}
+
+dependencies {
+    japicmpCli("com.github.siom79.japicmp:japicmp:$japicmpVersion:jar-with-dependencies")
+}
+
+fun isAtLeastOneDotZero(version: String): Boolean {
+    val baseVersion = version.substringBefore('-')
+    val major = baseVersion.substringBefore('.').toIntOrNull() ?: return false
+    return major >= 1
+}
 
 fun publicOrProtected(modifiers: Int): Boolean =
         Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)
@@ -417,4 +469,102 @@ val verifyPublicApiSnapshot = tasks.register("verifyPublicApiSnapshot") {
 
 tasks.named("check") {
     dependsOn(verifyPublicApiSnapshot)
+}
+
+val binaryCompatibilityBaselineArtifacts by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    description = "Published ActionGraph artifacts used as the japicmp baseline."
+}
+
+if (binaryCompatibilityBaselineVersion.isPresent) {
+    libraryModuleDescriptions.keys.sorted().forEach { moduleName ->
+        dependencies.add(
+                binaryCompatibilityBaselineArtifacts.name,
+                "${project.group}:$moduleName:${binaryCompatibilityBaselineVersion.get()}"
+        )
+    }
+}
+
+val verifyBinaryCompatibilityWithJapicmp = tasks.register<JavaExec>("verifyBinaryCompatibilityWithJapicmp") {
+    group = "verification"
+    description = "Internal japicmp CLI invocation for the configured ActionGraph baseline version."
+    classpath(japicmpCli)
+    mainClass.set("japicmp.JApiCmp")
+    onlyIf { binaryCompatibilityBaselineVersion.isPresent }
+    dependsOn(libraryModuleDescriptions.keys.map { ":$it:jar" })
+    inputs.property("baselineVersion", binaryCompatibilityBaselineVersion.orNull ?: "")
+    inputs.property("excludedApis", binaryCompatibilityExcludes.joinToString(";"))
+    outputs.dir(binaryCompatibilityReportDir)
+
+    doFirst {
+        val baselineVersion = binaryCompatibilityBaselineVersion.get()
+
+        val baselineArtifacts = binaryCompatibilityBaselineArtifacts.resolvedConfiguration.resolvedArtifacts
+                .filter { it.moduleVersion.id.version == baselineVersion }
+                .sortedBy { it.name }
+                .map { it.file }
+        val expectedModules = libraryModuleDescriptions.keys.sorted()
+        val missingModules = expectedModules.filter { moduleName ->
+            baselineArtifacts.none { it.name == "$moduleName-$baselineVersion.jar" }
+        }
+        if (missingModules.isNotEmpty()) {
+            throw GradleException(
+                    "Missing baseline artifacts for $baselineVersion: ${missingModules.joinToString(", ")}"
+            )
+        }
+
+        val currentArtifacts = expectedModules.map { moduleName ->
+            project(":$moduleName").tasks.named("jar").get().outputs.files.singleFile
+        }
+        val reportFile = binaryCompatibilityReportDir.get().file(
+                "japicmp-${baselineVersion}-to-${project.version}.md"
+        ).asFile
+        reportFile.parentFile.mkdirs()
+        args(
+                "--old", baselineArtifacts.joinToString(";") { it.absolutePath },
+                "--new", currentArtifacts.joinToString(";") { it.absolutePath },
+                "--only-modified",
+                "--only-incompatible",
+                "--error-on-binary-incompatibility",
+                "--ignore-missing-classes",
+                "--exclude", binaryCompatibilityExcludes.joinToString(";"),
+                "--markdown",
+                "--html-file", binaryCompatibilityReportDir.get().file(
+                        "japicmp-${baselineVersion}-to-${project.version}.html"
+                ).asFile.absolutePath,
+                "--xml-file", binaryCompatibilityReportDir.get().file(
+                        "japicmp-${baselineVersion}-to-${project.version}.xml"
+                ).asFile.absolutePath
+        )
+        standardOutput = reportFile.outputStream()
+        errorOutput = System.err
+        logger.lifecycle("Running japicmp against ActionGraph baseline $baselineVersion")
+    }
+}
+
+val verifyBinaryCompatibility = tasks.register("verifyBinaryCompatibility") {
+    group = "verification"
+    description = "Verifies ActionGraph binary compatibility against the configured japicmp baseline."
+    if (binaryCompatibilityBaselineVersion.isPresent) {
+        dependsOn(verifyBinaryCompatibilityWithJapicmp)
+    }
+    doLast {
+        if (!binaryCompatibilityBaselineVersion.isPresent) {
+            if (isAtLeastOneDotZero(project.version.toString())) {
+                throw GradleException(
+                        "ActionGraph ${project.version} requires actionGraphBaselineVersion or " +
+                                "ACTIONGRAPH_BASELINE_VERSION for japicmp binary compatibility checks."
+                )
+            }
+            logger.lifecycle(
+                    "No ActionGraph binary compatibility baseline configured; " +
+                            "japicmp will run when ACTIONGRAPH_BASELINE_VERSION or -PactionGraphBaselineVersion is set."
+            )
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn(verifyBinaryCompatibility)
 }

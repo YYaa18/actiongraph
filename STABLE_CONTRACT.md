@@ -6,7 +6,9 @@ This document defines the compatibility policy ActionGraph is moving toward for 
 
 ActionGraph is currently pre-1.0. The project may still change public APIs while the framework is being hardened, but every public contract change must be intentional, tested, and recorded in `CHANGELOG.md`.
 
-At 1.0, the public API surface below becomes compatibility-protected.
+At 1.0, the public API surface below becomes compatibility-protected. APIs
+marked `@Experimental` or `@Internal` are intentionally outside the full
+post-1.0 compatibility promise until they are promoted in this document.
 
 ## Versioning
 
@@ -21,13 +23,14 @@ ActionGraph uses semantic versioning after 1.0:
 The following are public API after 1.0 unless documented otherwise:
 
 - published Maven artifacts listed in `README.md` and the component catalog;
-- public and protected types in `com.actiongraph.action`, `com.actiongraph.planning`, `com.actiongraph.runtime`, `com.actiongraph.runtime.api`, `com.actiongraph.runtime.api.batch`, `com.actiongraph.policy`, `com.actiongraph.trace`, `com.actiongraph.interpretation`, `com.actiongraph.memory`, `com.actiongraph.observability`, and `com.actiongraph.exception`;
+- public and protected types in `com.actiongraph.action`, `com.actiongraph.planning`, `com.actiongraph.runtime`, `com.actiongraph.runtime.api`, `com.actiongraph.policy`, `com.actiongraph.trace`, `com.actiongraph.interpretation`, `com.actiongraph.observability`, and `com.actiongraph.exception`;
 - Java 8 control-plane API, HTTP gateway types, and `com.actiongraph.controlplane.ControlPlaneApiException` in `actiongraph-control-plane-api`;
 - SLF4J API remains the logging facade; ActionGraph library modules must not bind a logging implementation for applications;
 - `ObservationSink` remains the provider-neutral runtime observability SPI; Micrometer integration is optional and must not become a core dependency;
 - public APIs must document compatibility-sensitive semantics in Javadoc, including null handling, thread-safety expectations, failure outcomes, compensation behavior, audit ordering, and resume-claim concurrency where applicable;
 - published source packages use JSpecify null-safety annotations. `@NullMarked` means unannotated API parameters and return values are non-null by default; `@Nullable` marks optional inputs or nullable accessors. After 1.0, tightening or loosening nullability in a way that breaks source compatibility is compatibility-sensitive and must be documented;
 - `@Experimental` marks APIs that are available for early adoption but are not yet covered by the full 1.0 compatibility promise. `@Internal` marks public implementation surfaces exposed for wiring or framework mechanics but not intended for direct application use;
+- `com.actiongraph.runtime.api.batch`, `com.actiongraph.memory`, and `com.actiongraph.llm` are currently experimental. They remain usable, documented, and tested, but japicmp and stable-contract review exclude them from 1.0 freezing until a future promotion decision;
 - Spring Boot configuration properties and documented `actiongraph.*` property names;
 - SQL schema expectations documented for JDBC persistence;
 - JSON request and response shapes documented for built-in HTTP endpoints.
@@ -91,6 +94,44 @@ Intentional public API changes must update the snapshot explicitly:
 Snapshot diffs must be reviewed with `CHANGELOG.md` updates and migration notes
 when compatibility is affected.
 
+## Binary Compatibility
+
+The root `check` task also runs `verifyBinaryCompatibility`. This task uses
+japicmp to compare the current published jars against a configured baseline and
+fails on binary-incompatible changes.
+
+ActionGraph is still pre-1.0, so the task is allowed to pass without a baseline
+while `version` remains below `1.0.0`. At `1.0.0` and later, the task fails
+unless one of the following is configured:
+
+```bash
+ACTIONGRAPH_BASELINE_VERSION=1.0.0 ./gradlew verifyBinaryCompatibility
+./gradlew verifyBinaryCompatibility -PactionGraphBaselineVersion=1.0.0
+```
+
+Baseline artifacts are resolved from Maven Central by default. Enterprise
+private repositories can be configured without changing the build:
+
+```bash
+ACTIONGRAPH_BASELINE_REPOSITORY_URL=https://repo.example.com/releases \
+ACTIONGRAPH_BASELINE_VERSION=1.0.0 \
+./gradlew verifyBinaryCompatibility
+```
+
+Local release rehearsals may opt into Maven Local:
+
+```bash
+./gradlew publishToMavenLocal
+./gradlew verifyBinaryCompatibility \
+  -PactionGraphBaselineVersion=1.0.0 \
+  -PactionGraphUseMavenLocalBaseline=true
+```
+
+japicmp excludes APIs marked `@Experimental` or `@Internal`, plus the current
+experimental package areas listed above. Removing an exclusion is the promotion
+mechanism; adding an exclusion to an already-stable API is compatibility
+sensitive and must be documented in `CHANGELOG.md`.
+
 ## Evidence
 
 Compatibility-sensitive changes should include at least one of:
@@ -98,6 +139,7 @@ Compatibility-sensitive changes should include at least one of:
 - source-level tests using the public interface;
 - Java 8 compilation tests for Java 8 artifacts;
 - public API snapshot verification;
+- japicmp binary compatibility verification against the configured release baseline;
 - architecture guard tests for published module dependency direction and forbidden framework/provider imports;
 - generated Javadocs published through GitHub Pages API reference;
 - component catalog or documentation guard tests;

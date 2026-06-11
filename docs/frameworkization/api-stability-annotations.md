@@ -17,6 +17,10 @@ Current experimental areas:
 - `com.actiongraph.runtime.api.batch`: application-owned batch interpretation SPI.
 - `com.actiongraph.llm`: LLM provider adapter, prompt rendering, and structured-output parsing contracts.
 
+`com.actiongraph.runtime.api` itself is part of the stable runtime facade; only
+the nested `batch` package is excluded from the 1.0 freeze while real batch
+interpretation deployments validate token-efficiency and provider behavior.
+
 Experimental APIs should still be tested and documented. The marker means source and binary compatibility is not yet promised at the same level as the stable core runtime contracts.
 
 ## `@Internal`
@@ -41,5 +45,8 @@ After 1.0:
 - removing `@Internal` from a type can be compatible when the type becomes documented as an application-facing API;
 - adding `@Internal` or `@Experimental` to an already stable API is compatibility-sensitive and must be documented in `CHANGELOG.md`;
 - removing or breaking an experimental API before 1.0 is allowed but still requires migration notes.
+- japicmp excludes APIs marked `@Experimental` or `@Internal`; promotion to
+  stable therefore means removing the marker and accepting binary compatibility
+  enforcement from that point forward.
 
 The component catalog guard test checks that the annotation definitions, experimental package markers, internal implementation markers, and this documentation stay in sync.

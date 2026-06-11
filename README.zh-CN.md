@@ -288,7 +288,7 @@ ActionGraph 明确避免把企业系统交给 LLM 自由发挥：
 
 ## 当前成熟度
 
-- 357 个自动化测试通过。
+- 358 个自动化测试通过。
 - 并发冒烟约 6000 runs/s；重复 resume 只产生一次业务副作用。
 - Gradle 模块已收敛到 10 个：core、control-plane-api、governance、human-review、persistence-jdbc、llm-deepseek、console、spring-boot-starter、bom 与 samples。
 - 3 个参考业务域完整跑通。

@@ -693,7 +693,47 @@ class ActionGraphComponentCatalogServiceTest {
         assertThat(readSource(root, "docs/frameworkization/api-stability-annotations.md"))
                 .contains("Experimental")
                 .contains("Internal")
-                .contains("remains independent");
+                .contains("remains independent")
+                .contains("runtime.api` itself is part of the stable runtime facade")
+                .contains("nested `batch` package is excluded");
+    }
+
+    @Test
+    void binaryCompatibilityGateUsesJapicmpAndStableScopeExcludesExperimentalApis() throws IOException {
+        Path root = repositoryRoot();
+        String build = readSource(root, "build.gradle.kts");
+        String ci = readSource(root, ".github/workflows/ci.yml");
+        String stableContract = readSource(root, "STABLE_CONTRACT.md");
+        String publicApiCompatibility = readSource(root, "docs/frameworkization/public-api-compatibility.md");
+
+        assertThat(build)
+                .contains("val japicmpVersion = \"0.26.1\"")
+                .contains("com.github.siom79.japicmp:japicmp:$japicmpVersion:jar-with-dependencies")
+                .contains("verifyBinaryCompatibility")
+                .contains("verifyBinaryCompatibilityWithJapicmp")
+                .contains("--error-on-binary-incompatibility")
+                .contains("ACTIONGRAPH_BASELINE_VERSION")
+                .contains("ACTIONGRAPH_BASELINE_REPOSITORY_URL")
+                .contains("actionGraphUseMavenLocalBaseline")
+                .contains("@com.actiongraph.api.Experimental")
+                .contains("@com.actiongraph.api.Internal")
+                .contains("com.actiongraph.runtime.api.batch.*");
+        assertThat(ci)
+                .contains("Binary Compatibility")
+                .contains("./gradlew verifyBinaryCompatibility --no-daemon --stacktrace");
+        assertThat(stableContract)
+                .contains("At 1.0, the public API surface below becomes compatibility-protected")
+                .contains("At `1.0.0` and later, the task fails")
+                .contains("ACTIONGRAPH_BASELINE_VERSION")
+                .contains("japicmp excludes APIs marked `@Experimental` or `@Internal`")
+                .contains("com.actiongraph.runtime.api.batch")
+                .contains("currently experimental")
+                .doesNotContain("com.actiongraph.runtime.api, com.actiongraph.runtime.api.batch");
+        assertThat(publicApiCompatibility)
+                .contains("japicmp binary compatibility task")
+                .contains("build/reports/binary-compatibility")
+                .contains("runtime/api/batch")
+                .contains("outside the stable freeze");
     }
 
     @Test
