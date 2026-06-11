@@ -14,6 +14,8 @@ import java.util.TreeMap;
 
 public final class RawHttpActionGraphGatewayUsage {
     public static final String DEFAULT_RUNTIME_TOKEN_HEADER = "X-ActionGraph-Runtime-Token";
+    public static final String DEFAULT_REVIEW_TOKEN_HEADER = "X-ActionGraph-Review-Token";
+    public static final String DEFAULT_CONSOLE_TOKEN_HEADER = "X-ActionGraph-Console-Token";
 
     private RawHttpActionGraphGatewayUsage() {
     }
@@ -97,6 +99,157 @@ public final class RawHttpActionGraphGatewayUsage {
                 "{}", 5000, 30000, extraHeaders);
     }
 
+    public static LegacyHttpResponse pendingReviewTasks(
+            String reviewTaskApiBaseUrl,
+            String sharedSecret,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(reviewTaskApiBaseUrl, sharedSecret, DEFAULT_REVIEW_TOKEN_HEADER,
+                "/pending", "application/json", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse decideReviewTask(
+            String reviewTaskApiBaseUrl,
+            String sharedSecret,
+            String runId,
+            String actionId,
+            int expectedStageIndex,
+            String decision,
+            String reviewer,
+            String comment,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return post(reviewTaskApiBaseUrl, sharedSecret, DEFAULT_REVIEW_TOKEN_HEADER,
+                "/runs/" + encodePathSegment(requireText(runId, "runId"))
+                        + "/actions/" + encodePathSegment(requireText(actionId, "actionId"))
+                        + "/decision",
+                reviewDecisionJson(expectedStageIndex, decision, reviewer, comment),
+                5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse reviewCallback(
+            String callbackApiBaseUrl,
+            String sharedSecret,
+            String runId,
+            String actionId,
+            int expectedStageIndex,
+            String decision,
+            String reviewer,
+            String comment,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return post(callbackApiBaseUrl, sharedSecret, DEFAULT_REVIEW_TOKEN_HEADER, "",
+                reviewCallbackJson(runId, actionId, expectedStageIndex, decision, reviewer, comment),
+                5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse consoleRuns(
+            String consoleApiBaseUrl,
+            String sharedSecret,
+            Integer limit,
+            Integer offset,
+            String status,
+            Boolean auditComplete,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(consoleApiBaseUrl, sharedSecret, DEFAULT_CONSOLE_TOKEN_HEADER,
+                "/runs" + runQuery(limit, offset, status, auditComplete),
+                "application/json", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse consoleRun(
+            String consoleApiBaseUrl,
+            String sharedSecret,
+            String runId,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(consoleApiBaseUrl, sharedSecret, DEFAULT_CONSOLE_TOKEN_HEADER,
+                "/runs/" + encodePathSegment(requireText(runId, "runId")),
+                "application/json", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse consoleTrace(
+            String consoleApiBaseUrl,
+            String sharedSecret,
+            String runId,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(consoleApiBaseUrl, sharedSecret, DEFAULT_CONSOLE_TOKEN_HEADER,
+                "/runs/" + encodePathSegment(requireText(runId, "runId")) + "/trace",
+                "application/json", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse consoleRunsCsv(
+            String consoleApiBaseUrl,
+            String sharedSecret,
+            Integer limit,
+            Integer offset,
+            String status,
+            Boolean auditComplete,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(consoleApiBaseUrl, sharedSecret, DEFAULT_CONSOLE_TOKEN_HEADER,
+                "/runs/export.csv" + runQuery(limit, offset, status, auditComplete),
+                "text/csv", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse consoleTraceCsv(
+            String consoleApiBaseUrl,
+            String sharedSecret,
+            String runId,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(consoleApiBaseUrl, sharedSecret, DEFAULT_CONSOLE_TOKEN_HEADER,
+                "/runs/" + encodePathSegment(requireText(runId, "runId")) + "/trace/export.csv",
+                "text/csv", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse consoleTraceJsonl(
+            String consoleApiBaseUrl,
+            String sharedSecret,
+            String runId,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        return get(consoleApiBaseUrl, sharedSecret, DEFAULT_CONSOLE_TOKEN_HEADER,
+                "/runs/" + encodePathSegment(requireText(runId, "runId")) + "/trace/export.jsonl",
+                "application/x-ndjson", 5000, 30000, extraHeaders);
+    }
+
+    public static LegacyHttpResponse get(
+            String apiBaseUrl,
+            String sharedSecret,
+            String tokenHeader,
+            String path,
+            String accept,
+            int connectTimeoutMillis,
+            int readTimeoutMillis,
+            Map<String, String> extraHeaders
+    ) throws IOException {
+        String baseUrl = normalizeBaseUrl(apiBaseUrl);
+        String requestPath = path == null ? "" : path;
+        if (requestPath.length() > 0 && !requestPath.startsWith("/")) {
+            requestPath = "/" + requestPath;
+        }
+
+        HttpURLConnection connection = (HttpURLConnection) new URL(baseUrl + requestPath).openConnection();
+        try {
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(connectTimeoutMillis);
+            connection.setReadTimeout(readTimeoutMillis);
+            applyHeaders(connection, extraHeaders);
+            connection.setRequestProperty("Accept", requireText(accept, "accept"));
+            if (!isBlank(sharedSecret)) {
+                connection.setRequestProperty(requireText(tokenHeader, "tokenHeader"), sharedSecret);
+            }
+
+            int statusCode = connection.getResponseCode();
+            InputStream responseStream = statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream();
+            return new LegacyHttpResponse(statusCode, readBody(responseStream));
+        } finally {
+            connection.disconnect();
+        }
+    }
+
     public static LegacyHttpResponse post(
             String runtimeApiBaseUrl,
             String sharedSecret,
@@ -122,7 +275,7 @@ public final class RawHttpActionGraphGatewayUsage {
     ) throws IOException {
         String baseUrl = normalizeBaseUrl(runtimeApiBaseUrl);
         String requestPath = path == null ? "" : path;
-        if (!requestPath.startsWith("/")) {
+        if (requestPath.length() > 0 && !requestPath.startsWith("/")) {
             requestPath = "/" + requestPath;
         }
 
@@ -185,6 +338,73 @@ public final class RawHttpActionGraphGatewayUsage {
         }
         json.append("}}");
         return json.toString();
+    }
+
+    private static String reviewDecisionJson(
+            int expectedStageIndex,
+            String decision,
+            String reviewer,
+            String comment
+    ) {
+        StringBuilder json = new StringBuilder();
+        json.append("{\"expectedStageIndex\":").append(expectedStageIndex);
+        json.append(",\"decision\":").append(jsonString(requireText(decision, "decision")));
+        json.append(",\"reviewer\":").append(jsonString(reviewer == null ? "" : reviewer));
+        json.append(",\"comment\":").append(jsonString(comment == null ? "" : comment));
+        json.append('}');
+        return json.toString();
+    }
+
+    private static String reviewCallbackJson(
+            String runId,
+            String actionId,
+            int expectedStageIndex,
+            String decision,
+            String reviewer,
+            String comment
+    ) {
+        StringBuilder json = new StringBuilder();
+        json.append("{\"runId\":").append(jsonString(requireText(runId, "runId")));
+        json.append(",\"actionId\":").append(jsonString(requireText(actionId, "actionId")));
+        json.append(",\"expectedStageIndex\":").append(expectedStageIndex);
+        json.append(",\"decision\":").append(jsonString(requireText(decision, "decision")));
+        json.append(",\"reviewer\":").append(jsonString(reviewer == null ? "" : reviewer));
+        json.append(",\"comment\":").append(jsonString(comment == null ? "" : comment));
+        json.append('}');
+        return json.toString();
+    }
+
+    private static String runQuery(Integer limit, Integer offset, String status, Boolean auditComplete)
+            throws IOException {
+        StringBuilder query = new StringBuilder();
+        appendIntParam(query, "limit", limit, true);
+        appendIntParam(query, "offset", offset, false);
+        if (status != null) {
+            appendParam(query, "status", requireText(status, "status"));
+        }
+        if (auditComplete != null) {
+            appendParam(query, "auditComplete", auditComplete.toString());
+        }
+        return query.toString();
+    }
+
+    private static void appendIntParam(StringBuilder query, String name, Integer value, boolean positive)
+            throws IOException {
+        if (value == null) {
+            return;
+        }
+        if (positive && value.intValue() <= 0) {
+            throw new IllegalArgumentException(name + " must be positive");
+        }
+        if (!positive && value.intValue() < 0) {
+            throw new IllegalArgumentException(name + " must not be negative");
+        }
+        appendParam(query, name, value.toString());
+    }
+
+    private static void appendParam(StringBuilder query, String name, String value) throws IOException {
+        query.append(query.length() == 0 ? '?' : '&');
+        query.append(encodeQueryParam(name)).append('=').append(encodeQueryParam(value));
     }
 
     private static String jsonString(String value) {
@@ -268,6 +488,10 @@ public final class RawHttpActionGraphGatewayUsage {
 
     private static String encodePathSegment(String value) throws IOException {
         return URLEncoder.encode(value, "UTF-8").replace("+", "%20");
+    }
+
+    private static String encodeQueryParam(String value) throws IOException {
+        return URLEncoder.encode(value, "UTF-8");
     }
 
     private static String requireText(String value, String name) {

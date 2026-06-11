@@ -126,6 +126,113 @@ class Java8ConsumerCompilationTest {
     }
 
     @Test
+    void rawHttpGatewayExampleCallsReviewAndConsoleEndpoints() throws Exception {
+        Path outputDir = compileExample(
+                "8",
+                repositoryRoot().resolve(
+                        "docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java"),
+                emptyClasspath().toString(),
+                "com/company/legacygateway/RawHttpActionGraphGatewayUsage.class");
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        AtomicReference<String> reviewToken = new AtomicReference<>();
+        AtomicReference<String> reviewRequestId = new AtomicReference<>();
+        AtomicReference<String> pendingMethod = new AtomicReference<>();
+        AtomicReference<String> decisionPath = new AtomicReference<>();
+        AtomicReference<String> decisionBody = new AtomicReference<>();
+        AtomicReference<String> callbackPath = new AtomicReference<>();
+        AtomicReference<String> callbackBody = new AtomicReference<>();
+        AtomicReference<String> consoleQuery = new AtomicReference<>();
+        AtomicReference<String> consoleToken = new AtomicReference<>();
+        AtomicReference<String> consoleJsonlPath = new AtomicReference<>();
+        AtomicReference<String> consoleJsonlAccept = new AtomicReference<>();
+        server.createContext("/actiongraph/human-review/tasks/pending", exchange -> {
+            pendingMethod.set(exchange.getRequestMethod());
+            reviewToken.set(exchange.getRequestHeaders().getFirst("X-ActionGraph-Review-Token"));
+            reviewRequestId.set(exchange.getRequestHeaders().getFirst("X-Request-Id"));
+            exchange.getRequestBody().close();
+            send(exchange, 200, "[{\"runId\":\"RUN-1\"}]");
+        });
+        server.createContext("/actiongraph/human-review/tasks/runs", exchange -> {
+            decisionPath.set(exchange.getRequestURI().getRawPath());
+            decisionBody.set(read(exchange));
+            send(exchange, 200, "{\"decision\":\"APPROVED\"}");
+        });
+        server.createContext("/actiongraph/human-review/callbacks", exchange -> {
+            callbackPath.set(exchange.getRequestURI().getPath());
+            callbackBody.set(read(exchange));
+            send(exchange, 200, "{\"stageDecisionCount\":1}");
+        });
+        server.createContext("/actiongraph/console/runs", exchange -> {
+            String rawPath = exchange.getRequestURI().getRawPath();
+            if (rawPath.endsWith("/trace/export.jsonl")) {
+                consoleJsonlPath.set(rawPath);
+                consoleJsonlAccept.set(exchange.getRequestHeaders().getFirst("Accept"));
+                send(exchange, 200, "{\"seq\":1}\n");
+            } else {
+                consoleQuery.set(exchange.getRequestURI().getRawQuery());
+                consoleToken.set(exchange.getRequestHeaders().getFirst("X-ActionGraph-Console-Token"));
+                send(exchange, 200, "{\"runs\":[]}");
+            }
+        });
+        server.start();
+        try {
+            URLClassLoader loader = new URLClassLoader(new URL[]{outputDir.toUri().toURL()}, null);
+            try {
+                Class<?> gateway = Class.forName(
+                        "com.company.legacygateway.RawHttpActionGraphGatewayUsage", true, loader);
+                Map<String, String> extraHeaders = new HashMap<>();
+                extraHeaders.put("X-Request-Id", "REQ-RAW-REVIEW-1");
+
+                Method pending = gateway.getMethod("pendingReviewTasks", String.class, String.class, Map.class);
+                Method decide = gateway.getMethod("decideReviewTask", String.class, String.class, String.class,
+                        String.class, int.class, String.class, String.class, String.class, Map.class);
+                Method callback = gateway.getMethod("reviewCallback", String.class, String.class, String.class,
+                        String.class, int.class, String.class, String.class, String.class, Map.class);
+                Method consoleRuns = gateway.getMethod("consoleRuns", String.class, String.class, Integer.class,
+                        Integer.class, String.class, Boolean.class, Map.class);
+                Method consoleJsonl = gateway.getMethod("consoleTraceJsonl", String.class, String.class,
+                        String.class, Map.class);
+
+                Object pendingResponse = pending.invoke(null, reviewTasksBaseUrl(server), "review-secret", extraHeaders);
+                Object decisionResponse = decide.invoke(null, reviewTasksBaseUrl(server), "review-secret",
+                        "RUN 1", "claim.approval/request", 0, "APPROVED", "checker", "同意 \"支付\"\n复核",
+                        extraHeaders);
+                callback.invoke(null, callbackBaseUrl(server), "review-secret",
+                        "RUN-1", "claim.approval.request", 0, "APPROVED", "checker", "approved", extraHeaders);
+                Object runsResponse = consoleRuns.invoke(null, consoleBaseUrl(server), "console-secret",
+                        Integer.valueOf(25), Integer.valueOf(10), "COMPLETED", Boolean.TRUE, extraHeaders);
+                Object jsonlResponse = consoleJsonl.invoke(null, consoleBaseUrl(server), "console-secret",
+                        "RUN 1", extraHeaders);
+
+                assertThat(pendingResponse.getClass().getMethod("statusCode").invoke(pendingResponse)).isEqualTo(200);
+                assertThat(decisionResponse.getClass().getMethod("statusCode").invoke(decisionResponse)).isEqualTo(200);
+                assertThat(runsResponse.getClass().getMethod("statusCode").invoke(runsResponse)).isEqualTo(200);
+                assertThat(jsonlResponse.getClass().getMethod("statusCode").invoke(jsonlResponse)).isEqualTo(200);
+                assertThat(pendingMethod.get()).isEqualTo("GET");
+                assertThat(reviewToken.get()).isEqualTo("review-secret");
+                assertThat(reviewRequestId.get()).isEqualTo("REQ-RAW-REVIEW-1");
+                assertThat(decisionPath.get())
+                        .isEqualTo("/actiongraph/human-review/tasks/runs/RUN%201/actions/claim.approval%2Frequest/decision");
+                assertThat(decisionBody.get())
+                        .contains("\"expectedStageIndex\":0")
+                        .contains("\"decision\":\"APPROVED\"")
+                        .contains("\\\"支付\\\"")
+                        .contains("\\n");
+                assertThat(callbackPath.get()).isEqualTo("/actiongraph/human-review/callbacks");
+                assertThat(callbackBody.get()).contains("\"runId\":\"RUN-1\"");
+                assertThat(consoleQuery.get()).isEqualTo("limit=25&offset=10&status=COMPLETED&auditComplete=true");
+                assertThat(consoleToken.get()).isEqualTo("console-secret");
+                assertThat(consoleJsonlPath.get()).isEqualTo("/actiongraph/console/runs/RUN%201/trace/export.jsonl");
+                assertThat(consoleJsonlAccept.get()).isEqualTo("application/x-ndjson");
+            } finally {
+                loader.close();
+            }
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
     void rawHttpGatewayExampleDoesNotUseActionGraphJava7OrJava8Conveniences() throws Exception {
         Path sourceFile = repositoryRoot().resolve(
                 "docs/examples/pre-java8-http-gateway/src/main/java/com/company/legacygateway/RawHttpActionGraphGatewayUsage.java");
@@ -178,6 +285,28 @@ class Java8ConsumerCompilationTest {
 
     private static String baseUrl(HttpServer server) {
         return "http://127.0.0.1:" + server.getAddress().getPort() + "/actiongraph/runtime";
+    }
+
+    private static String reviewTasksBaseUrl(HttpServer server) {
+        return "http://127.0.0.1:" + server.getAddress().getPort() + "/actiongraph/human-review/tasks";
+    }
+
+    private static String callbackBaseUrl(HttpServer server) {
+        return "http://127.0.0.1:" + server.getAddress().getPort() + "/actiongraph/human-review/callbacks";
+    }
+
+    private static String consoleBaseUrl(HttpServer server) {
+        return "http://127.0.0.1:" + server.getAddress().getPort() + "/actiongraph/console";
+    }
+
+    private static String read(com.sun.net.httpserver.HttpExchange exchange) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] bytes = new byte[1024];
+        int read;
+        while ((read = exchange.getRequestBody().read(bytes)) != -1) {
+            buffer.write(bytes, 0, read);
+        }
+        return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
     }
 
     private static void send(com.sun.net.httpserver.HttpExchange exchange, int status, String body) throws IOException {
