@@ -245,6 +245,7 @@ The `external-callbacks` mode replays JSONL approval callback deliveries through
 ## Documentation
 
 - [Quick start guide](docs/quick-start.html)
+- [API reference and generated Javadocs](docs/api/index.html)
 - [Real LLM smoke test](docs/frameworkization/llm-smoke.md)
 - [Human review integration](docs/frameworkization/human-review.md)
 - [Runtime API](docs/frameworkization/runtime-api.md)

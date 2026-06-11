@@ -671,6 +671,42 @@ class ActionGraphComponentCatalogServiceTest {
     }
 
     @Test
+    void githubPagesPublishesGeneratedJavadocsAndApiReference() throws IOException {
+        Path root = repositoryRoot();
+        String workflow = readSource(root, ".github/workflows/pages.yml");
+        String apiIndex = readSource(root, "docs/api/index.html");
+        String readme = readSource(root, "README.md");
+        String chineseReadme = readSource(root, "README.zh-CN.md");
+        String website = readSource(root, "docs/index.html");
+
+        assertThat(workflow)
+                .contains("actions/setup-java@v5")
+                .contains("./gradlew javadoc")
+                .contains("build/pages-site")
+                .contains("build/pages-site/api/javadoc")
+                .contains("path: build/pages-site");
+        for (String module : parseLibraryModules(root.resolve("build.gradle.kts"))) {
+            assertThat(workflow)
+                    .as("Pages workflow should copy generated Javadocs for " + module)
+                    .contains(module);
+            assertThat(apiIndex)
+                    .as("API reference index should link generated Javadocs for " + module)
+                    .contains("javadoc/" + module + "/");
+        }
+        assertThat(apiIndex)
+                .contains("ActionGraph API Reference")
+                .contains("public-api.snapshot")
+                .contains("Javadoc");
+        assertThat(readme)
+                .contains("docs/api/index.html");
+        assertThat(chineseReadme)
+                .contains("docs/api/index.html");
+        assertThat(website)
+                .contains("href=\"api/\"")
+                .contains("API Reference");
+    }
+
+    @Test
     void strategyDocumentsKeepF1AsRealWorldGateNotSampleCompletion() throws IOException {
         Path root = repositoryRoot();
         String strategy = Files.readString(root.resolve("docs/finance-strategy.md"), StandardCharsets.UTF_8);

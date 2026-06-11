@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ActionGraph API Reference</title>
+<style>
+  :root {
+    --ink: #13221b;
+    --muted: #617168;
+    --line: #dbe4df;
+    --panel: #ffffff;
+    --page: #f6f8fa;
+    --green: #16844c;
+    --blue: #2467d6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--page);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.65;
+  }
+  main {
+    width: min(1080px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 56px 0 72px;
+  }
+  a { color: inherit; text-decoration: none; }
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 44px;
+  }
+  .back {
+    color: var(--muted);
+    font-weight: 700;
+  }
+  h1 {
+    margin: 0 0 12px;
+    font-size: clamp(34px, 5vw, 64px);
+    line-height: 1.05;
+    letter-spacing: 0;
+  }
+  .lead {
+    max-width: 760px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 18px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 34px;
+  }
+  .card {
+    display: block;
+    min-height: 150px;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+  }
+  .card:hover {
+    border-color: #9ec4b1;
+    box-shadow: 0 10px 30px rgba(19, 34, 27, 0.08);
+  }
+  .tag {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  h2 {
+    margin: 0 0 8px;
+    font-size: 21px;
+    line-height: 1.2;
+  }
+  p { margin: 0; color: var(--muted); }
+  .snapshot {
+    margin-top: 18px;
+    padding: 20px;
+    border-left: 4px solid var(--blue);
+    background: #eef4ff;
+    border-radius: 8px;
+  }
+  .snapshot a {
+    color: var(--blue);
+    font-weight: 800;
+  }
+  @media (max-width: 760px) {
+    .top { align-items: flex-start; flex-direction: column; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <a class="back" href="../index.html">← 返回官网首页</a>
+    <a class="back" href="public-api.snapshot">Public API Snapshot</a>
+  </div>
+  <h1>ActionGraph API Reference</h1>
+  <p class="lead">这里发布的是每次 GitHub Pages 部署时生成的 Javadoc。模块文档来自当前 main 分支，适合开发接入、代码评审和 1.0 兼容性冻结前的 API 对照。</p>
+
+  <div class="snapshot">
+    机器可读 API surface 仍以 <a href="public-api.snapshot">public-api.snapshot</a> 为兼容性守门依据；Javadoc 用于阅读合同、线程安全、空安全和生命周期语义。
+  </div>
+
+  <section class="grid" aria-label="Javadoc modules">
+    <a class="card" href="javadoc/actiongraph-core/">
+      <span class="tag">runtime</span>
+      <h2>actiongraph-core</h2>
+      <p>Action、Planner、Executor、Policy、Trace、Goal、Runtime API、Memory、Observability 与 API stability annotations。</p>
+    </a>
+    <a class="card" href="javadoc/actiongraph-control-plane-api/">
+      <span class="tag">java8-client</span>
+      <h2>actiongraph-control-plane-api</h2>
+      <p>Java 8 控制面契约、组件目录、HTTP clients、properties 聚合配置与 shared-secret token verifier。</p>
+    </a>
+    <a class="card" href="javadoc/actiongraph-human-review/">
+      <span class="tag">review</span>
+      <h2>actiongraph-human-review</h2>
+      <p>审批任务、审批链、回调处理、Repository-backed policy 与任务查询/决策服务。</p>
+    </a>
+    <a class="card" href="javadoc/actiongraph-governance/">
+      <span class="tag">governance</span>
+      <h2>actiongraph-governance</h2>
+      <p>脱敏、额度、权限、租户、审批属性和风险审批链路由策略。</p>
+    </a>
+    <a class="card" href="javadoc/actiongraph-llm-deepseek/">
+      <span class="tag">llm</span>
+      <h2>actiongraph-llm-deepseek</h2>
+      <p>实验态 LLM provider、prompt rendering、structured output parser 与 DeepSeek-compatible client。</p>
+    </a>
+    <a class="card" href="javadoc/actiongraph-persistence-jdbc/">
+      <span class="tag">jdbc</span>
+      <h2>actiongraph-persistence-jdbc</h2>
+      <p>Trace、SuspendedRun、Memory、HumanReview 和 Console read model 的 JDBC 仓储。</p>
+    </a>
+    <a class="card" href="javadoc/actiongraph-console/">
+      <span class="tag">ops</span>
+      <h2>actiongraph-console</h2>
+      <p>只读运行查询、Trace 时间线响应、审计链验证结果和 CSV/JSONL 导出服务。</p>
+    </a>
+    <a class="card" href="javadoc/actiongraph-spring-boot-starter/">
+      <span class="tag">spring</span>
+      <h2>actiongraph-spring-boot-starter</h2>
+      <p>Spring Boot auto-configuration、endpoint controllers、配置属性、JDBC/Memory/Review/Governance wiring。</p>
+    </a>
+  </section>
+</main>
+</body>
+</html>
