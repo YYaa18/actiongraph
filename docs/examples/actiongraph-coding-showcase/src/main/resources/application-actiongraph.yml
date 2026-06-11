@@ -1,0 +1,51 @@
+actiongraph:
+  actions:
+    auto-register-annotated: true
+  validation:
+    mode: FAIL
+  planner:
+    max-depth: 16
+  executor:
+    max-steps: 32
+  execution:
+    policies:
+      - action-id: order.cancellation.request.draft
+        max-attempts: 2
+        backoff: 250ms
+        timeout: 2s
+  runtime:
+    api:
+      enabled: true
+      path: /actiongraph/runtime
+      trace-headers:
+        - X-Request-Id
+        - X-Source-System
+  persistence:
+    jdbc:
+      enabled: true
+      suspended-run-claim-timeout: 15m
+      blackboard:
+        allowed-packages:
+          - demo
+  human-review:
+    api:
+      enabled: true
+      path: /actiongraph/human-review/tasks
+    callback-endpoint:
+      enabled: true
+      path: /actiongraph/human-review/callbacks
+    risk-based-approval-chain: true
+  masking:
+    enabled: true
+    blocked-keys:
+      - customerMobile
+      - bankCardNo
+  limits:
+    rules:
+      - action-id: operations.approval.request
+        currency: CNY
+        review-limit: 5000
+        hard-limit: 50000
+  console:
+    enabled: true
+    path: /actiongraph/console

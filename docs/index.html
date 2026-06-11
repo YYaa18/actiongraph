@@ -320,7 +320,7 @@
   .act-no {
     width: 44px;
     height: 44px;
-    border-radius: 12px;
+    border-radius: 8px;
     display: grid;
     place-items: center;
     background: #143c27;
@@ -341,6 +341,10 @@
 
   .code-pair > *,
   .act > *,
+  .setup-grid > *,
+  .video-grid > *,
+  .journey > *,
+  .journey-step > *,
   .adoption > *,
   .split > *,
   .code-grid > *,
@@ -367,7 +371,7 @@
   pre.snippet, pre.output {
     margin: 0;
     padding: 14px 16px;
-    border-radius: 10px;
+    border-radius: var(--radius);
     overflow-x: auto;
     max-width: 100%;
     font-size: 12.5px;
@@ -390,8 +394,73 @@
     margin-top: 30px;
     border-left: 4px solid var(--green);
     background: var(--green-soft);
-    border-radius: 0 10px 10px 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
     padding: 16px 20px;
+  }
+
+  .tutorial-run a {
+    color: var(--green-strong);
+    font-weight: 760;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .journey {
+    display: grid;
+    gap: 14px;
+    margin-top: 24px;
+  }
+
+  .journey-step {
+    display: grid;
+    grid-template-columns: minmax(0, 0.36fr) minmax(0, 1fr);
+    gap: 24px;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+  }
+
+  .journey-meta {
+    color: var(--green-strong);
+    font-size: 13px;
+    font-weight: 820;
+    text-transform: uppercase;
+  }
+
+  .journey-step h3 {
+    margin: 8px 0 0;
+    color: var(--ink);
+    font-size: 21px;
+    line-height: 1.28;
+  }
+
+  .journey-step p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.66;
+  }
+
+  .journey-step ul {
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+  }
+
+  .journey-step li {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .journey-step li strong {
+    color: var(--ink);
+  }
+
+  .evidence-block {
+    margin-top: 26px;
   }
 
   @media (max-width: 880px) {
@@ -798,6 +867,169 @@
   .copy-btn:hover { border-color: rgba(126, 226, 155, 0.58); color: var(--code-green); }
   .copy-btn svg { width: 15px; height: 15px; stroke-width: 2; }
 
+  .setup-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0 0 18px;
+  }
+
+  .setup-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    padding: 20px;
+  }
+
+  .setup-card span {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--green-soft);
+    color: var(--green-strong);
+    font-size: 13px;
+    font-weight: 820;
+  }
+
+  .setup-card b {
+    display: block;
+    margin-top: 14px;
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.35;
+  }
+
+  .setup-card p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .config-block {
+    margin-top: 22px;
+  }
+
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    align-items: start;
+  }
+
+  .video-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .video-frame {
+    position: relative;
+    background: #0f1e17;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .video-frame video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #0f1e17;
+  }
+
+  .video-content {
+    padding: 22px;
+  }
+
+  .video-kicker {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: var(--green-soft);
+    color: var(--green-strong);
+    font-size: 12px;
+    font-weight: 780;
+  }
+
+  .video-kicker.blue {
+    background: var(--blue-soft);
+    color: var(--blue);
+  }
+
+  .video-card h3 {
+    margin: 14px 0 8px;
+    color: var(--ink);
+    font-size: 22px;
+    line-height: 1.25;
+  }
+
+  .video-card p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .video-points {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .video-points li {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .video-points li::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    margin-top: 8px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  .video-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .config-block h3,
+  .journey-intro h3,
+  .evidence-block h3 {
+    margin: 0 0 10px;
+    color: var(--ink);
+    font-size: 22px;
+    line-height: 1.25;
+  }
+
+  .config-block > p,
+  .journey-intro p,
+  .evidence-block > p {
+    max-width: 820px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.68;
+  }
+
+  .table-wrap {
+    margin-top: 16px;
+    overflow-x: auto;
+    border-radius: var(--radius);
+  }
+
   .feature-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1160,6 +1392,7 @@
     .model-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .model-step::after { display: none; }
     .feature-grid,
+    .video-grid,
     .ops-grid,
     .sample-grid,
     .doc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1210,6 +1443,8 @@
     h2 { font-size: 32px; line-height: 1.12; }
     .section-lead { font-size: 16px; line-height: 1.65; }
     .model-grid,
+    .setup-grid,
+    .video-grid,
     .feature-grid,
     .ops-grid,
     .sample-grid,
@@ -1228,7 +1463,8 @@
       overflow-x: auto;
       border-radius: var(--radius);
     }
-    .matrix table { min-width: 760px; }
+    .table-wrap .matrix { min-width: 760px; }
+    .journey-step { grid-template-columns: 1fr; gap: 12px; }
     .nav-actions .button.primary { padding: 10px 12px; }
   }
 
@@ -1251,15 +1487,15 @@
       <img class="brand-logo" src="assets/actiongraph-logo.svg" alt="ActionGraph">
     </a>
     <nav class="nav-links" aria-label="主导航">
-      <a href="#why">为什么</a>
-      <a href="#model">执行模型</a>
-      <a href="#quickstart">快速开始</a>
-      <a href="#capabilities">核心能力</a>
-      <a href="#modules">模块</a>
+      <a href="#why">定位</a>
+      <a href="#model">架构</a>
+      <a href="#quickstart">接入</a>
+      <a href="#videos">视频</a>
+      <a href="#capabilities">能力</a>
+      <a href="#modules">生态</a>
       <a href="#control-plane">控制面</a>
-      <a href="#samples">样例</a>
-      <a href="#tutorial">教学</a>
-      <a href="#docs">文档</a>
+      <a href="#samples">案例</a>
+      <a href="#docs">资源</a>
     </nav>
     <div class="nav-actions">
       <a class="button" href="../README.zh-CN.md">
@@ -1403,7 +1639,7 @@ OrderRecord lookup(OrderId orderId) {
 <section class="section" id="why">
     <div class="wrap">
       <div class="section-head">
-        <h2>企业 AI 执行的难点，不是回答，而是敢不敢执行。</h2>
+        <h2>为企业 Agent 定义可执行、可治理的业务边界。</h2>
         <p class="section-lead">ActionGraph 的设计目标是把“可控业务能力”变成 Agent 可以规划和执行的 Action 集合，同时把计划、审批、补偿、恢复和审计放在框架层统一处理。</p>
       </div>
       <div class="split">
@@ -1432,7 +1668,7 @@ OrderRecord lookup(OrderId orderId) {
   <section class="section alt" id="model">
     <div class="wrap">
       <div class="section-head full">
-        <h2>从自然语言目标到可审计执行业务链。</h2>
+        <h2>目标解释与业务执行之间，隔着一层确定性规划。</h2>
         <p class="section-lead">运行时把目标解释、Blackboard 装配、确定性规划、逐步执行、人审挂起、恢复和补偿串成一个闭环。每一步执行后都会重新规划，因此运行时事实变化可以自动改道。</p>
       </div>
       <div class="model-grid">
@@ -1468,9 +1704,27 @@ OrderRecord lookup(OrderId orderId) {
   <section class="section" id="quickstart">
     <div class="wrap">
       <div class="section-head">
-        <h2>快速开始：引入 starter，把普通方法变成 Action。</h2>
-        <p class="section-lead">Spring Boot 应用通常只需要 BOM、主 starter 和一个可选 LLM provider。端点、JDBC、人审和治理都通过 <code>actiongraph.*</code> 属性显式启用。</p>
+        <h2>接入路径：先声明能力，再开放运行边界。</h2>
+        <p class="section-lead">Spring Boot 应用从依赖、Action adapter 和少量开关开始接入。配置不在官网里堆 YAML，而按运行域整理为可审阅的属性契约。</p>
       </div>
+      <div class="setup-grid" aria-label="接入路径">
+        <article class="setup-card">
+          <span>1</span>
+          <b>声明运行时依赖</b>
+          <p>用 BOM 锁定版本，主 starter 提供规划器、执行器、注解扫描、治理与可选端点自动装配。</p>
+        </article>
+        <article class="setup-card">
+          <span>2</span>
+          <b>把业务方法注册为 Action</b>
+          <p>业务服务只暴露可控方法；precondition/effect 定义可规划边界，guard 与 compensation 定义执行边界。</p>
+        </article>
+        <article class="setup-card">
+          <span>3</span>
+          <b>按域启用生产能力</b>
+          <p>Runtime API、JDBC、人审、Console、脱敏与限额都通过属性开关显式启用，默认不扩大暴露面。</p>
+        </article>
+      </div>
+
       <div class="code-grid">
         <div class="code-panel">
           <div class="code-title">
@@ -1486,75 +1740,6 @@ OrderRecord lookup(OrderId orderId) {
   implementation("com.actiongraph:actiongraph-llm-deepseek")
 }</code></pre>
         </div>
-        <div class="code-panel">
-          <div class="code-title">
-            <span>application.yml</span>
-            <button class="copy-btn" type="button" data-copy="yaml" aria-label="复制 YAML 示例">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            </button>
-          </div>
-<pre><code id="yaml">actiongraph:
-  planner:
-    max-depth: 32
-    max-expansions: 10000
-  executor:
-    max-steps: 64
-  actions:
-    auto-register-annotated: true
-  runtime:
-    api:
-      enabled: true
-      path: /actiongraph/runtime
-      token-header: X-ActionGraph-Runtime-Token
-      shared-secret: ${ACTIONGRAPH_RUNTIME_API_SECRET}
-      trace-headers:
-        - X-Request-Id
-        - X-Correlation-Id
-        - X-Source-System
-  component-catalog:
-    enabled: true
-    path: /actiongraph/components
-    token-header: X-ActionGraph-Catalog-Token
-    shared-secret: ${ACTIONGRAPH_CATALOG_SECRET}
-  persistence:
-    jdbc:
-      enabled: true
-      suspended-run-claim-timeout: 15m
-      blackboard:
-        allowed-packages:
-          - com.example.business
-  human-review:
-    api:
-      enabled: true
-      path: /actiongraph/human-review/tasks
-      token-header: X-ActionGraph-Review-Token
-      shared-secret: ${ACTIONGRAPH_REVIEW_API_SECRET}
-    callback-endpoint:
-      enabled: true
-      path: /actiongraph/human-review/callbacks
-      token-header: X-ActionGraph-Review-Token
-      shared-secret: ${ACTIONGRAPH_REVIEW_CALLBACK_SECRET}
-    risk-based-approval-chain: true
-  console:
-    enabled: true
-    path: /actiongraph/console
-    token-header: X-ActionGraph-Console-Token
-    shared-secret: ${ACTIONGRAPH_CONSOLE_SECRET}
-    default-limit: 50
-    max-limit: 200
-  masking:
-    enabled: true
-    blocked-keys: [idCardNumber, bankAccount]
-  limits:
-    rules:
-      - action-id: sales.approval.request
-        currency: CNY
-        hard-limit: 1000000
-        review-limit: 100000</code></pre>
-        </div>
-      </div>
-
-      <div class="code-grid" style="margin-top: 18px;">
         <div class="code-panel">
           <div class="code-title">
             <span>Action adapter</span>
@@ -1585,23 +1770,72 @@ class OrderCancellationWorkflow {
   }
 }</code></pre>
         </div>
-        <div class="code-panel">
-          <div class="code-title">
-            <span>Run samples</span>
-            <button class="copy-btn" type="button" data-copy="samples-run" aria-label="复制样例命令">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            </button>
-          </div>
-<pre><code id="samples-run">./gradlew build
+      </div>
 
-./gradlew :actiongraph-samples:run \
-  --args="--approve-human-review Prepare renewal quote for C123"
-
-./gradlew :actiongraph-samples:runOrderCancellationSample \
-  --args="--approve-human-review Cancel order O100"
-
-./gradlew :actiongraph-samples:runClaimsPrecheckSample \
-  --args="--approve-human-review Prepare payout application for claim CLM100"</code></pre>
+      <div class="config-block">
+        <h3>配置属性速查</h3>
+        <p>官网只展示属性契约与生产语义；完整 YAML 建议放在接入文档或样例项目中维护，避免页面被配置噪声淹没。</p>
+        <div class="table-wrap">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th>属性域</th>
+                <th>关键属性</th>
+                <th>默认语义</th>
+                <th>生产建议</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>规划器</td>
+                <td><code>planner.max-depth</code><br><code>planner.max-expansions</code></td>
+                <td>限制 GOAP 搜索深度与扩展次数，防止异常 Action 图导致无限探索。</td>
+                <td>按业务链路长度设置上限，并用测试覆盖不可达与多路径场景。</td>
+              </tr>
+              <tr>
+                <td>执行器</td>
+                <td><code>executor.max-steps</code><br><code>actions.auto-register-annotated</code></td>
+                <td>限制单次 run 的最大执行步数；可选择是否自动注册注解式 Action。</td>
+                <td>生产建议显式管理 Action 包扫描范围，避免测试或内部动作进入运行时。</td>
+              </tr>
+              <tr>
+                <td>Runtime API</td>
+                <td><code>runtime.api.enabled</code><br><code>runtime.api.path</code><br><code>runtime.api.trace-headers</code></td>
+                <td>默认关闭。启用后提供 interpret、run、resume 三类运行端点。</td>
+                <td>通过网关暴露；只把 request/correlation/source 等审计头写入 Trace。</td>
+              </tr>
+              <tr>
+                <td>组件目录</td>
+                <td><code>component-catalog.enabled</code><br><code>component-catalog.path</code></td>
+                <td>默认关闭。启用后提供模块、profile、compatibility 的机器可读目录。</td>
+                <td>用于部署检查、网关治理和老系统集成，不承载运行时写操作。</td>
+              </tr>
+              <tr>
+                <td>JDBC 持久化</td>
+                <td><code>persistence.jdbc.enabled</code><br><code>suspended-run-claim-timeout</code><br><code>blackboard.allowed-packages</code></td>
+                <td>启用后可持久化 Trace、SuspendedRun、read model、Memory 与人审任务。</td>
+                <td>生产恢复挂起快照前必须收敛 Blackboard 类型白名单。</td>
+              </tr>
+              <tr>
+                <td>人审与回调</td>
+                <td><code>human-review.api.enabled</code><br><code>callback-endpoint.enabled</code><br><code>risk-based-approval-chain</code></td>
+                <td>默认关闭。启用后支持待审查询、决策写入、外部回调和风险链路由。</td>
+                <td>审批系统应校验 stage index，避免重复回调推进下一阶段。</td>
+              </tr>
+              <tr>
+                <td>Console</td>
+                <td><code>console.enabled</code><br><code>console.default-limit</code><br><code>console.max-limit</code></td>
+                <td>只读运行列表、Trace 时间线、审计链验证与 CSV/JSONL 导出。</td>
+                <td>只面向运维或审计内网暴露，不承担恢复、审批或补偿动作。</td>
+              </tr>
+              <tr>
+                <td>数据治理</td>
+                <td><code>masking.enabled</code><br><code>masking.blocked-keys</code><br><code>limits.rules[]</code></td>
+                <td>Trace 与审批预览可脱敏；金额规则可硬拒绝，并为人审动作追加升级属性。</td>
+                <td>金额提取器由业务提供；hard-limit 与 review-limit 应纳入变更审批。</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -1612,10 +1846,67 @@ class OrderCancellationWorkflow {
     </div>
   </section>
 
+  <section class="section tint" id="videos">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>两支视频，分别讲清价值和落地方式。</h2>
+        <p class="section-lead">第一支面向业务负责人，解释为什么 ActionGraph 值得推广；第二支面向技术团队，用真实代码演示从接入依赖到运行、审批、恢复和审计的完整过程。</p>
+      </div>
+
+      <div class="video-grid" aria-label="ActionGraph 视频演示">
+        <article class="video-card">
+          <div class="video-frame">
+            <video controls preload="metadata" playsinline poster="assets/actiongraph-executive-demo-poster.png" aria-label="ActionGraph 业务价值动态演示视频">
+              <source src="assets/actiongraph-executive-demo.mp4" type="video/mp4">
+              当前浏览器不支持 HTML5 视频播放，请直接打开视频文件。
+            </video>
+          </div>
+          <div class="video-content">
+            <span class="video-kicker">业务价值演示</span>
+            <h3>让非技术管理者看懂：Agent 如何安全办理业务。</h3>
+            <p>用“大额转账预约”串起目标理解、规则约束、自动改道、人审挂起、审批恢复和审计证据，重点回答“为什么这套框架可以推广”。</p>
+            <ul class="video-points">
+              <li>用业务语言解释确定性规划、人审和审计价值。</li>
+              <li>展示系统在风险、异常和审批场景下的可控行为。</li>
+              <li>适合立项沟通、领导汇报和跨部门推广预热。</li>
+            </ul>
+            <div class="video-actions">
+              <a class="button primary" href="assets/actiongraph-executive-demo.mp4">打开视频</a>
+              <a class="button" href="actiongraph-tutorial-video.md">查看分镜</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="video-card">
+          <div class="video-frame">
+            <video controls preload="metadata" playsinline poster="assets/actiongraph-coding-showcase-poster.png" aria-label="ActionGraph 真实代码接入动态演示视频">
+              <source src="assets/actiongraph-coding-showcase.mp4" type="video/mp4">
+              当前浏览器不支持 HTML5 视频播放，请直接打开视频文件。
+            </video>
+          </div>
+          <div class="video-content">
+            <span class="video-kicker blue">技术接入演示</span>
+            <h3>让技术团队看清：真实代码如何变成可治理运行。</h3>
+            <p>从 Gradle 依赖、Action 注解、Guard、Compensation、人审 Action、配置开关到运行看板，逐步展示接入过程和每一步带来的运行效果。</p>
+            <ul class="video-points">
+              <li>代码使用真实 ActionGraph API，不用伪包名和伪接口。</li>
+              <li>运行效果用中文状态看板、审批卡片和审计时间线展示。</li>
+              <li>适合开发宣讲、架构评审和接入培训。</li>
+            </ul>
+            <div class="video-actions">
+              <a class="button primary" href="assets/actiongraph-coding-showcase.mp4">打开视频</a>
+              <a class="button" href="actiongraph-coding-showcase-video.md">查看分镜</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <section class="section alt" id="capabilities">
     <div class="wrap">
       <div class="section-head">
-        <h2>核心能力围绕一个原则：业务系统拥有最终裁决权。</h2>
+        <h2>运行时能力围绕一个原则：模型不拥有最终裁决权。</h2>
         <p class="section-lead">框架让 Agent 能执行，但不把业务判断交给模型。规划、运行时校验、审批、补偿、持久化、审计与控制面都围绕“可控执行”设计。</p>
       </div>
       <div class="feature-grid">
@@ -1671,7 +1962,7 @@ class OrderCancellationWorkflow {
   <section class="section" id="modules">
     <div class="wrap">
       <div class="section-head">
-        <h2>模块化生态：从核心运行时到控制面端点。</h2>
+        <h2>模块边界清晰，按部署形态组合。</h2>
         <p class="section-lead">每个模块都有清晰边界。Spring 服务可以用主 starter 快速收敛能力，非 Spring 和 Java 8 老系统也可以只引入控制面或 HTTP client。</p>
       </div>
       <div class="module-grid">
@@ -1760,7 +2051,7 @@ class OrderCancellationWorkflow {
   <section class="section tint" id="control-plane">
     <div class="wrap">
       <div class="section-head">
-        <h2>控制面默认关闭，按部署边界显式打开。</h2>
+        <h2>控制面按端点族发布，默认保持收敛。</h2>
         <p class="section-lead">主 starter 收敛端点自动装配，但每个端点族都有自己的 path、token header、shared-secret 与 enabled 开关。启用端点不会创建业务 Action、LLM client 或领域解释器。</p>
       </div>
       <div class="control-plane">
@@ -1807,7 +2098,7 @@ class OrderCancellationWorkflow {
   <section class="section" id="governance">
     <div class="wrap">
       <div class="section-head">
-        <h2>治理能力不是旁路插件，而是运行路径的一部分。</h2>
+        <h2>治理逻辑进入执行路径，而不是事后补丁。</h2>
         <p class="section-lead">权限、脱敏、额度、人审、补偿、哈希链和恢复快照全部围绕同一个 runId 与 Trace 序列展开，方便企业控制台和审计系统追踪。</p>
       </div>
       <div class="ops-grid">
@@ -1846,7 +2137,7 @@ class OrderCancellationWorkflow {
   <section class="section alt" id="operations">
     <div class="wrap">
       <div class="section-head">
-        <h2>生产接入关心的边界，框架已经给出默认答案。</h2>
+        <h2>生产契约覆盖持久化、恢复、安全与兼容性。</h2>
         <p class="section-lead">JDBC 持久化、Java 8 老系统、控制层 token、GET 重试、Blackboard 类型白名单和 snapshot version 都是发布契约的一部分。</p>
       </div>
       <div class="adoption">
@@ -1877,7 +2168,7 @@ class OrderCancellationWorkflow {
   <section class="section" id="samples">
     <div class="wrap">
       <div class="section-head">
-        <h2>三条参考业务流，覆盖读、写、审批、补偿和批处理。</h2>
+        <h2>样例以业务形态组织，而不是功能清单。</h2>
         <p class="section-lead">样例不是玩具流程：续约报价、订单取消、理赔资料预审分别展示目标解释、Blackboard seeding、runtime guard、人审挂起恢复和审计报告。</p>
       </div>
       <div class="sample-grid">
@@ -1889,7 +2180,7 @@ class OrderCancellationWorkflow {
             <li>RenewalQuoteBlackboardSeeder</li>
             <li>SalesApprovalRequestAction</li>
           </ul>
-          <code class="run-command">./gradlew :actiongraph-samples:run --args="--approve-human-review Prepare renewal quote for C123"</code>
+          <code class="run-command">Task: :actiongraph-samples:run</code>
         </article>
         <article class="sample">
           <h3>订单取消</h3>
@@ -1899,7 +2190,7 @@ class OrderCancellationWorkflow {
             <li>CancellationEligibilityCheckAction</li>
             <li>OperationsApprovalRequestAction</li>
           </ul>
-          <code class="run-command">./gradlew :actiongraph-samples:runOrderCancellationSample --args="--approve-human-review Cancel order O100"</code>
+          <code class="run-command">Task: :actiongraph-samples:runOrderCancellationSample</code>
         </article>
         <article class="sample">
           <h3>理赔资料预审</h3>
@@ -1909,9 +2200,7 @@ class OrderCancellationWorkflow {
             <li>JSONL callback replay</li>
             <li>CSV / Markdown / HTML report</li>
           </ul>
-          <code class="run-command">./gradlew :actiongraph-samples:runClaimsPrecheckSample --args="--approve-human-review Prepare payout application for claim CLM100"
-
-./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-001 --environment local"</code>
+          <code class="run-command">Tasks: runClaimsPrecheckSample · runClaimsPrecheckBatchMetrics</code>
         </article>
       </div>
     </div>
@@ -1920,153 +2209,157 @@ class OrderCancellationWorkflow {
   <section class="section tint" id="tutorial">
     <div class="wrap">
       <div class="section-head">
-        <h2>教学：用一个真实项目，六幕走完全部能力。</h2>
-        <p>教学项目 <b>transfer-demo</b>（大额转账预约助手）完全离线可跑：一条 6 步业务链贯穿
-        自然语言入口、启动校验、确定性规划、自动重试、动态改道、限额升级、多级审批挂起恢复、
-        脱敏与防篡改审计。<b>以下所有输出均来自真实运行，未经修饰。</b></p>
+        <h2>端到端导览：同一条业务线贯穿规划、审批与审计。</h2>
+        <p class="section-lead">教学项目 <b>transfer-demo</b> 以“大额转账预约”为主线，按一次真实运行的顺序解释框架职责。这里强调系统行为和证据产物，完整代码留在接入指南与样例工程中。</p>
       </div>
 
-      <pre class="output" style="margin-top:6px">业务链：核身 → 查余额（实时/快照双路）→ 风险评估 → 生成草稿 → 提交人工审批
-自然语言入口："为客户 C001 预约 80 万元的大额转账"</pre>
-
-      <!-- 第 1 幕 -->
-      <div class="act">
-        <div class="act-no">1</div>
-        <div>
-          <h3>链路即图 —— 把「AI 只能走的路」画给评审看</h3>
-          <p>condition 是路标，Action 是路段。一行代码导出 Mermaid，贴进行内 wiki 就是给业务方与安全评审的承诺书。</p>
-          <div class="code-pair">
-            <div><span class="label">代码</span>
-<pre class="snippet"><code>String mermaid = new ActionGraphExporter()
-    .toMermaid(registry.all(),
-        goal.goal(), goal.seedConditions());</code></pre></div>
-            <div><span class="label">真实输出（节选）</span>
-<pre class="output">a_transfer_draft_create["transfer.draft.create
-  risk=MEDIUM"]
-c_transfer_RISK_ASSESSED --&gt; a_transfer_draft_create
-a_transfer_draft_create --&gt; c_transfer_DRAFT_CREATED</pre></div>
-          </div>
-        </div>
+      <div class="journey-intro">
+        <h3>场景主线</h3>
+        <p>用户提出“为客户 C001 预约 80 万元的大额转账”。运行时需要确认参数、装配 Blackboard、规划可达路径、处理余额接口重试、触发限额升级审批、挂起等待人审、恢复同一 run，并最终给出可验证的 Trace 证据。</p>
       </div>
 
-      <!-- 第 2 幕 -->
-      <div class="act">
-        <div class="act-no">2</div>
-        <div>
-          <h3>启动校验 —— 拼错一个 condition，应用拒绝启动</h3>
-          <p>把 <code>RISK_ASSESSED</code> 拼成 <code>RISK_ASSESED</code>，校验器不止说"不可达"，
-          还告诉你缺哪个条件、哪个 Action 悬空、疑似拼错了什么。链路通不通，启动那一刻就有答案。</p>
-          <div class="code-pair">
-            <div><span class="label">故意写错的代码</span>
-<pre class="snippet"><code><span class="code-anno">@ActionGraphAction</span>(id = <span class="code-string">"typo.draft.create"</span>,
-    preconditions = <span class="code-string">"transfer:RISK_ASSESED"</span>, <span class="code-dim">// 少个 S</span>
-    effects = <span class="code-string">"transfer:APPROVAL_REQUESTED"</span>)</code></pre></div>
-            <div><span class="label">真实输出</span>
-<pre class="output">valid = <span class="bad">false</span>
-缺失条件: [transfer:APPROVAL_REQUESTED]
-悬空动作: [typo.draft.create]
-诊断: closest registered effect ...
-  (possible spelling or namespace mismatch)</pre></div>
+      <div class="journey" aria-label="端到端导览">
+        <article class="journey-step">
+          <div>
+            <div class="journey-meta">01 · Intent</div>
+            <h3>解释器只确认目标与参数</h3>
           </div>
-        </div>
+          <div>
+            <p>自然语言入口负责把请求映射到 GoalType、customerId、amount 等业务参数；缺参时返回澄清问题。计划仍由 GOAP planner 根据 Action 图搜索，LLM 不直接生成执行步骤。</p>
+            <ul>
+              <li><strong>输入：</strong>客户、金额、业务意图。</li>
+              <li><strong>产物：</strong>Goal + seed conditions + typed Blackboard entries。</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div>
+            <div class="journey-meta">02 · Contract</div>
+            <h3>启动前校验 Action 图</h3>
+          </div>
+          <div>
+            <p>框架在应用启动或注册阶段检查 condition/effect 是否闭合。拼写错误、命名空间不匹配和悬空 Action 会尽早暴露，避免把不可达路径留到生产运行时才发现。</p>
+            <ul>
+              <li><strong>检查：</strong>缺失条件、悬空动作、相近 effect 诊断。</li>
+              <li><strong>价值：</strong>把“AI 能走哪些路”变成可审查的工程契约。</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div>
+            <div class="journey-meta">03 · Execution</div>
+            <h3>每一步执行后重新规划</h3>
+          </div>
+          <div>
+            <p>余额实时接口失败时，Action 的重试策略先处理短暂异常；当 runtime guard 判断核心系统不可用时，规划器会根据当前事实改道到快照余额链路。业务编排不需要把每个 fallback 手写成流程分支。</p>
+            <ul>
+              <li><strong>运行策略：</strong>maxAttempts、backoff、runtime guard。</li>
+              <li><strong>改道条件：</strong>Blackboard 事实变化后触发下一轮 planner 选择。</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div>
+            <div class="journey-meta">04 · Review</div>
+            <h3>高风险动作挂起，而不是继续猜测</h3>
+          </div>
+          <div>
+            <p>80 万元超过 review-limit 后，风险链路在原审批链上追加 amount-authorization。运行进入 SUSPENDED_PENDING_REVIEW，保存挂起快照与补偿栈；审批通过后以同一 runId 原子认领恢复。</p>
+            <ul>
+              <li><strong>人审链：</strong>checker-review、authorization、amount-authorization。</li>
+              <li><strong>并发语义：</strong>重复 resume 只有一个请求能成功 claim。</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div>
+            <div class="journey-meta">05 · Evidence</div>
+            <h3>审计证据随运行产生</h3>
+          </div>
+          <div>
+            <p>Trace 事件先经过脱敏策略，再进入哈希链。Console read model 可以展示运行列表、Trace 时间线、审计链验证结果和导出文件；挂起快照保留恢复所需原值，不与展示层脱敏混淆。</p>
+            <ul>
+              <li><strong>审计对象：</strong>Trace sequence、hash chain、review attributes。</li>
+              <li><strong>展示边界：</strong>审批预览和 Console 输出脱敏，恢复快照保持语义完整。</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div>
+            <div class="journey-meta">06 · Policy</div>
+            <h3>硬限额在副作用发生前拦截</h3>
+          </div>
+          <div>
+            <p>当金额超过 hard-limit，Policy 在执行草稿创建前拒绝动作，后续副作用不会发生。review-limit 只负责进入人审后的金额升级，不替代业务权限、租户校验或企业 IAM。</p>
+            <ul>
+              <li><strong>拒绝点：</strong>Action 执行前。</li>
+              <li><strong>治理边界：</strong>ActionGraph 提供策略挂点，业务系统保留最终裁决。</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div>
+            <div class="journey-meta">07 · Durability</div>
+            <h3>进程崩溃，副作用零孤儿</h3>
+          </div>
+          <div>
+            <p>开启 durability 后，每个 Action 成功即写检查点，执行前登记执行意图（WAL）。演示中进程恰好"断电"在最危险的窗口——草稿已在远端创建、检查点未落。重启后的恢复器认领僵尸运行：意图未清，该步按「结果未知」先补偿再重做，随后续跑进审批、照常挂起。真实输出：草稿创建成功×2、恢复性补偿×1 → 净草稿恰好 1 份；51 条 Trace 事件跨崩溃、恢复与审批连续编号，哈希链验证通过。</p>
+            <ul>
+              <li><strong>恢复语义：</strong>in-flight 步与超时同一哲学——结果未知，补偿＋重做实现等效恰好一次。</li>
+              <li><strong>运维含义：</strong>编排服务可随意滚动发布；实测每步检查点开销 0.054 ms。</li>
+            </ul>
+          </div>
+        </article>
       </div>
 
-      <!-- 第 3 幕 -->
-      <div class="act">
-        <div class="act-no">3</div>
-        <div>
-          <h3>自然语言入口 —— 缺参就追问，绝不猜</h3>
-          <p>解释器只产出目标与参数（或澄清问题），<b>永远不产出执行计划</b>。生产环境接行内大模型只需四行配置（OpenAI 兼容协议），网关抖动自动降级到规则解释器。</p>
-          <div class="code-pair">
-            <div><span class="label">两次输入</span>
-<pre class="snippet"><code>interpreter.interpret(<span class="code-string">"帮客户预约一笔大额转账"</span>);
-interpreter.interpret(<span class="code-string">"为客户 C001 预约 80 万元的大额转账"</span>);</code></pre></div>
-            <div><span class="label">真实输出</span>
-<pre class="output">→ isReady=<span class="bad">false</span> 缺参=[customerId, amount]
-→ 追问用户: 请补充：customerId、amount
-→ isReady=<span class="ok">true</span> 参数={customerId=C001, amount=800000}</pre></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 第 4 幕 -->
-      <div class="act">
-        <div class="act-no">4</div>
-        <div>
-          <h3>完整运行 —— 重试、限额升级、三级审批、挂起恢复</h3>
-          <p>实时余额接口前两次必失败（声明 <code>maxAttempts=3</code> 自动重试）；80 万超过 50 万审批阈值，
-          审批链自动升一级；遇到 HIGH 风险动作整个运行挂起，三级审批人依次批准后，<b>同一 runId 原子认领恢复</b>——并发恢复只有一个能成功。</p>
-          <div class="code-pair">
-            <div><span class="label">代码（节选）</span>
-<pre class="snippet"><code><span class="code-anno">@ActionGraphAction</span>(id = <span class="code-string">"transfer.balance.check.realtime"</span>,
-    maxAttempts = 3, backoffMillis = 100, ...)
-
-<span class="code-dim">// 审批后恢复：</span>
-executor.resume(runId, registry.all(), registry);</code></pre></div>
-            <div><span class="label">真实输出</span>
-<pre class="output">首次运行: <span class="warn">SUSPENDED_PENDING_REVIEW</span>
-待审任务: 审批链=[checker-review, authorization,
-  amount-authorization]   ← 金额升级自动加一级
-金额上下文={amount=800000, amountEscalated=true}
-第 1/2/3 级审批通过
-恢复运行: <span class="ok">COMPLETED</span>  全链 5 步</pre></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 第 5 幕 -->
-      <div class="act">
-        <div class="act-no">5</div>
-        <div>
-          <h3>审计 —— 防篡改哈希链与敏感数据脱敏</h3>
-          <p>38 条事件跨挂起恢复连续编号，逐事件 SHA-256 链接：改动任何一行，验证器都能指出确切位置。
-          审批人看到的预览里，身份证与手机号已在落库前打码——而挂起快照保持原值，恢复无损。</p>
-          <div class="code-pair">
-            <div><span class="label">代码</span>
-<pre class="snippet"><code>new TraceChainVerifier()
-    .verify(traces.findByRun(runId));</code></pre></div>
-            <div><span class="label">真实输出</span>
-<pre class="output">哈希链验证: valid=<span class="ok">true</span>  共 38 条事件
-[10] ACTION_RETRIED {attempt=1, backoffMillis=100}
-[11] ACTION_RETRIED {attempt=2, backoffMillis=100}
-审批预览(脱敏后) CustomerProfile =
-  idCard=<span class="ok">110101********8888</span>, phone=<span class="ok">138****5678</span></pre></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 第 6 幕 -->
-      <div class="act">
-        <div class="act-no">6</div>
-        <div>
-          <h3>守住底线 —— 硬限额前置拒绝、核心系统离线自动改道</h3>
-          <p>600 万超硬限额：拒绝发生在动作执行<b>之前</b>，草稿根本不会被创建。核心系统整体离线：
-          实时接口被 runtimeGuard 拦下，规划器自动改道快照接口——<b>零编排代码，路是规划器自己找的</b>。</p>
-          <div class="code-pair">
-            <div><span class="label">配置即策略</span>
-<pre class="snippet"><code><span class="code-dim"># application.yml</span>
-actiongraph.limits.rules:
-  - action-id: <span class="code-string">"transfer.draft.create"</span>
-    hard-limit: 5000000      <span class="code-dim"># 超过 → 拒绝</span>
-    review-limit: 500000     <span class="code-dim"># 超过 → 升级审批</span></code></pre></div>
-            <div><span class="label">真实输出</span>
-<pre class="output">超硬限额: <span class="bad">DENIED_BY_POLICY</span>
-  → Policy denied action: transfer.draft.create
-核心离线: 改道后链路=[customer.lookup,
-  balance.check.<span class="ok">snapshot</span>, risk.assess, draft.create]
-30 万审批链=[checker-review, authorization]
-  （比 80 万的升级链少一级）</pre></div>
-          </div>
+      <div class="evidence-block">
+        <h3>导览产物如何阅读</h3>
+        <p>下面把 transfer-demo 的输出按“证据类型”而不是代码片段组织，便于架构评审、开发接入和审计人员各取所需。</p>
+        <div class="table-wrap">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th>证据类型</th>
+                <th>说明</th>
+                <th>对应能力</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Mermaid Action 图</td>
+                <td>展示 Action、condition 与可达路径，适合放入架构评审或变更记录。</td>
+                <td>GoalCatalog、ActionGraphExporter、启动校验</td>
+              </tr>
+              <tr>
+                <td>运行状态序列</td>
+                <td>从 STARTED、ACTION_RETRIED、SUSPENDED_PENDING_REVIEW 到 COMPLETED，串起一次完整 run。</td>
+                <td>GoapExecutor、retry、suspend/resume</td>
+              </tr>
+              <tr>
+                <td>审批任务记录</td>
+                <td>记录审批链、stage index、review attributes 与最终决策，支持外部审批系统回调。</td>
+                <td>Human Review、RiskBasedChainResolver</td>
+              </tr>
+              <tr>
+                <td>Trace 哈希链</td>
+                <td>逐事件 SHA-256 链接，可验证断链、篡改和导出文件完整性。</td>
+                <td>RunTrace、TraceHasher、TraceChainVerifier</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
       <div class="tutorial-run">
-        <b>把它跑起来（完全离线，无需 API Key）</b><br>
-        ① 在框架仓库根执行 <code>./gradlew publishToMavenLocal</code>；
-        ② 进入教学项目 transfer-demo 执行 <code>./gradlew bootRun</code>。
-        整个接入只有 9 个业务文件：6 个注解式 Action、1 个 Goal 定义、1 个 Seeder、1 个 Contribution——
-        其余全部由 <code>actiongraph-spring-boot-starter</code> 自动装配。完整接入手册见
-        <a href="quick-start.html" style="text-decoration:underline">快速接入指南</a>。
+        <b>离线运行路径</b><br>
+        先在框架仓库根执行 <code>./gradlew publishToMavenLocal</code>，再进入教学项目运行 <code>./gradlew bootRun</code>。完整接入手册见
+        <a href="quick-start.html">快速接入指南</a>。
       </div>
     </div>
   </section>
@@ -2074,7 +2367,7 @@ actiongraph.limits.rules:
   <section class="section alt" id="docs">
     <div class="wrap">
       <div class="section-head">
-        <h2>继续深入：从快速接入到控制面契约。</h2>
+        <h2>文档入口按接入阶段组织。</h2>
         <p class="section-lead">这套官网页聚合了主要概念。每个细节仍然指向仓库中的原始文档，方便开发者直接进入对应实现与示例。</p>
       </div>
       <div class="doc-grid">
