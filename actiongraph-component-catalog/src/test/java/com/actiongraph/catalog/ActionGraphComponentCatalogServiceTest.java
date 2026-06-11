@@ -26,7 +26,6 @@ class ActionGraphComponentCatalogServiceTest {
                         "actiongraph-core",
                         "actiongraph-runtime-api",
                         "actiongraph-human-review",
-                        "actiongraph-control-plane-spring-boot-starter",
                         "actiongraph-component-catalog",
                         "actiongraph-control-plane-api",
                         "actiongraph-component-catalog-spring-boot-starter",
@@ -43,10 +42,7 @@ class ActionGraphComponentCatalogServiceTest {
                         "actiongraph-component-catalog-spring-boot-starter"
                 );
         assertThat(service.component("actiongraph-control-plane-spring-boot-starter"))
-                .isPresent()
-                .get()
-                .satisfies(component -> assertThat(component.requires())
-                        .contains("actiongraph-component-catalog-spring-boot-starter"));
+                .isEmpty();
         assertThat(service.component("actiongraph-runtime-api-spring-boot-starter"))
                 .isPresent()
                 .get()
@@ -150,7 +146,11 @@ class ActionGraphComponentCatalogServiceTest {
                 .isPresent()
                 .get()
                 .satisfies(profile -> assertThat(profile.modules())
-                        .contains("actiongraph-control-plane-spring-boot-starter"));
+                        .containsExactly(
+                                "actiongraph-runtime-api-spring-boot-starter",
+                                "actiongraph-component-catalog-spring-boot-starter",
+                                "actiongraph-human-review-api-spring-boot-starter",
+                                "actiongraph-console-spring-boot-starter"));
         assertThat(service.profile("ecosystem-introspection"))
                 .isPresent()
                 .get()
@@ -197,7 +197,7 @@ class ActionGraphComponentCatalogServiceTest {
         assertThat(service.profilesContainingModule("actiongraph-console"))
                 .extracting(ActionGraphCompositionProfile::name)
                 .contains("console-control-plane");
-        assertThat(service.profilesContainingModule("actiongraph-control-plane-spring-boot-starter"))
+        assertThat(service.profilesContainingModule("actiongraph-runtime-api-spring-boot-starter"))
                 .extracting(ActionGraphCompositionProfile::name)
                 .contains("full-control-plane", "full-pilot-service");
         assertThat(service.profilesContainingModule("missing")).isEmpty();

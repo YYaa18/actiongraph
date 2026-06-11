@@ -1,8 +1,8 @@
-# Control-Plane Starter
+# Control-Plane Endpoint Composition
 
-`actiongraph-control-plane-spring-boot-starter` is an optional aggregate for Spring MVC deployments that want the built-in control-plane endpoint set through one coordinate.
+ActionGraph no longer publishes an extra aggregate starter for the built-in Spring MVC control-plane endpoints. Spring deployments compose the endpoint surface explicitly so dependency lists show exactly what is exposed.
 
-It brings these endpoint starters together:
+Use these endpoint starters together when one deployment should expose the full built-in control plane:
 
 - `actiongraph-runtime-api-spring-boot-starter`
 - `actiongraph-component-catalog-spring-boot-starter`
@@ -16,13 +16,16 @@ The endpoint starters remain independently usable. Prefer them when a deployment
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```
 
-The aggregate does not include runtime action registration, runtime JDBC repositories, review-task storage, LLM clients, or governance policies. Add those components separately when the deployment owns them.
+The endpoint starter set does not include runtime action registration, runtime JDBC repositories, review-task storage, LLM clients, or governance policies. Add those components separately when the deployment owns them.
 
-All built-in endpoint starters share `actiongraph-control-plane-api` for error response contracts, Java 8 compatible aggregate / properties-based aggregate / safe GET retry / Runtime / Component Catalog / Human Review / Console HTTP client support, and shared-secret token checks. The API component keeps the JSON error shape, header lookup, disabled-secret semantics, and constant-time comparison consistent across Runtime API, Component Catalog, Human Review API, callback, and Console endpoints. The Spring aggregate starter exposes server-side endpoint modules; the Java 8 aggregate client, properties adapter, and GET-only retry knobs are only caller-side conveniences for legacy systems. These are still lightweight control-plane utilities; enterprise identity, gateway policy, RBAC, tenant checks, and rate limits remain outside this aggregate.
+All built-in endpoint starters share `actiongraph-control-plane-api` for error response contracts, Java 8 compatible aggregate / properties-based aggregate / safe GET retry / Runtime / Component Catalog / Human Review / Console HTTP client support, and shared-secret token checks. The API component keeps the JSON error shape, header lookup, disabled-secret semantics, and constant-time comparison consistent across Runtime API, Component Catalog, Human Review API, callback, and Console endpoints. The Java 8 aggregate client, properties adapter, and GET-only retry knobs are caller-side conveniences for legacy systems. These are still lightweight control-plane utilities; enterprise identity, gateway policy, RBAC, tenant checks, and rate limits remain outside ActionGraph.
 
 Runtime start/resume endpoints also support whitelisted request-header capture into trace metadata through `actiongraph.runtime.api.trace-headers`. This is intended for non-sensitive audit identifiers such as request id, correlation id, or source system. The configured Runtime API token header is hard-excluded from trace capture even when misconfigured into that list; other sensitive headers should still stay out of it.
 
@@ -50,11 +53,11 @@ actiongraph:
     enabled: true
 ```
 
-The aggregate adds classpath availability only. Existing conditional beans still require the corresponding runtime services, repositories, interpreters, seeders, or console repositories. The component catalog is self-contained, but it still remains opt-in through `actiongraph.component-catalog.enabled=true`.
+Endpoint starters add classpath availability only. Existing conditional beans still require the corresponding runtime services, repositories, interpreters, seeders, or console repositories. The component catalog is self-contained, but it still remains opt-in through `actiongraph.component-catalog.enabled=true`.
 
 ## Component Catalog Endpoints
 
-When the component catalog switch is enabled, the aggregate also exposes a read-only ecosystem view:
+When the component catalog switch is enabled, the component catalog endpoint starter exposes a read-only ecosystem view:
 
 ```text
 GET /actiongraph/components
@@ -70,4 +73,4 @@ Use `actiongraph.component-catalog.path`, `actiongraph.component-catalog.token-h
 
 ## Boundary
 
-This module has no production Java code. It is a dependency-composition artifact for convenience and version alignment. It must not add controllers, repositories, policies, execution behavior, or default storage of its own.
+There is no separate aggregate module for this composition. Keep endpoint exposure explicit in application dependencies and property switches.

@@ -377,7 +377,7 @@ These Spring MVC endpoint starters depend on this module transitively:
 - `actiongraph-human-review-api-spring-boot-starter`
 - `actiongraph-console-spring-boot-starter`
 
-The aggregate `actiongraph-control-plane-spring-boot-starter` brings those endpoint starters together, so it also receives the shared response contract and shared-secret token verification transitively.
+The Spring endpoint starters use this shared response contract and shared-secret token verification directly; applications compose the endpoint set explicitly instead of relying on an extra aggregate artifact.
 
 ## Boundary
 

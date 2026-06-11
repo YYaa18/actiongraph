@@ -33,7 +33,6 @@ The runtime is split into publishable library modules plus a non-published actio
 | `actiongraph-human-review-api-spring-boot-starter` | `com.actiongraph:actiongraph-human-review-api-spring-boot-starter:0.1.0` | Optional Spring MVC human-review task API and approval callback endpoints |
 | `actiongraph-console` | `com.actiongraph:actiongraph-console:0.1.0` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
 | `actiongraph-console-spring-boot-starter` | `com.actiongraph:actiongraph-console-spring-boot-starter:0.1.0` | Optional Spring MVC Console API, UI, export endpoints, and JDBC repository auto-configuration |
-| `actiongraph-control-plane-spring-boot-starter` | `com.actiongraph:actiongraph-control-plane-spring-boot-starter:0.1.0` | Optional aggregate for runtime, component catalog, human-review, callback, and Console endpoint starters |
 
 `actiongraph-samples` remains an application/sample module and is intentionally not published.
 
@@ -239,10 +238,13 @@ Spring MVC read-only operational monitoring, built-in page, audit export endpoin
 implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 ```
 
-Full built-in Spring MVC control-plane endpoints add:
+Full built-in Spring MVC control-plane endpoints add the explicit endpoint starter set:
 
 ```kotlin
-implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
+implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
+implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
+implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
+implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 ```
 
 ## Private Repository Publishing

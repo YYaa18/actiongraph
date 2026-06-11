@@ -407,18 +407,21 @@ GET /actiongraph/console/runs/{runId}/trace/export.jsonl
 
 It requires `actiongraph.console.enabled=true` and either an `ActionGraphConsoleService`/`ConsoleRunRepository` bean or an enabled JDBC repository auto-configuration with a `DataSource`. It must remain read-only: it does not execute, resume, approve, deny, or compensate runs.
 
-## Spring MVC Control-Plane Aggregate
+## Spring MVC Control-Plane Endpoint Composition
 
-Use this convenience coordinate when one Spring MVC deployment should expose the built-in runtime entry API, component catalog API, approval task API, approval callback receiver, Console JSON API, Console UI, and Console export endpoints together.
+Use explicit endpoint starters when one Spring MVC deployment should expose the built-in runtime entry API, component catalog API, approval task API, approval callback receiver, Console JSON API, Console UI, and Console export endpoints together.
 
 ```kotlin
 dependencies {
     implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
-    implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```
 
-The aggregate brings only endpoint starters. It does not create business runtime beans, interpreters, seeders, runtime repositories, review storage, LLM clients, or governance policies. Each endpoint family still requires its own `actiongraph.*.enabled=true` switch and, except the self-contained component catalog, its own backing beans. Console read-model repository wiring remains property-gated by the Console starter. Prefer split endpoint starters when the deployment should expose only part of the built-in control plane.
+Endpoint starters do not create business runtime beans, interpreters, seeders, runtime repositories, review storage, LLM clients, or governance policies. Each endpoint family still requires its own `actiongraph.*.enabled=true` switch and, except the self-contained component catalog, its own backing beans. Console read-model repository wiring remains property-gated by the Console starter. Include only the endpoint starters the deployment should expose.
 
 ## Full Pilot Service
 
@@ -434,7 +437,9 @@ dependencies {
     implementation("com.actiongraph:actiongraph-jdbc-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
-    implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```

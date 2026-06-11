@@ -47,7 +47,6 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 | `actiongraph-console` | keep-target | `actiongraph-console` |
 | `actiongraph-console-spring-boot-starter` | temporary-optional-starter | `actiongraph-console-spring-boot-starter` |
 | `actiongraph-control-plane-api` | merge-planned | `actiongraph-console` |
-| `actiongraph-control-plane-spring-boot-starter` | merge-planned | `actiongraph-spring-boot-starter` |
 | `actiongraph-core` | keep-target | `actiongraph-core` |
 | `actiongraph-governance` | keep-target | `actiongraph-governance` |
 | `actiongraph-governance-human-review` | merge-planned | `actiongraph-governance` |
@@ -73,6 +72,6 @@ This ledger is intentionally exhaustive. The component catalog test compares it 
 
 ## Freeze Notes
 
-- The ledger does not mean the current 29-module surface is desirable; it documents the temporary state so growth is visible.
+- The ledger does not mean the current 28-module surface is desirable; it documents the temporary state so growth is visible.
 - Consolidation should happen by moving implementation into target modules, keeping compatibility shims only when a consumer migration requires them.
 - Sample-domain growth is not a substitute for F1 validation. Claims precheck is frozen except for real/near-real integration fixes and evidence.

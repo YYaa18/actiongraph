@@ -60,11 +60,11 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
                 .run(context -> {
                     MockMvc mockMvc = mockMvc(context);
 
-                    mockMvc.perform(get("/internal/actiongraph/components/modules/actiongraph-control-plane-spring-boot-starter"))
+                    mockMvc.perform(get("/internal/actiongraph/components/modules/actiongraph-runtime-api-spring-boot-starter"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.kind").value("CONTROL_PLANE"))
                             .andExpect(jsonPath("$.compatibility").value("java21-plus"))
-                            .andExpect(jsonPath("$.capabilities[0]").value("control-plane-aggregate"));
+                            .andExpect(jsonPath("$.capabilities[0]").value("runtime-http-api"));
 
                     mockMvc.perform(get("/internal/actiongraph/components/modules/actiongraph-control-plane-api"))
                             .andExpect(status().isOk())
@@ -90,6 +90,15 @@ class ActionGraphComponentCatalogWebAutoConfigurationTest {
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/control-plane-response-contracts"))
                             .andExpect(status().isOk())
                             .andExpect(jsonPath("$.modules[0]").value("actiongraph-control-plane-api"));
+
+                    mockMvc.perform(get("/internal/actiongraph/components/profiles/full-control-plane"))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.modules[*]",
+                                    hasItem("actiongraph-runtime-api-spring-boot-starter")))
+                            .andExpect(jsonPath("$.modules[*]",
+                                    hasItem("actiongraph-human-review-api-spring-boot-starter")))
+                            .andExpect(jsonPath("$.modules[*]",
+                                    hasItem("actiongraph-console-spring-boot-starter")));
 
                     mockMvc.perform(get("/internal/actiongraph/components/profiles/java8-legacy-client"))
                             .andExpect(status().isOk())

@@ -40,7 +40,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional runtime API Spring Boot starter with goal interpretation, start, resume, and trace-header capture endpoints
 - Optional component catalog Spring Boot starter with read-only ecosystem introspection endpoints
 - Optional human-review API Spring Boot starter with task query, decision, and approval callback endpoints
-- Optional control-plane aggregate Spring Boot starter for runtime, component catalog, human-review, callback, and console endpoints
+- Explicit control-plane endpoint starter composition for runtime, component catalog, human-review, callback, and console endpoints
 - Reusable console library for read-only run monitoring, JDBC read models, and CSV/JSONL audit evidence
 - Optional console Spring Boot starter for JSON API, built-in UI, audit exports, and JDBC read-model repository auto-configuration
 - Optional JDBC Spring Boot starter for durable repository auto-configuration
@@ -78,7 +78,6 @@ It lets application teams expose ordinary business methods as typed Actions, the
 | `actiongraph-human-review-spring-boot-starter` | Optional repository-backed review policy and JDBC repository auto-configuration |
 | `actiongraph-component-catalog-spring-boot-starter` | Optional Spring MVC read-only component catalog endpoints |
 | `actiongraph-human-review-api-spring-boot-starter` | Optional Spring MVC human-review task API and callback endpoints |
-| `actiongraph-control-plane-spring-boot-starter` | Optional aggregate for runtime, component catalog, human-review, callback, and console endpoint starters |
 | `actiongraph-console` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
 | `actiongraph-console-spring-boot-starter` | Optional Spring MVC Console API, UI, export endpoints, and JDBC repository auto-configuration |
 | `actiongraph-samples` | Pure Java sample applications |
@@ -99,13 +98,10 @@ dependencies {
     implementation("com.actiongraph:actiongraph-human-review-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 
-    // Option A: full built-in control-plane endpoints in one aggregate.
-    implementation("com.actiongraph:actiongraph-control-plane-spring-boot-starter")
-
-    // Option B: choose split endpoint starters instead.
-    // implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
-    // implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
-    // implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
+    // Choose only the built-in control-plane endpoint starters this deployment exposes.
+    implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")
+    implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")
     // implementation("com.actiongraph:actiongraph-console-spring-boot-starter")
 }
 ```
@@ -234,7 +230,7 @@ If `shared-secret` is configured, the request must include the configured token 
 
 `actiongraph-console` can be used directly by custom monitoring services, CLIs, or enterprise gateways that want the run query service, response model, `ConsoleRunRepository` port, JDBC trace read model, and CSV/JSONL audit export service without Spring MVC endpoints. Spring MVC control-plane services add `actiongraph-console-spring-boot-starter` when they want the built-in JSON API, HTML page, export endpoints, and optional JDBC `ConsoleRunRepository` auto-configuration from a `DataSource`. With `actiongraph.console.enabled=true`, the read-only surface is:
 
-If a single Spring MVC deployment should expose the built-in runtime entry, component catalog, approval task, approval callback, and console endpoints together, add `actiongraph-control-plane-spring-boot-starter`. It is only an endpoint aggregate; it still does not create runtime actions, interpreters, runtime repositories, review storage, LLM clients, or governance policies. Console read-model repository wiring remains property-gated by the Console starter.
+If a single Spring MVC deployment should expose the built-in runtime entry, component catalog, approval task, approval callback, and console endpoints together, add the explicit endpoint starters: `actiongraph-runtime-api-spring-boot-starter`, `actiongraph-component-catalog-spring-boot-starter`, `actiongraph-human-review-api-spring-boot-starter`, and `actiongraph-console-spring-boot-starter`. They still do not create runtime actions, interpreters, runtime repositories, review storage, LLM clients, or governance policies. Console read-model repository wiring remains property-gated by the Console starter.
 
 ```text
 Console starter: GET /actiongraph/console

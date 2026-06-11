@@ -116,7 +116,7 @@ The default catalog includes profiles such as:
 | `runtime-entry-api` | Interpret/start/resume service surface |
 | `human-review-control-plane` | Approval task inbox and callback surface |
 | `console-control-plane` | Read-only console and audit export surface |
-| `full-control-plane` | Built-in endpoint aggregate |
+| `full-control-plane` | Explicit built-in endpoint starter composition |
 | `ecosystem-introspection` | Component catalog modules |
 | `java8-legacy-client` | Java 8 client-side integration over deployed runtime, component catalog, human-review, and console APIs |
 | `full-pilot-service` | Pilot-oriented full composition |

@@ -204,7 +204,6 @@
   <tr><td><code>com.actiongraph:actiongraph-runtime-api-spring-boot-starter</code></td><td>运行入口 HTTP 端点</td><td>Spring MVC 控制层需要解释目标、启动运行和恢复挂起运行时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-human-review-api-spring-boot-starter</code></td><td>审批任务查询、决策与回调 HTTP 端点</td><td>Spring MVC 控制层需要审批任务 API 或审批回调时引入；各端点仍由配置开关控制</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-component-catalog-spring-boot-starter</code></td><td>组件目录只读 HTTP 端点</td><td>Spring MVC 控制层需要暴露模块与组合方案目录时引入</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-control-plane-spring-boot-starter</code></td><td>控制面端点聚合包</td><td>单个 Spring MVC 部署需要内置 Runtime / Component Catalog / Human Review / Callback / Console 全套端点时引入</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console</code></td><td>只读 Console 查询、JDBC read model 与 CSV/JSONL 审计导出</td><td>自研控制台、CLI、批处理或网关适配时使用，不引入 Spring MVC endpoint</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-console-spring-boot-starter</code></td><td>Console API、页面、导出端点与 JDBC 仓储自动装配</td><td>Spring MVC 控制层需要内置只读运行监控时引入</td></tr>
 </table>
@@ -224,12 +223,11 @@ dependencies {
     implementation(<span class="s">"com.actiongraph:actiongraph-jdbc-spring-boot-starter"</span>)  <span class="c">// Spring Boot 生产持久化</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-human-review-spring-boot-starter"</span>)  <span class="c">// 可选仓储型审批 / 审批持久化</span>
     implementation(<span class="s">"com.actiongraph:actiongraph-console-spring-boot-starter"</span>)  <span class="c">// 可选只读 Console 控制面</span>
-    implementation(<span class="s">"com.actiongraph:actiongraph-control-plane-spring-boot-starter"</span>)  <span class="c">// 可选内置控制面聚合包</span>
 
-    <span class="c">// 或者按需选择拆分 endpoint starter：</span>
-    <span class="c">// implementation("com.actiongraph:actiongraph-runtime-api-spring-boot-starter")</span>
-    <span class="c">// implementation("com.actiongraph:actiongraph-component-catalog-spring-boot-starter")</span>
-    <span class="c">// implementation("com.actiongraph:actiongraph-human-review-api-spring-boot-starter")</span>
+    <span class="c">// 按部署边界显式选择 endpoint starter：</span>
+    implementation(<span class="s">"com.actiongraph:actiongraph-runtime-api-spring-boot-starter"</span>)
+    implementation(<span class="s">"com.actiongraph:actiongraph-component-catalog-spring-boot-starter"</span>)
+    implementation(<span class="s">"com.actiongraph:actiongraph-human-review-api-spring-boot-starter"</span>)
     <span class="c">// implementation("com.actiongraph:actiongraph-console-spring-boot-starter")</span>
 }</code></pre>
 <p>基础 starter 引入后无需任何注解开关，自动装配以下 Bean（全部 <code>@ConditionalOnMissingBean</code>，你随时可以用自己的 <code>@Bean</code> 覆盖）：<code>Planner</code>、<code>GoapExecutor</code>、<code>ActionRegistry</code>、<code>ExecutionPolicyGuard</code>、<code>HumanReviewPolicy</code>、<code>TraceRepository</code>、<code>SuspendedRunRepository</code> 等。<code>MemoryContextLoader</code>、仓储型审批、JDBC 仓储和控制台端点都由对应可选 starter 显式提供。</p>
@@ -503,7 +501,7 @@ MemoryRepository memoryRepository =
   <tr><td><code>actiongraph.runtime.api.path</code></td><td><code>/actiongraph/runtime</code></td><td>运行入口 API 前缀；提供 <code>POST /interpret</code>、<code>POST /runs</code>、<code>POST /runs/{runId}/resume</code></td></tr>
   <tr><td><code>actiongraph.runtime.api.token-header</code></td><td><code>X-ActionGraph-Runtime-Token</code></td><td>启用共享密钥后用于传递运行入口 API token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.runtime.api.shared-secret</code></td><td>空</td><td>运行入口 API 共享密钥；为空时不校验，生产环境建议通过企业网关、环境变量或密钥系统注入</td></tr>
-  <tr><td><code>actiongraph.component-catalog.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露组件目录只读端点；需要 <code>actiongraph-component-catalog-spring-boot-starter</code>，也可通过控制面聚合包传递引入</td></tr>
+  <tr><td><code>actiongraph.component-catalog.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露组件目录只读端点；需要显式引入 <code>actiongraph-component-catalog-spring-boot-starter</code></td></tr>
   <tr><td><code>actiongraph.component-catalog.path</code></td><td><code>/actiongraph/components</code></td><td>组件目录 API 前缀；提供 <code>GET /</code>、<code>GET /modules</code>、<code>GET /modules/{module}</code>、<code>GET /profiles</code>、<code>GET /profiles/{profile}</code></td></tr>
   <tr><td><code>actiongraph.component-catalog.token-header</code></td><td><code>X-ActionGraph-Catalog-Token</code></td><td>启用共享密钥后用于传递组件目录 token 的 Header 名</td></tr>
   <tr><td><code>actiongraph.component-catalog.shared-secret</code></td><td>空</td><td>组件目录共享密钥；为空时不校验，生产环境建议接入企业网关或密钥系统</td></tr>
