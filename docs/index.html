@@ -324,8 +324,79 @@
     text-underline-offset: 3px;
   }
 
+  .act {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 18px;
+    margin-top: 34px;
+  }
+
+  .act-no {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: #143c27;
+    color: #9df0b2;
+    font-weight: 800;
+    font-size: 18px;
+  }
+
+  .act h3 { margin: 8px 0 8px; font-size: clamp(17px, 1.8vw, 21px); }
+  .act > div > p { color: var(--muted); margin-bottom: 12px; max-width: 62em; }
+
+  .code-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .code-pair .label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 6px 2px;
+  }
+
+  pre.snippet, pre.output {
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+
+  pre.snippet { background: var(--code-bg); color: var(--code-text); }
+  pre.snippet .code-dim { color: var(--code-dim); }
+  pre.output {
+    background: #f3f7f4;
+    border: 1px solid var(--line);
+    color: #29372f;
+  }
+
+  pre.output .ok { color: var(--green-strong); font-weight: 700; }
+  pre.output .warn { color: var(--amber); font-weight: 700; }
+  pre.output .bad { color: var(--coral); font-weight: 700; }
+
+  .tutorial-run {
+    margin-top: 30px;
+    border-left: 4px solid var(--green);
+    background: var(--green-soft);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+  }
+
   @media (max-width: 880px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .code-pair { grid-template-columns: 1fr; }
+    .act { grid-template-columns: 1fr; }
+    .act-no { width: 36px; height: 36px; font-size: 15px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1180,6 +1251,7 @@
       <a href="#modules">模块</a>
       <a href="#control-plane">控制面</a>
       <a href="#samples">样例</a>
+      <a href="#tutorial">教学</a>
       <a href="#docs">文档</a>
     </nav>
     <div class="nav-actions">
@@ -1834,6 +1906,160 @@ class OrderCancellationWorkflow {
 
 ./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-001 --environment local"</code>
         </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section tint" id="tutorial">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>教学：用一个真实项目，六幕走完全部能力。</h2>
+        <p>教学项目 <b>transfer-demo</b>（大额转账预约助手）完全离线可跑：一条 6 步业务链贯穿
+        自然语言入口、启动校验、确定性规划、自动重试、动态改道、限额升级、多级审批挂起恢复、
+        脱敏与防篡改审计。<b>以下所有输出均来自真实运行，未经修饰。</b></p>
+      </div>
+
+      <pre class="output" style="margin-top:6px">业务链：核身 → 查余额（实时/快照双路）→ 风险评估 → 生成草稿 → 提交人工审批
+自然语言入口："为客户 C001 预约 80 万元的大额转账"</pre>
+
+      <!-- 第 1 幕 -->
+      <div class="act">
+        <div class="act-no">1</div>
+        <div>
+          <h3>链路即图 —— 把「AI 只能走的路」画给评审看</h3>
+          <p>condition 是路标，Action 是路段。一行代码导出 Mermaid，贴进行内 wiki 就是给业务方与安全评审的承诺书。</p>
+          <div class="code-pair">
+            <div><span class="label">代码</span>
+<pre class="snippet"><code>String mermaid = new ActionGraphExporter()
+    .toMermaid(registry.all(),
+        goal.goal(), goal.seedConditions());</code></pre></div>
+            <div><span class="label">真实输出（节选）</span>
+<pre class="output">a_transfer_draft_create["transfer.draft.create
+  risk=MEDIUM"]
+c_transfer_RISK_ASSESSED --&gt; a_transfer_draft_create
+a_transfer_draft_create --&gt; c_transfer_DRAFT_CREATED</pre></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第 2 幕 -->
+      <div class="act">
+        <div class="act-no">2</div>
+        <div>
+          <h3>启动校验 —— 拼错一个 condition，应用拒绝启动</h3>
+          <p>把 <code>RISK_ASSESSED</code> 拼成 <code>RISK_ASSESED</code>，校验器不止说"不可达"，
+          还告诉你缺哪个条件、哪个 Action 悬空、疑似拼错了什么。链路通不通，启动那一刻就有答案。</p>
+          <div class="code-pair">
+            <div><span class="label">故意写错的代码</span>
+<pre class="snippet"><code><span class="code-anno">@ActionGraphAction</span>(id = <span class="code-string">"typo.draft.create"</span>,
+    preconditions = <span class="code-string">"transfer:RISK_ASSESED"</span>, <span class="code-dim">// 少个 S</span>
+    effects = <span class="code-string">"transfer:APPROVAL_REQUESTED"</span>)</code></pre></div>
+            <div><span class="label">真实输出</span>
+<pre class="output">valid = <span class="bad">false</span>
+缺失条件: [transfer:APPROVAL_REQUESTED]
+悬空动作: [typo.draft.create]
+诊断: closest registered effect ...
+  (possible spelling or namespace mismatch)</pre></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第 3 幕 -->
+      <div class="act">
+        <div class="act-no">3</div>
+        <div>
+          <h3>自然语言入口 —— 缺参就追问，绝不猜</h3>
+          <p>解释器只产出目标与参数（或澄清问题），<b>永远不产出执行计划</b>。生产环境接行内大模型只需四行配置（OpenAI 兼容协议），网关抖动自动降级到规则解释器。</p>
+          <div class="code-pair">
+            <div><span class="label">两次输入</span>
+<pre class="snippet"><code>interpreter.interpret(<span class="code-string">"帮客户预约一笔大额转账"</span>);
+interpreter.interpret(<span class="code-string">"为客户 C001 预约 80 万元的大额转账"</span>);</code></pre></div>
+            <div><span class="label">真实输出</span>
+<pre class="output">→ isReady=<span class="bad">false</span> 缺参=[customerId, amount]
+→ 追问用户: 请补充：customerId、amount
+→ isReady=<span class="ok">true</span> 参数={customerId=C001, amount=800000}</pre></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第 4 幕 -->
+      <div class="act">
+        <div class="act-no">4</div>
+        <div>
+          <h3>完整运行 —— 重试、限额升级、三级审批、挂起恢复</h3>
+          <p>实时余额接口前两次必失败（声明 <code>maxAttempts=3</code> 自动重试）；80 万超过 50 万审批阈值，
+          审批链自动升一级；遇到 HIGH 风险动作整个运行挂起，三级审批人依次批准后，<b>同一 runId 原子认领恢复</b>——并发恢复只有一个能成功。</p>
+          <div class="code-pair">
+            <div><span class="label">代码（节选）</span>
+<pre class="snippet"><code><span class="code-anno">@ActionGraphAction</span>(id = <span class="code-string">"transfer.balance.check.realtime"</span>,
+    maxAttempts = 3, backoffMillis = 100, ...)
+
+<span class="code-dim">// 审批后恢复：</span>
+executor.resume(runId, registry.all(), registry);</code></pre></div>
+            <div><span class="label">真实输出</span>
+<pre class="output">首次运行: <span class="warn">SUSPENDED_PENDING_REVIEW</span>
+待审任务: 审批链=[checker-review, authorization,
+  amount-authorization]   ← 金额升级自动加一级
+金额上下文={amount=800000, amountEscalated=true}
+第 1/2/3 级审批通过
+恢复运行: <span class="ok">COMPLETED</span>  全链 5 步</pre></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第 5 幕 -->
+      <div class="act">
+        <div class="act-no">5</div>
+        <div>
+          <h3>审计 —— 防篡改哈希链与敏感数据脱敏</h3>
+          <p>38 条事件跨挂起恢复连续编号，逐事件 SHA-256 链接：改动任何一行，验证器都能指出确切位置。
+          审批人看到的预览里，身份证与手机号已在落库前打码——而挂起快照保持原值，恢复无损。</p>
+          <div class="code-pair">
+            <div><span class="label">代码</span>
+<pre class="snippet"><code>new TraceChainVerifier()
+    .verify(traces.findByRun(runId));</code></pre></div>
+            <div><span class="label">真实输出</span>
+<pre class="output">哈希链验证: valid=<span class="ok">true</span>  共 38 条事件
+[10] ACTION_RETRIED {attempt=1, backoffMillis=100}
+[11] ACTION_RETRIED {attempt=2, backoffMillis=100}
+审批预览(脱敏后) CustomerProfile =
+  idCard=<span class="ok">110101********8888</span>, phone=<span class="ok">138****5678</span></pre></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第 6 幕 -->
+      <div class="act">
+        <div class="act-no">6</div>
+        <div>
+          <h3>守住底线 —— 硬限额前置拒绝、核心系统离线自动改道</h3>
+          <p>600 万超硬限额：拒绝发生在动作执行<b>之前</b>，草稿根本不会被创建。核心系统整体离线：
+          实时接口被 runtimeGuard 拦下，规划器自动改道快照接口——<b>零编排代码，路是规划器自己找的</b>。</p>
+          <div class="code-pair">
+            <div><span class="label">配置即策略</span>
+<pre class="snippet"><code><span class="code-dim"># application.yml</span>
+actiongraph.limits.rules:
+  - action-id: <span class="code-string">"transfer.draft.create"</span>
+    hard-limit: 5000000      <span class="code-dim"># 超过 → 拒绝</span>
+    review-limit: 500000     <span class="code-dim"># 超过 → 升级审批</span></code></pre></div>
+            <div><span class="label">真实输出</span>
+<pre class="output">超硬限额: <span class="bad">DENIED_BY_POLICY</span>
+  → Policy denied action: transfer.draft.create
+核心离线: 改道后链路=[customer.lookup,
+  balance.check.<span class="ok">snapshot</span>, risk.assess, draft.create]
+30 万审批链=[checker-review, authorization]
+  （比 80 万的升级链少一级）</pre></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tutorial-run">
+        <b>把它跑起来（完全离线，无需 API Key）</b><br>
+        ① 在框架仓库根执行 <code>./gradlew publishToMavenLocal</code>；
+        ② 进入教学项目 transfer-demo 执行 <code>./gradlew bootRun</code>。
+        整个接入只有 9 个业务文件：6 个注解式 Action、1 个 Goal 定义、1 个 Seeder、1 个 Contribution——
+        其余全部由 <code>actiongraph-spring-boot-starter</code> 自动装配。完整接入手册见
+        <a href="quick-start.html" style="text-decoration:underline">快速接入指南</a>。
       </div>
     </div>
   </section>
