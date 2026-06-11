@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ActionGraph | Governed Java Agent Runtime</title>
+<meta name="description" content="ActionGraph 是面向 Java 企业业务系统的类型化 GOAP 框架，用确定性规划、人审、补偿、审计与控制面能力把自然语言目标安全落到业务 Action。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23143c27'/%3E%3Cpath d='M32 12l18 10v20L32 52 14 42V22l18-10z' fill='none' stroke='%239df0b2' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M22 32h20M32 22v20' stroke='%239df0b2' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --page: #ffffff;
+    --section: #f6f8fa;
+    --section-strong: #eef4f7;
+    --surface: #ffffff;
+    --ink: #12211b;
+    --ink-2: #24342d;
+    --muted: #5f6f68;
+    --faint: #84918b;
+    --line: #dbe4df;
+    --line-strong: #b9c9c1;
+    --green: #20a05b;
+    --green-strong: #0f7d43;
+    --green-soft: #e5f6ed;
+    --blue: #2467d6;
+    --blue-soft: #e8f0ff;
+    --amber: #c97b13;
+    --amber-soft: #fff3df;
+    --coral: #c94e4e;
+    --coral-soft: #fff0ee;
+    --code-bg: #101914;
+    --code-text: #e8f3ee;
+    --code-dim: #96a79e;
+    --code-green: #7ee29b;
+    --code-blue: #8db8ff;
+    --code-amber: #ffd07a;
+    --radius: 8px;
+    --shadow: 0 18px 60px rgba(20, 40, 32, 0.12);
+    --max: 1180px;
+    --header: 72px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--page);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    text-rendering: optimizeLegibility;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  p { margin: 0; }
+  code, pre {
+    font-family: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    min-height: var(--header);
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid rgba(219, 228, 223, 0.9);
+    backdrop-filter: blur(16px);
+  }
+
+  .nav-shell {
+    width: min(var(--max), calc(100% - 40px));
+    min-height: var(--header);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 800;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: #11251b;
+    color: #9df0b2;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+
+  .brand-mark svg {
+    width: 23px;
+    height: 23px;
+    stroke-width: 1.8;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 650;
+  }
+
+  .nav-links a {
+    padding: 10px 12px;
+    border-radius: 7px;
+  }
+
+  .nav-links a:hover,
+  .nav-links a.active {
+    color: var(--green-strong);
+    background: var(--green-soft);
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    color: var(--ink);
+    background: #fff;
+    font-size: 14px;
+    font-weight: 760;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
+  }
+
+  .button:hover {
+    transform: translateY(-1px);
+    border-color: var(--green);
+    color: var(--green-strong);
+  }
+
+  .button.primary {
+    border-color: #143c27;
+    background: #143c27;
+    color: #fff;
+  }
+
+  .button.primary:hover {
+    background: var(--green-strong);
+    border-color: var(--green-strong);
+    color: #fff;
+  }
+
+  .button svg {
+    width: 17px;
+    height: 17px;
+    stroke-width: 2;
+  }
+
+  .mobile-toggle {
+    display: none;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .mobile-toggle svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+  }
+
+  .hero {
+    position: relative;
+    min-height: min(720px, calc(100vh - 88px));
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    background-image:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 38%, rgba(255, 255, 255, 0.36) 68%, rgba(255, 255, 255, 0.08) 100%),
+      url("assets/actiongraph-hero.png");
+    background-size: cover;
+    background-position: center right;
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 130px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), #fff);
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    width: min(var(--max), calc(100% - 40px));
+    margin: 0 auto;
+    padding: 86px 0 94px;
+  }
+
+  .hero-copy {
+    max-width: 660px;
+  }
+
+  h1 {
+    margin: 0;
+    color: #0f1e17;
+    font-size: 72px;
+    line-height: 0.98;
+    font-weight: 860;
+    letter-spacing: 0;
+  }
+
+  .hero-subtitle {
+    margin-top: 28px;
+    color: var(--ink-2);
+    font-size: 24px;
+    line-height: 1.38;
+    font-weight: 760;
+    max-width: 640px;
+  }
+
+  .hero-body {
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1.75;
+    max-width: 610px;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 32px;
+  }
+
+  .hero-command {
+    margin-top: 46px;
+    display: grid;
+    grid-template-columns: minmax(0, 420px) minmax(0, 300px);
+    gap: 14px;
+    align-items: stretch;
+  }
+
+  .terminal {
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--code-bg);
+    box-shadow: var(--shadow);
+  }
+
+  .terminal pre {
+    font-size: 12px;
+  }
+
+  .terminal-head {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 14px;
+    background: #17241d;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #6b7d72;
+  }
+
+  .dot:nth-child(1) { background: #f36d64; }
+  .dot:nth-child(2) { background: #f2bd52; }
+  .dot:nth-child(3) { background: #4fc979; }
+
+  pre {
+    margin: 0;
+    padding: 18px 20px 20px;
+    color: var(--code-text);
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.58;
+  }
+
+  .code-key { color: var(--code-blue); }
+  .code-string { color: var(--code-green); }
+  .code-comment { color: var(--code-dim); }
+  .code-anno { color: var(--code-amber); }
+
+  .hero-facts {
+    display: grid;
+    gap: 10px;
+  }
+
+  .fact {
+    min-height: 74px;
+    padding: 14px 16px;
+    border: 1px solid rgba(185, 201, 193, 0.75);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(10px);
+  }
+
+  .fact b {
+    display: block;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  .fact span {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .proof-strip {
+    position: relative;
+    z-index: 2;
+    width: min(var(--max), calc(100% - 40px));
+    margin: -50px auto 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 16px 50px rgba(18, 33, 27, 0.09);
+  }
+
+  .proof {
+    padding: 24px;
+    min-height: 122px;
+    border-right: 1px solid var(--line);
+  }
+
+  .proof:last-child { border-right: 0; }
+
+  .proof strong {
+    display: block;
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  .proof span {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .section {
+    padding: 94px 0;
+  }
+
+  .section.tight { padding: 72px 0; }
+  .section.alt { background: var(--section); }
+  .section.tint { background: linear-gradient(180deg, #f5faf7, #eef5f2); }
+
+  .wrap {
+    width: min(var(--max), calc(100% - 40px));
+    margin: 0 auto;
+  }
+
+  .section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: end;
+    margin-bottom: 42px;
+  }
+
+  .section-head.full {
+    display: block;
+    max-width: 820px;
+  }
+
+  h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 44px;
+    line-height: 1.08;
+    font-weight: 840;
+    letter-spacing: 0;
+  }
+
+  .section-lead {
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1.75;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 42px;
+    align-items: start;
+  }
+
+  .prose {
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.75;
+  }
+
+  .prose p + p { margin-top: 16px; }
+  .prose strong { color: var(--ink); }
+  .prose a {
+    color: var(--green-strong);
+    font-weight: 760;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .problem-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .problem {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+  }
+
+  .problem svg {
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+    color: var(--coral);
+    stroke-width: 2;
+  }
+
+  .problem b {
+    display: block;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .problem span {
+    display: block;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.58;
+  }
+
+  .model-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .model-step {
+    position: relative;
+    min-height: 190px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+  }
+
+  .model-step::after {
+    content: "";
+    position: absolute;
+    top: 40px;
+    right: -13px;
+    width: 14px;
+    height: 1px;
+    background: var(--line-strong);
+  }
+
+  .model-step:last-child::after { display: none; }
+
+  .step-number {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--green-soft);
+    color: var(--green-strong);
+    font-size: 14px;
+    font-weight: 820;
+  }
+
+  .model-step h3,
+  .feature h3,
+  .sample h3,
+  .doc-link h3,
+  .module-card h3,
+  .ops-card h3 {
+    margin: 16px 0 8px;
+    color: var(--ink);
+    font-size: 18px;
+    line-height: 1.25;
+    letter-spacing: 0;
+  }
+
+  .model-step p,
+  .feature p,
+  .sample p,
+  .doc-link p,
+  .module-card p,
+  .ops-card p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .code-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .code-panel {
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--code-bg);
+    box-shadow: var(--shadow);
+  }
+
+  .code-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 42px;
+    padding: 0 14px 0 16px;
+    color: #d9e8df;
+    background: #17241d;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-size: 13px;
+    font-weight: 760;
+  }
+
+  .copy-btn {
+    min-width: 34px;
+    height: 28px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 6px;
+    color: #d9e8df;
+    background: rgba(255,255,255,0.04);
+    cursor: pointer;
+  }
+
+  .copy-btn:hover { border-color: rgba(126, 226, 155, 0.58); color: var(--code-green); }
+  .copy-btn svg { width: 15px; height: 15px; stroke-width: 2; }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .feature,
+  .sample,
+  .doc-link,
+  .module-card,
+  .ops-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    padding: 22px;
+  }
+
+  .feature-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--green-soft);
+    color: var(--green-strong);
+  }
+
+  .feature-icon.blue { background: var(--blue-soft); color: var(--blue); }
+  .feature-icon.amber { background: var(--amber-soft); color: var(--amber); }
+  .feature-icon.coral { background: var(--coral-soft); color: var(--coral); }
+
+  .feature-icon svg {
+    width: 21px;
+    height: 21px;
+    stroke-width: 2;
+  }
+
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .module-card {
+    padding: 20px;
+    min-height: 190px;
+  }
+
+  .module-tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: var(--section);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 760;
+  }
+
+  .module-tag.runtime { background: var(--green-soft); color: var(--green-strong); }
+  .module-tag.java8 { background: var(--blue-soft); color: var(--blue); }
+  .module-tag.ops { background: var(--amber-soft); color: var(--amber); }
+
+  .matrix {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .matrix th,
+  .matrix td {
+    padding: 15px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .matrix th {
+    color: var(--ink);
+    background: var(--section);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0;
+  }
+
+  .matrix tr:last-child td { border-bottom: 0; }
+  .matrix code {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 5px;
+    color: var(--ink);
+    background: #eef4f1;
+    font-size: 12.5px;
+  }
+
+  .control-plane {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .endpoint-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .endpoint {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 42px;
+    padding: 10px 12px;
+    border-radius: 7px;
+    background: var(--section);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .method {
+    flex: 0 0 auto;
+    min-width: 44px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    text-align: center;
+    color: var(--green-strong);
+    background: var(--green-soft);
+    font-size: 11px;
+    font-weight: 820;
+  }
+
+  .method.post {
+    color: var(--blue);
+    background: var(--blue-soft);
+  }
+
+  .endpoint code {
+    color: var(--ink);
+    background: transparent;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .ops-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .ops-card {
+    min-height: 220px;
+    padding: 24px;
+  }
+
+  .ops-card ul,
+  .sample ul {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+  }
+
+  .ops-card li,
+  .sample li {
+    position: relative;
+    padding-left: 18px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .ops-card li::before,
+  .sample li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  .sample-grid,
+  .doc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .sample h3,
+  .doc-link h3 {
+    margin-top: 0;
+  }
+
+  .run-command {
+    display: block;
+    margin-top: 18px;
+    padding: 12px;
+    border-radius: 7px;
+    color: #d9e8df;
+    background: var(--code-bg);
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+
+  .doc-link {
+    min-height: 150px;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .doc-link:hover {
+    transform: translateY(-2px);
+    border-color: var(--green);
+    box-shadow: 0 12px 34px rgba(20, 40, 32, 0.1);
+  }
+
+  .doc-link .path {
+    display: block;
+    margin-top: 14px;
+    color: var(--green-strong);
+    font-size: 13px;
+    font-weight: 760;
+    overflow-wrap: anywhere;
+  }
+
+  .adoption {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .adoption-step {
+    min-height: 196px;
+    padding: 24px;
+    border-right: 1px solid var(--line);
+  }
+
+  .adoption-step:last-child { border-right: 0; }
+  .adoption-step b {
+    display: block;
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.35;
+  }
+
+  .adoption-step span {
+    display: block;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.58;
+  }
+
+  .callout {
+    margin-top: 28px;
+    padding: 24px;
+    border: 1px solid var(--line-strong);
+    border-left: 4px solid var(--green);
+    border-radius: var(--radius);
+    background: #fff;
+  }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--ink);
+    font-size: 18px;
+  }
+
+  .callout p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.68;
+  }
+
+  .footer {
+    padding: 56px 0;
+    color: #d7e4dd;
+    background: #101914;
+  }
+
+  .footer-grid {
+    width: min(var(--max), calc(100% - 40px));
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) repeat(3, minmax(0, 0.45fr));
+    gap: 36px;
+  }
+
+  .footer b {
+    color: #fff;
+    font-size: 15px;
+  }
+
+  .footer p,
+  .footer a {
+    color: #aebfb6;
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .footer a {
+    display: block;
+    margin-top: 8px;
+  }
+
+  .footer a:hover { color: #9df0b2; }
+
+  @media (max-width: 1120px) {
+    .nav-links { display: none; }
+    .mobile-toggle { display: grid; place-items: center; }
+    .site-header.menu-open .nav-links {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      top: 78px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+    .site-header.menu-open .nav-links a { padding: 12px; }
+    .hero-command { grid-template-columns: 1fr; max-width: 640px; }
+    .proof-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .proof:nth-child(2) { border-right: 0; }
+    .proof:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .section-head,
+    .split,
+    .code-grid,
+    .control-plane { grid-template-columns: 1fr; }
+    .model-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .model-step::after { display: none; }
+    .feature-grid,
+    .ops-grid,
+    .sample-grid,
+    .doc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .adoption { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .adoption-step:nth-child(2) { border-right: 0; }
+    .adoption-step:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 720px) {
+    :root { --header: 66px; }
+    .nav-shell { width: min(calc(100% - 28px), var(--max)); gap: 12px; }
+    .nav-actions .button:not(.primary) { display: none; }
+    .brand { font-size: 15px; }
+    .brand-mark { width: 32px; height: 32px; }
+    .hero {
+      min-height: 690px;
+      background-image:
+        linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.96) 48%, rgba(255,255,255,0.72) 78%, rgba(255,255,255,0.28) 100%),
+        url("assets/actiongraph-hero.png");
+      background-size: 980px auto;
+      background-position: 62% bottom;
+    }
+    .hero-inner {
+      width: min(calc(100% - 28px), var(--max));
+      padding: 50px 0 290px;
+    }
+    h1 { font-size: 46px; line-height: 1.02; }
+    .hero-subtitle { font-size: 20px; line-height: 1.42; }
+    .hero-body { font-size: 16px; }
+    .hero-command { display: none; }
+    .proof-strip {
+      width: min(calc(100% - 28px), var(--max));
+      margin-top: -36px;
+      grid-template-columns: 1fr;
+    }
+    .proof {
+      min-height: 0;
+      padding: 18px;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .proof:last-child { border-bottom: 0; }
+    .section { padding: 68px 0; }
+    .section.tight { padding: 54px 0; }
+    .wrap { width: min(calc(100% - 28px), var(--max)); }
+    .section-head { gap: 18px; margin-bottom: 28px; }
+    h2 { font-size: 32px; line-height: 1.12; }
+    .section-lead { font-size: 16px; line-height: 1.65; }
+    .model-grid,
+    .feature-grid,
+    .ops-grid,
+    .sample-grid,
+    .doc-grid,
+    .module-grid,
+    .adoption,
+    .footer-grid { grid-template-columns: 1fr; }
+    .adoption-step,
+    .adoption-step:nth-child(2) {
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .adoption-step:last-child { border-bottom: 0; }
+    .matrix {
+      display: block;
+      overflow-x: auto;
+      border-radius: var(--radius);
+    }
+    .matrix table { min-width: 760px; }
+    .nav-actions .button.primary { padding: 10px 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+<header class="site-header" id="top">
+  <div class="nav-shell">
+    <a class="brand" href="#top" aria-label="ActionGraph 首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M12 3l7 4v10l-7 4-7-4V7l7-4z"></path>
+          <path d="M8 12h8"></path>
+          <path d="M12 8v8"></path>
+        </svg>
+      </span>
+      <span>ActionGraph</span>
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#why">为什么</a>
+      <a href="#model">执行模型</a>
+      <a href="#quickstart">快速开始</a>
+      <a href="#capabilities">核心能力</a>
+      <a href="#modules">模块</a>
+      <a href="#control-plane">控制面</a>
+      <a href="#samples">样例</a>
+      <a href="#docs">文档</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="button" href="../README.zh-CN.md">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        README
+      </a>
+      <a class="button primary" href="#quickstart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M5 12h14"></path>
+          <path d="M13 5l7 7-7 7"></path>
+        </svg>
+        开始接入
+      </a>
+      <button class="mobile-toggle" type="button" aria-label="打开导航" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M4 7h16"></path>
+          <path d="M4 12h16"></path>
+          <path d="M4 17h16"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-label="ActionGraph">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <h1>ActionGraph</h1>
+        <p class="hero-subtitle">面向 Java 企业系统的类型化 GOAP Agent 运行时。</p>
+        <p class="hero-body">把自然语言目标转成安全、可审计、可补偿的业务 Action 执行链。LLM 负责理解目标，确定性规划器负责组合路径，业务系统拥有最终裁决权。</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#quickstart">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="M13 5l7 7-7 7"></path>
+            </svg>
+            5 分钟看懂接入
+          </a>
+          <a class="button" href="#model">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M3 12h6l3-8 3 16 3-8h3"></path>
+            </svg>
+            查看运行模型
+          </a>
+        </div>
+        <div class="hero-command" aria-label="代码示例">
+          <div class="terminal">
+            <div class="terminal-head" aria-hidden="true">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+<pre><code><span class="code-anno">@ActionGraphAction</span>(
+  id = <span class="code-string">"order.lookup"</span>,
+  preconditions =
+    <span class="code-string">"order-cancellation:ORDER_ID_PRESENT"</span>,
+  effects =
+    <span class="code-string">"order-cancellation:ORDER_LOADED"</span>
+)
+OrderRecord lookup(OrderId orderId) {
+  <span class="code-key">return</span> orderService.find(orderId);
+}</code></pre>
+          </div>
+          <div class="hero-facts">
+            <div class="fact">
+              <b>LLM 不生成 Plan</b>
+              <span>目标解释可由 LLM 完成，执行路径由符号规划器搜索。</span>
+            </div>
+            <div class="fact">
+              <b>业务 Action 白名单</b>
+              <span>只能执行你暴露的类型化方法，不能绕过权限、审批和补偿边界。</span>
+            </div>
+            <div class="fact">
+              <b>审计与恢复内建</b>
+              <span>Trace、挂起快照、人审任务、Console read model 可切到 JDBC。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="proof-strip" aria-label="核心摘要">
+    <div class="proof">
+      <strong>Deterministic planning</strong>
+      <span>基于 Action precondition / effect 搜索路径，同样输入得到同样计划。</span>
+    </div>
+    <div class="proof">
+      <strong>Typed blackboard</strong>
+      <span>运行态数据按 Java 类型与 key 管理，减少字符串拼装式传参。</span>
+    </div>
+    <div class="proof">
+      <strong>Human review</strong>
+      <span>需要人审的高风险步骤可多级挂起，审批后以同一 runId 原子认领恢复。</span>
+    </div>
+    <div class="proof">
+      <strong>Audit evidence</strong>
+      <span>Trace 哈希链、CSV/JSONL 导出、只读 Console read model 面向监管。</span>
+    </div>
+  </div>
+
+  <section class="section" id="why">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>企业 AI 执行的难点，不是回答，而是敢不敢执行。</h2>
+        <p class="section-lead">ActionGraph 的设计目标是把“可控业务能力”变成 Agent 可以规划和执行的 Action 集合，同时把计划、审批、补偿、恢复和审计放在框架层统一处理。</p>
+      </div>
+      <div class="split">
+        <div class="prose">
+          <p>在企业系统里，让 LLM 直接调 API 或写 SQL 通常不可控、不可复现，也很难审计。只做问答机器人又无法把流程办完。每个业务系统各自接 AI，则会重复建设 prompt、审批、审计和回滚机制。</p>
+          <p><strong>ActionGraph 选择了一条更保守也更工程化的路线：</strong>业务系统只暴露可控 Action，规划器只看条件与效果，运行时每一步都经过权限、人审、runtime guard 和补偿边界。LLM 可以解释目标，但不能直接操作你的业务状态。</p>
+        </div>
+        <div class="problem-list" aria-label="常见方案问题">
+          <div class="problem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+            <div><b>LLM 直连 API</b><span>计划不可复现，越权和重复副作用难以治理。</span></div>
+          </div>
+          <div class="problem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h6"></path><path d="M17 3h4v4"></path><path d="M14 10l7-7"></path></svg>
+            <div><b>只有问答机器人</b><span>能解释制度，不能稳定完成审批、下单、生成草稿等流程。</span></div>
+          </div>
+          <div class="problem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
+            <div><b>系统各自接 AI</b><span>prompt、审计、回滚、人审和运维标准分散，长期成本高。</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="model">
+    <div class="wrap">
+      <div class="section-head full">
+        <h2>从自然语言目标到可审计执行业务链。</h2>
+        <p class="section-lead">运行时把目标解释、Blackboard 装配、确定性规划、逐步执行、人审挂起、恢复和补偿串成一个闭环。每一步执行后都会重新规划，因此运行时事实变化可以自动改道。</p>
+      </div>
+      <div class="model-grid">
+        <article class="model-step">
+          <div class="step-number">1</div>
+          <h3>解释目标</h3>
+          <p>GoalInterpreter 把用户输入映射为 GoalType 与参数。LLM 解释器可用，规则解释器可降级。</p>
+        </article>
+        <article class="model-step">
+          <div class="step-number">2</div>
+          <h3>装配上下文</h3>
+          <p>GoalBlackboardSeeder 把 customerId、orderId 等业务参数写入类型化 Blackboard。</p>
+        </article>
+        <article class="model-step">
+          <div class="step-number">3</div>
+          <h3>确定性规划</h3>
+          <p>GoapPlanner 只根据 Action 的 precondition 与 effect 搜索可达路径，不让 LLM 生成计划。</p>
+        </article>
+        <article class="model-step">
+          <div class="step-number">4</div>
+          <h3>受控执行</h3>
+          <p>GoapExecutor 按步骤执行，检查权限、runtime guard、金额规则与人审策略。</p>
+        </article>
+        <article class="model-step">
+          <div class="step-number">5</div>
+          <h3>恢复与审计</h3>
+          <p>Trace、挂起快照、审批任务、补偿栈与 Console read model 形成可追踪证据链。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="quickstart">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>快速开始：引入 starter，把普通方法变成 Action。</h2>
+        <p class="section-lead">Spring Boot 应用通常只需要 BOM、主 starter 和一个可选 LLM provider。端点、JDBC、人审和治理都通过 <code>actiongraph.*</code> 属性显式启用。</p>
+      </div>
+      <div class="code-grid">
+        <div class="code-panel">
+          <div class="code-title">
+            <span>build.gradle.kts</span>
+            <button class="copy-btn" type="button" data-copy="gradle" aria-label="复制 Gradle 示例">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+<pre><code id="gradle">dependencies {
+  implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+
+  implementation("com.actiongraph:actiongraph-spring-boot-starter")
+  implementation("com.actiongraph:actiongraph-llm-deepseek")
+}</code></pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-title">
+            <span>application.yml</span>
+            <button class="copy-btn" type="button" data-copy="yaml" aria-label="复制 YAML 示例">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+<pre><code id="yaml">actiongraph:
+  planner:
+    max-depth: 32
+    max-expansions: 10000
+  executor:
+    max-steps: 64
+  actions:
+    auto-register-annotated: true
+  runtime:
+    api:
+      enabled: true
+      path: /actiongraph/runtime
+      token-header: X-ActionGraph-Runtime-Token
+      shared-secret: ${ACTIONGRAPH_RUNTIME_API_SECRET}
+      trace-headers:
+        - X-Request-Id
+        - X-Correlation-Id
+        - X-Source-System
+  component-catalog:
+    enabled: true
+    path: /actiongraph/components
+    token-header: X-ActionGraph-Catalog-Token
+    shared-secret: ${ACTIONGRAPH_CATALOG_SECRET}
+  persistence:
+    jdbc:
+      enabled: true
+      suspended-run-claim-timeout: 15m
+      blackboard:
+        allowed-packages:
+          - com.example.business
+  human-review:
+    api:
+      enabled: true
+      path: /actiongraph/human-review/tasks
+      token-header: X-ActionGraph-Review-Token
+      shared-secret: ${ACTIONGRAPH_REVIEW_API_SECRET}
+    callback-endpoint:
+      enabled: true
+      path: /actiongraph/human-review/callbacks
+      token-header: X-ActionGraph-Review-Token
+      shared-secret: ${ACTIONGRAPH_REVIEW_CALLBACK_SECRET}
+    risk-based-approval-chain: true
+  console:
+    enabled: true
+    path: /actiongraph/console
+    token-header: X-ActionGraph-Console-Token
+    shared-secret: ${ACTIONGRAPH_CONSOLE_SECRET}
+    default-limit: 50
+    max-limit: 200
+  masking:
+    enabled: true
+    blocked-keys: [idCardNumber, bankAccount]
+  limits:
+    rules:
+      - action-id: sales.approval.request
+        currency: CNY
+        hard-limit: 1000000
+        review-limit: 100000</code></pre>
+        </div>
+      </div>
+
+      <div class="code-grid" style="margin-top: 18px;">
+        <div class="code-panel">
+          <div class="code-title">
+            <span>Action adapter</span>
+            <button class="copy-btn" type="button" data-copy="adapter" aria-label="复制 Action 示例">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+<pre><code id="adapter">@Service
+class OrderCancellationWorkflow {
+  @ActionGraphAction(
+    id = "order.lookup",
+    preconditions = "order-cancellation:ORDER_ID_PRESENT",
+    effects = "order-cancellation:ORDER_LOADED",
+    riskLevel = ActionRiskLevel.READ_ONLY
+  )
+  OrderRecord lookup(OrderId orderId) {
+    return orderService.lookup(orderId);
+  }
+
+  @ActionGraphGuard(actionId = "order.cancellation.request.draft")
+  boolean canDraft(CancellationEligibility eligibility) {
+    return eligibility.allowed();
+  }
+
+  @ActionGraphCompensation(actionId = "order.cancellation.request.draft")
+  void voidDraft(CancellationRequestDraft draft) {
+    cancellationRequestService.voidDraft(draft.requestId());
+  }
+}</code></pre>
+        </div>
+        <div class="code-panel">
+          <div class="code-title">
+            <span>Run samples</span>
+            <button class="copy-btn" type="button" data-copy="samples-run" aria-label="复制样例命令">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+<pre><code id="samples-run">./gradlew build
+
+./gradlew :actiongraph-samples:run \
+  --args="--approve-human-review Prepare renewal quote for C123"
+
+./gradlew :actiongraph-samples:runOrderCancellationSample \
+  --args="--approve-human-review Cancel order O100"
+
+./gradlew :actiongraph-samples:runClaimsPrecheckSample \
+  --args="--approve-human-review Prepare payout application for claim CLM100"</code></pre>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>主 starter 不会替你创建业务 Action 或 LLM client。</strong>
+        <p>它提供规划器、执行器、仓储默认实现、注解扫描、治理策略和端点自动装配。业务动作、领域 Goal、解释器、DataSource、LLM provider 与生产权限边界仍由接入应用明确提供。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="capabilities">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>核心能力围绕一个原则：业务系统拥有最终裁决权。</h2>
+        <p class="section-lead">框架让 Agent 能执行，但不把业务判断交给模型。规划、运行时校验、审批、补偿、持久化、审计与控制面都围绕“可控执行”设计。</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 17l6-6 4 4 6-8"></path><path d="M14 7h6v6"></path></svg></div>
+          <h3>确定性 GOAP 规划</h3>
+          <p>只基于 Action 前置条件与效果搜索路径，计划可复现、可测试、可审计。</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"></path><path d="M12 12l8-4.5"></path><path d="M12 12v9"></path><path d="M12 12L4 7.5"></path></svg></div>
+          <h3>类型化 Blackboard</h3>
+          <p>运行数据按 Java 类型与 BlackboardKey 管理，支持同类型多实例和注解参数绑定。</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg></div>
+          <h3>Runtime Guard</h3>
+          <p>依赖真实业务值的判断放到执行前校验，保持规划器纯净，不污染 symbolic planning。</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg></div>
+          <h3>多级人工审批</h3>
+          <p>Repository-backed review 支持审批链、stage index、回调幂等与原子 suspend/resume。</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path><path d="M12 7v5l3 3"></path></svg></div>
+          <h3>Saga 补偿</h3>
+          <p>失败或审批拒绝时按已执行 Action 逆序补偿，降低孤儿副作用残留。</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h5"></path></svg></div>
+          <h3>Trace 哈希链</h3>
+          <p>TraceEvent 按 runId 形成链式 SHA-256 哈希，Console 可显示审计链完整性。</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18"></path><path d="M8 6v12"></path><path d="M16 6v12"></path><path d="M5 18h14"></path></svg></div>
+          <h3>敏感数据脱敏</h3>
+          <p>Trace 与审批预览可脱敏身份证、银行卡、手机号、邮箱和指定字段。</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1v22"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+          <h3>额度与风险策略</h3>
+          <p>业务方提供 AmountExtractor 后，可按 action / 币种设置硬拒绝，并在进入人审时追加金额升级审批阶段。</p>
+        </article>
+        <article class="feature">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16v16H4z"></path><path d="M9 4v16"></path><path d="M15 4v16"></path><path d="M4 9h16"></path><path d="M4 15h16"></path></svg></div>
+          <h3>结构化记忆</h3>
+          <p>MemoryRepository 与 MemoryContextLoader 进入 core，Spring 与 JDBC 可自动切换。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="modules">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>模块化生态：从核心运行时到控制面端点。</h2>
+        <p class="section-lead">每个模块都有清晰边界。Spring 服务可以用主 starter 快速收敛能力，非 Spring 和 Java 8 老系统也可以只引入控制面或 HTTP client。</p>
+      </div>
+      <div class="module-grid">
+        <article class="module-card">
+          <span class="module-tag runtime">runtime</span>
+          <h3>actiongraph-core</h3>
+          <p>Action、Planner、Executor、Policy、Trace、GoalCatalog、Runtime API service 与 Memory API。</p>
+        </article>
+        <article class="module-card">
+  <span class="module-tag runtime">spring</span>
+  <h3>spring-boot-starter</h3>
+  <p>注解扫描、默认 Bean、按配置启用的 JDBC 仓储、治理、人审、Runtime/Catalog/Review/Console 端点。</p>
+        </article>
+        <article class="module-card">
+          <span class="module-tag java8">java8-client</span>
+          <h3>control-plane-api</h3>
+          <p>Java 8 组件目录、控制层响应契约、聚合 HTTP client、split clients 与 token verifier。</p>
+        </article>
+        <article class="module-card">
+          <span class="module-tag ops">ops</span>
+          <h3>actiongraph-console</h3>
+          <p>只读运行查询、JDBC read model、Trace 详情、审计链验证、CSV/JSONL 导出。</p>
+        </article>
+        <article class="module-card">
+          <span class="module-tag runtime">review</span>
+          <h3>human-review</h3>
+          <p>审批任务仓储、审批链、回调处理、task API service 和 repository-backed policy。</p>
+        </article>
+        <article class="module-card">
+          <span class="module-tag runtime">governance</span>
+          <h3>governance</h3>
+          <p>脱敏、额度规则、权限策略、review attributes 与风险审批链路由。</p>
+        </article>
+        <article class="module-card">
+          <span class="module-tag ops">persistence</span>
+          <h3>persistence-jdbc</h3>
+          <p>Trace、SuspendedRun、Trace read model、Memory 与 HumanReview 的 JDBC 仓储。</p>
+        </article>
+        <article class="module-card">
+          <span class="module-tag runtime">llm</span>
+          <h3>llm-deepseek</h3>
+          <p>Provider-neutral 目标解释、GoalCatalog prompt、结构化输出解析与 DeepSeek 兼容客户端。</p>
+        </article>
+      </div>
+      <div style="margin-top: 18px; overflow-x: auto;">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th>推荐组合</th>
+              <th>适用场景</th>
+              <th>典型模块</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>core-runtime</code></td>
+              <td>最小纯 Java 运行内核，需要完全手工装配。</td>
+              <td><code>actiongraph-core</code></td>
+            </tr>
+            <tr>
+              <td><code>spring-business-runtime</code></td>
+              <td>Spring Boot 业务服务接入 ActionGraph，但不公开控制面端点。</td>
+              <td><code>actiongraph-spring-boot-starter</code></td>
+            </tr>
+            <tr>
+              <td><code>durable-spring-runtime</code></td>
+              <td>生产运行态需要 JDBC Trace、挂起、Memory 和审批任务。</td>
+              <td><code>spring-boot-starter</code> + DataSource + JDBC switch</td>
+            </tr>
+            <tr>
+              <td><code>full-control-plane</code></td>
+              <td>单个服务同时拥有 Runtime、Component Catalog、Human Review 与 Console 端点。</td>
+              <td><code>spring-boot-starter</code> + endpoint enabled properties</td>
+            </tr>
+            <tr>
+              <td><code>java8-legacy-client</code></td>
+              <td>Java 8 老系统通过 HTTP、网关、ESB 或 sidecar 调用部署好的 ActionGraph 服务。</td>
+              <td><code>actiongraph-control-plane-api</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section tint" id="control-plane">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>控制面默认关闭，按部署边界显式打开。</h2>
+        <p class="section-lead">主 starter 收敛端点自动装配，但每个端点族都有自己的 path、token header、shared-secret 与 enabled 开关。启用端点不会创建业务 Action、LLM client 或领域解释器。</p>
+      </div>
+      <div class="control-plane">
+        <article class="ops-card">
+          <h3>Runtime API</h3>
+          <p>解释、启动、恢复运行。metadata overload 会把白名单请求头写入 Trace，并在高风险挂起时合并到审批 attributes。</p>
+          <div class="endpoint-list">
+            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/runtime/interpret</code></div>
+            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/runtime/runs</code></div>
+            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/runtime/runs/{runId}/resume</code></div>
+          </div>
+        </article>
+        <article class="ops-card">
+          <h3>Component Catalog</h3>
+          <p>机器可读模块目录、能力标签、依赖提示、兼容性标签和推荐组合方案，适合部署检查与网关治理。</p>
+          <div class="endpoint-list">
+            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/components</code></div>
+            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/components/modules/{module}</code></div>
+            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/components/compatibility/{compatibility}</code></div>
+          </div>
+        </article>
+        <article class="ops-card">
+          <h3>Human Review</h3>
+          <p>审批任务查询、详情、决策写入与外部系统回调。stage index 防止重复回调误推进下一阶段。</p>
+          <div class="endpoint-list">
+            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/human-review/tasks/pending</code></div>
+            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}/decision</code></div>
+            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/human-review/callbacks</code></div>
+          </div>
+        </article>
+        <article class="ops-card">
+          <h3>Console</h3>
+          <p>只读运行列表、筛选、Trace 时间线、审计链验证、CSV/JSONL 导出。Console 不执行、恢复、审批、拒绝或补偿运行。</p>
+          <div class="endpoint-list">
+            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/console/runs</code></div>
+            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/console/runs/{runId}/trace</code></div>
+            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/console/runs/{runId}/trace/export.jsonl</code></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="governance">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>治理能力不是旁路插件，而是运行路径的一部分。</h2>
+        <p class="section-lead">权限、脱敏、额度、人审、补偿、哈希链和恢复快照全部围绕同一个 runId 与 Trace 序列展开，方便企业控制台和审计系统追踪。</p>
+      </div>
+      <div class="ops-grid">
+        <article class="ops-card">
+          <h3>权限与额度</h3>
+          <p>PermissionPolicy 与 ExecutionPolicyGuard 在执行前判定动作是否允许；金额规则可硬拒绝，并为进入人审的动作追加金额升级属性。</p>
+          <ul>
+            <li>按 action id 与 currency 配置 hard-limit / review-limit</li>
+            <li>AmountExtractor 由业务侧提供，不让框架猜业务金额</li>
+            <li>RiskBasedChainResolver 根据 amountEscalated 追加 amount-authorization 阶段</li>
+            <li>规则权限与租户校验可在非 Spring 服务手工装配</li>
+          </ul>
+        </article>
+        <article class="ops-card">
+          <h3>人审挂起与恢复</h3>
+          <p>requiresHumanReview 的 Action 创建审批任务并保存挂起快照，审批后从同一个 runId 原子 claim 恢复，避免重复副作用。</p>
+          <ul>
+            <li>PENDING 只挂起，不补偿</li>
+            <li>APPROVED 推进阶段，最终阶段通过后继续执行</li>
+            <li>DENIED 终止并触发已执行 Action 的逆序补偿</li>
+          </ul>
+        </article>
+        <article class="ops-card">
+          <h3>审计与脱敏</h3>
+          <p>Trace 事件先经过 DataMaskingPolicy，再写入哈希链。挂起快照保持无损恢复，不做脱敏。</p>
+          <ul>
+            <li>Trace detail/data 与审批预览支持字段与正则脱敏</li>
+            <li>TraceChainVerifier 可识别断链与篡改</li>
+            <li>Console read model 可分页筛选并导出归档证据</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="operations">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>生产接入关心的边界，框架已经给出默认答案。</h2>
+        <p class="section-lead">JDBC 持久化、Java 8 老系统、控制层 token、GET 重试、Blackboard 类型白名单和 snapshot version 都是发布契约的一部分。</p>
+      </div>
+      <div class="adoption">
+        <div class="adoption-step">
+          <b>JDBC persistence</b>
+          <span>启用 <code>actiongraph.persistence.jdbc.enabled=true</code> 后，Trace、SuspendedRun、Trace read model、Memory 和 Human Review repository 可切到 JDBC。</span>
+        </div>
+        <div class="adoption-step">
+          <b>Blackboard allowlist</b>
+          <span>生产恢复挂起快照时建议配置 <code>allowed-packages</code>，在反序列化前拒绝不允许的类型。</span>
+        </div>
+        <div class="adoption-step">
+          <b>Java 8 control plane</b>
+          <span><code>actiongraph-control-plane-api</code> 编译为 Java 8，无 Spring、JDBC、LLM、Servlet 或 JSON 依赖。</span>
+        </div>
+        <div class="adoption-step">
+          <b>Safe GET retries</b>
+          <span>可对组件目录、人审查询和 Console 只读查询开启 GET 重试；会产生副作用的 POST 不自动重试。</span>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>控制面 shared-secret 不是企业 IAM。</strong>
+        <p>内置 token verifier 负责 Header 名校验、未配置 shared-secret 时跳过读取、常量时间比较 token。生产身份认证、RBAC、租户权限、网络边界和审计策略仍应由接入系统、API 网关或企业安全平台负责。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="samples">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>三条参考业务流，覆盖读、写、审批、补偿和批处理。</h2>
+        <p class="section-lead">样例不是玩具流程：续约报价、订单取消、理赔资料预审分别展示目标解释、Blackboard seeding、runtime guard、人审挂起恢复和审计报告。</p>
+      </div>
+      <div class="sample-grid">
+        <article class="sample">
+          <h3>续约报价</h3>
+          <p>客户资料、当前合同、续约资格、报价草稿和销售审批。</p>
+          <ul>
+            <li>RuleBasedRenewalGoalInterpreter</li>
+            <li>RenewalQuoteBlackboardSeeder</li>
+            <li>SalesApprovalRequestAction</li>
+          </ul>
+          <code class="run-command">./gradlew :actiongraph-samples:run --args="--approve-human-review Prepare renewal quote for C123"</code>
+        </article>
+        <article class="sample">
+          <h3>订单取消</h3>
+          <p>订单查询、取消资格、取消草稿、运营审批和补偿。</p>
+          <ul>
+            <li>OrderLookupAction</li>
+            <li>CancellationEligibilityCheckAction</li>
+            <li>OperationsApprovalRequestAction</li>
+          </ul>
+          <code class="run-command">./gradlew :actiongraph-samples:runOrderCancellationSample --args="--approve-human-review Cancel order O100"</code>
+        </article>
+        <article class="sample">
+          <h3>理赔资料预审</h3>
+          <p>资料查询、预审评估、赔付申请、人审回调和批量指标报告。</p>
+          <ul>
+            <li>ClaimsPrecheckBatchMetricsApp</li>
+            <li>JSONL callback replay</li>
+            <li>CSV / Markdown / HTML report</li>
+          </ul>
+          <code class="run-command">./gradlew :actiongraph-samples:runClaimsPrecheckSample --args="--approve-human-review Prepare payout application for claim CLM100"
+
+./gradlew :actiongraph-samples:runClaimsPrecheckBatchMetrics --args="--input actiongraph-samples/src/main/resources/claims-precheck-cases.csv --report-dir actiongraph-samples/build/reports/claims-precheck --batch-id F1-CLAIMS-001 --environment local"</code>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="docs">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>继续深入：从快速接入到控制面契约。</h2>
+        <p class="section-lead">这套官网页聚合了主要概念。每个细节仍然指向仓库中的原始文档，方便开发者直接进入对应实现与示例。</p>
+      </div>
+      <div class="doc-grid">
+        <a class="doc-link" href="quick-start.html">
+          <h3>快速接入指南</h3>
+          <p>一步步完成依赖、Action、Goal、LLM 解释器、审批、持久化和上线清单。</p>
+          <span class="path">docs/quick-start.html</span>
+        </a>
+        <a class="doc-link" href="frameworkization/runtime-api.md">
+          <h3>Runtime API</h3>
+          <p>复用 interpret / start / resume 入口服务，或通过 Spring MVC 暴露运行端点。</p>
+          <span class="path">docs/frameworkization/runtime-api.md</span>
+        </a>
+        <a class="doc-link" href="frameworkization/component-catalog.md">
+          <h3>Component Catalog</h3>
+          <p>机器可读模块目录、能力标签、兼容性标签和推荐组合 profile。</p>
+          <span class="path">docs/frameworkization/component-catalog.md</span>
+        </a>
+        <a class="doc-link" href="frameworkization/control-plane-api.md">
+          <h3>Control Plane API</h3>
+          <p>Java 8 控制层契约、聚合 HTTP client、split clients、properties 配置和 token verifier。</p>
+          <span class="path">docs/frameworkization/control-plane-api.md</span>
+        </a>
+        <a class="doc-link" href="frameworkization/human-review.md">
+          <h3>Human Review</h3>
+          <p>Repository-backed 审批任务、审批链、回调处理、stage index 与恢复语义。</p>
+          <span class="path">docs/frameworkization/human-review.md</span>
+        </a>
+        <a class="doc-link" href="frameworkization/jdbc-persistence.md">
+          <h3>JDBC Persistence</h3>
+          <p>Trace、挂起快照、read model、Memory、人审任务和 Blackboard 类型白名单。</p>
+          <span class="path">docs/frameworkization/jdbc-persistence.md</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <b>ActionGraph</b>
+      <p>Typed GOAP runtime for governed business action execution in Java. Built for deterministic planning, human review, compensation, audit evidence, and legacy-friendly control-plane integration.</p>
+    </div>
+    <div>
+      <b>Start</b>
+      <a href="#quickstart">快速开始</a>
+      <a href="quick-start.html">完整接入指南</a>
+      <a href="../README.zh-CN.md">中文 README</a>
+    </div>
+    <div>
+      <b>Reference</b>
+      <a href="frameworkization/spring-boot-starter.md">Spring Boot Starter</a>
+      <a href="frameworkization/runtime-api.md">Runtime API</a>
+      <a href="frameworkization/control-plane-api.md">Control Plane API</a>
+    </div>
+    <div>
+      <b>Operate</b>
+      <a href="frameworkization/human-review.md">Human Review</a>
+      <a href="frameworkization/jdbc-persistence.md">JDBC Persistence</a>
+      <a href="frameworkization/component-catalog.md">Component Catalog</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const header = document.querySelector(".site-header");
+  const mobileToggle = document.querySelector(".mobile-toggle");
+  const navLinks = Array.from(document.querySelectorAll(".nav-links a"));
+
+  mobileToggle.addEventListener("click", () => {
+    const open = header.classList.toggle("menu-open");
+    mobileToggle.setAttribute("aria-expanded", String(open));
+  });
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      header.classList.remove("menu-open");
+      mobileToggle.setAttribute("aria-expanded", "false");
+    });
+  });
+
+  const sections = navLinks
+    .map((link) => document.querySelector(link.getAttribute("href")))
+    .filter(Boolean);
+
+  const observer = new IntersectionObserver((entries) => {
+    const visible = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+    if (!visible) return;
+    navLinks.forEach((link) => {
+      link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`);
+    });
+  }, { rootMargin: "-20% 0px -62% 0px", threshold: [0.08, 0.2, 0.45] });
+
+  sections.forEach((section) => observer.observe(section));
+
+  const copyButtons = document.querySelectorAll("[data-copy]");
+  copyButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const target = document.getElementById(button.dataset.copy);
+      if (!target) return;
+      try {
+        await navigator.clipboard.writeText(target.textContent.trim());
+        const previous = button.innerHTML;
+        button.textContent = "OK";
+        window.setTimeout(() => { button.innerHTML = previous; }, 1100);
+      } catch (error) {
+        button.textContent = "Err";
+        window.setTimeout(() => { button.textContent = ""; }, 1100);
+      }
+    });
+  });
+</script>
+</body>
+</html>
