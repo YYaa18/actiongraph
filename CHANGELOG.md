@@ -22,7 +22,7 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 - japicmp-backed binary compatibility verification, with CI wiring, configurable release baselines, and explicit exclusion of `@Experimental` / `@Internal` surfaces from the 1.0 freeze.
 - Experimental external event ingress: `ActionResult.waiting(...)`, `SUSPENDED_WAITING_EVENT`, `WAITING_EVENT` snapshots, `ExternalEventGateway`, `EventApplier`, timeout sweeping, JDBC event claims, and optional Spring HTTP callbacks.
 - Experimental annotated Goal metadata: `@ActionGraphGoal`, `@GoalParameter`, automatic schema inference, Spring Boot auto-registration, and non-Spring `AnnotatedGoalFactory` support.
-- Experimental annotated Goal seeding: `@ActionGraphGoalSeeder`, `@GoalParam`, built-in value conversion, custom `GoalValueConverter` hooks, `SeedResult` multi-write support, and Spring Boot auto-registration.
+- Experimental annotated Goal seeding: `@ActionGraphGoalSeeder`, `@FromGoalParam`, built-in value conversion, custom `GoalValueConverter` hooks, `SeedResult` multi-write support, and Spring Boot auto-registration.
 
 ### Changed
 

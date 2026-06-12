@@ -128,14 +128,14 @@ annotated seeder methods for that binding layer.
 @Component
 final class ProductSeeders {
     @ActionGraphGoalSeeder(
-            goal = "product.create",
+            value = "product.create",
             seedConditions = "product:CREATE_REQUESTED"
     )
     Product seedCreate(
-            @GoalParam("name") String name,
-            @GoalParam("price") BigDecimal price,
-            @GoalParam("stock") int stock,
-            @GoalParam(value = "status", required = false, converter = ProductStatusConverter.class)
+            @FromGoalParam("name") String name,
+            @FromGoalParam("price") BigDecimal price,
+            @FromGoalParam("stock") int stock,
+            @FromGoalParam(value = "status", required = false, converter = ProductStatusConverter.class)
             ProductStatus status
     ) {
         Product product = new Product();
@@ -178,7 +178,9 @@ final class ProductReferenceToId implements GoalValueConverter<Long> {
 ```
 
 Spring resolves converter classes from the BeanFactory first, so converters can
-depend on services, repositories, HTTP clients, or policy components. Without
+depend on services, repositories, HTTP clients, or policy components. Modular
+JPMS applications should prefer Bean-based converter registration because
+reflection-based construction may be blocked by strong encapsulation. Without
 Spring, converters must expose a no-arg constructor or be supplied through a
 custom `GoalValueConverterResolver`.
 
@@ -186,10 +188,10 @@ Simple seeder methods return one object and ActionGraph writes it to the
 Blackboard. Use `@BlackboardValue` on the method to write a keyed value:
 
 ```java
-@ActionGraphGoalSeeder(goal = "product.delete", seedConditions = "product:DELETE_REQUESTED")
+@ActionGraphGoalSeeder(value = "product.delete", seedConditions = "product:DELETE_REQUESTED")
 @BlackboardValue("productId")
 Long seedProductId(
-        @GoalParam(value = "productRef", converter = ProductReferenceToId.class)
+        @FromGoalParam(value = "productRef", converter = ProductReferenceToId.class)
         Long productId
 ) {
     return productId;
@@ -215,6 +217,12 @@ actiongraph:
   seeders:
     auto-register-annotated: false
 ```
+
+When both `@ActionGraphGoal.seedConditions` and
+`@ActionGraphGoalSeeder.seedConditions` are available for the same goal type,
+the Spring starter validates at startup that the seeder-declared conditions cover
+the goal-declared seed conditions. A mismatch fails startup before any runtime
+request can enter the planner.
 
 ## 4. Goal Validation
 

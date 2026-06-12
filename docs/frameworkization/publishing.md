@@ -6,15 +6,15 @@ The runtime is split into publishable library modules plus a non-published actio
 
 | Module | Artifact | Purpose |
 |---|---|---|
-| `actiongraph-bom` | `com.actiongraph:actiongraph-bom:0.1.0` | BOM for aligning ActionGraph module versions |
-| `actiongraph-core` | `com.actiongraph:actiongraph-core:0.1.0` | Core action, annotation adapter, planning, runtime, policy, trace, goal interpretation, runtime entry, and structured memory APIs |
-| `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.1.0` | Java 8 compatible component metadata, compatibility labels, composition profiles, control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
-| `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.1.0` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
-| `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.1.0` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
-| `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.1.0` | Optional LLM package with provider-neutral goal interpretation, prompt rendering, structured output parsing, and a DeepSeek-compatible client |
-| `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.1.0` | JDBC trace, suspended-run, trace read-model, structured-memory, and human-review repositories |
-| `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.1.0` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review/console HTTP endpoints |
-| `actiongraph-console` | `com.actiongraph:actiongraph-console:0.1.0` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
+| `actiongraph-bom` | `com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT` | BOM for aligning ActionGraph module versions |
+| `actiongraph-core` | `com.actiongraph:actiongraph-core:0.2.0-SNAPSHOT` | Core action, annotation adapter, planning, runtime, policy, trace, goal interpretation, runtime entry, and structured memory APIs |
+| `actiongraph-control-plane-api` | `com.actiongraph:actiongraph-control-plane-api:0.2.0-SNAPSHOT` | Java 8 compatible component metadata, compatibility labels, composition profiles, control-plane contracts, properties-based aggregate configuration, safe GET retries, lightweight aggregate / Runtime / Component Catalog / Human Review / Console HTTP clients, and shared-secret token verification |
+| `actiongraph-human-review` | `com.actiongraph:actiongraph-human-review:0.2.0-SNAPSHOT` | Optional repository-backed human review tasks, callback handler, approval-chain support, and task query/decision service |
+| `actiongraph-governance` | `com.actiongraph:actiongraph-governance:0.2.0-SNAPSHOT` | Optional non-Spring governance policies for masking, amount limits, and rule-based permissions |
+| `actiongraph-llm-deepseek` | `com.actiongraph:actiongraph-llm-deepseek:0.2.0-SNAPSHOT` | Optional LLM package with provider-neutral goal interpretation, prompt rendering, structured output parsing, and a DeepSeek-compatible client |
+| `actiongraph-persistence-jdbc` | `com.actiongraph:actiongraph-persistence-jdbc:0.2.0-SNAPSHOT` | JDBC trace, suspended-run, trace read-model, structured-memory, and human-review repositories |
+| `actiongraph-spring-boot-starter` | `com.actiongraph:actiongraph-spring-boot-starter:0.2.0-SNAPSHOT` | Main Spring Boot integration: annotation scanning, runtime defaults, JDBC repositories, structured memory, repository-backed human review, governance, and opt-in runtime/catalog/review/console HTTP endpoints |
+| `actiongraph-console` | `com.actiongraph:actiongraph-console:0.2.0-SNAPSHOT` | Reusable read-only Console query service, JDBC read model, and CSV/JSONL audit export service |
 
 `actiongraph-samples` remains an application/sample module and is intentionally not published.
 
@@ -61,7 +61,7 @@ repositories {
 }
 
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
 }
 ```
@@ -69,7 +69,7 @@ dependencies {
 Pure Java/non-Spring consumers can depend on:
 
 ```kotlin
-implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
 implementation("com.actiongraph:actiongraph-core")
 ```
 
@@ -159,7 +159,7 @@ ACTIONGRAPH_PUBLISH_PASSWORD=... \
 The current version is defined once in the root `build.gradle.kts`:
 
 ```kotlin
-version = "0.1.0"
+version = "0.2.0-SNAPSHOT"
 ```
 
 Before publishing a breaking API change, bump this version and document the migration in the relevant frameworkization note.

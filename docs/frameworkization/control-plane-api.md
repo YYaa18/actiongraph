@@ -8,7 +8,7 @@ It exists so built-in Spring MVC endpoint starters, custom gateways, CLIs, legac
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-control-plane-api")
 }
 ```

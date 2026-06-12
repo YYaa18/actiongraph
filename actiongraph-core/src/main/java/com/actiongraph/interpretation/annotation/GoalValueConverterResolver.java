@@ -6,7 +6,7 @@ import com.actiongraph.exception.ActionGraphConfigurationException;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * Resolves converter classes declared by {@link GoalParam}.
+ * Resolves converter classes declared by {@link FromGoalParam}.
  */
 @FunctionalInterface
 @Experimental(

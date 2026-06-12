@@ -8,7 +8,7 @@ It turns the module split into a machine-readable API: deployment checks, CLIs, 
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-control-plane-api")
 }
 ```
@@ -43,7 +43,7 @@ If an old system should not load the catalog model jar, or if component guidance
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-control-plane-api")
 }
 ```
@@ -75,7 +75,7 @@ The test suite compiles that exact file with `javac --release 8`.
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
 }
 ```

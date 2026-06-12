@@ -71,6 +71,16 @@ class AnnotatedGoalSeederFactoryTest {
     }
 
     @Test
+    void builtInEnumConversionTriesExactMatchBeforeIgnoreCase() {
+        GoalBlackboardSeeder seeder = seeder("enum.case");
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+
+        seeder.seed(GoalParameters.of(Map.of("style", "snake_case")), blackboard);
+
+        assertThat(blackboard.get(CaseStyle.class)).contains(CaseStyle.snake_case);
+    }
+
+    @Test
     void missingRequiredGoalParameterFailsFast() {
         GoalBlackboardSeeder seeder = seeder("product.create");
 
@@ -102,21 +112,26 @@ class AnnotatedGoalSeederFactoryTest {
         OFF_SALE
     }
 
+    private enum CaseStyle {
+        snake_case,
+        UPPER_CASE
+    }
+
     private static final class ProductSeeders {
-        @ActionGraphGoalSeeder(goal = "product.create", seedConditions = "product:CREATE_REQUESTED")
+        @ActionGraphGoalSeeder(value = "product.create", seedConditions = "product:CREATE_REQUESTED")
         ProductDraft create(
-                @GoalParam("name") String name,
-                @GoalParam("price") BigDecimal price,
-                @GoalParam("stock") int stock,
-                @GoalParam(value = "status", required = false, converter = ProductStatusConverter.class)
+                @FromGoalParam("name") String name,
+                @FromGoalParam("price") BigDecimal price,
+                @FromGoalParam("stock") int stock,
+                @FromGoalParam(value = "status", required = false, converter = ProductStatusConverter.class)
                 ProductStatus status
         ) {
             return new ProductDraft(name, price, stock, status == null ? ProductStatus.ON_SALE : status);
         }
 
-        @ActionGraphGoalSeeder(goal = "product.delete", seedConditions = "product:DELETE_REQUESTED")
+        @ActionGraphGoalSeeder(value = "product.delete", seedConditions = "product:DELETE_REQUESTED")
         SeedResult delete(
-                @GoalParam(value = "productRef", converter = ProductReferenceConverter.class)
+                @FromGoalParam(value = "productRef", converter = ProductReferenceConverter.class)
                 Long productId
         ) {
             return SeedResult.builder()
@@ -125,11 +140,16 @@ class AnnotatedGoalSeederFactoryTest {
                     .build();
         }
 
-        @ActionGraphGoalSeeder(goal = "product.lookup", seedConditions = "product:LOOKUP_REQUESTED")
+        @ActionGraphGoalSeeder(value = "product.lookup", seedConditions = "product:LOOKUP_REQUESTED")
         @BlackboardValue("productId")
         Long lookup(GoalParameters parameters, Blackboard blackboard) {
             blackboard.addCondition(Condition.of("product:LOOKUP_USED_CONTEXT"));
             return Long.valueOf(parameters.get("id").orElseThrow());
+        }
+
+        @ActionGraphGoalSeeder("enum.case")
+        CaseStyle enumCase(@FromGoalParam("style") CaseStyle style) {
+            return style;
         }
     }
 
@@ -156,7 +176,7 @@ class AnnotatedGoalSeederFactoryTest {
         void first() {
         }
 
-        @ActionGraphGoalSeeder(goalType = "duplicate.goal")
+        @ActionGraphGoalSeeder("duplicate.goal")
         void second() {
         }
     }

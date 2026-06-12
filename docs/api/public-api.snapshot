@@ -594,6 +594,7 @@ CLASS public final record com.actiongraph.interpretation.ClarificationQuestion
   METHOD public java.lang.String text()
   METHOD public final java.lang.String toString()
 CLASS public abstract interface com.actiongraph.interpretation.GoalBlackboardSeeder
+  METHOD public default java.util.Optional declaredSeedConditions()
   METHOD public abstract com.actiongraph.interpretation.GoalType goalType()
   METHOD public abstract void seed(com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard)
 CLASS public final class com.actiongraph.interpretation.GoalBlackboardSeederRegistry
@@ -678,8 +679,6 @@ CLASS public abstract annotation com.actiongraph.interpretation.annotation.Actio
   METHOD public abstract java.lang.String[] targetConditions()
   METHOD public abstract java.lang.String type()
 CLASS public abstract annotation com.actiongraph.interpretation.annotation.ActionGraphGoalSeeder
-  METHOD public abstract java.lang.String goal()
-  METHOD public abstract java.lang.String goalType()
   METHOD public abstract java.lang.String[] seedConditions()
   METHOD public abstract java.lang.String value()
 CLASS public final class com.actiongraph.interpretation.annotation.AnnotatedGoalFactory
@@ -687,7 +686,7 @@ CLASS public final class com.actiongraph.interpretation.annotation.AnnotatedGoal
 CLASS public final class com.actiongraph.interpretation.annotation.AnnotatedGoalSeederFactory
   METHOD public static java.util.List seeders(com.actiongraph.interpretation.annotation.GoalValueConverterResolver,java.lang.Object[])
   METHOD public static java.util.List seeders(java.lang.Object[])
-CLASS public abstract annotation com.actiongraph.interpretation.annotation.GoalParam
+CLASS public abstract annotation com.actiongraph.interpretation.annotation.FromGoalParam
   METHOD public abstract java.lang.Class converter()
   METHOD public abstract java.lang.String name()
   METHOD public abstract boolean required()
@@ -2030,7 +2029,7 @@ CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   METHOD public org.springframework.context.SmartLifecycle actionGraphEventWaitSweeperLifecycle(com.actiongraph.events.EventWaitSweeper,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.runtime.GoapExecutor actionGraphExecutor(com.actiongraph.planning.Planner,com.actiongraph.policy.ExecutionPolicyGuard,com.actiongraph.policy.HumanReviewPolicy,com.actiongraph.trace.TraceRepository,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.policy.DataMaskingPolicy,com.actiongraph.policy.ReviewAttributeContributor,com.actiongraph.observability.ObservationSink,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.events.ExternalEventGateway actionGraphExternalEventGateway(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.ObjectProvider)
-  METHOD public com.actiongraph.interpretation.GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
+  METHOD public com.actiongraph.interpretation.GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,com.actiongraph.interpretation.GoalCatalog,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.interpretation.GoalCatalog actionGraphGoalCatalog(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.HumanReviewPolicy actionGraphHumanReviewPolicy()
   METHOD public com.actiongraph.observability.ObservationSink actionGraphObservationSink()

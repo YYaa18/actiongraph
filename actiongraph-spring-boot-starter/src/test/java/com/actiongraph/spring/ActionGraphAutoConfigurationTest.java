@@ -21,7 +21,7 @@ import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.annotation.ActionGraphGoal;
 import com.actiongraph.interpretation.annotation.ActionGraphGoalSeeder;
-import com.actiongraph.interpretation.annotation.GoalParam;
+import com.actiongraph.interpretation.annotation.FromGoalParam;
 import com.actiongraph.interpretation.annotation.GoalParameter;
 import com.actiongraph.interpretation.annotation.GoalParameterBindingContext;
 import com.actiongraph.interpretation.annotation.GoalValueConverter;
@@ -213,6 +213,20 @@ class ActionGraphAutoConfigurationTest {
                 .withBean(SpringInputIdConverter.class, () -> new SpringInputIdConverter("bean-"))
                 .run(context -> assertThat(context.getBean(GoalBlackboardSeederRegistry.class)
                         .byGoalType(ANNOTATED_SEEDER_GOAL_TYPE)).isEmpty());
+    }
+
+    @Test
+    void failsFastWhenAnnotatedSeederConditionsDoNotCoverGoalSeedConditions() {
+        contextRunner
+                .withBean(AnnotatedWorkflow.class)
+                .withBean(AnnotatedGoalDeclarations.class)
+                .withBean(MismatchedSeederDeclarations.class)
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .hasMessageContaining("does not declare required seed conditions")
+                            .hasMessageContaining("spring-test:INPUT_PRESENT");
+                });
     }
 
     @Test
@@ -519,13 +533,19 @@ class ActionGraphAutoConfigurationTest {
     }
 
     static final class AnnotatedSeederDeclarations {
-        @ActionGraphGoalSeeder(goal = ANNOTATED_SEEDER_GOAL, seedConditions = "spring-test:INPUT_PRESENT")
+        @ActionGraphGoalSeeder(value = ANNOTATED_SEEDER_GOAL, seedConditions = "spring-test:INPUT_PRESENT")
         @BlackboardValue("input")
         InputId seed(
-                @GoalParam(value = "inputId", converter = SpringInputIdConverter.class)
+                @FromGoalParam(value = "inputId", converter = SpringInputIdConverter.class)
                 InputId inputId
         ) {
             return inputId;
+        }
+    }
+
+    static final class MismatchedSeederDeclarations {
+        @ActionGraphGoalSeeder(value = "spring-test.annotated-finish", seedConditions = "spring-test:LOADED")
+        void seed() {
         }
     }
 

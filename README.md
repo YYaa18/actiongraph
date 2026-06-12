@@ -73,7 +73,7 @@ It lets application teams expose ordinary business methods as typed Actions, the
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
 
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
     implementation("com.actiongraph:actiongraph-llm-deepseek")

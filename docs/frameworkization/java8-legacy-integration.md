@@ -19,7 +19,7 @@ Java 8 is the official legacy support target. ActionGraph does not claim Java 6/
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-control-plane-api")
 }
 ```

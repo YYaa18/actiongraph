@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "com.actiongraph"
-version = "0.1.0"
+version = "0.2.0-SNAPSHOT"
 
 val platformModuleName = "actiongraph-bom"
 val jspecifyVersion = "1.0.0"

@@ -8,7 +8,7 @@ Spring Boot applications should prefer the optional starter. It keeps durable pe
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
 }
 ```
@@ -42,7 +42,7 @@ The optional memory Spring starter creates a JDBC `MemoryRepository` when the sh
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-persistence-jdbc")
 }
 ```

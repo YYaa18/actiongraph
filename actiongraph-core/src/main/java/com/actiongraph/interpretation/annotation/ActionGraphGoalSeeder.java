@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * Declares a method that seeds the initial Blackboard for a goal.
  *
  * <p>The annotated method is invoked by ActionGraph before planning starts.
- * Parameters may be bound from {@link GoalParam} values, or may request the
+ * Parameters may be bound from {@link FromGoalParam} values, or may request the
  * current {@code GoalParameters} / {@code Blackboard} directly.
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -22,10 +22,6 @@ import java.lang.annotation.Target;
 )
 public @interface ActionGraphGoalSeeder {
     String value() default "";
-
-    String goal() default "";
-
-    String goalType() default "";
 
     String[] seedConditions() default {};
 }

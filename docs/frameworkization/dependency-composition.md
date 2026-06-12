@@ -6,7 +6,7 @@ ActionGraph modules are independently usable, but the public dependency surface 
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
 }
 ```
 
@@ -134,7 +134,7 @@ The Console endpoints are property-gated and read-only. They can query runs/trac
 A single pilot deployment that runs business workflows, receives approval callbacks, persists state, interprets natural-language goals, and exposes the read-only Console usually needs only:
 
 ```kotlin
-implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
 implementation("com.actiongraph:actiongraph-spring-boot-starter")
 implementation("com.actiongraph:actiongraph-llm-deepseek")
 ```

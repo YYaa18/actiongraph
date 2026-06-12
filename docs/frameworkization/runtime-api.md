@@ -60,7 +60,7 @@ Add the main Spring starter only when an application should expose runtime entry
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
 }
 ```

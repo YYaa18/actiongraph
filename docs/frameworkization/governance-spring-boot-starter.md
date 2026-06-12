@@ -6,7 +6,7 @@ Spring Boot governance wiring now lives in `actiongraph-spring-boot-starter`. Th
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-spring-boot-starter")
 }
 ```

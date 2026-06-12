@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
         since = "0.2.0",
         value = "Annotated goal parameter binding is experimental until pilot domains validate conversion conventions."
 )
-public @interface GoalParam {
+public @interface FromGoalParam {
     String value() default "";
 
     String name() default "";

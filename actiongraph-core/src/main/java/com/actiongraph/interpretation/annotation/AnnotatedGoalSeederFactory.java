@@ -143,6 +143,11 @@ public final class AnnotatedGoalSeederFactory {
         }
 
         @Override
+        public Optional<Set<Condition>> declaredSeedConditions() {
+            return Optional.of(seedConditions);
+        }
+
+        @Override
         public void seed(GoalParameters parameters, Blackboard blackboard) {
             Object[] args = resolveArguments(parameters, blackboard);
             Object result = invoke(args);
@@ -168,13 +173,13 @@ public final class AnnotatedGoalSeederFactory {
                 return blackboard;
             }
             BlackboardValue blackboardValue = parameter.getAnnotation(BlackboardValue.class);
-            if (blackboardValue != null && parameter.getAnnotation(GoalParam.class) == null) {
+            if (blackboardValue != null && parameter.getAnnotation(FromGoalParam.class) == null) {
                 return blackboard.get(BlackboardKey.of(parameterType, blackboardValue.value()))
                         .orElseThrow(() -> new ActionGraphInputException(
                                 "Missing blackboard value for " + parameterType.getName()
                                         + "#" + blackboardValue.value()));
             }
-            GoalParam goalParam = parameter.getAnnotation(GoalParam.class);
+            FromGoalParam goalParam = parameter.getAnnotation(FromGoalParam.class);
             String name = goalParamName(parameter, goalParam);
             boolean required = goalParam == null || goalParam.required();
             Optional<String> raw = parameters.get(name)
@@ -191,7 +196,7 @@ public final class AnnotatedGoalSeederFactory {
             return convert(raw.get(), parameterType, goalParam, context);
         }
 
-        private String goalParamName(Parameter parameter, GoalParam annotation) {
+        private String goalParamName(Parameter parameter, FromGoalParam annotation) {
             if (annotation != null) {
                 String name = firstNonBlank(annotation.name(), annotation.value(), "");
                 if (!name.isBlank()) {
@@ -203,13 +208,13 @@ public final class AnnotatedGoalSeederFactory {
             }
             throw new ActionGraphConfigurationException(
                     "Cannot infer goal parameter name for " + parameter.getDeclaringExecutable()
-                            + ". Compile with -parameters or use @GoalParam(name=...).");
+                            + ". Compile with -parameters or use @FromGoalParam(name=...).");
         }
 
         private Object convert(
                 String raw,
                 Class<?> parameterType,
-                GoalParam annotation,
+                FromGoalParam annotation,
                 GoalParameterBindingContext context
         ) {
             Class<? extends GoalValueConverter<?>> converterType =
@@ -243,9 +248,7 @@ public final class AnnotatedGoalSeederFactory {
                     return parseBoolean(raw);
                 }
                 if (type.isEnum()) {
-                    @SuppressWarnings({"unchecked", "rawtypes"})
-                    Object value = Enum.valueOf((Class<? extends Enum>) type, raw.trim().toUpperCase(Locale.ROOT));
-                    return value;
+                    return parseEnum(raw, type);
                 }
             } catch (IllegalArgumentException ex) {
                 throw new ActionGraphInputException(
@@ -256,7 +259,23 @@ public final class AnnotatedGoalSeederFactory {
             }
             throw new ActionGraphConfigurationException(
                     "No built-in goal parameter converter for " + targetType.getName()
-                            + "; use @GoalParam(converter=...)");
+                            + "; use @FromGoalParam(converter=...)");
+        }
+
+        private Object parseEnum(String raw, Class<?> type) {
+            String value = raw.trim();
+            Object[] constants = type.getEnumConstants();
+            for (Object constant : constants) {
+                if (((Enum<?>) constant).name().equals(value)) {
+                    return constant;
+                }
+            }
+            for (Object constant : constants) {
+                if (((Enum<?>) constant).name().equalsIgnoreCase(value)) {
+                    return constant;
+                }
+            }
+            throw new IllegalArgumentException("Unsupported enum value: " + raw);
         }
 
         private Boolean parseBoolean(String raw) {
@@ -338,18 +357,11 @@ public final class AnnotatedGoalSeederFactory {
     }
 
     private static String resolveGoalType(ActionGraphGoalSeeder annotation) {
-        Set<String> values = new LinkedHashSet<>();
-        addNonBlank(values, annotation.value());
-        addNonBlank(values, annotation.goal());
-        addNonBlank(values, annotation.goalType());
-        if (values.isEmpty()) {
+        String value = annotation.value();
+        if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Annotated goal seeder goal type must not be blank");
         }
-        if (values.size() > 1) {
-            throw new ActionGraphConfigurationException("Annotated goal seeder declares conflicting goal types: "
-                    + values);
-        }
-        return values.iterator().next();
+        return value.trim();
     }
 
     private static Set<Condition> conditions(String[] keys) {
@@ -364,12 +376,6 @@ public final class AnnotatedGoalSeederFactory {
             conditions.add(Condition.of(key));
         }
         return Set.copyOf(conditions);
-    }
-
-    private static void addNonBlank(Set<String> values, String value) {
-        if (value != null && !value.isBlank()) {
-            values.add(value.trim());
-        }
     }
 
     private static String firstNonBlank(String first, String second, String fallback) {

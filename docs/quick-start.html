@@ -128,7 +128,7 @@
 
 <nav>
   <div class="logo">ActionGraph</div>
-  <div class="ver">快速接入指南 · v0.1.0</div>
+  <div class="ver">快速接入指南 · v0.2.0-SNAPSHOT</div>
   <a href="#intro">这是什么</a>
   <a href="#arch">架构与职责边界</a>
   <a href="#modules">模块与依赖</a>
@@ -178,7 +178,7 @@
 
 <h2 id="modules">模块与依赖</h2>
 <table>
-  <tr><th>Maven 坐标（version 0.1.0）</th><th>内容</th><th>什么时候需要</th></tr>
+  <tr><th>Maven 坐标（version 0.2.0-SNAPSHOT）</th><th>内容</th><th>什么时候需要</th></tr>
   <tr><td><code>com.actiongraph:actiongraph-bom</code></td><td>版本对齐 BOM</td><td><b>推荐先引入</b>，之后各组件无需重复写版本号</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-spring-boot-starter</code></td><td>主 Spring Boot 集成：自动装配、注解 Bean 扫描、JDBC 仓储、结构化记忆、仓储型人审、治理策略、运行入口 / 组件目录 / 人审 HTTP 端点</td><td><b>业务执行型 Spring Boot 应用常用</b>，HTTP 端点仍由各自 <code>enabled</code> 配置显式打开</td></tr>
   <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、注解适配器、审批契约、Trace、GoalCatalog、运行入口服务、结构化记忆</td><td>非 Spring 应用需要最小运行内核、目标解释契约、启动/恢复入口服务、结构化记忆，或用注解注册普通方法时直接依赖它</td></tr>
@@ -195,7 +195,7 @@
 <h2 id="step1"><span class="step-no">1</span>引入依赖</h2>
 <pre><code><span class="c">// build.gradle.kts</span>
 dependencies {
-    implementation(platform(<span class="s">"com.actiongraph:actiongraph-bom:0.1.0"</span>))
+    implementation(platform(<span class="s">"com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"</span>))
 
     implementation(<span class="s">"com.actiongraph:actiongraph-spring-boot-starter"</span>)
     implementation(<span class="s">"com.actiongraph:actiongraph-llm-deepseek"</span>)
@@ -301,11 +301,11 @@ dependencies {
 <span class="k">final class</span> OrderCancellationSeeders {
 
     <span class="a">@ActionGraphGoalSeeder</span>(
-        goal = <span class="s">"order.cancel"</span>,
+        value = <span class="s">"order.cancel"</span>,
         seedConditions = <span class="s">"order:ORDER_ID_PRESENT"</span>
     )
     OrderId seedOrderId(
-        <span class="a">@GoalParam</span>(<span class="s">"orderId"</span>) String orderId
+        <span class="a">@FromGoalParam</span>(<span class="s">"orderId"</span>) String orderId
     ) {
         <span class="k">return new</span> OrderId(orderId);
     }
@@ -327,11 +327,11 @@ dependencies {
 
 <span class="a">@Component</span>
 <span class="k">final class</span> ProductSeeders {
-    <span class="a">@ActionGraphGoalSeeder</span>(goal = <span class="s">"product.delete"</span>,
+    <span class="a">@ActionGraphGoalSeeder</span>(value = <span class="s">"product.delete"</span>,
                            seedConditions = <span class="s">"product:DELETE_REQUESTED"</span>)
     <span class="a">@BlackboardValue</span>(<span class="s">"productId"</span>)
     Long seedProductId(
-        <span class="a">@GoalParam</span>(value = <span class="s">"productRef"</span>, converter = ProductReferenceToId.class)
+        <span class="a">@FromGoalParam</span>(value = <span class="s">"productRef"</span>, converter = ProductReferenceToId.class)
         Long productId
     ) {
         <span class="k">return</span> productId;
@@ -590,7 +590,7 @@ MemoryRepository memoryRepository =
 </div>
 
 <footer>
-  ActionGraph v0.1.0 · 详细设计文档见 <code>docs/PRD-v0.md</code> 与 <code>docs/frameworkization/</code> · 参考实现见 <code>actiongraph-samples</code> 模块（renewal 续约报价 / order-cancellation 订单取消 / claimsprecheck 理赔资料预审三个完整域）
+  ActionGraph v0.2.0-SNAPSHOT · 详细设计文档见 <code>docs/PRD-v0.md</code> 与 <code>docs/frameworkization/</code> · 参考实现见 <code>actiongraph-samples</code> 模块（renewal 续约报价 / order-cancellation 订单取消 / claimsprecheck 理赔资料预审三个完整域）
 </footer>
 
 </main>

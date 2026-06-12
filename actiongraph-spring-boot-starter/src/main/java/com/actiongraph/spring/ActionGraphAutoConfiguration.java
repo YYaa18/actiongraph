@@ -60,8 +60,10 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @AutoConfiguration
@@ -351,11 +353,12 @@ public class ActionGraphAutoConfiguration {
     public GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(
             ObjectProvider<GoalBlackboardSeeder> seeders,
             ObjectProvider<ActionGraphContribution> contributions,
+            GoalCatalog catalog,
             ConfigurableListableBeanFactory beanFactory,
             ActionGraphProperties properties
     ) {
         GoalBlackboardSeederRegistry registry = new GoalBlackboardSeederRegistry();
-        seeders.orderedStream().forEach(registry::register);
+        seeders.orderedStream().forEach(seeder -> registerSeeder(registry, catalog, seeder));
         Map<GoalType, String> sources = new LinkedHashMap<>();
         for (ActionGraphContribution contribution : contributions.orderedStream().toList()) {
             List<GoalBlackboardSeeder> contributionSeeders = new java.util.ArrayList<>(contribution.seeders());
@@ -367,13 +370,13 @@ public class ActionGraphAutoConfiguration {
                             + seeder.goalType().value() + " from contributions " + previous
                             + " and " + contribution.getClass().getName());
                 }
-                registry.register(seeder);
+                registerSeeder(registry, catalog, seeder);
             }
         }
         if (properties.getSeeders().isAutoRegisterAnnotated()) {
             for (GoalBlackboardSeeder seeder : new AnnotatedSpringBeanGoalSeederRegistrar(beanFactory)
                     .annotatedSeeders()) {
-                registry.register(seeder);
+                registerSeeder(registry, catalog, seeder);
             }
         }
         return registry;
@@ -426,6 +429,29 @@ public class ActionGraphAutoConfiguration {
                 registry.register(applyExecutionPolicyOverride(action, overrides));
             }
         }
+    }
+
+    private void registerSeeder(
+            GoalBlackboardSeederRegistry registry,
+            GoalCatalog catalog,
+            GoalBlackboardSeeder seeder
+    ) {
+        assertDeclaredSeedConditions(catalog, seeder);
+        registry.register(seeder);
+    }
+
+    private void assertDeclaredSeedConditions(GoalCatalog catalog, GoalBlackboardSeeder seeder) {
+        seeder.declaredSeedConditions().ifPresent(declared -> catalog.byType(seeder.goalType()).ifPresent(goal -> {
+            Set<com.actiongraph.planning.Condition> missing = new LinkedHashSet<>(goal.seedConditions());
+            missing.removeAll(declared);
+            if (!missing.isEmpty()) {
+                throw new ActionGraphConfigurationException(
+                        "Annotated blackboard seeder for goal type " + seeder.goalType().value()
+                                + " does not declare required seed conditions " + missing
+                                + "; goal declares " + goal.seedConditions()
+                                + " but seeder declares " + declared);
+            }
+        }));
     }
 
     private Map<String, ActionExecutionPolicy> executionPolicyOverrides(ActionGraphProperties properties) {

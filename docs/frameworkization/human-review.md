@@ -6,7 +6,7 @@ v2 human review now has a repository-backed integration point for external appro
 
 ```kotlin
 dependencies {
-    implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+    implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
     implementation("com.actiongraph:actiongraph-human-review")
 }
 ```
@@ -141,7 +141,7 @@ The JDBC repository stores:
 The base Spring Boot runtime starter only provides a safe pending `HumanReviewPolicy`; it does not create review task storage. Add the optional human-review starter when a Spring service wants repository-backed review tasks:
 
 ```kotlin
-implementation(platform("com.actiongraph:actiongraph-bom:0.1.0"))
+implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
 implementation("com.actiongraph:actiongraph-spring-boot-starter")
 ```
 
