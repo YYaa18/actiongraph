@@ -10,6 +10,7 @@ import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.durability.RecoveryPolicy;
 import com.actiongraph.durability.RunRecoverer;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.trace.InMemoryTraceRepository;
@@ -55,9 +56,11 @@ class GoapExecutorDurabilityTest {
         ActionRegistry registry = registry(actions);
         KillingSuspendedRunRepository repository = new KillingSuspendedRunRepository(4);
         InMemoryTraceRepository traceRepository = new InMemoryTraceRepository();
+        RunPrincipal principal = new RunPrincipal("user:maker", "portal", List.of("channel:web"), java.util.Map.of(
+                "roles", "maker"));
 
         assertThatThrownBy(() -> executor(repository, traceRepository)
-                .run(GOAL, blackboard(START), actions, registry))
+                .run(GOAL, blackboard(START), actions, registry, java.util.Map.of(), principal))
                 .isInstanceOf(ProcessKilled.class);
 
         String runId = repository.lastCheckpointRunId();
@@ -87,6 +90,13 @@ class GoapExecutorDurabilityTest {
         assertThat(traceRepository.findByRun(runId))
                 .extracting(event -> event.type())
                 .contains(TraceEventType.RUN_RECOVERED, TraceEventType.RUN_CHECKPOINTED);
+        assertThat(traceRepository.findByRun(runId))
+                .filteredOn(event -> event.type() == TraceEventType.RUN_RECOVERED)
+                .singleElement()
+                .satisfies(event -> assertThat(event.data())
+                        .containsEntry("actedBy", "system:recoverer"));
+        assertThat(sideEffects.principal("step.5"))
+                .isEqualTo(principal);
         assertThat(new TraceChainVerifier().verify(traceRepository.findByRun(runId)).valid()).isTrue();
     }
 
@@ -267,7 +277,8 @@ class GoapExecutorDurabilityTest {
                 run.message(),
                 run.snapshotState(),
                 Instant.EPOCH,
-                run.inFlightActionId()
+                run.inFlightActionId(),
+                run.principal()
         );
     }
 
@@ -326,6 +337,7 @@ class GoapExecutorDurabilityTest {
 
         @Override
         public ActionResult execute(ExecutionContext context) {
+            sideEffects.recordPrincipal(id.value(), context.principal());
             sideEffects.create(id.value());
             return ActionResult.ok();
         }
@@ -366,6 +378,11 @@ class GoapExecutorDurabilityTest {
         private final java.util.concurrent.ConcurrentHashMap<String, AtomicInteger> created = new java.util.concurrent.ConcurrentHashMap<>();
         private final java.util.concurrent.ConcurrentHashMap<String, AtomicInteger> active = new java.util.concurrent.ConcurrentHashMap<>();
         private final java.util.concurrent.ConcurrentHashMap<String, AtomicInteger> voided = new java.util.concurrent.ConcurrentHashMap<>();
+        private final java.util.concurrent.ConcurrentHashMap<String, RunPrincipal> principals = new java.util.concurrent.ConcurrentHashMap<>();
+
+        void recordPrincipal(String id, RunPrincipal principal) {
+            principals.put(id, principal);
+        }
 
         void create(String id) {
             created.computeIfAbsent(id, ignored -> new AtomicInteger()).incrementAndGet();
@@ -391,6 +408,10 @@ class GoapExecutorDurabilityTest {
 
         int voided(String id) {
             return voided.getOrDefault(id, new AtomicInteger()).get();
+        }
+
+        RunPrincipal principal(String id) {
+            return principals.get(id);
         }
     }
 

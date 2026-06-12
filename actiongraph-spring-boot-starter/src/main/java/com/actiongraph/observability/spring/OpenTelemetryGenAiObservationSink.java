@@ -76,7 +76,7 @@ public final class OpenTelemetryGenAiObservationSink implements ObservationSink 
                 .setAttribute(GEN_AI_AGENT_NAME, ACTIONGRAPH_SYSTEM)
                 .setAttribute(GEN_AI_OPERATION_NAME, operationName(event.type()))
                 .setAttribute(ACTIONGRAPH_EVENT_TYPE, event.type().name());
-        if (includeRunId) {
+        if (includeRunId && event.type() != ObservationEventType.INTERPRETATION_FINISHED) {
             builder.setAttribute(ACTIONGRAPH_RUN_ID, event.runId());
         }
         if (!event.actionId().isBlank()) {
@@ -156,6 +156,7 @@ public final class OpenTelemetryGenAiObservationSink implements ObservationSink 
     private static String operationName(ObservationEventType type) {
         return switch (type) {
             case RUN_STARTED, RUN_RESUMED, RUN_FINISHED -> "agent.run";
+            case INTERPRETATION_FINISHED -> "agent.interpretation";
             case PLAN_GENERATED, NO_PLAN -> "agent.plan";
             case POLICY_EVALUATED, RUNTIME_GUARD_FAILED -> "agent.policy";
             case HUMAN_REVIEW_REQUESTED, HUMAN_REVIEW_DECIDED -> "agent.human_review";

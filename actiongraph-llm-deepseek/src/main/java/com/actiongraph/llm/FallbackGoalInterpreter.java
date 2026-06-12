@@ -5,6 +5,7 @@ import com.actiongraph.interpretation.GoalInterpreter;
 import com.actiongraph.interpretation.GoalParameters;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public final class FallbackGoalInterpreter implements GoalInterpreter {
     private final GoalInterpreter primary;
@@ -22,9 +23,22 @@ public final class FallbackGoalInterpreter implements GoalInterpreter {
 
     @Override
     public GoalInterpretation interpret(String input, GoalParameters knownParameters) {
+        return interpret(input, knownParameters, ignored -> {
+        });
+    }
+
+    public GoalInterpretation interpret(
+            String input,
+            GoalParameters knownParameters,
+            Consumer<Boolean> fallbackUsed
+    ) {
+        Objects.requireNonNull(fallbackUsed, "fallbackUsed");
         try {
-            return primary.interpret(input, knownParameters);
+            GoalInterpretation interpretation = primary.interpret(input, knownParameters);
+            fallbackUsed.accept(false);
+            return interpretation;
         } catch (LlmClientException ex) {
+            fallbackUsed.accept(true);
             return fallback.interpret(input, knownParameters);
         }
     }

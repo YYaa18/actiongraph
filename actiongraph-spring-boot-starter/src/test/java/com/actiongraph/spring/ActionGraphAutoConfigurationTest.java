@@ -12,19 +12,24 @@ import com.actiongraph.action.annotation.ActionGraphAction;
 import com.actiongraph.action.annotation.ActionGraphGuard;
 import com.actiongraph.action.annotation.BlackboardValue;
 import com.actiongraph.contribution.ActionGraphContribution;
+import com.actiongraph.interpretation.ClarificationQuestion;
 import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.interpretation.GoalCatalog;
 import com.actiongraph.interpretation.GoalDefinition;
+import com.actiongraph.interpretation.GoalInterpretation;
+import com.actiongraph.interpretation.GoalInterpreter;
 import com.actiongraph.interpretation.GoalParameterDefinition;
 import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.interpretation.GoalType;
+import com.actiongraph.interpretation.MissingField;
 import com.actiongraph.interpretation.annotation.ActionGraphGoal;
 import com.actiongraph.interpretation.annotation.ActionGraphGoalSeeder;
 import com.actiongraph.interpretation.annotation.FromGoalParam;
 import com.actiongraph.interpretation.annotation.GoalParameter;
 import com.actiongraph.interpretation.annotation.GoalParameterBindingContext;
 import com.actiongraph.interpretation.annotation.TypedGoalValueConverter;
+import com.actiongraph.interpretation.spring.MeasuredGoalInterpreter;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.OpenAiCompatibleChatClient;
 import com.actiongraph.observability.NoopObservationSink;
@@ -46,6 +51,8 @@ import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunStatus;
 import com.actiongraph.runtime.BlackboardKey;
 import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -552,6 +559,52 @@ class ActionGraphAutoConfigurationTest {
     }
 
     @Test
+    void doesNotWrapGoalInterpreterWhenInterpretationMetricsAndSamplingAreDisabled() {
+        contextRunner
+                .withBean(GoalInterpreter.class, TestGoalInterpreter::new)
+                .run(context -> assertThat(context.getBean(GoalInterpreter.class))
+                        .isInstanceOf(TestGoalInterpreter.class)
+                        .isNotInstanceOf(MeasuredGoalInterpreter.class));
+    }
+
+    @Test
+    void wrapsGoalInterpreterAndRecordsMicrometerMetricsWhenEnabled() {
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(
+                        com.actiongraph.observability.spring.ActionGraphMicrometerAutoConfiguration.class,
+                        ActionGraphAutoConfiguration.class))
+                .withBean(GoalInterpreter.class, TestGoalInterpreter::new)
+                .withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .withPropertyValues("actiongraph.interpretation.metrics=true")
+                .run(context -> {
+                    GoalInterpreter interpreter = context.getBean(GoalInterpreter.class);
+                    MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
+
+                    assertThat(interpreter).isInstanceOf(MeasuredGoalInterpreter.class);
+
+                    interpreter.interpret("finish");
+                    interpreter.interpret("missing");
+                    interpreter.interpret("weather");
+
+                    assertThat(meterRegistry.find("actiongraph.observations")
+                            .tag("event", "INTERPRETATION_FINISHED")
+                            .tag("outcome", "ready")
+                            .counter()
+                            .count()).isEqualTo(1.0d);
+                    assertThat(meterRegistry.find("actiongraph.observations")
+                            .tag("event", "INTERPRETATION_FINISHED")
+                            .tag("outcome", "clarification")
+                            .counter()
+                            .count()).isEqualTo(1.0d);
+                    assertThat(meterRegistry.find("actiongraph.observations")
+                            .tag("event", "INTERPRETATION_FINISHED")
+                            .tag("outcome", "unknown")
+                            .counter()
+                            .count()).isEqualTo(1.0d);
+                });
+    }
+
+    @Test
     void createsDefaultGovernanceBeansByDefault() {
         contextRunner.run(context -> {
             assertThat(context.containsBean("actionGraphAmountExtractor")).isFalse();
@@ -781,6 +834,38 @@ class ActionGraphAutoConfigurationTest {
         @Override
         public void seed(GoalParameters parameters, com.actiongraph.runtime.Blackboard blackboard) {
             blackboard.addCondition(INPUT_PRESENT);
+        }
+    }
+
+    private static final class TestGoalInterpreter implements GoalInterpreter {
+        @Override
+        public GoalInterpretation interpret(String input) {
+            return interpret(input, GoalParameters.empty());
+        }
+
+        @Override
+        public GoalInterpretation interpret(String input, GoalParameters knownParameters) {
+            if ("weather".equals(input)) {
+                return GoalInterpretation.needsClarification(
+                        new GoalType("unknown"),
+                        GoalParameters.empty(),
+                        Set.of(new MissingField("supportedGoal")),
+                        new ClarificationQuestion("Unsupported goal.")
+                );
+            }
+            if ("missing".equals(input)) {
+                return GoalInterpretation.needsClarification(
+                        TEST_GOAL_TYPE,
+                        GoalParameters.empty(),
+                        Set.of(new MissingField("inputId")),
+                        new ClarificationQuestion("Which input?")
+                );
+            }
+            return GoalInterpretation.ready(
+                    TEST_GOAL_TYPE,
+                    GoalParameters.empty(),
+                    new Goal("finishSpringWorkflow", Set.of(DONE))
+            );
         }
     }
 

@@ -16,8 +16,13 @@ import java.util.regex.Pattern;
 
 public final class RuleBasedRenewalGoalInterpreter implements GoalInterpreter {
     private static final Pattern CUSTOMER_ID_PATTERN = Pattern.compile("\\bC\\d{3,}\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern RENEWAL_INTENT_PATTERN = Pattern.compile(
+            "renewal|renew|quote|contract|customer|续约|报价|合同|客户",
+            Pattern.CASE_INSENSITIVE);
     private static final GoalType GOAL_TYPE = RenewalGoalTypes.PREPARE_RENEWAL_QUOTE;
+    private static final GoalType UNKNOWN = new GoalType("unknown");
     private static final MissingField CUSTOMER_ID = new MissingField("customerId");
+    private static final MissingField SUPPORTED_GOAL = new MissingField("supportedGoal");
 
     @Override
     public GoalInterpretation interpret(String input) {
@@ -34,6 +39,9 @@ public final class RuleBasedRenewalGoalInterpreter implements GoalInterpreter {
 
         Optional<String> customerId = extractCustomerId(input);
         if (customerId.isEmpty()) {
+            if (!looksLikeRenewalIntent(input)) {
+                return unknown(knownParameters);
+            }
             return knownParameters.get("customerId")
                     .map(this::ready)
                     .orElseGet(() -> askForCustomerId(knownParameters));
@@ -45,6 +53,10 @@ public final class RuleBasedRenewalGoalInterpreter implements GoalInterpreter {
     private Optional<String> extractCustomerId(String input) {
         Matcher matcher = CUSTOMER_ID_PATTERN.matcher(input);
         return matcher.find() ? Optional.of(matcher.group()) : Optional.empty();
+    }
+
+    private boolean looksLikeRenewalIntent(String input) {
+        return RENEWAL_INTENT_PATTERN.matcher(input).find();
     }
 
     private GoalInterpretation askForCustomerId(GoalParameters parameters) {
@@ -59,5 +71,14 @@ public final class RuleBasedRenewalGoalInterpreter implements GoalInterpreter {
     private GoalInterpretation ready(String customerId) {
         GoalParameters parameters = GoalParameters.of(Map.of("customerId", customerId.toUpperCase()));
         return GoalInterpretation.ready(GOAL_TYPE, parameters, RenewalGoals.prepareRenewalQuote());
+    }
+
+    private GoalInterpretation unknown(GoalParameters parameters) {
+        return GoalInterpretation.needsClarification(
+                UNKNOWN,
+                parameters,
+                Set.of(SUPPORTED_GOAL),
+                new ClarificationQuestion("I can only interpret renewal quote requests.")
+        );
     }
 }

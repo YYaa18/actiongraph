@@ -102,6 +102,37 @@ class OpenTelemetryGenAiObservationSinkTest {
         }
     }
 
+    @Test
+    void mapsInterpretationEventsToGenAiInterpretationOperation() {
+        InMemorySpanExporter exporter = InMemorySpanExporter.create();
+        SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
+                .addSpanProcessor(SimpleSpanProcessor.create(exporter))
+                .build();
+        OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
+                .setTracerProvider(tracerProvider)
+                .build();
+
+        try {
+            OpenTelemetryGenAiObservationSink sink =
+                    new OpenTelemetryGenAiObservationSink(openTelemetry, "actiongraph-test", true);
+
+            sink.observe(ObservationEvent.of(
+                    "INTERPRETATION-1",
+                    ObservationEventType.INTERPRETATION_FINISHED,
+                    null,
+                    Map.of("outcome", "ready")
+            ));
+
+            SpanData span = exporter.getFinishedSpanItems().get(0);
+            assertThat(span.getAttributes().get(string(OpenTelemetryGenAiObservationSink.GEN_AI_OPERATION_NAME)))
+                    .isEqualTo("agent.interpretation");
+            assertThat(span.getAttributes().get(string(OpenTelemetryGenAiObservationSink.ACTIONGRAPH_RUN_ID)))
+                    .isNull();
+        } finally {
+            tracerProvider.close();
+        }
+    }
+
     private static AttributeKey<String> string(String key) {
         return AttributeKey.stringKey(key);
     }

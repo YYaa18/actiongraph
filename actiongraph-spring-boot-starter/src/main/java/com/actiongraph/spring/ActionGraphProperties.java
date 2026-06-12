@@ -22,6 +22,7 @@ public class ActionGraphProperties {
     private final GoalsProperties goals = new GoalsProperties();
     private final SeedingProperties seeding = new SeedingProperties();
     private final SeedersProperties seeders = new SeedersProperties();
+    private final InterpretationProperties interpretation = new InterpretationProperties();
     private final ValidationProperties validation = new ValidationProperties();
     private final ExecutionProperties execution = new ExecutionProperties();
     private final ObservabilityProperties observability = new ObservabilityProperties();
@@ -64,6 +65,14 @@ public class ActionGraphProperties {
     )
     public SeedersProperties getSeeders() {
         return seeders;
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Interpretation quality measurement is experimental until STD3 pilots settle."
+    )
+    public InterpretationProperties getInterpretation() {
+        return interpretation;
     }
 
     @Experimental(
@@ -375,6 +384,46 @@ public class ActionGraphProperties {
 
         public void setAutoRegisterAnnotated(boolean autoRegisterAnnotated) {
             this.autoRegisterAnnotated = autoRegisterAnnotated;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Interpretation quality measurement is experimental until STD3 pilots settle."
+    )
+    public static final class InterpretationProperties {
+        private boolean metrics = false;
+        private final InterpretationSamplingProperties sampling = new InterpretationSamplingProperties();
+
+        public boolean isMetrics() {
+            return metrics;
+        }
+
+        public void setMetrics(boolean metrics) {
+            this.metrics = metrics;
+        }
+
+        public InterpretationSamplingProperties getSampling() {
+            return sampling;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Interpretation quality sampling is experimental until STD3 pilots settle."
+    )
+    public static final class InterpretationSamplingProperties {
+        private double rate = 0.0d;
+
+        public double getRate() {
+            return rate;
+        }
+
+        public void setRate(double rate) {
+            if (Double.isNaN(rate) || rate < 0.0d || rate > 1.0d) {
+                throw new IllegalArgumentException("rate must be between 0 and 1");
+            }
+            this.rate = rate;
         }
     }
 

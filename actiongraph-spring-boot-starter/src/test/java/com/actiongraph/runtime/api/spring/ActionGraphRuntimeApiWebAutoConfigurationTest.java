@@ -13,6 +13,7 @@ import com.actiongraph.interpretation.GoalInterpreter;
 import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.MissingField;
+import com.actiongraph.interpretation.sampling.InterpretationSampleRepository;
 import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
@@ -329,6 +330,38 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
                             .satisfies(event -> assertThat(event.data())
                                     .containsEntry("requestHeader.X-Transaction-Id", "TX-1001")
                                     .doesNotContainKey("requestHeader.X-Request-Id"));
+                });
+    }
+
+    @Test
+    void interpretationSampleStoresRunIdWhenRequestStartsRun() {
+        contextRunner
+                .withBean(Action.class, () -> new FinishAction(false, new AtomicInteger()))
+                .withPropertyValues(
+                        "actiongraph.runtime.api.enabled=true",
+                        "actiongraph.interpretation.sampling.rate=1.0"
+                )
+                .run(context -> {
+                    MockMvc mockMvc = mockMvc(context);
+
+                    String response = mockMvc.perform(post("/actiongraph/runtime/runs")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                              "input": "finish",
+                                              "knownParameters": {"id": "I-1"}
+                                            }
+                                            """))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.run.status").value("COMPLETED"))
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsString();
+                    String runId = response.replaceAll(".*\\\"runId\\\":\\\"([^\\\"]+)\\\".*", "$1");
+
+                    assertThat(context.getBean(InterpretationSampleRepository.class).findRecent(1))
+                            .singleElement()
+                            .satisfies(sample -> assertThat(sample.runId()).isEqualTo(runId));
                 });
     }
 

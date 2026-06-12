@@ -23,6 +23,7 @@ import com.actiongraph.interpretation.annotation.AnnotatedGoalFactory;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalSeederFactory;
 import com.actiongraph.interpretation.annotation.GoalValueConverterResolver;
 import com.actiongraph.interpretation.annotation.TypedGoalValueConverter;
+import com.actiongraph.interpretation.sampling.InterpretationSampleTracker;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;
@@ -170,7 +171,9 @@ public final class ActionGraph {
         if (!checked.isReady()) {
             return new ChatResult(checked, null);
         }
-        return new ChatResult(checked, start(checked, runMetadata, principal));
+        RunResult result = start(checked, runMetadata, principal);
+        attachSampleRunId(result.runId());
+        return new ChatResult(checked, result);
     }
 
     public RunResult resume(String runId) {
@@ -219,6 +222,12 @@ public final class ActionGraph {
             return goalInterpreter.interpret(input);
         }
         return goalInterpreter.interpret(input, safeKnownParameters);
+    }
+
+    private void attachSampleRunId(String runId) {
+        if (interpreter instanceof InterpretationSampleTracker tracker) {
+            tracker.lastSampleId().ifPresent(sampleId -> tracker.attachRunId(sampleId, runId));
+        }
     }
 
     public RunResult start(GoalInterpretation interpretation, @Nullable Map<String, String> runMetadata) {

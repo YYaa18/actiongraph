@@ -1,6 +1,8 @@
 package com.actiongraph.jdbc.spring;
 
+import com.actiongraph.interpretation.sampling.InterpretationSampleRepository;
 import com.actiongraph.persistence.jdbc.BlackboardTypeRegistry;
+import com.actiongraph.persistence.jdbc.JdbcInterpretationSampleRepository;
 import com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
@@ -72,5 +74,14 @@ public class ActionGraphJdbcAutoConfiguration {
             ActionGraphJdbcProperties properties
     ) {
         return new JdbcTraceRunRepository(dataSource, properties.getTables().getTraceEvent());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public InterpretationSampleRepository actionGraphJdbcInterpretationSampleRepository(
+            DataSource dataSource,
+            ActionGraphJdbcProperties properties
+    ) {
+        return new JdbcInterpretationSampleRepository(dataSource, properties.getTables().getInterpretationSample());
     }
 }

@@ -1,10 +1,12 @@
 package com.actiongraph.jdbc.spring;
 
 import com.actiongraph.persistence.jdbc.BlackboardTypeRegistry;
+import com.actiongraph.persistence.jdbc.JdbcInterpretationSampleRepository;
 import com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRepository;
 import com.actiongraph.persistence.jdbc.JdbcTraceRunRepository;
 import com.actiongraph.runtime.Executor;
+import com.actiongraph.interpretation.sampling.InterpretationSampleRepository;
 import com.actiongraph.runtime.SuspendedRunRepository;
 import com.actiongraph.spring.ActionGraphAutoConfiguration;
 import com.actiongraph.trace.InMemoryTraceRepository;
@@ -64,6 +66,8 @@ class ActionGraphJdbcAutoConfigurationTest {
                             .isInstanceOf(JdbcTraceRepository.class);
                     assertThat(context.getBean(SuspendedRunRepository.class))
                             .isInstanceOf(JdbcSuspendedRunRepository.class);
+                    assertThat(context.getBean(InterpretationSampleRepository.class))
+                            .isInstanceOf(JdbcInterpretationSampleRepository.class);
                     assertThat(context).hasSingleBean(JdbcTraceRunRepository.class);
                     assertThat(context.getBean(BlackboardTypeRegistry.class).allowAllTypes()).isTrue();
                 });
@@ -77,6 +81,7 @@ class ActionGraphJdbcAutoConfigurationTest {
                         "actiongraph.persistence.jdbc.enabled=true",
                         "actiongraph.persistence.jdbc.tables.trace-event=ag_trace",
                         "actiongraph.persistence.jdbc.tables.suspended-run=ag_suspended",
+                        "actiongraph.persistence.jdbc.tables.interpretation-sample=ag_interpretation_sample",
                         "actiongraph.persistence.jdbc.blackboard.allowed-classes=java.lang.String",
                         "actiongraph.persistence.jdbc.blackboard.allowed-packages=com.example.domain"
                 )

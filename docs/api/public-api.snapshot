@@ -904,6 +904,39 @@ CLASS public final record com.actiongraph.interpretation.config.ConfiguredGoalPa
   METHOD public boolean required()
   METHOD public final java.lang.String toString()
   METHOD public java.lang.String type()
+CLASS public final class com.actiongraph.interpretation.sampling.InMemoryInterpretationSampleRepository
+  CONSTRUCTOR public com.actiongraph.interpretation.sampling.InMemoryInterpretationSampleRepository()
+  METHOD public synchronized void attachRunId(java.lang.String,java.lang.String)
+  METHOD public synchronized java.util.Optional findById(java.lang.String)
+  METHOD public synchronized java.util.List findRecent(int)
+  METHOD public synchronized void markLabeled(java.lang.String)
+  METHOD public synchronized void save(com.actiongraph.interpretation.sampling.InterpretationSample)
+CLASS public final record com.actiongraph.interpretation.sampling.InterpretationSample
+  CONSTRUCTOR public com.actiongraph.interpretation.sampling.InterpretationSample(java.lang.String,java.time.Instant,java.lang.String,java.lang.String,java.lang.String,java.util.Set,boolean,boolean,java.lang.String,boolean)
+  METHOD public java.time.Instant at()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public boolean fallbackUsed()
+  METHOD public java.lang.String goalType()
+  METHOD public final int hashCode()
+  METHOD public java.lang.String id()
+  METHOD public boolean labeled()
+  METHOD public java.lang.String maskedInput()
+  METHOD public java.util.Set missingFields()
+  METHOD public java.lang.String outcome()
+  METHOD public boolean parseFailure()
+  METHOD public java.lang.String runId()
+  METHOD public final java.lang.String toString()
+  METHOD public com.actiongraph.interpretation.sampling.InterpretationSample withLabeled()
+  METHOD public com.actiongraph.interpretation.sampling.InterpretationSample withRunId(java.lang.String)
+CLASS public abstract interface com.actiongraph.interpretation.sampling.InterpretationSampleRepository
+  METHOD public abstract void attachRunId(java.lang.String,java.lang.String)
+  METHOD public abstract java.util.Optional findById(java.lang.String)
+  METHOD public abstract java.util.List findRecent(int)
+  METHOD public abstract void markLabeled(java.lang.String)
+  METHOD public abstract void save(com.actiongraph.interpretation.sampling.InterpretationSample)
+CLASS public abstract interface com.actiongraph.interpretation.sampling.InterpretationSampleTracker
+  METHOD public abstract void attachRunId(java.lang.String,java.lang.String)
+  METHOD public abstract java.util.Optional lastSampleId()
 CLASS public final class com.actiongraph.memory.InMemoryMemoryRepository
   CONSTRUCTOR public com.actiongraph.memory.InMemoryMemoryRepository()
   METHOD public void delete(java.lang.String)
@@ -981,6 +1014,7 @@ CLASS public final enum com.actiongraph.observability.ObservationEventType
   FIELD public static final com.actiongraph.observability.ObservationEventType COMPENSATION_STARTED
   FIELD public static final com.actiongraph.observability.ObservationEventType HUMAN_REVIEW_DECIDED
   FIELD public static final com.actiongraph.observability.ObservationEventType HUMAN_REVIEW_REQUESTED
+  FIELD public static final com.actiongraph.observability.ObservationEventType INTERPRETATION_FINISHED
   FIELD public static final com.actiongraph.observability.ObservationEventType NO_PLAN
   FIELD public static final com.actiongraph.observability.ObservationEventType PLAN_GENERATED
   FIELD public static final com.actiongraph.observability.ObservationEventType POLICY_EVALUATED
@@ -1746,6 +1780,7 @@ CLASS public final class com.actiongraph.llm.FallbackGoalInterpreter
   CONSTRUCTOR public com.actiongraph.llm.FallbackGoalInterpreter(com.actiongraph.interpretation.GoalInterpreter,com.actiongraph.interpretation.GoalInterpreter)
   METHOD public com.actiongraph.interpretation.GoalInterpretation interpret(java.lang.String)
   METHOD public com.actiongraph.interpretation.GoalInterpretation interpret(java.lang.String,com.actiongraph.interpretation.GoalParameters)
+  METHOD public com.actiongraph.interpretation.GoalInterpretation interpret(java.lang.String,com.actiongraph.interpretation.GoalParameters,java.util.function.Consumer)
 CLASS public final class com.actiongraph.llm.GoalCatalogPromptRenderer
   CONSTRUCTOR public com.actiongraph.llm.GoalCatalogPromptRenderer(com.actiongraph.interpretation.GoalCatalog)
   CONSTRUCTOR public com.actiongraph.llm.GoalCatalogPromptRenderer(com.actiongraph.interpretation.GoalCatalog,int)
@@ -1791,6 +1826,77 @@ CLASS public final class com.actiongraph.llm.StructuredOutputException
   CONSTRUCTOR public com.actiongraph.llm.StructuredOutputException(java.lang.String,java.lang.Throwable)
 CLASS public abstract interface com.actiongraph.llm.StructuredOutputParser
   METHOD public abstract java.lang.Object parse(java.lang.String)
+CLASS public final record com.actiongraph.llm.evals.ActualInterpretation
+  CONSTRUCTOR public com.actiongraph.llm.evals.ActualInterpretation(java.lang.String,java.util.Map,boolean,boolean,java.util.Set,boolean)
+  METHOD public boolean clarification()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public java.lang.String goalType()
+  METHOD public final int hashCode()
+  METHOD public java.util.Set missingFields()
+  METHOD public java.util.Map parameters()
+  METHOD public boolean ready()
+  METHOD public final java.lang.String toString()
+  METHOD public boolean unknownGoal()
+CLASS public final record com.actiongraph.llm.evals.CaseDiff
+  CONSTRUCTOR public com.actiongraph.llm.evals.CaseDiff(java.lang.String,com.actiongraph.llm.evals.Expectation,com.actiongraph.llm.evals.ActualInterpretation,java.util.List)
+  METHOD public com.actiongraph.llm.evals.ActualInterpretation actual()
+  METHOD public java.util.List differences()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public com.actiongraph.llm.evals.Expectation expected()
+  METHOD public final int hashCode()
+  METHOD public java.lang.String input()
+  METHOD public final java.lang.String toString()
+CLASS public final record com.actiongraph.llm.evals.EvalReport
+  CONSTRUCTOR public com.actiongraph.llm.evals.EvalReport(int,int,int,int,java.util.List)
+  METHOD public double clarificationAccuracy()
+  METHOD public int clarificationCorrect()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public boolean exact()
+  METHOD public java.util.List failures()
+  METHOD public double goalTypeAccuracy()
+  METHOD public int goalTypeCorrect()
+  METHOD public final int hashCode()
+  METHOD public double parametersAccuracy()
+  METHOD public int parametersCorrect()
+  METHOD public java.lang.String toMarkdown()
+  METHOD public final java.lang.String toString()
+  METHOD public int total()
+CLASS public final record com.actiongraph.llm.evals.Expectation
+  CONSTRUCTOR public com.actiongraph.llm.evals.Expectation(java.lang.String,java.util.Map,boolean,java.util.Set,boolean)
+  METHOD public boolean clarification()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public java.lang.String goalType()
+  METHOD public final int hashCode()
+  METHOD public java.util.Set missingFields()
+  METHOD public java.util.Map parameters()
+  METHOD public final java.lang.String toString()
+  METHOD public boolean unknownGoal()
+CLASS public final record com.actiongraph.llm.evals.GoldenCase
+  CONSTRUCTOR public com.actiongraph.llm.evals.GoldenCase(java.lang.String,com.actiongraph.llm.evals.Expectation)
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public com.actiongraph.llm.evals.Expectation expect()
+  METHOD public final int hashCode()
+  METHOD public java.lang.String input()
+  METHOD public final java.lang.String toString()
+CLASS public final class com.actiongraph.llm.evals.GoldenSetAssertions
+  METHOD public static com.actiongraph.llm.evals.EvalReport assertMeets(com.actiongraph.interpretation.GoalInterpreter,java.nio.file.Path,com.actiongraph.llm.evals.Thresholds)
+CLASS public final class com.actiongraph.llm.evals.GoldenSetEvalRunner
+  CONSTRUCTOR public com.actiongraph.llm.evals.GoldenSetEvalRunner()
+  CONSTRUCTOR public com.actiongraph.llm.evals.GoldenSetEvalRunner(com.fasterxml.jackson.databind.ObjectMapper,java.nio.file.Path)
+  CONSTRUCTOR public com.actiongraph.llm.evals.GoldenSetEvalRunner(java.nio.file.Path)
+  METHOD public com.actiongraph.llm.evals.EvalReport evaluate(com.actiongraph.interpretation.GoalInterpreter,java.nio.file.Path)
+  METHOD public java.util.List readCases(java.nio.file.Path)
+CLASS public final record com.actiongraph.llm.evals.Thresholds
+  CONSTRUCTOR public com.actiongraph.llm.evals.Thresholds(double,double,double)
+  METHOD public double clarificationAccuracy()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public static com.actiongraph.llm.evals.Thresholds exact()
+  METHOD public double goalTypeAccuracy()
+  METHOD public final int hashCode()
+  METHOD public static com.actiongraph.llm.evals.Thresholds of(double,double)
+  METHOD public static com.actiongraph.llm.evals.Thresholds of(double,double,double)
+  METHOD public double parametersAccuracy()
+  METHOD public final java.lang.String toString()
 
 MODULE actiongraph-persistence-jdbc
 CLASS public final class com.actiongraph.humanreview.jdbc.JdbcHumanReviewRepository
@@ -1829,6 +1935,16 @@ CLASS public static final class com.actiongraph.persistence.jdbc.BlackboardTypeR
 CLASS public final class com.actiongraph.persistence.jdbc.DisallowedBlackboardTypeException
   CONSTRUCTOR public com.actiongraph.persistence.jdbc.DisallowedBlackboardTypeException(java.lang.String)
   METHOD public java.lang.String className()
+CLASS public final class com.actiongraph.persistence.jdbc.JdbcInterpretationSampleRepository
+  FIELD public static final java.lang.String DEFAULT_TABLE
+  CONSTRUCTOR public com.actiongraph.persistence.jdbc.JdbcInterpretationSampleRepository(javax.sql.DataSource)
+  CONSTRUCTOR public com.actiongraph.persistence.jdbc.JdbcInterpretationSampleRepository(javax.sql.DataSource,java.lang.String)
+  METHOD public void attachRunId(java.lang.String,java.lang.String)
+  METHOD public java.util.Optional findById(java.lang.String)
+  METHOD public java.util.List findRecent(int)
+  METHOD public void initializeSchema()
+  METHOD public void markLabeled(java.lang.String)
+  METHOD public void save(com.actiongraph.interpretation.sampling.InterpretationSample)
 CLASS public final class com.actiongraph.persistence.jdbc.JdbcSuspendedRunRepository
   FIELD public static final java.time.Duration DEFAULT_CLAIM_TIMEOUT
   FIELD public static final java.lang.String DEFAULT_TABLE
@@ -2198,9 +2314,17 @@ CLASS public class com.actiongraph.humanreview.spring.ActionGraphHumanReviewCall
   CONSTRUCTOR public com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackWebAutoConfiguration()
   METHOD public com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController actionGraphHumanReviewCallbackController(com.actiongraph.policy.HumanReviewCallbackHandler,com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackProperties,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.policy.HumanReviewCallbackHandler actionGraphHumanReviewCallbackHandler(com.actiongraph.policy.HumanReviewRepository)
+CLASS public final class com.actiongraph.interpretation.spring.MeasuredGoalInterpreter
+  CONSTRUCTOR public com.actiongraph.interpretation.spring.MeasuredGoalInterpreter(com.actiongraph.interpretation.GoalInterpreter,com.actiongraph.observability.ObservationSink,com.actiongraph.interpretation.sampling.InterpretationSampleRepository,com.actiongraph.policy.DataMaskingPolicy,boolean,double)
+  CONSTRUCTOR public com.actiongraph.interpretation.spring.MeasuredGoalInterpreter(com.actiongraph.interpretation.GoalInterpreter,com.actiongraph.observability.ObservationSink,com.actiongraph.interpretation.sampling.InterpretationSampleRepository,com.actiongraph.policy.DataMaskingPolicy,boolean,double,java.util.function.DoubleSupplier)
+  METHOD public void attachRunId(java.lang.String,java.lang.String)
+  METHOD public com.actiongraph.interpretation.GoalInterpretation interpret(java.lang.String)
+  METHOD public com.actiongraph.interpretation.GoalInterpretation interpret(java.lang.String,com.actiongraph.interpretation.GoalParameters)
+  METHOD public java.util.Optional lastSampleId()
 CLASS public class com.actiongraph.jdbc.spring.ActionGraphJdbcAutoConfiguration
   CONSTRUCTOR public com.actiongraph.jdbc.spring.ActionGraphJdbcAutoConfiguration()
   METHOD public com.actiongraph.persistence.jdbc.BlackboardTypeRegistry actionGraphJdbcBlackboardTypeRegistry(com.actiongraph.jdbc.spring.ActionGraphJdbcProperties)
+  METHOD public com.actiongraph.interpretation.sampling.InterpretationSampleRepository actionGraphJdbcInterpretationSampleRepository(javax.sql.DataSource,com.actiongraph.jdbc.spring.ActionGraphJdbcProperties)
   METHOD public com.actiongraph.runtime.SuspendedRunRepository actionGraphJdbcSuspendedRunRepository(javax.sql.DataSource,com.actiongraph.persistence.jdbc.BlackboardTypeRegistry,com.actiongraph.jdbc.spring.ActionGraphJdbcProperties)
   METHOD public com.actiongraph.trace.TraceRepository actionGraphJdbcTraceRepository(javax.sql.DataSource,com.actiongraph.jdbc.spring.ActionGraphJdbcProperties)
   METHOD public com.actiongraph.persistence.jdbc.JdbcTraceRunRepository actionGraphJdbcTraceRunRepository(javax.sql.DataSource,com.actiongraph.jdbc.spring.ActionGraphJdbcProperties)
@@ -2221,10 +2345,12 @@ CLASS public static final class com.actiongraph.jdbc.spring.ActionGraphJdbcPrope
 CLASS public static final class com.actiongraph.jdbc.spring.ActionGraphJdbcProperties$Tables
   CONSTRUCTOR public com.actiongraph.jdbc.spring.ActionGraphJdbcProperties$Tables()
   METHOD public java.lang.String getHumanReview()
+  METHOD public java.lang.String getInterpretationSample()
   METHOD public java.lang.String getMemory()
   METHOD public java.lang.String getSuspendedRun()
   METHOD public java.lang.String getTraceEvent()
   METHOD public void setHumanReview(java.lang.String)
+  METHOD public void setInterpretationSample(java.lang.String)
   METHOD public void setMemory(java.lang.String)
   METHOD public void setSuspendedRun(java.lang.String)
   METHOD public void setTraceEvent(java.lang.String)
@@ -2307,7 +2433,9 @@ CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   METHOD public com.actiongraph.events.ExternalEventGateway actionGraphExternalEventGateway(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.interpretation.GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,com.actiongraph.interpretation.GoalCatalog,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.interpretation.GoalCatalog actionGraphGoalCatalog(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.action.ActionRegistry,com.actiongraph.spring.ActionGraphProperties)
+  METHOD public org.springframework.beans.factory.config.BeanPostProcessor actionGraphGoalInterpreterMeasurementPostProcessor(com.actiongraph.spring.ActionGraphProperties,com.actiongraph.observability.ObservationSink,com.actiongraph.interpretation.sampling.InterpretationSampleRepository,com.actiongraph.policy.DataMaskingPolicy)
   METHOD public com.actiongraph.policy.HumanReviewPolicy actionGraphHumanReviewPolicy()
+  METHOD public com.actiongraph.interpretation.sampling.InterpretationSampleRepository actionGraphInterpretationSampleRepository()
   METHOD public com.actiongraph.observability.ObservationSink actionGraphObservationSink()
   METHOD public com.actiongraph.llm.LlmClient actionGraphOpenAiCompatibleLlmClient(com.actiongraph.spring.ActionGraphProperties)
   METHOD public org.springframework.beans.factory.SmartInitializingSingleton actionGraphOpenTelemetryDependencyVerifier(com.actiongraph.spring.ActionGraphProperties)
@@ -2329,6 +2457,7 @@ CLASS public class com.actiongraph.spring.ActionGraphProperties
   METHOD public com.actiongraph.spring.ActionGraphProperties$ExecutionProperties getExecution()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ExecutorProperties getExecutor()
   METHOD public com.actiongraph.spring.ActionGraphProperties$GoalsProperties getGoals()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$InterpretationProperties getInterpretation()
   METHOD public com.actiongraph.spring.ActionGraphProperties$LlmProperties getLlm()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ObservabilityProperties getObservability()
   METHOD public com.actiongraph.spring.ActionGraphProperties$PlannerProperties getPlanner()
@@ -2451,6 +2580,15 @@ CLASS public static final class com.actiongraph.spring.ActionGraphProperties$Goa
   METHOD public java.util.List getDefinitions()
   METHOD public boolean isAutoRegisterAnnotated()
   METHOD public void setAutoRegisterAnnotated(boolean)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$InterpretationProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$InterpretationProperties()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$InterpretationSamplingProperties getSampling()
+  METHOD public boolean isMetrics()
+  METHOD public void setMetrics(boolean)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$InterpretationSamplingProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$InterpretationSamplingProperties()
+  METHOD public double getRate()
+  METHOD public void setRate(double)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$LlmProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$LlmProperties()
   METHOD public java.lang.String getApiKeyEnv()

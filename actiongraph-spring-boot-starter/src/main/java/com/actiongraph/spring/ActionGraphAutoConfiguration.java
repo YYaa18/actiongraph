@@ -27,6 +27,9 @@ import com.actiongraph.interpretation.annotation.GoalValueConverterResolver;
 import com.actiongraph.interpretation.config.ConfiguredGoalDefinition;
 import com.actiongraph.interpretation.config.ConfiguredGoalDefinitionFactory;
 import com.actiongraph.interpretation.config.ConfiguredGoalParameter;
+import com.actiongraph.interpretation.sampling.InMemoryInterpretationSampleRepository;
+import com.actiongraph.interpretation.sampling.InterpretationSampleRepository;
+import com.actiongraph.interpretation.spring.MeasuredGoalInterpreter;
 import com.actiongraph.llm.DeepSeekChatClient;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.OpenAiCompatibleChatClient;
@@ -56,7 +59,9 @@ import com.actiongraph.trace.InMemoryTraceRepository;
 import com.actiongraph.trace.TraceRepository;
 import com.actiongraph.validation.ActionGraphValidator;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -200,6 +205,52 @@ public class ActionGraphAutoConfiguration {
     @ConditionalOnMissingBean
     public ObservationSink actionGraphObservationSink() {
         return NoopObservationSink.INSTANCE;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @Experimental(
+            since = "0.2.0",
+            value = "Interpretation quality sampling is experimental until STD3 pilots settle."
+    )
+    public InterpretationSampleRepository actionGraphInterpretationSampleRepository() {
+        return new InMemoryInterpretationSampleRepository();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "actionGraphGoalInterpreterMeasurementPostProcessor")
+    @Experimental(
+            since = "0.2.0",
+            value = "Interpretation quality measurement is experimental until STD3 pilots settle."
+    )
+    public BeanPostProcessor actionGraphGoalInterpreterMeasurementPostProcessor(
+            ActionGraphProperties properties,
+            ObservationSink observationSink,
+            InterpretationSampleRepository sampleRepository,
+            DataMaskingPolicy maskingPolicy
+    ) {
+        return new BeanPostProcessor() {
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+                ActionGraphProperties.InterpretationProperties interpretation = properties.getInterpretation();
+                double samplingRate = interpretation.getSampling().getRate();
+                if (!interpretation.isMetrics() && samplingRate <= 0.0d) {
+                    return bean;
+                }
+                if (bean instanceof GoalInterpreter goalInterpreter
+                        && !(bean instanceof MeasuredGoalInterpreter)) {
+                    return new MeasuredGoalInterpreter(
+                            goalInterpreter,
+                            observationSink,
+                            sampleRepository,
+                            maskingPolicy,
+                            interpretation.isMetrics(),
+                            samplingRate
+                    );
+                }
+                return bean;
+            }
+        };
     }
 
     @Bean

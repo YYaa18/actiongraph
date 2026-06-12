@@ -10,6 +10,7 @@ public enum ObservationEventType {
     RUN_STARTED,
     RUN_RESUMED,
     RUN_FINISHED,
+    INTERPRETATION_FINISHED,
     PLAN_GENERATED,
     NO_PLAN,
     POLICY_EVALUATED,

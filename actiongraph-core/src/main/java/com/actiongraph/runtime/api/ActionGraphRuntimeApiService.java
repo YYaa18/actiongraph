@@ -5,6 +5,7 @@ import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.interpretation.GoalInterpretation;
 import com.actiongraph.interpretation.GoalInterpreter;
+import com.actiongraph.interpretation.sampling.InterpretationSampleTracker;
 import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.GoapExecutor;
@@ -120,6 +121,7 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
 
         RunResult result = actionGraph.start(interpretation, safeStringMap(runMetadata, "run metadata key"),
                 principal);
+        attachSampleRunId(result.runId());
         return RuntimeStartResponse.runStarted(interpretationResponse, RuntimeRunResponse.from(result));
     }
 
@@ -151,6 +153,12 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
             return interpreter.interpret(input);
         }
         return interpreter.interpret(input, com.actiongraph.interpretation.GoalParameters.of(safeKnownParameters));
+    }
+
+    private void attachSampleRunId(String runId) {
+        if (interpreter instanceof InterpretationSampleTracker tracker) {
+            tracker.lastSampleId().ifPresent(sampleId -> tracker.attachRunId(sampleId, runId));
+        }
     }
 
     private static Map<String, String> safeStringMap(@Nullable Map<String, String> values, String keyName) {
