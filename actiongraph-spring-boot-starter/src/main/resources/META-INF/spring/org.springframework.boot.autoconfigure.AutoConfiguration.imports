@@ -5,6 +5,7 @@ com.actiongraph.memory.jdbc.spring.ActionGraphMemoryJdbcAutoConfiguration
 com.actiongraph.memory.spring.ActionGraphMemoryAutoConfiguration
 com.actiongraph.humanreview.jdbc.spring.ActionGraphHumanReviewJdbcAutoConfiguration
 com.actiongraph.humanreview.spring.ActionGraphHumanReviewAutoConfiguration
+com.actiongraph.observability.spring.ActionGraphOpenTelemetryAutoConfiguration
 com.actiongraph.observability.spring.ActionGraphMicrometerAutoConfiguration
 com.actiongraph.spring.ActionGraphAutoConfiguration
 com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiWebAutoConfiguration

@@ -2238,10 +2238,27 @@ CLASS public class com.actiongraph.memory.spring.ActionGraphMemoryAutoConfigurat
 CLASS public class com.actiongraph.observability.spring.ActionGraphMicrometerAutoConfiguration
   CONSTRUCTOR public com.actiongraph.observability.spring.ActionGraphMicrometerAutoConfiguration()
   METHOD public com.actiongraph.observability.ObservationSink actionGraphObservationSink(io.micrometer.core.instrument.MeterRegistry)
+CLASS public class com.actiongraph.observability.spring.ActionGraphOpenTelemetryAutoConfiguration
+  CONSTRUCTOR public com.actiongraph.observability.spring.ActionGraphOpenTelemetryAutoConfiguration()
+  METHOD public com.actiongraph.observability.ObservationSink actionGraphObservationSink(io.opentelemetry.api.OpenTelemetry,com.actiongraph.spring.ActionGraphProperties)
+  METHOD public io.opentelemetry.api.OpenTelemetry actionGraphOpenTelemetry()
 CLASS public final class com.actiongraph.observability.spring.MicrometerObservationSink
   FIELD public static final java.lang.String DURATION_TIMER
   FIELD public static final java.lang.String EVENT_COUNTER
   CONSTRUCTOR public com.actiongraph.observability.spring.MicrometerObservationSink(io.micrometer.core.instrument.MeterRegistry)
+  METHOD public void observe(com.actiongraph.observability.ObservationEvent)
+CLASS public final class com.actiongraph.observability.spring.OpenTelemetryGenAiObservationSink
+  FIELD public static final java.lang.String ACTIONGRAPH_ACTION_ID
+  FIELD public static final java.lang.String ACTIONGRAPH_DURATION_NANOS
+  FIELD public static final java.lang.String ACTIONGRAPH_EVENT_TYPE
+  FIELD public static final java.lang.String ACTIONGRAPH_RUN_ID
+  FIELD public static final java.lang.String ACTIONGRAPH_TAG_PREFIX
+  FIELD public static final java.lang.String ERROR_TYPE
+  FIELD public static final java.lang.String GEN_AI_AGENT_NAME
+  FIELD public static final java.lang.String GEN_AI_OPERATION_NAME
+  FIELD public static final java.lang.String GEN_AI_SYSTEM
+  CONSTRUCTOR public com.actiongraph.observability.spring.OpenTelemetryGenAiObservationSink(io.opentelemetry.api.OpenTelemetry)
+  CONSTRUCTOR public com.actiongraph.observability.spring.OpenTelemetryGenAiObservationSink(io.opentelemetry.api.OpenTelemetry,java.lang.String,boolean)
   METHOD public void observe(com.actiongraph.observability.ObservationEvent)
 CLASS public final class com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController
   CONSTRUCTOR public com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController(com.actiongraph.runtime.api.ActionGraphRuntimeOperations,com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiProperties,com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier)
@@ -2293,6 +2310,7 @@ CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   METHOD public com.actiongraph.policy.HumanReviewPolicy actionGraphHumanReviewPolicy()
   METHOD public com.actiongraph.observability.ObservationSink actionGraphObservationSink()
   METHOD public com.actiongraph.llm.LlmClient actionGraphOpenAiCompatibleLlmClient(com.actiongraph.spring.ActionGraphProperties)
+  METHOD public org.springframework.beans.factory.SmartInitializingSingleton actionGraphOpenTelemetryDependencyVerifier(com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.PermissionPolicy actionGraphPermissionPolicy()
   METHOD public com.actiongraph.planning.Planner actionGraphPlanner(com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.ExecutionPolicyGuard actionGraphPolicyGuard(com.actiongraph.policy.PermissionPolicy,com.actiongraph.spring.ActionGraphProperties)
@@ -2312,6 +2330,7 @@ CLASS public class com.actiongraph.spring.ActionGraphProperties
   METHOD public com.actiongraph.spring.ActionGraphProperties$ExecutorProperties getExecutor()
   METHOD public com.actiongraph.spring.ActionGraphProperties$GoalsProperties getGoals()
   METHOD public com.actiongraph.spring.ActionGraphProperties$LlmProperties getLlm()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$ObservabilityProperties getObservability()
   METHOD public com.actiongraph.spring.ActionGraphProperties$PlannerProperties getPlanner()
   METHOD public com.actiongraph.spring.ActionGraphProperties$SecurityProperties getSecurity()
   METHOD public com.actiongraph.spring.ActionGraphProperties$SeedersProperties getSeeders()
@@ -2463,6 +2482,17 @@ CLASS public static final class com.actiongraph.spring.ActionGraphProperties$OAu
   METHOD public void setDelegationChainClaim(java.lang.String)
   METHOD public void setFallbackClientIdClaim(java.lang.String)
   METHOD public void setRolesClaim(java.lang.String)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ObservabilityProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ObservabilityProperties()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$OpenTelemetryProperties getOtel()
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$OpenTelemetryProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$OpenTelemetryProperties()
+  METHOD public java.lang.String getInstrumentationName()
+  METHOD public boolean isEnabled()
+  METHOD public boolean isIncludeRunId()
+  METHOD public void setEnabled(boolean)
+  METHOD public void setIncludeRunId(boolean)
+  METHOD public void setInstrumentationName(java.lang.String)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$PlannerProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$PlannerProperties()
   METHOD public int getMaxDepth()

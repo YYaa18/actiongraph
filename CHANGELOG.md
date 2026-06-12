@@ -31,6 +31,7 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 - Optional Action descriptions on `Action` and `@ActionGraphAction`, surfaced in graph export and Goal Studio prompts.
 - Experimental run identity model with `RunPrincipal`, explicit `ActionGraph.start/chat/resume` principal overloads, principal-aware `ExecutionContext`, policy evaluation, human-review tasks, suspend/resume snapshots, external event actor tracing, and JDBC persistence.
 - Experimental Spring endpoint security bridge with `RunPrincipalResolver`, OAuth2 resource-server mode, endpoint scope checks, JWT claim-to-principal mapping, shared-secret development-mode fallback, and configuration-based any-of action role gates.
+- Experimental OpenTelemetry GenAI semantic-convention observation sink with Spring Boot auto-configuration, OTel-before-Micrometer ordering when explicitly enabled, and privacy-preserving span attributes.
 
 ### Changed
 

@@ -45,6 +45,7 @@ import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunStatus;
 import com.actiongraph.runtime.BlackboardKey;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -511,6 +512,15 @@ class ActionGraphAutoConfigurationTest {
     void createsNoopObservationSinkByDefault() {
         contextRunner.run(context -> assertThat(context.getBean(ObservationSink.class))
                 .isSameAs(NoopObservationSink.INSTANCE));
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void sharedSecretEndpointModeLogsDevelopmentWarning(CapturedOutput output) {
+        contextRunner.run(context -> assertThat(context).hasSingleBean(ActionGraphEndpointAccessVerifier.class));
+
+        assertThat(output)
+                .contains("ActionGraph endpoint security mode is shared-secret; use oauth2 for production deployments");
     }
 
     @Test

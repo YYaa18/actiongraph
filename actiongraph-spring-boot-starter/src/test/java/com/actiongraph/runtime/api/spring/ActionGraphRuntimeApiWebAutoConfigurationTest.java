@@ -268,6 +268,34 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
     }
 
     @Test
+    void oauth2RuntimeApiReturnsUnauthorizedWhenPrincipalIsAnonymous() {
+        contextRunner
+                .withBean(Action.class, () -> new FinishAction(false, new AtomicInteger()))
+                .withBean(RunPrincipalResolver.class, () -> new StaticRunPrincipalResolver(
+                        RunPrincipal.anonymous(),
+                        Set.of("actiongraph.runtime")
+                ))
+                .withPropertyValues(
+                        "actiongraph.runtime.api.enabled=true",
+                        "actiongraph.security.mode=oauth2"
+                )
+                .run(context -> {
+                    MockMvc mockMvc = mockMvc(context);
+
+                    mockMvc.perform(post("/actiongraph/runtime/runs")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                              "input": "finish",
+                                              "knownParameters": {"id": "I-1"}
+                                            }
+                                            """))
+                            .andExpect(status().isUnauthorized())
+                            .andExpect(jsonPath("$.error").value("UNAUTHORIZED"));
+                });
+    }
+
+    @Test
     void customTraceHeadersControlWhichHeadersEnterRunTrace() {
         contextRunner
                 .withBean(Action.class, () -> new FinishAction(false, new AtomicInteger()))

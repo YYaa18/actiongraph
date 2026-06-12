@@ -162,6 +162,23 @@ public class ActionGraphAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "actionGraphOpenTelemetryDependencyVerifier")
+    @Experimental(
+            since = "0.2.0",
+            value = "OpenTelemetry observability configuration is experimental until STD2 pilots settle."
+    )
+    public SmartInitializingSingleton actionGraphOpenTelemetryDependencyVerifier(ActionGraphProperties properties) {
+        return () -> {
+            if (properties.getObservability().getOtel().isEnabled()
+                    && !isClassPresent("io.opentelemetry.api.OpenTelemetry")) {
+                throw new ActionGraphConfigurationException(
+                        "actiongraph.observability.otel.enabled=true requires io.opentelemetry:opentelemetry-api "
+                                + "on the application classpath");
+            }
+        };
+    }
+
+    @Bean
     @ConditionalOnMissingBean
     public ReviewAttributeContributor actionGraphReviewAttributeContributor() {
         return NoopReviewAttributeContributor.INSTANCE;
@@ -809,6 +826,15 @@ public class ActionGraphAutoConfiguration {
 
     private String blankToDefault(String value, String defaultValue) {
         return value == null || value.isBlank() ? defaultValue : value;
+    }
+
+    private static boolean isClassPresent(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException | LinkageError ex) {
+            return false;
+        }
     }
 
     private static final class RecovererLifecycle implements SmartLifecycle {

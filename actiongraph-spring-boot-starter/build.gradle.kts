@@ -3,6 +3,7 @@ plugins {
 }
 
 val springBootVersion = "3.3.5"
+val openTelemetryVersion = "1.63.0"
 
 dependencies {
     api(project(":actiongraph-core"))
@@ -18,6 +19,7 @@ dependencies {
 
     compileOnly("org.springframework:spring-web:6.1.14")
     compileOnly("io.micrometer:micrometer-core:1.13.6")
+    compileOnly("io.opentelemetry:opentelemetry-api:$openTelemetryVersion")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
 
@@ -27,5 +29,9 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-oauth2-jose:6.3.4")
     testImplementation("org.springframework.security:spring-security-test:6.3.4")
     testImplementation("io.micrometer:micrometer-core:1.13.6")
+    testImplementation("io.opentelemetry:opentelemetry-api:$openTelemetryVersion")
+    testImplementation("io.opentelemetry:opentelemetry-sdk:$openTelemetryVersion")
+    testImplementation("io.opentelemetry:opentelemetry-sdk-testing:$openTelemetryVersion")
+    testImplementation("io.opentelemetry:opentelemetry-sdk-trace:$openTelemetryVersion")
     testImplementation("com.h2database:h2:2.2.224")
 }

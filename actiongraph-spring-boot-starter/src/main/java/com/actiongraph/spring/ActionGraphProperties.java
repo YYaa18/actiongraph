@@ -24,6 +24,7 @@ public class ActionGraphProperties {
     private final SeedersProperties seeders = new SeedersProperties();
     private final ValidationProperties validation = new ValidationProperties();
     private final ExecutionProperties execution = new ExecutionProperties();
+    private final ObservabilityProperties observability = new ObservabilityProperties();
     private final LlmProperties llm = new LlmProperties();
     private final DurabilityProperties durability = new DurabilityProperties();
     private final EventsProperties events = new EventsProperties();
@@ -79,6 +80,14 @@ public class ActionGraphProperties {
     )
     public ExecutionProperties getExecution() {
         return execution;
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "OpenTelemetry observability configuration is experimental until STD2 pilots settle."
+    )
+    public ObservabilityProperties getObservability() {
+        return observability;
     }
 
     @Experimental(
@@ -447,6 +456,54 @@ public class ActionGraphProperties {
 
         public void setTimeout(Duration timeout) {
             this.timeout = timeout;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "OpenTelemetry observability configuration is experimental until STD2 pilots settle."
+    )
+    public static final class ObservabilityProperties {
+        private final OpenTelemetryProperties otel = new OpenTelemetryProperties();
+
+        public OpenTelemetryProperties getOtel() {
+            return otel;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "OpenTelemetry GenAI semantic convention export is experimental until STD2 pilots settle."
+    )
+    public static final class OpenTelemetryProperties {
+        private boolean enabled = false;
+        private String instrumentationName = "actiongraph";
+        private boolean includeRunId = true;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getInstrumentationName() {
+            return instrumentationName;
+        }
+
+        public void setInstrumentationName(String instrumentationName) {
+            this.instrumentationName = instrumentationName == null || instrumentationName.isBlank()
+                    ? "actiongraph"
+                    : instrumentationName.trim();
+        }
+
+        public boolean isIncludeRunId() {
+            return includeRunId;
+        }
+
+        public void setIncludeRunId(boolean includeRunId) {
+            this.includeRunId = includeRunId;
         }
     }
 
