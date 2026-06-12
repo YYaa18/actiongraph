@@ -1,6 +1,7 @@
 package com.actiongraph.persistence.jdbc;
 
 import com.actiongraph.action.ActionId;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.runtime.BlackboardKey;
@@ -18,6 +19,7 @@ import java.sql.Types;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,6 +58,33 @@ class JdbcSuspendedRunRepositoryTest {
 
         repository.delete("RUN-1");
         assertThat(repository.findByRunId("RUN-1")).isEmpty();
+    }
+
+    @Test
+    void persistsAndRestoresRunPrincipal() {
+        JdbcSuspendedRunRepository repository = new JdbcSuspendedRunRepository(JdbcTestDataSources.h2());
+        InMemoryBlackboard blackboard = new InMemoryBlackboard();
+        RunPrincipal principal = new RunPrincipal("user:alice", "portal", List.of("channel:mobile"),
+                Map.of("roles", "maker"));
+
+        repository.save(new SuspendedRun(
+                "RUN-PRINCIPAL",
+                new Goal("persistedGoal", Set.of(DRAFTED)),
+                blackboard,
+                List.of(),
+                List.of(),
+                new ActionId("action.two"),
+                "waiting",
+                SnapshotState.SUSPENDED,
+                Instant.EPOCH,
+                null,
+                principal
+        ));
+
+        assertThat(repository.findByRunId("RUN-PRINCIPAL"))
+                .get()
+                .extracting(SuspendedRun::principal)
+                .isEqualTo(principal);
     }
 
     @Test

@@ -29,11 +29,14 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 - Experimental configuration-defined Goals with typed parameter seeding, startup validation, duplicate-source diagnostics, Goal and Action graph fingerprints in `RUN_STARTED` trace, and fingerprint-checked bundle import.
 - Experimental Goal Studio for non-production drafting: LLM-generated Goal declarations only, validation auto-repair, framework-computed risk profiles, token-protected Spring endpoints, production-profile hard fail, and approved YAML bundle export.
 - Optional Action descriptions on `Action` and `@ActionGraphAction`, surfaced in graph export and Goal Studio prompts.
+- Experimental run identity model with `RunPrincipal`, explicit `ActionGraph.start/chat/resume` principal overloads, principal-aware `ExecutionContext`, policy evaluation, human-review tasks, suspend/resume snapshots, external event actor tracing, and JDBC persistence.
+- Experimental Spring endpoint security bridge with `RunPrincipalResolver`, OAuth2 resource-server mode, endpoint scope checks, JWT claim-to-principal mapping, shared-secret development-mode fallback, and configuration-based any-of action role gates.
 
 ### Changed
 
 - Repository governance now treats legal, security, contribution, changelog, and compatibility policy files as required release artifacts.
 - `ActionGraphRuntimeApiService` is now documented and wired as a control-plane adapter over the root facade.
+- `PermissionPolicy` and `ActionGraphRuntimeOperations` gained principal-aware default methods so existing two-argument implementations remain compatible.
 - The renewal sample now dogfoods annotated Goal metadata/seeders and the root `ActionGraph` facade.
 
 ## 0.1.0 - 2026-06-11

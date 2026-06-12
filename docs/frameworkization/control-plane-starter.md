@@ -23,6 +23,27 @@ Built-in endpoints share `actiongraph-control-plane-api` for error response cont
 
 Runtime start/resume endpoints also support whitelisted request-header capture into trace metadata through `actiongraph.runtime.api.trace-headers`. This is intended for non-sensitive audit identifiers such as request id, correlation id, or source system. The configured Runtime API token header is hard-excluded from trace capture even when misconfigured into that list; other sensitive headers should still stay out of it.
 
+Endpoint access defaults to shared-secret mode for local development and emits a
+startup warning. Production deployments should switch to OAuth2 resource-server
+mode and scope each endpoint group:
+
+```yaml
+actiongraph:
+  security:
+    mode: oauth2
+    endpoints:
+      runtime-api: [actiongraph.runtime]
+      human-review: [actiongraph.human-review]
+      events: [actiongraph.events]
+      console: [actiongraph.console]
+      studio: [actiongraph.studio]
+```
+
+In OAuth2 mode the Spring starter resolves `RunPrincipal` from the current JWT:
+`sub` is the initiating subject, `azp` / `client_id` is the client system, and
+the configured roles claim feeds role-based `PermissionPolicy` checks. Custom
+IAM or gateway deployments can provide their own `RunPrincipalResolver` Bean.
+
 ## Endpoint Switches
 
 Each endpoint surface still uses its own explicit property switch:

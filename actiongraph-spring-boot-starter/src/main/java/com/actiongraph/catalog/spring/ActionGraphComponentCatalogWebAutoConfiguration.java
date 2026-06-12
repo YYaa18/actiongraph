@@ -1,6 +1,9 @@
 package com.actiongraph.catalog.spring;
 
 import com.actiongraph.catalog.ActionGraphComponentCatalogService;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifiers;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -32,8 +35,13 @@ public class ActionGraphComponentCatalogWebAutoConfiguration {
     @ConditionalOnMissingBean(name = "actionGraphComponentCatalogController")
     public ActionGraphComponentCatalogController actionGraphComponentCatalogController(
             ActionGraphComponentCatalogService catalogService,
-            ActionGraphComponentCatalogProperties properties
+            ActionGraphComponentCatalogProperties properties,
+            ObjectProvider<ActionGraphEndpointAccessVerifier> accessVerifier
     ) {
-        return new ActionGraphComponentCatalogController(catalogService, properties);
+        return new ActionGraphComponentCatalogController(
+                catalogService,
+                properties,
+                ActionGraphEndpointAccessVerifiers.getOrSharedSecretDefault(accessVerifier)
+        );
     }
 }

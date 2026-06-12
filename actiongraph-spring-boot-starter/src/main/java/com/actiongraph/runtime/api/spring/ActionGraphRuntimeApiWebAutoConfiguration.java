@@ -3,6 +3,9 @@ package com.actiongraph.runtime.api.spring;
 import com.actiongraph.ActionGraph;
 import com.actiongraph.interpretation.GoalInterpreter;
 import com.actiongraph.runtime.api.ActionGraphRuntimeApiService;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifiers;
+import org.springframework.beans.factory.ObjectProvider;
 import com.actiongraph.runtime.api.ActionGraphRuntimeOperations;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -41,8 +44,13 @@ public class ActionGraphRuntimeApiWebAutoConfiguration {
     @ConditionalOnMissingBean(name = "actionGraphRuntimeApiController")
     public ActionGraphRuntimeApiController actionGraphRuntimeApiController(
             ActionGraphRuntimeOperations apiService,
-            ActionGraphRuntimeApiProperties properties
+            ActionGraphRuntimeApiProperties properties,
+            ObjectProvider<ActionGraphEndpointAccessVerifier> accessVerifier
     ) {
-        return new ActionGraphRuntimeApiController(apiService, properties);
+        return new ActionGraphRuntimeApiController(
+                apiService,
+                properties,
+                ActionGraphEndpointAccessVerifiers.getOrSharedSecretDefault(accessVerifier)
+        );
     }
 }

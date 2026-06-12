@@ -23,6 +23,9 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+    testImplementation("org.springframework.security:spring-security-oauth2-resource-server:6.3.4")
+    testImplementation("org.springframework.security:spring-security-oauth2-jose:6.3.4")
+    testImplementation("org.springframework.security:spring-security-test:6.3.4")
     testImplementation("io.micrometer:micrometer-core:1.13.6")
     testImplementation("com.h2database:h2:2.2.224")
 }

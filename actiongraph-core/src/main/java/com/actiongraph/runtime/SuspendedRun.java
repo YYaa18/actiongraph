@@ -2,6 +2,7 @@ package com.actiongraph.runtime;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.api.Experimental;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Goal;
 import org.jspecify.annotations.Nullable;
 
@@ -73,7 +74,12 @@ public record SuspendedRun(
                 since = "0.2.0",
                 value = "External event waits are experimental until MS2 event ingress pilots complete."
         )
-        @Nullable Instant eventDeadline
+        @Nullable Instant eventDeadline,
+        @Experimental(
+                since = "0.2.0",
+                value = "Run principal snapshots are experimental until STD1 identity pilots settle."
+        )
+        RunPrincipal principal
 ) {
     public SuspendedRun {
         if (runId == null || runId.isBlank()) {
@@ -116,6 +122,27 @@ public record SuspendedRun(
         if (snapshotState != SnapshotState.RUNNING && inFlightActionId != null) {
             throw new IllegalArgumentException("inFlightActionId is only valid for RUNNING checkpoints");
         }
+        principal = principal == null ? RunPrincipal.anonymous() : principal;
+    }
+
+    public SuspendedRun(
+            String runId,
+            Goal goal,
+            Blackboard blackboard,
+            List<ActionId> executedActions,
+            List<ActionId> compensationStack,
+            @Nullable ActionId pendingActionId,
+            String message,
+            SnapshotState snapshotState,
+            Instant heartbeatAt,
+            @Nullable ActionId inFlightActionId,
+            @Nullable String eventType,
+            @Nullable String eventCorrelationId,
+            @Nullable Instant eventDeadline
+    ) {
+        this(runId, goal, blackboard, executedActions, compensationStack, pendingActionId, message,
+                snapshotState, heartbeatAt, inFlightActionId, eventType, eventCorrelationId, eventDeadline,
+                RunPrincipal.anonymous());
     }
 
     public SuspendedRun(
@@ -128,7 +155,7 @@ public record SuspendedRun(
             String message
     ) {
         this(runId, goal, blackboard, executedActions, compensationStack, pendingActionId, message,
-                SnapshotState.SUSPENDED, Instant.now(), null, null, null, null);
+                SnapshotState.SUSPENDED, Instant.now(), null, null, null, null, RunPrincipal.anonymous());
     }
 
     public SuspendedRun(
@@ -144,7 +171,24 @@ public record SuspendedRun(
             @Nullable ActionId inFlightActionId
     ) {
         this(runId, goal, blackboard, executedActions, compensationStack, pendingActionId, message,
-                snapshotState, heartbeatAt, inFlightActionId, null, null, null);
+                snapshotState, heartbeatAt, inFlightActionId, null, null, null, RunPrincipal.anonymous());
+    }
+
+    public SuspendedRun(
+            String runId,
+            Goal goal,
+            Blackboard blackboard,
+            List<ActionId> executedActions,
+            List<ActionId> compensationStack,
+            @Nullable ActionId pendingActionId,
+            String message,
+            SnapshotState snapshotState,
+            Instant heartbeatAt,
+            @Nullable ActionId inFlightActionId,
+            RunPrincipal principal
+    ) {
+        this(runId, goal, blackboard, executedActions, compensationStack, pendingActionId, message,
+                snapshotState, heartbeatAt, inFlightActionId, null, null, null, principal);
     }
 
     public static SuspendedRun waitingForEvent(
@@ -158,8 +202,24 @@ public record SuspendedRun(
             String eventCorrelationId,
             Instant eventDeadline
     ) {
+        return waitingForEvent(runId, goal, blackboard, executedActions, compensationStack,
+                message, eventType, eventCorrelationId, eventDeadline, RunPrincipal.anonymous());
+    }
+
+    public static SuspendedRun waitingForEvent(
+            String runId,
+            Goal goal,
+            Blackboard blackboard,
+            List<ActionId> executedActions,
+            List<ActionId> compensationStack,
+            String message,
+            String eventType,
+            String eventCorrelationId,
+            Instant eventDeadline,
+            RunPrincipal principal
+    ) {
         return new SuspendedRun(runId, goal, blackboard, executedActions, compensationStack,
                 null, message, SnapshotState.WAITING_EVENT, Instant.now(), null,
-                eventType, eventCorrelationId, eventDeadline);
+                eventType, eventCorrelationId, eventDeadline, principal);
     }
 }

@@ -1,13 +1,16 @@
 package com.actiongraph.runtime.api.spring;
 
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
-import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.runtime.SuspendedRunNotClaimableException;
 import com.actiongraph.runtime.api.ActionGraphRuntimeOperations;
 import com.actiongraph.runtime.api.RuntimeInterpretationResponse;
 import com.actiongraph.runtime.api.RuntimeRunResponse;
 import com.actiongraph.runtime.api.RuntimeStartResponse;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointGroup;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,18 +31,20 @@ import org.jspecify.annotations.Nullable;
 @RestController
 @RequestMapping("${actiongraph.runtime.api.path:/actiongraph/runtime}")
 public final class ActionGraphRuntimeApiController {
-    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
     private static final String UNAUTHORIZED_MESSAGE = "Runtime API token is missing or invalid";
 
     private final ActionGraphRuntimeOperations apiService;
     private final ActionGraphRuntimeApiProperties properties;
+    private final ActionGraphEndpointAccessVerifier accessVerifier;
 
     public ActionGraphRuntimeApiController(
             ActionGraphRuntimeOperations apiService,
-            ActionGraphRuntimeApiProperties properties
+            ActionGraphRuntimeApiProperties properties,
+            ActionGraphEndpointAccessVerifier accessVerifier
     ) {
         this.apiService = Objects.requireNonNull(apiService, "apiService");
         this.properties = Objects.requireNonNull(properties, "properties");
+        this.accessVerifier = Objects.requireNonNull(accessVerifier, "accessVerifier");
     }
 
     @PostMapping("/interpret")
@@ -47,7 +52,7 @@ public final class ActionGraphRuntimeApiController {
             @RequestHeader HttpHeaders headers,
             @RequestBody RuntimeGoalRequest request
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return apiService.interpret(request.input(), request.knownParametersOrEmpty());
     }
 
@@ -56,8 +61,8 @@ public final class ActionGraphRuntimeApiController {
             @RequestHeader HttpHeaders headers,
             @RequestBody RuntimeGoalRequest request
     ) {
-        verifyToken(headers);
-        return apiService.start(request.input(), request.knownParametersOrEmpty(), traceMetadata(headers));
+        RunPrincipal principal = verifyAccess(headers);
+        return apiService.start(request.input(), request.knownParametersOrEmpty(), traceMetadata(headers), principal);
     }
 
     @PostMapping("/runs/{runId}/resume")
@@ -65,12 +70,17 @@ public final class ActionGraphRuntimeApiController {
             @RequestHeader HttpHeaders headers,
             @PathVariable("runId") String runId
     ) {
-        verifyToken(headers);
-        return apiService.resume(runId, traceMetadata(headers));
+        RunPrincipal actedBy = verifyAccess(headers);
+        return apiService.resume(runId, traceMetadata(headers), actedBy);
     }
 
-    private void verifyToken(HttpHeaders headers) {
-        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
+    private RunPrincipal verifyAccess(HttpHeaders headers) {
+        return accessVerifier.verify(
+                ActionGraphEndpointGroup.RUNTIME_API,
+                properties,
+                headers::getFirst,
+                UNAUTHORIZED_MESSAGE
+        );
     }
 
     private Map<String, String> traceMetadata(HttpHeaders headers) {
@@ -96,6 +106,12 @@ public final class ActionGraphRuntimeApiController {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenControlPlaneAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ControlPlaneErrorResponse handleForbidden(ForbiddenControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.forbidden(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

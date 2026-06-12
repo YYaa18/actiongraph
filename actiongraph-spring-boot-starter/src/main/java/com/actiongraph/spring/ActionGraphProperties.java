@@ -27,6 +27,7 @@ public class ActionGraphProperties {
     private final LlmProperties llm = new LlmProperties();
     private final DurabilityProperties durability = new DurabilityProperties();
     private final EventsProperties events = new EventsProperties();
+    private final SecurityProperties security = new SecurityProperties();
 
     public PlannerProperties getPlanner() {
         return planner;
@@ -102,6 +103,14 @@ public class ActionGraphProperties {
     )
     public EventsProperties getEvents() {
         return events;
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Principal-aware endpoint and role security is experimental until STD1 pilots settle."
+    )
+    public SecurityProperties getSecurity() {
+        return security;
     }
 
     public static final class PlannerProperties {
@@ -611,6 +620,192 @@ public class ActionGraphProperties {
 
     @Experimental(
             since = "0.2.0",
+            value = "Principal-aware endpoint and role security is experimental until STD1 pilots settle."
+    )
+    public static final class SecurityProperties {
+        private EndpointSecurityMode mode = EndpointSecurityMode.SHARED_SECRET;
+        private final OAuth2Properties oauth2 = new OAuth2Properties();
+        private final EndpointScopesProperties endpoints = new EndpointScopesProperties();
+        private final List<ActionRoleProperties> actionRoles = new ArrayList<>();
+
+        public EndpointSecurityMode getMode() {
+            return mode;
+        }
+
+        public void setMode(EndpointSecurityMode mode) {
+            this.mode = mode == null ? EndpointSecurityMode.SHARED_SECRET : mode;
+        }
+
+        public OAuth2Properties getOauth2() {
+            return oauth2;
+        }
+
+        public EndpointScopesProperties getEndpoints() {
+            return endpoints;
+        }
+
+        public List<ActionRoleProperties> getActionRoles() {
+            return actionRoles;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Endpoint security mode selection is experimental until STD1 pilots settle."
+    )
+    public enum EndpointSecurityMode {
+        SHARED_SECRET,
+        OAUTH2
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "OAuth2 claim mapping is experimental until STD1 pilots settle."
+    )
+    public static final class OAuth2Properties {
+        private String rolesClaim = "roles";
+        private String clientIdClaim = "azp";
+        private String fallbackClientIdClaim = "client_id";
+        private String delegationChainClaim = "";
+
+        public String getRolesClaim() {
+            return rolesClaim;
+        }
+
+        public void setRolesClaim(String rolesClaim) {
+            this.rolesClaim = blankToDefault(rolesClaim, "roles");
+        }
+
+        public String getClientIdClaim() {
+            return clientIdClaim;
+        }
+
+        public void setClientIdClaim(String clientIdClaim) {
+            this.clientIdClaim = blankToDefault(clientIdClaim, "azp");
+        }
+
+        public String getFallbackClientIdClaim() {
+            return fallbackClientIdClaim;
+        }
+
+        public void setFallbackClientIdClaim(String fallbackClientIdClaim) {
+            this.fallbackClientIdClaim = blankToDefault(fallbackClientIdClaim, "client_id");
+        }
+
+        public String getDelegationChainClaim() {
+            return delegationChainClaim;
+        }
+
+        public void setDelegationChainClaim(String delegationChainClaim) {
+            this.delegationChainClaim = delegationChainClaim == null ? "" : delegationChainClaim.trim();
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Endpoint scope mapping is experimental until STD1 pilots settle."
+    )
+    public static final class EndpointScopesProperties {
+        private List<String> console = new ArrayList<>(List.of("actiongraph.console"));
+        private List<String> studio = new ArrayList<>(List.of("actiongraph.studio"));
+        private List<String> runtimeApi = new ArrayList<>(List.of("actiongraph.runtime"));
+        private List<String> humanReview = new ArrayList<>(List.of("actiongraph.human-review"));
+        private List<String> events = new ArrayList<>(List.of("actiongraph.events"));
+
+        public List<String> getConsole() {
+            return List.copyOf(console);
+        }
+
+        public void setConsole(List<String> console) {
+            this.console = safeScopeList(console, "console");
+        }
+
+        public List<String> getStudio() {
+            return List.copyOf(studio);
+        }
+
+        public void setStudio(List<String> studio) {
+            this.studio = safeScopeList(studio, "studio");
+        }
+
+        public List<String> getRuntimeApi() {
+            return List.copyOf(runtimeApi);
+        }
+
+        public void setRuntimeApi(List<String> runtimeApi) {
+            this.runtimeApi = safeScopeList(runtimeApi, "runtime-api");
+        }
+
+        public List<String> getHumanReview() {
+            return List.copyOf(humanReview);
+        }
+
+        public void setHumanReview(List<String> humanReview) {
+            this.humanReview = safeScopeList(humanReview, "human-review");
+        }
+
+        public List<String> getEvents() {
+            return List.copyOf(events);
+        }
+
+        public void setEvents(List<String> events) {
+            this.events = safeScopeList(events, "events");
+        }
+
+        private static List<String> safeScopeList(List<String> scopes, String name) {
+            if (scopes == null) {
+                return new ArrayList<>();
+            }
+            List<String> safeScopes = new ArrayList<>();
+            for (String scope : scopes) {
+                if (scope == null || scope.isBlank()) {
+                    throw new IllegalArgumentException("actiongraph.security.endpoints." + name
+                            + " scopes must not contain blanks");
+                }
+                safeScopes.add(scope.trim());
+            }
+            return safeScopes;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Configuration-based action role gates are experimental until STD1 pilots settle."
+    )
+    public static final class ActionRoleProperties {
+        private String actionId;
+        private List<String> anyOf = new ArrayList<>();
+
+        public String getActionId() {
+            return actionId;
+        }
+
+        public void setActionId(String actionId) {
+            this.actionId = actionId;
+        }
+
+        public List<String> getAnyOf() {
+            return List.copyOf(anyOf);
+        }
+
+        public void setAnyOf(List<String> anyOf) {
+            if (anyOf == null) {
+                this.anyOf = new ArrayList<>();
+                return;
+            }
+            List<String> safeRoles = new ArrayList<>();
+            for (String role : anyOf) {
+                if (role == null || role.isBlank()) {
+                    throw new IllegalArgumentException("actiongraph.security.action-roles any-of must not contain blanks");
+                }
+                safeRoles.add(role.trim());
+            }
+            this.anyOf = safeRoles;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
             value = "External event HTTP callbacks are experimental until MS2 pilots complete."
     )
     public static final class CallbackEndpointProperties implements SharedSecretTokenProperties {
@@ -671,5 +866,9 @@ public class ActionGraphProperties {
         NONE,
         DEEPSEEK,
         OPENAI_COMPATIBLE
+    }
+
+    private static String blankToDefault(String value, String defaultValue) {
+        return value == null || value.isBlank() ? defaultValue : value.trim();
     }
 }

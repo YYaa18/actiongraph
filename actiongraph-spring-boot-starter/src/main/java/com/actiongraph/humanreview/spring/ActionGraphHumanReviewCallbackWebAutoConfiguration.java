@@ -2,6 +2,9 @@ package com.actiongraph.humanreview.spring;
 
 import com.actiongraph.policy.HumanReviewCallbackHandler;
 import com.actiongraph.policy.HumanReviewRepository;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifiers;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -37,11 +40,13 @@ public class ActionGraphHumanReviewCallbackWebAutoConfiguration {
     @ConditionalOnMissingBean(name = "actionGraphHumanReviewCallbackController")
     public ActionGraphHumanReviewCallbackController actionGraphHumanReviewCallbackController(
             HumanReviewCallbackHandler humanReviewCallbackHandler,
-            ActionGraphHumanReviewCallbackProperties properties
+            ActionGraphHumanReviewCallbackProperties properties,
+            ObjectProvider<ActionGraphEndpointAccessVerifier> accessVerifier
     ) {
         return new ActionGraphHumanReviewCallbackController(
                 humanReviewCallbackHandler,
-                properties
+                properties,
+                ActionGraphEndpointAccessVerifiers.getOrSharedSecretDefault(accessVerifier)
         );
     }
 }

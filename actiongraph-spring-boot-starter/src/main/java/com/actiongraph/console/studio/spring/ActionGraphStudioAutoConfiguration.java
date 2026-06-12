@@ -10,7 +10,10 @@ import com.actiongraph.interpretation.annotation.GoalValueConverterResolver;
 import com.actiongraph.interpretation.config.ConfiguredGoalDefinitionFactory;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.LlmRequest;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifiers;
 import com.actiongraph.spring.SpringGoalValueConverterResolver;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -72,9 +75,14 @@ public class ActionGraphStudioAutoConfiguration {
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public ActionGraphStudioController actionGraphStudioController(
             GoalStudioService studioService,
-            ActionGraphStudioProperties properties
+            ActionGraphStudioProperties properties,
+            ObjectProvider<ActionGraphEndpointAccessVerifier> accessVerifier
     ) {
-        return new ActionGraphStudioController(studioService, properties);
+        return new ActionGraphStudioController(
+                studioService,
+                properties,
+                ActionGraphEndpointAccessVerifiers.getOrSharedSecretDefault(accessVerifier)
+        );
     }
 
     private void assertNotForbiddenProfile(ActionGraphStudioProperties properties, Environment environment) {

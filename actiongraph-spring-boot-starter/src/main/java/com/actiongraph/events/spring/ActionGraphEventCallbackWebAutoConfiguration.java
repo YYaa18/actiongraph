@@ -3,6 +3,9 @@ package com.actiongraph.events.spring;
 import com.actiongraph.events.ExternalEventGateway;
 import com.actiongraph.spring.ActionGraphAutoConfiguration;
 import com.actiongraph.spring.ActionGraphProperties;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifiers;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -26,8 +29,13 @@ public class ActionGraphEventCallbackWebAutoConfiguration {
     @ConditionalOnMissingBean
     public ActionGraphEventCallbackController actionGraphEventCallbackController(
             ExternalEventGateway gateway,
-            ActionGraphProperties properties
+            ActionGraphProperties properties,
+            ObjectProvider<ActionGraphEndpointAccessVerifier> accessVerifier
     ) {
-        return new ActionGraphEventCallbackController(gateway, properties);
+        return new ActionGraphEventCallbackController(
+                gateway,
+                properties,
+                ActionGraphEndpointAccessVerifiers.getOrSharedSecretDefault(accessVerifier)
+        );
     }
 }

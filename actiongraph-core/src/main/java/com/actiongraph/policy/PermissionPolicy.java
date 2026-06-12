@@ -1,6 +1,7 @@
 package com.actiongraph.policy;
 
 import com.actiongraph.action.Action;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.runtime.Blackboard;
 
 /**
@@ -23,5 +24,20 @@ public interface PermissionPolicy {
      */
     default boolean canExecute(Action action, Blackboard blackboard) {
         return true;
+    }
+
+    /**
+     * Returns whether the action may execute for the supplied principal.
+     *
+     * <p>The default delegates to the legacy two-argument hook so existing
+     * policies remain source and binary compatible.
+     *
+     * @param action candidate action; never {@code null}
+     * @param blackboard current run Blackboard; never {@code null}
+     * @param principal run principal; never {@code null}
+     * @return {@code true} to allow evaluation to continue, {@code false} to deny
+     */
+    default boolean canExecute(Action action, Blackboard blackboard, RunPrincipal principal) {
+        return canExecute(action, blackboard);
     }
 }

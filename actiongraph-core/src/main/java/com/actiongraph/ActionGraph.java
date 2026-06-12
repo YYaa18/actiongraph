@@ -8,6 +8,7 @@ import com.actiongraph.api.Experimental;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.exception.ActionGraphInputException;
 import com.actiongraph.fingerprint.ActionGraphFingerprints;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.interpretation.ClarificationQuestion;
 import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
@@ -85,23 +86,65 @@ public final class ActionGraph {
         return start(goalType, parameters, Map.of());
     }
 
+    @Experimental(
+            since = "0.2.0",
+            value = "Run principal propagation is experimental until STD1 identity pilots settle."
+    )
+    public RunResult start(String goalType, Map<String, String> parameters, RunPrincipal principal) {
+        return start(goalType, parameters, Map.of(), principal);
+    }
+
     public RunResult start(
             String goalType,
             @Nullable Map<String, String> parameters,
             @Nullable Map<String, String> runMetadata
     ) {
+        return start(goalType, parameters, runMetadata, RunPrincipal.anonymous());
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Run principal propagation is experimental until STD1 identity pilots settle."
+    )
+    public RunResult start(
+            String goalType,
+            @Nullable Map<String, String> parameters,
+            @Nullable Map<String, String> runMetadata,
+            RunPrincipal principal
+    ) {
         GoalDefinition definition = definition(goalType);
         GoalParameters goalParameters = GoalParameters.of(safeStringMap(parameters, "goal parameter name"));
         assertRequiredParameters(definition, goalParameters);
-        return start(GoalInterpretation.ready(definition.type(), goalParameters, definition.goal()), runMetadata);
+        return start(GoalInterpretation.ready(definition.type(), goalParameters, definition.goal()),
+                runMetadata, principal);
     }
 
     public ChatResult chat(String input) {
         return chat(input, Map.of());
     }
 
+    @Experimental(
+            since = "0.2.0",
+            value = "Run principal propagation is experimental until STD1 identity pilots settle."
+    )
+    public ChatResult chat(String input, RunPrincipal principal) {
+        return chat(input, Map.of(), Map.of(), principal);
+    }
+
     public ChatResult chat(String input, @Nullable Map<String, String> knownParameters) {
         return chat(input, knownParameters, Map.of());
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Run principal propagation is experimental until STD1 identity pilots settle."
+    )
+    public ChatResult chat(
+            String input,
+            @Nullable Map<String, String> knownParameters,
+            RunPrincipal principal
+    ) {
+        return chat(input, knownParameters, Map.of(), principal);
     }
 
     public ChatResult chat(
@@ -109,23 +152,53 @@ public final class ActionGraph {
             @Nullable Map<String, String> knownParameters,
             @Nullable Map<String, String> runMetadata
     ) {
+        return chat(input, knownParameters, runMetadata, RunPrincipal.anonymous());
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Run principal propagation is experimental until STD1 identity pilots settle."
+    )
+    public ChatResult chat(
+            String input,
+            @Nullable Map<String, String> knownParameters,
+            @Nullable Map<String, String> runMetadata,
+            RunPrincipal principal
+    ) {
         GoalInterpretation interpretation = interpret(input, knownParameters);
         GoalInterpretation checked = withMissingRequiredParameters(interpretation);
         if (!checked.isReady()) {
             return new ChatResult(checked, null);
         }
-        return new ChatResult(checked, start(checked, runMetadata));
+        return new ChatResult(checked, start(checked, runMetadata, principal));
     }
 
     public RunResult resume(String runId) {
         return resume(runId, Map.of());
     }
 
+    @Experimental(
+            since = "0.2.0",
+            value = "Run resume actor propagation is experimental until STD1 identity pilots settle."
+    )
+    public RunResult resume(String runId, RunPrincipal actedBy) {
+        return resume(runId, Map.of(), actedBy);
+    }
+
     public RunResult resume(String runId, @Nullable Map<String, String> runMetadata) {
+        return resume(runId, runMetadata, RunPrincipal.anonymous());
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Run resume actor propagation is experimental until STD1 identity pilots settle."
+    )
+    public RunResult resume(String runId, @Nullable Map<String, String> runMetadata, RunPrincipal actedBy) {
         if (runId == null || runId.isBlank()) {
             throw new ActionGraphInputException("runId must not be blank");
         }
-        return executor.resume(runId, registry.all(), registry, safeStringMap(runMetadata, "run metadata key"));
+        return executor.resume(runId, registry.all(), registry, safeStringMap(runMetadata, "run metadata key"),
+                actedBy);
     }
 
     private GoalInterpretation interpret(String input) {
@@ -149,6 +222,18 @@ public final class ActionGraph {
     }
 
     public RunResult start(GoalInterpretation interpretation, @Nullable Map<String, String> runMetadata) {
+        return start(interpretation, runMetadata, RunPrincipal.anonymous());
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Run principal propagation is experimental until STD1 identity pilots settle."
+    )
+    public RunResult start(
+            GoalInterpretation interpretation,
+            @Nullable Map<String, String> runMetadata,
+            RunPrincipal principal
+    ) {
         Objects.requireNonNull(interpretation, "interpretation");
         if (!interpretation.isReady()) {
             throw new ActionGraphInputException("Cannot start run from an incomplete goal interpretation");
@@ -163,7 +248,8 @@ public final class ActionGraph {
                 blackboard,
                 registry.all(),
                 registry,
-                fingerprintMetadata(interpretation.goalType(), runMetadata)
+                fingerprintMetadata(interpretation.goalType(), runMetadata),
+                principal
         );
     }
 

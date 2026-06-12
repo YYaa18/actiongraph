@@ -3,6 +3,7 @@ package com.actiongraph.humanreview.jdbc;
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRiskLevel;
 import com.actiongraph.exception.ActionGraphNotFoundException;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Plan;
 import com.actiongraph.planning.PlanStep;
@@ -123,6 +124,22 @@ class JdbcHumanReviewRepositoryTest {
     }
 
     @Test
+    void persistsRequestedByPrincipal() {
+        JdbcHumanReviewRepository repository = new JdbcHumanReviewRepository(JdbcTestDataSources.h2());
+        RunPrincipal requestedBy = new RunPrincipal("user:alice", "portal", List.of("channel:mobile"),
+                Map.of("roles", "maker"));
+        HumanReviewTask task = HumanReviewTask.pending(request("RUN-PRINCIPAL", Map.of(), requestedBy),
+                "principal review");
+
+        repository.savePending(task);
+
+        assertThat(repository.find("RUN-PRINCIPAL", ACTION_ID))
+                .get()
+                .extracting(HumanReviewTask::requestedBy)
+                .isEqualTo(requestedBy);
+    }
+
+    @Test
     void migratesLegacyReviewTableWithSingleStageDefaults() throws Exception {
         var dataSource = JdbcTestDataSources.h2();
         try (var connection = dataSource.getConnection();
@@ -159,6 +176,7 @@ class JdbcHumanReviewRepositoryTest {
             assertThat(restored.currentStageIndex()).isZero();
             assertThat(restored.stageDecisions()).isEmpty();
             assertThat(restored.attributes()).isEmpty();
+            assertThat(restored.requestedBy()).isEqualTo(RunPrincipal.anonymous());
         });
     }
 
@@ -188,6 +206,10 @@ class JdbcHumanReviewRepositoryTest {
     }
 
     private HumanReviewRequest request(String runId, Map<String, String> attributes) {
+        return request(runId, attributes, RunPrincipal.anonymous());
+    }
+
+    private HumanReviewRequest request(String runId, Map<String, String> attributes, RunPrincipal requestedBy) {
         return new HumanReviewRequest(
                 runId,
                 ACTION_ID,
@@ -196,7 +218,8 @@ class JdbcHumanReviewRepositoryTest {
                 new Plan(List.of(new PlanStep(ACTION_ID))),
                 Set.of(Condition.of("risk:READY")),
                 Map.of("customerId", "C001"),
-                attributes
+                attributes,
+                requestedBy
         );
     }
 }

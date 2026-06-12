@@ -4,6 +4,9 @@ import com.actiongraph.console.ActionGraphConsoleService;
 import com.actiongraph.console.export.ActionGraphConsoleExportService;
 import com.actiongraph.console.spring.ActionGraphConsoleProperties;
 import com.actiongraph.console.spring.ActionGraphConsoleServiceAutoConfiguration;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifiers;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -38,8 +41,13 @@ public class ActionGraphConsoleExportAutoConfiguration {
     @ConditionalOnBean(ActionGraphConsoleExportService.class)
     public ActionGraphConsoleExportController actionGraphConsoleExportController(
             ActionGraphConsoleExportService exportService,
-            ActionGraphConsoleProperties properties
+            ActionGraphConsoleProperties properties,
+            ObjectProvider<ActionGraphEndpointAccessVerifier> accessVerifier
     ) {
-        return new ActionGraphConsoleExportController(exportService, properties);
+        return new ActionGraphConsoleExportController(
+                exportService,
+                properties,
+                ActionGraphEndpointAccessVerifiers.getOrSharedSecretDefault(accessVerifier)
+        );
     }
 }

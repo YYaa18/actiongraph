@@ -3,6 +3,7 @@ package com.actiongraph.persistence.jdbc;
 import com.actiongraph.api.Internal;
 import com.actiongraph.action.ActionId;
 import com.actiongraph.exception.ActionGraphIntegrationException;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.runtime.Blackboard;
@@ -137,6 +138,29 @@ public final class PersistenceJsonCodec {
                 .collect(Collectors.toSet());
     }
 
+    public String writeRunPrincipal(RunPrincipal principal) {
+        RunPrincipal safe = principal == null ? RunPrincipal.anonymous() : principal;
+        return write(new PrincipalSnapshot(
+                safe.subject(),
+                safe.clientId(),
+                safe.delegationChain(),
+                safe.attributes()
+        ));
+    }
+
+    public RunPrincipal readRunPrincipal(String json) {
+        if (json == null || json.isBlank()) {
+            return RunPrincipal.anonymous();
+        }
+        PrincipalSnapshot snapshot = read(json, PrincipalSnapshot.class);
+        return new RunPrincipal(
+                snapshot.subject(),
+                snapshot.clientId(),
+                snapshot.delegationChain(),
+                snapshot.attributes()
+        );
+    }
+
     private void putRestoredObject(InMemoryBlackboard blackboard, ObjectSnapshot snapshot) {
         try {
             blackboardTypeRegistry.verifyAllowed(snapshot.className());
@@ -188,6 +212,20 @@ public final class PersistenceJsonCodec {
     private record ObjectSnapshot(String className, String id, JsonNode value) {
         private ObjectSnapshot {
             id = id == null ? BlackboardKey.DEFAULT_ID : id;
+        }
+    }
+
+    private record PrincipalSnapshot(
+            String subject,
+            String clientId,
+            List<String> delegationChain,
+            Map<String, String> attributes
+    ) {
+        private PrincipalSnapshot {
+            subject = subject == null || subject.isBlank() ? RunPrincipal.ANONYMOUS_SUBJECT : subject;
+            clientId = clientId == null ? "" : clientId;
+            delegationChain = delegationChain == null ? List.of() : List.copyOf(delegationChain);
+            attributes = attributes == null ? Map.of() : Map.copyOf(attributes);
         }
     }
 }

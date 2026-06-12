@@ -1,6 +1,9 @@
 package com.actiongraph.console.spring;
 
 import com.actiongraph.console.ActionGraphConsoleService;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifiers;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -28,8 +31,13 @@ public class ActionGraphConsoleApiAutoConfiguration {
     @ConditionalOnBean(ActionGraphConsoleService.class)
     public ActionGraphConsoleApiController actionGraphConsoleApiController(
             ActionGraphConsoleService consoleService,
-            ActionGraphConsoleProperties properties
+            ActionGraphConsoleProperties properties,
+            ObjectProvider<ActionGraphEndpointAccessVerifier> accessVerifier
     ) {
-        return new ActionGraphConsoleApiController(consoleService, properties);
+        return new ActionGraphConsoleApiController(
+                consoleService,
+                properties,
+                ActionGraphEndpointAccessVerifiers.getOrSharedSecretDefault(accessVerifier)
+        );
     }
 }

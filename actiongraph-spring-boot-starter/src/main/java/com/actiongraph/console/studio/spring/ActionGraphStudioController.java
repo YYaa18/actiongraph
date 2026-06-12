@@ -4,9 +4,12 @@ import com.actiongraph.api.Experimental;
 import com.actiongraph.console.studio.GoalStudioService;
 import com.actiongraph.console.studio.GoalStudioSessionResponse;
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
-import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import com.actiongraph.exception.ActionGraphConfigurationException;
+import com.actiongraph.identity.RunPrincipal;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointGroup;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,15 +31,20 @@ import java.util.Objects;
         value = "Goal Studio HTTP endpoints are experimental and must remain disabled outside drafting environments."
 )
 public final class ActionGraphStudioController {
-    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
     private static final String UNAUTHORIZED_MESSAGE = "Studio token is missing or invalid";
 
     private final GoalStudioService studioService;
     private final ActionGraphStudioProperties properties;
+    private final ActionGraphEndpointAccessVerifier accessVerifier;
 
-    public ActionGraphStudioController(GoalStudioService studioService, ActionGraphStudioProperties properties) {
+    public ActionGraphStudioController(
+            GoalStudioService studioService,
+            ActionGraphStudioProperties properties,
+            ActionGraphEndpointAccessVerifier accessVerifier
+    ) {
         this.studioService = Objects.requireNonNull(studioService, "studioService");
         this.properties = Objects.requireNonNull(properties, "properties");
+        this.accessVerifier = Objects.requireNonNull(accessVerifier, "accessVerifier");
     }
 
     @PostMapping("/sessions")
@@ -44,7 +52,7 @@ public final class ActionGraphStudioController {
             @RequestHeader HttpHeaders headers,
             @RequestBody CreateSessionRequest request
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return studioService.createSession(request.description());
     }
 
@@ -54,7 +62,7 @@ public final class ActionGraphStudioController {
             @PathVariable("id") String id,
             @RequestBody RefineSessionRequest request
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return studioService.refine(id, request.feedback());
     }
 
@@ -64,8 +72,8 @@ public final class ActionGraphStudioController {
             @PathVariable("id") String id,
             @RequestBody ApproveSessionRequest request
     ) {
-        verifyToken(headers);
-        return studioService.approve(id, request.approver());
+        RunPrincipal principal = verifyAccess(headers);
+        return studioService.approve(id, approver(request.approver(), principal));
     }
 
     @GetMapping("/sessions/{id}")
@@ -73,18 +81,32 @@ public final class ActionGraphStudioController {
             @RequestHeader HttpHeaders headers,
             @PathVariable("id") String id
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return studioService.session(id);
     }
 
-    private void verifyToken(HttpHeaders headers) {
-        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
+    private RunPrincipal verifyAccess(HttpHeaders headers) {
+        return accessVerifier.verify(ActionGraphEndpointGroup.STUDIO, properties, headers::getFirst,
+                UNAUTHORIZED_MESSAGE);
+    }
+
+    private String approver(String requestedApprover, RunPrincipal principal) {
+        if (principal != null && !principal.anonymousPrincipal()) {
+            return principal.subject();
+        }
+        return requestedApprover;
     }
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenControlPlaneAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ControlPlaneErrorResponse handleForbidden(ForbiddenControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.forbidden(exception.getMessage());
     }
 
     @ExceptionHandler({IllegalArgumentException.class, ActionGraphConfigurationException.class})

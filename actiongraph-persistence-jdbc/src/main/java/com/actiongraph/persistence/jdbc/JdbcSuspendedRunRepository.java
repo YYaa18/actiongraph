@@ -110,6 +110,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                 + "event_type varchar(256),"
                 + "event_correlation_id varchar(512),"
                 + "event_deadline varchar(64),"
+                + "principal_json clob,"
                 + "status varchar(32) not null,"
                 + "claimed_at varchar(64),"
                 + "updated_at varchar(64) not null"
@@ -126,6 +127,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
             ensureColumn(connection, "event_type", "varchar(256)");
             ensureColumn(connection, "event_correlation_id", "varchar(512)");
             ensureColumn(connection, "event_deadline", "varchar(64)");
+            ensureColumn(connection, "principal_json", "clob");
             try (Statement update = connection.createStatement()) {
                 update.executeUpdate("update " + table + " set snapshot_version = " + SNAPSHOT_FORMAT_VERSION
                         + " where snapshot_version is null");
@@ -381,7 +383,7 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
     private Optional<SuspendedRun> findByRunId(Connection connection, String runId) throws SQLException {
         String sql = "select run_id, snapshot_version, goal_json, blackboard_json, executed_actions_json, "
                 + "compensation_stack_json, pending_action_id, message, snapshot_state, heartbeat_at, "
-                + "in_flight_action_id, event_type, event_correlation_id, event_deadline "
+                + "in_flight_action_id, event_type, event_correlation_id, event_deadline, principal_json "
                 + "from " + table + " where run_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, runId);
@@ -403,7 +405,8 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
                         readActionId(resultSet.getString("in_flight_action_id")),
                         readNullableString(resultSet.getString("event_type")),
                         readNullableString(resultSet.getString("event_correlation_id")),
-                        readInstantOrNull(resultSet.getString("event_deadline"))
+                        readInstantOrNull(resultSet.getString("event_deadline")),
+                        codec.readRunPrincipal(resultSet.getString("principal_json"))
                 ));
             }
         }
@@ -430,8 +433,8 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
         String sql = "insert into " + table
                 + " (run_id, snapshot_version, goal_json, blackboard_json, executed_actions_json, compensation_stack_json, "
                 + "pending_action_id, message, snapshot_state, heartbeat_at, in_flight_action_id, event_type, "
-                + "event_correlation_id, event_deadline, status, claimed_at, updated_at) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "event_correlation_id, event_deadline, principal_json, status, claimed_at, updated_at) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, run.runId());
             statement.setInt(2, SNAPSHOT_FORMAT_VERSION);
@@ -463,9 +466,10 @@ public final class JdbcSuspendedRunRepository implements SuspendedRunRepository 
             } else {
                 statement.setString(14, run.eventDeadline().toString());
             }
-            statement.setString(15, STATUS_SUSPENDED);
-            statement.setNull(16, Types.VARCHAR);
-            statement.setString(17, Instant.now().toString());
+            statement.setString(15, codec.writeRunPrincipal(run.principal()));
+            statement.setString(16, STATUS_SUSPENDED);
+            statement.setNull(17, Types.VARCHAR);
+            statement.setString(18, Instant.now().toString());
             statement.executeUpdate();
         }
     }

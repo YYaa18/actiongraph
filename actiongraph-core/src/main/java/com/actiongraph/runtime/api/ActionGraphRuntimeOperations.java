@@ -1,6 +1,7 @@
 package com.actiongraph.runtime.api;
 
 import com.actiongraph.interpretation.GoalInterpretation;
+import com.actiongraph.identity.RunPrincipal;
 
 import java.util.Map;
 
@@ -25,11 +26,36 @@ public interface ActionGraphRuntimeOperations {
             @Nullable Map<String, String> runMetadata
     );
 
+    default RuntimeStartResponse start(
+            String input,
+            @Nullable Map<String, String> knownParameters,
+            @Nullable Map<String, String> runMetadata,
+            RunPrincipal principal
+    ) {
+        return start(input, knownParameters, runMetadata);
+    }
+
     RuntimeStartResponse start(GoalInterpretation interpretation);
 
     RuntimeStartResponse start(GoalInterpretation interpretation, @Nullable Map<String, String> runMetadata);
 
+    default RuntimeStartResponse start(
+            GoalInterpretation interpretation,
+            @Nullable Map<String, String> runMetadata,
+            RunPrincipal principal
+    ) {
+        return start(interpretation, runMetadata);
+    }
+
     RuntimeRunResponse resume(String runId);
 
     RuntimeRunResponse resume(String runId, @Nullable Map<String, String> runMetadata);
+
+    default RuntimeRunResponse resume(
+            String runId,
+            @Nullable Map<String, String> runMetadata,
+            RunPrincipal actedBy
+    ) {
+        return resume(runId, runMetadata);
+    }
 }

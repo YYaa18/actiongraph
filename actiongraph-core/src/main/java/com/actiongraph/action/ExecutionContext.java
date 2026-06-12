@@ -1,6 +1,7 @@
 package com.actiongraph.action;
 
 import com.actiongraph.api.Experimental;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.trace.TraceRepository;
 
@@ -52,5 +53,18 @@ public interface ExecutionContext {
     )
     default int attempt() {
         return 1;
+    }
+
+    /**
+     * Principal on whose behalf this run executes.
+     *
+     * @return non-null run principal
+     */
+    @Experimental(
+            since = "0.2.0",
+            value = "Run principal propagation is experimental until STD1 identity pilots settle."
+    )
+    default RunPrincipal principal() {
+        return RunPrincipal.anonymous();
     }
 }

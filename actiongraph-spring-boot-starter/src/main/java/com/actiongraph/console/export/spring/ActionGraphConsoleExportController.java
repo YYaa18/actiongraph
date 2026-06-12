@@ -4,8 +4,10 @@ import com.actiongraph.console.ConsoleRunNotFoundException;
 import com.actiongraph.console.export.ActionGraphConsoleExportService;
 import com.actiongraph.console.spring.ActionGraphConsoleProperties;
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
-import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointGroup;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -30,18 +32,20 @@ import org.jspecify.annotations.Nullable;
 public final class ActionGraphConsoleExportController {
     private static final MediaType TEXT_CSV = MediaType.parseMediaType("text/csv;charset=UTF-8");
     private static final MediaType JSONL = MediaType.parseMediaType("application/x-ndjson;charset=UTF-8");
-    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
     private static final String UNAUTHORIZED_MESSAGE = "Console token is missing or invalid";
 
     private final ActionGraphConsoleExportService exportService;
     private final ActionGraphConsoleProperties properties;
+    private final ActionGraphEndpointAccessVerifier accessVerifier;
 
     public ActionGraphConsoleExportController(
             ActionGraphConsoleExportService exportService,
-            ActionGraphConsoleProperties properties
+            ActionGraphConsoleProperties properties,
+            ActionGraphEndpointAccessVerifier accessVerifier
     ) {
         this.exportService = Objects.requireNonNull(exportService, "exportService");
         this.properties = Objects.requireNonNull(properties, "properties");
+        this.accessVerifier = Objects.requireNonNull(accessVerifier, "accessVerifier");
     }
 
     @GetMapping(value = "/runs/export.csv", produces = "text/csv")
@@ -52,7 +56,7 @@ public final class ActionGraphConsoleExportController {
             @RequestParam(name = "status", required = false) @Nullable String status,
             @RequestParam(name = "auditComplete", required = false) @Nullable Boolean auditComplete
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return download("actiongraph-runs.csv", TEXT_CSV,
                 exportService.runsCsv(limit, offset, status, auditComplete));
     }
@@ -62,7 +66,7 @@ public final class ActionGraphConsoleExportController {
             @RequestHeader HttpHeaders headers,
             @PathVariable("runId") String runId
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return download("actiongraph-trace-" + safeFilename(runId) + ".csv", TEXT_CSV,
                 exportService.traceCsv(runId));
     }
@@ -72,7 +76,7 @@ public final class ActionGraphConsoleExportController {
             @RequestHeader HttpHeaders headers,
             @PathVariable("runId") String runId
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return download("actiongraph-trace-" + safeFilename(runId) + ".jsonl", JSONL,
                 exportService.traceJsonl(runId));
     }
@@ -87,8 +91,8 @@ public final class ActionGraphConsoleExportController {
                 .body(body);
     }
 
-    private void verifyToken(HttpHeaders headers) {
-        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
+    private void verifyAccess(HttpHeaders headers) {
+        accessVerifier.verify(ActionGraphEndpointGroup.CONSOLE, properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
     }
 
     private String safeFilename(String value) {
@@ -113,6 +117,12 @@ public final class ActionGraphConsoleExportController {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenControlPlaneAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ControlPlaneErrorResponse handleForbidden(ForbiddenControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.forbidden(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

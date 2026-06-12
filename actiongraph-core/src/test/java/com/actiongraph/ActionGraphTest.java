@@ -4,9 +4,12 @@ import com.actiongraph.action.ActionResult;
 import com.actiongraph.action.annotation.ActionGraphAction;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.exception.ActionGraphInputException;
+import com.actiongraph.interpretation.GoalBlackboardSeeder;
+import com.actiongraph.interpretation.GoalDefinition;
 import com.actiongraph.interpretation.ClarificationQuestion;
 import com.actiongraph.interpretation.GoalInterpretation;
 import com.actiongraph.interpretation.GoalInterpreter;
+import com.actiongraph.interpretation.GoalParameterDefinition;
 import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.MissingField;
@@ -14,11 +17,17 @@ import com.actiongraph.interpretation.annotation.ActionGraphGoal;
 import com.actiongraph.interpretation.annotation.ActionGraphGoalSeeder;
 import com.actiongraph.interpretation.annotation.FromGoalParam;
 import com.actiongraph.interpretation.annotation.GoalParameter;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.policy.HumanReviewPolicy;
 import com.actiongraph.policy.HumanReviewRequest;
 import com.actiongraph.policy.HumanReviewResult;
+import com.actiongraph.action.Action;
+import com.actiongraph.action.ActionId;
+import com.actiongraph.action.ActionRiskLevel;
+import com.actiongraph.action.CompensationResult;
+import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemorySuspendedRunRepository;
 import com.actiongraph.runtime.RunResult;
@@ -26,6 +35,7 @@ import com.actiongraph.runtime.RunStatus;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +45,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ActionGraphTest {
     private static final GoalType TYPE = new GoalType("hello.finish");
+    private static final Condition INPUT_PRESENT = Condition.of("hello:INPUT_PRESENT");
     private static final Condition DONE = Condition.of("hello:DONE");
 
     @Test
@@ -142,6 +153,32 @@ class ActionGraphTest {
                 .hasMessageContaining("No blackboard seeder registered");
     }
 
+    @Test
+    void startAndChatPropagateExplicitPrincipalThroughFacade() {
+        PrincipalCaptureAction action = new PrincipalCaptureAction();
+        ActionGraph actionGraph = ActionGraph.builder()
+                .goal(new GoalDefinition(
+                        TYPE,
+                        "Finish a hello workflow.",
+                        new Goal("finish hello", Set.of(DONE)),
+                        List.of(GoalParameterDefinition.required("id", "Input id", "A-1")),
+                        Set.of(INPUT_PRESENT)
+                ))
+                .seeder(new ConditionOnlySeeder())
+                .action(action)
+                .goalInterpreter(new HelloInterpreter())
+                .build();
+        RunPrincipal principal = new RunPrincipal("user:alice", "portal", List.of(),
+                Map.of("roles", "maker"));
+
+        RunResult started = actionGraph.start("hello.finish", Map.of("id", "A-6"), principal);
+        ChatResult chatted = actionGraph.chat("finish it", Map.of("id", "A-7"), principal);
+
+        assertThat(started.status()).isEqualTo(RunStatus.COMPLETED);
+        assertThat(chatted.started()).isTrue();
+        assertThat(action.seenSubjects).containsExactly("user:alice", "user:alice");
+    }
+
     static class HelloWorkflow {
         final AtomicInteger executions = new AtomicInteger();
 
@@ -217,6 +254,73 @@ class ActionGraphTest {
         ActionResult finish(InputId input) {
             seen = input.value();
             return ActionResult.ok();
+        }
+    }
+
+    static final class ConditionOnlySeeder implements GoalBlackboardSeeder {
+        @Override
+        public GoalType goalType() {
+            return TYPE;
+        }
+
+        @Override
+        public void seed(GoalParameters parameters, com.actiongraph.runtime.Blackboard blackboard) {
+            blackboard.addCondition(INPUT_PRESENT);
+        }
+    }
+
+    static final class PrincipalCaptureAction implements Action {
+        final java.util.List<String> seenSubjects = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        @Override
+        public ActionId id() {
+            return new ActionId("hello.finish");
+        }
+
+        @Override
+        public Set<Class<?>> inputTypes() {
+            return Set.of();
+        }
+
+        @Override
+        public Set<Class<?>> outputTypes() {
+            return Set.of();
+        }
+
+        @Override
+        public Set<Condition> preconditions() {
+            return Set.of(INPUT_PRESENT);
+        }
+
+        @Override
+        public Set<Condition> effects() {
+            return Set.of(DONE);
+        }
+
+        @Override
+        public int cost() {
+            return 1;
+        }
+
+        @Override
+        public ActionRiskLevel riskLevel() {
+            return ActionRiskLevel.LOW;
+        }
+
+        @Override
+        public boolean requiresHumanReview() {
+            return false;
+        }
+
+        @Override
+        public ActionResult execute(ExecutionContext context) {
+            seenSubjects.add(context.principal().subject());
+            return ActionResult.ok();
+        }
+
+        @Override
+        public CompensationResult compensate(ExecutionContext context) {
+            return CompensationResult.noop();
         }
     }
 

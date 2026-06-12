@@ -2,6 +2,7 @@ package com.actiongraph.policy;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRiskLevel;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.PlanStep;
 
@@ -20,6 +21,7 @@ public record HumanReviewTask(
         Set<Condition> currentState,
         Map<String, String> blackboardPreview,
         Map<String, String> attributes,
+        RunPrincipal requestedBy,
         HumanReviewDecision decision,
         String reviewer,
         String message,
@@ -44,8 +46,32 @@ public record HumanReviewTask(
             Instant updatedAt
     ) {
         this(runId, actionId, riskLevel, requiredByAction, planPreview, currentState, blackboardPreview,
-                Map.of(), decision, reviewer, message, createdAt, updatedAt, ApprovalChain.single().stages(),
+                Map.of(), RunPrincipal.anonymous(), decision, reviewer, message, createdAt, updatedAt,
+                ApprovalChain.single().stages(),
                 defaultStageIndex(decision, ApprovalChain.single().stages()), List.of());
+    }
+
+    public HumanReviewTask(
+            String runId,
+            ActionId actionId,
+            ActionRiskLevel riskLevel,
+            boolean requiredByAction,
+            List<ActionId> planPreview,
+            Set<Condition> currentState,
+            Map<String, String> blackboardPreview,
+            Map<String, String> attributes,
+            HumanReviewDecision decision,
+            String reviewer,
+            String message,
+            Instant createdAt,
+            Instant updatedAt,
+            List<ApprovalStage> stages,
+            int currentStageIndex,
+            List<StageDecision> stageDecisions
+    ) {
+        this(runId, actionId, riskLevel, requiredByAction, planPreview, currentState, blackboardPreview,
+                attributes, RunPrincipal.anonymous(), decision, reviewer, message, createdAt, updatedAt,
+                stages, currentStageIndex, stageDecisions);
     }
 
     public HumanReviewTask {
@@ -58,6 +84,7 @@ public record HumanReviewTask(
         currentState = Set.copyOf(Objects.requireNonNull(currentState, "currentState"));
         blackboardPreview = Map.copyOf(Objects.requireNonNull(blackboardPreview, "blackboardPreview"));
         attributes = Map.copyOf(Objects.requireNonNull(attributes, "attributes"));
+        requestedBy = requestedBy == null ? RunPrincipal.anonymous() : requestedBy;
         Objects.requireNonNull(decision, "decision");
         reviewer = reviewer == null ? "" : reviewer;
         message = message == null ? "" : message;
@@ -97,6 +124,7 @@ public record HumanReviewTask(
                 request.currentState(),
                 request.blackboardPreview(),
                 request.attributes(),
+                request.requestedBy(),
                 HumanReviewDecision.PENDING,
                 "",
                 message,
@@ -146,6 +174,7 @@ public record HumanReviewTask(
                 currentState,
                 blackboardPreview,
                 attributes,
+                requestedBy,
                 taskDecision,
                 newReviewer,
                 newMessage,

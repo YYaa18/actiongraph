@@ -5,8 +5,10 @@ import com.actiongraph.catalog.ActionGraphComponentCatalog;
 import com.actiongraph.catalog.ActionGraphComponentCatalogService;
 import com.actiongraph.catalog.ActionGraphCompositionProfile;
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
-import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointGroup;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,29 +25,31 @@ import java.util.Objects;
 @RestController
 @RequestMapping("${actiongraph.component-catalog.path:/actiongraph/components}")
 public final class ActionGraphComponentCatalogController {
-    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
     private static final String UNAUTHORIZED_MESSAGE = "Component catalog token is missing or invalid";
 
     private final ActionGraphComponentCatalogService catalogService;
     private final ActionGraphComponentCatalogProperties properties;
+    private final ActionGraphEndpointAccessVerifier accessVerifier;
 
     public ActionGraphComponentCatalogController(
             ActionGraphComponentCatalogService catalogService,
-            ActionGraphComponentCatalogProperties properties
+            ActionGraphComponentCatalogProperties properties,
+            ActionGraphEndpointAccessVerifier accessVerifier
     ) {
         this.catalogService = Objects.requireNonNull(catalogService, "catalogService");
         this.properties = Objects.requireNonNull(properties, "properties");
+        this.accessVerifier = Objects.requireNonNull(accessVerifier, "accessVerifier");
     }
 
     @GetMapping
     public ActionGraphComponentCatalog catalog(@RequestHeader HttpHeaders headers) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return catalogService.catalog();
     }
 
     @GetMapping("/modules")
     public List<ActionGraphComponent> modules(@RequestHeader HttpHeaders headers) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return catalogService.components();
     }
 
@@ -54,7 +58,7 @@ public final class ActionGraphComponentCatalogController {
             @RequestHeader HttpHeaders headers,
             @PathVariable("compatibility") String compatibility
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return catalogService.componentsByCompatibility(compatibility);
     }
 
@@ -63,7 +67,7 @@ public final class ActionGraphComponentCatalogController {
             @RequestHeader HttpHeaders headers,
             @PathVariable("module") String module
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return catalogService.component(module)
                 .orElseThrow(() -> new ComponentCatalogEntryNotFoundException(
                         "component", module, "Component not found: " + module));
@@ -74,7 +78,7 @@ public final class ActionGraphComponentCatalogController {
             @RequestHeader HttpHeaders headers,
             @PathVariable("module") String module
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         catalogService.component(module)
                 .orElseThrow(() -> new ComponentCatalogEntryNotFoundException(
                         "component", module, "Component not found: " + module));
@@ -83,7 +87,7 @@ public final class ActionGraphComponentCatalogController {
 
     @GetMapping("/profiles")
     public List<ActionGraphCompositionProfile> profiles(@RequestHeader HttpHeaders headers) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return catalogService.profiles();
     }
 
@@ -92,20 +96,26 @@ public final class ActionGraphComponentCatalogController {
             @RequestHeader HttpHeaders headers,
             @PathVariable("profile") String profile
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return catalogService.profile(profile)
                 .orElseThrow(() -> new ComponentCatalogEntryNotFoundException(
                         "profile", profile, "Profile not found: " + profile));
     }
 
-    private void verifyToken(HttpHeaders headers) {
-        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
+    private void verifyAccess(HttpHeaders headers) {
+        accessVerifier.verify(ActionGraphEndpointGroup.CONSOLE, properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
     }
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenControlPlaneAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ControlPlaneErrorResponse handleForbidden(ForbiddenControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.forbidden(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -4,6 +4,7 @@ import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.api.Experimental;
 import com.actiongraph.exception.ActionGraphConfigurationException;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.runtime.SnapshotState;
 import com.actiongraph.runtime.SuspendedRun;
 import com.actiongraph.runtime.SuspendedRunRepository;
@@ -51,9 +52,18 @@ public final class ExternalEventGateway {
     }
 
     public DeliveryResult deliver(String eventType, String correlationId, EventPayload payload) {
+        return deliver(eventType, correlationId, payload, RunPrincipal.anonymous());
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "External event actor propagation is experimental until STD1 identity pilots settle."
+    )
+    public DeliveryResult deliver(String eventType, String correlationId, EventPayload payload, RunPrincipal actedBy) {
         String normalizedEventType = requireNonBlank(eventType, "eventType");
         String normalizedCorrelationId = requireNonBlank(correlationId, "correlationId");
         EventPayload normalizedPayload = payload == null ? EventPayload.empty() : payload;
+        RunPrincipal safeActor = actedBy == null ? RunPrincipal.anonymous() : actedBy;
         EventApplier applier = appliers.get(normalizedEventType);
         if (applier == null) {
             return DeliveryResult.APPLIER_MISSING;
@@ -78,7 +88,8 @@ public final class ExternalEventGateway {
                     waitingRun.runId(),
                     normalizedEventType,
                     normalizedCorrelationId,
-                    normalizedPayload
+                    normalizedPayload,
+                    safeActor
             );
             SuspendedRun checkpoint = new SuspendedRun(
                     waitingRun.runId(),
@@ -90,7 +101,8 @@ public final class ExternalEventGateway {
                     "External event delivered",
                     SnapshotState.RUNNING,
                     Instant.now(),
-                    null
+                    null,
+                    waitingRun.principal()
             );
             repository.saveCheckpoint(checkpoint);
             checkpointWritten = true;

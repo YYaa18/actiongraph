@@ -13,6 +13,7 @@ import com.actiongraph.interpretation.GoalInterpreter;
 import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.MissingField;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Goal;
 import com.actiongraph.runtime.Blackboard;
@@ -22,6 +23,7 @@ import com.actiongraph.runtime.api.RuntimeInterpretationResponse;
 import com.actiongraph.runtime.api.RuntimeRunResponse;
 import com.actiongraph.runtime.api.RuntimeStartResponse;
 import com.actiongraph.spring.ActionGraphAutoConfiguration;
+import com.actiongraph.spring.security.RunPrincipalResolver;
 import com.actiongraph.trace.TraceEventType;
 import com.actiongraph.trace.TraceRepository;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -186,6 +189,81 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
                                     .containsEntry("requestHeader.X-Source-System", "legacy-crm"));
 
                     assertThat(executions).hasValue(1);
+                });
+    }
+
+    @Test
+    void oauth2RuntimeApiMapsPrincipalIntoRunAndRequiresScope() {
+        AtomicInteger executions = new AtomicInteger();
+        AtomicReference<RunPrincipal> executedPrincipal = new AtomicReference<>();
+        RunPrincipal principal = new RunPrincipal("user:alice", "portal-web", java.util.List.of(),
+                Map.of("roles", "maker"));
+        contextRunner
+                .withBean(Action.class, () -> new FinishAction(false, executions, executedPrincipal))
+                .withBean(RunPrincipalResolver.class, () -> new StaticRunPrincipalResolver(
+                        principal,
+                        Set.of("actiongraph.runtime")
+                ))
+                .withPropertyValues(
+                        "actiongraph.runtime.api.enabled=true",
+                        "actiongraph.security.mode=oauth2"
+                )
+                .run(context -> {
+                    MockMvc mockMvc = mockMvc(context);
+
+                    String response = mockMvc.perform(post("/actiongraph/runtime/runs")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                              "input": "finish",
+                                              "knownParameters": {"id": "I-1"}
+                                            }
+                                            """))
+                            .andExpect(status().isOk())
+                            .andExpect(jsonPath("$.run.status").value("COMPLETED"))
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsString();
+                    String runId = response.replaceAll(".*\\\"runId\\\":\\\"([^\\\"]+)\\\".*", "$1");
+
+                    assertThat(executions).hasValue(1);
+                    assertThat(executedPrincipal).hasValue(principal);
+                    TraceRepository traceRepository = context.getBean(TraceRepository.class);
+                    assertThat(traceRepository.findByRun(runId))
+                            .filteredOn(event -> event.type() == TraceEventType.RUN_STARTED)
+                            .singleElement()
+                            .satisfies(event -> assertThat(event.data())
+                                    .containsEntry("principal.subject", "user:alice")
+                                    .containsEntry("principal.clientId", "portal-web")
+                                    .containsEntry("principal.attribute.roles", "maker"));
+                });
+    }
+
+    @Test
+    void oauth2RuntimeApiReturnsForbiddenWhenScopeIsMissing() {
+        contextRunner
+                .withBean(Action.class, () -> new FinishAction(false, new AtomicInteger()))
+                .withBean(RunPrincipalResolver.class, () -> new StaticRunPrincipalResolver(
+                        RunPrincipal.of("user:alice"),
+                        Set.of("actiongraph.console")
+                ))
+                .withPropertyValues(
+                        "actiongraph.runtime.api.enabled=true",
+                        "actiongraph.security.mode=oauth2"
+                )
+                .run(context -> {
+                    MockMvc mockMvc = mockMvc(context);
+
+                    mockMvc.perform(post("/actiongraph/runtime/runs")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                              "input": "finish",
+                                              "knownParameters": {"id": "I-1"}
+                                            }
+                                            """))
+                            .andExpect(status().isForbidden())
+                            .andExpect(jsonPath("$.error").value("FORBIDDEN"));
                 });
     }
 
@@ -433,10 +511,20 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
     private static final class FinishAction implements Action {
         private final boolean review;
         private final AtomicInteger executions;
+        private final AtomicReference<RunPrincipal> executedPrincipal;
 
         private FinishAction(boolean review, AtomicInteger executions) {
+            this(review, executions, new AtomicReference<>());
+        }
+
+        private FinishAction(
+                boolean review,
+                AtomicInteger executions,
+                AtomicReference<RunPrincipal> executedPrincipal
+        ) {
             this.review = review;
             this.executions = executions;
+            this.executedPrincipal = executedPrincipal;
         }
 
         @Override
@@ -482,7 +570,23 @@ class ActionGraphRuntimeApiWebAutoConfigurationTest {
         @Override
         public ActionResult execute(ExecutionContext context) {
             executions.incrementAndGet();
+            executedPrincipal.set(context.principal());
             return ActionResult.ok();
+        }
+    }
+
+    private record StaticRunPrincipalResolver(
+            RunPrincipal principal,
+            Set<String> scopes
+    ) implements RunPrincipalResolver {
+        @Override
+        public RunPrincipal resolve() {
+            return principal;
+        }
+
+        @Override
+        public Set<String> currentScopes() {
+            return scopes;
         }
     }
 }

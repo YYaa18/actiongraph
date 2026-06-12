@@ -12,6 +12,7 @@ import com.actiongraph.durability.RecoveryPolicy;
 import com.actiongraph.events.EventPayload;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.exception.ActionGraphIntegrationException;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.observability.NoopObservationSink;
 import com.actiongraph.observability.ObservationEvent;
 import com.actiongraph.observability.ObservationEventType;
@@ -199,10 +200,26 @@ public final class GoapExecutor implements Executor {
             ActionRegistry registry,
             Map<String, String> runMetadata
     ) {
+        return run(goal, initial, actions, registry, runMetadata, RunPrincipal.anonymous());
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Run principal propagation is experimental until STD1 identity pilots settle."
+    )
+    public RunResult run(
+            Goal goal,
+            Blackboard initial,
+            Collection<Action> actions,
+            ActionRegistry registry,
+            Map<String, String> runMetadata,
+            RunPrincipal principal
+    ) {
         Objects.requireNonNull(goal, "goal");
         Objects.requireNonNull(initial, "initial");
         Objects.requireNonNull(actions, "actions");
         Objects.requireNonNull(registry, "registry");
+        RunPrincipal safePrincipal = principal == null ? RunPrincipal.anonymous() : principal;
 
         Map<String, String> normalizedRunMetadata = normalizeMetadata(runMetadata);
         String runId = UUID.randomUUID().toString();
@@ -214,10 +231,10 @@ public final class GoapExecutor implements Executor {
                 "candidateActions", Integer.toString(actions.size())
         )));
         RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy, observationSink);
-        trace.append(TraceEventType.RUN_STARTED, null, "Run started", traceData(normalizedRunMetadata, Map.of(
+        trace.append(TraceEventType.RUN_STARTED, null, "Run started", traceData(normalizedRunMetadata, principalData(safePrincipal, Map.of(
                 "goal", goal.name(),
                 "targetConditions", conditionKeys(goal.targetConditions())
-        )));
+        ))));
         return runLoop(
                 runId,
                 goal,
@@ -229,7 +246,8 @@ public final class GoapExecutor implements Executor {
                 trace,
                 normalizedRunMetadata,
                 runStartedAt,
-                true
+                true,
+                safePrincipal
         );
     }
 
@@ -243,9 +261,24 @@ public final class GoapExecutor implements Executor {
             ActionRegistry registry,
             Map<String, String> runMetadata
     ) {
+        return resume(runId, actions, registry, runMetadata, RunPrincipal.anonymous());
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Run resume actor propagation is experimental until STD1 identity pilots settle."
+    )
+    public RunResult resume(
+            String runId,
+            Collection<Action> actions,
+            ActionRegistry registry,
+            Map<String, String> runMetadata,
+            RunPrincipal actedBy
+    ) {
         Objects.requireNonNull(runId, "runId");
         Objects.requireNonNull(actions, "actions");
         Objects.requireNonNull(registry, "registry");
+        RunPrincipal safeActor = actedBy == null ? RunPrincipal.anonymous() : actedBy;
 
         Map<String, String> normalizedRunMetadata = normalizeMetadata(runMetadata);
         long runStartedAt = System.nanoTime();
@@ -265,6 +298,8 @@ public final class GoapExecutor implements Executor {
         )));
         RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy, observationSink);
         trace.append(TraceEventType.RUN_RESUMED, suspendedRun.pendingActionId(), "Run resumed", traceData(normalizedRunMetadata, Map.of(
+                "actedBy", safeActor.subject(),
+                "actedByClientId", safeActor.clientId(),
                 "pendingActionId", suspendedRun.pendingActionId().value()
         )));
         return runLoop(
@@ -278,7 +313,8 @@ public final class GoapExecutor implements Executor {
                 trace,
                 normalizedRunMetadata,
                 runStartedAt,
-                true
+                true,
+                suspendedRun.principal()
         );
     }
 
@@ -304,13 +340,15 @@ public final class GoapExecutor implements Executor {
         String runId = checkpoint.runId();
         RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy, observationSink);
         trace.append(TraceEventType.RUN_RECOVERED, checkpoint.inFlightActionId(), "Run recovered", Map.of(
+                "actedBy", "system:recoverer",
                 "policy", recoveryPolicy.name(),
                 "inFlightActionId", checkpoint.inFlightActionId() == null
                         ? "" : checkpoint.inFlightActionId().value(),
                 "executedActions", Integer.toString(checkpoint.executedActions().size()),
                 "compensationStack", Integer.toString(checkpoint.compensationStack().size())
         ));
-        ExecutionContext context = new DefaultExecutionContext(checkpoint.blackboard(), traceRepository, runId);
+        ExecutionContext context = new DefaultExecutionContext(
+                checkpoint.blackboard(), traceRepository, runId, 1, checkpoint.principal());
         Deque<Action> compensationStack = rehydrateCompensationStack(checkpoint, registry);
         if (checkpoint.inFlightActionId() != null) {
             Action inFlight = registry.byId(checkpoint.inFlightActionId())
@@ -342,7 +380,8 @@ public final class GoapExecutor implements Executor {
                 trace,
                 Map.of(),
                 runStartedAt,
-                true
+                true,
+                checkpoint.principal()
         );
     }
 
@@ -381,7 +420,8 @@ public final class GoapExecutor implements Executor {
                 trace,
                 Map.of(),
                 runStartedAt,
-                true
+                true,
+                checkpoint.principal()
         );
     }
 
@@ -395,12 +435,29 @@ public final class GoapExecutor implements Executor {
             String correlationId,
             EventPayload payload
     ) {
+        recordEventDelivered(runId, eventType, correlationId, payload, RunPrincipal.anonymous());
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "External event actor propagation is experimental until STD1 identity pilots settle."
+    )
+    public void recordEventDelivered(
+            String runId,
+            String eventType,
+            String correlationId,
+            EventPayload payload,
+            RunPrincipal actedBy
+    ) {
         Objects.requireNonNull(runId, "runId");
         Objects.requireNonNull(eventType, "eventType");
         Objects.requireNonNull(correlationId, "correlationId");
         Objects.requireNonNull(payload, "payload");
+        RunPrincipal safeActor = actedBy == null ? RunPrincipal.anonymous() : actedBy;
         RunTrace trace = new RunTrace(traceRepository, runId, maskingPolicy, observationSink);
         trace.append(TraceEventType.EVENT_DELIVERED, null, "External event delivered", Map.of(
+                "actedBy", safeActor.subject(),
+                "actedByClientId", safeActor.clientId(),
                 "eventType", eventType,
                 "correlationId", correlationId,
                 "contentType", payload.contentType()
@@ -431,7 +488,8 @@ public final class GoapExecutor implements Executor {
                 "correlationId", waitingRun.eventCorrelationId() == null ? "" : waitingRun.eventCorrelationId(),
                 "deadline", waitingRun.eventDeadline() == null ? "" : waitingRun.eventDeadline().toString()
         ));
-        ExecutionContext context = new DefaultExecutionContext(waitingRun.blackboard(), traceRepository, waitingRun.runId());
+        ExecutionContext context = new DefaultExecutionContext(
+                waitingRun.blackboard(), traceRepository, waitingRun.runId(), 1, waitingRun.principal());
         boolean compensated = compensateAll(rehydrateCompensationStack(waitingRun, registry), context, trace);
         RunStatus status = compensated
                 ? RunStatus.FAILED_COMPENSATED
@@ -459,6 +517,19 @@ public final class GoapExecutor implements Executor {
         return merged;
     }
 
+    private static Map<String, String> principalData(RunPrincipal principal, Map<String, String> data) {
+        RunPrincipal safePrincipal = principal == null ? RunPrincipal.anonymous() : principal;
+        Map<String, String> merged = new LinkedHashMap<>();
+        merged.put("principal.subject", safePrincipal.subject());
+        merged.put("principal.clientId", safePrincipal.clientId());
+        merged.put("principal.delegationChain", String.join(",", safePrincipal.delegationChain()));
+        safePrincipal.attributes().entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> merged.put("principal.attribute." + entry.getKey(), entry.getValue()));
+        merged.putAll(data);
+        return Map.copyOf(merged);
+    }
+
     private RunResult runLoop(
             String runId,
             Goal goal,
@@ -470,14 +541,16 @@ public final class GoapExecutor implements Executor {
             RunTrace trace,
             Map<String, String> runMetadata,
             long runStartedAt,
-            boolean checkpointAtStart
+            boolean checkpointAtStart,
+            RunPrincipal principal
     ) {
-        ExecutionContext context = new DefaultExecutionContext(blackboard, traceRepository, runId);
+        RunPrincipal safePrincipal = principal == null ? RunPrincipal.anonymous() : principal;
+        ExecutionContext context = new DefaultExecutionContext(blackboard, traceRepository, runId, 1, safePrincipal);
         List<Action> allActions = List.copyOf(actions);
 
         try (Heartbeat heartbeat = startHeartbeat(runId)) {
             if (checkpointAtStart) {
-                saveInitialCheckpoint(runId, goal, blackboard, executedActionIds, compensationStack);
+                saveInitialCheckpoint(runId, goal, blackboard, executedActionIds, compensationStack, safePrincipal);
             }
             for (int step = 0; step < maxSteps; step++) {
             Set<Condition> state = blackboard.conditions();
@@ -494,7 +567,7 @@ public final class GoapExecutor implements Executor {
             }
 
             Selection selection = selectNextAction(
-                    runId, goal, state, blackboard, allActions, registry, trace, runMetadata);
+                    runId, goal, state, blackboard, allActions, registry, trace, runMetadata, safePrincipal);
             if (selection.halted()) {
                 LOGGER.debug("Run selection halted: runId={}, status={}, pendingActionId={}, compensateOnHalt={}",
                         runId,
@@ -504,7 +577,7 @@ public final class GoapExecutor implements Executor {
                 if (selection.status() == RunStatus.SUSPENDED_PENDING_REVIEW) {
                     trace.flush();
                     saveSuspendedRun(runId, goal, blackboard, executedActionIds,
-                            compensationStack, selection.pendingActionId(), selection.message());
+                            compensationStack, selection.pendingActionId(), selection.message(), safePrincipal);
                     return finish(trace, runId, selection.status(), blackboard, executedActionIds,
                             selection.message(), runStartedAt);
                 }
@@ -562,11 +635,12 @@ public final class GoapExecutor implements Executor {
                     ));
                     trace.flush();
                     saveWaitingEventRun(runId, goal, blackboard, executedActionIds,
-                            compensationStack, result.message(), eventType, correlationId, deadline);
+                            compensationStack, result.message(), eventType, correlationId, deadline, safePrincipal);
                     return finish(trace, runId, RunStatus.SUSPENDED_WAITING_EVENT, blackboard, executedActionIds,
                             result.message(), runStartedAt);
                 }
-                checkpointAfterAction(runId, goal, blackboard, executedActionIds, compensationStack, trace, action.id());
+                checkpointAfterAction(runId, goal, blackboard, executedActionIds,
+                        compensationStack, trace, action.id(), safePrincipal);
             } else {
                 if (outcome.timedOut()) {
                     executedActionIds.add(action.id());
@@ -604,7 +678,7 @@ public final class GoapExecutor implements Executor {
         for (int attempt = 1; attempt <= policy.maxAttempts(); attempt++) {
             markInFlight(context.runId(), action.id());
             ExecutionContext attemptContext = new DefaultExecutionContext(
-                    context.blackboard(), context.trace(), context.runId(), attempt);
+                    context.blackboard(), context.trace(), context.runId(), attempt, context.principal());
             AttemptResult attemptResult = executeAttempt(action, attemptContext, policy.timeout());
             if (attemptResult.timedOut()) {
                 tags.put("success", "false");
@@ -719,7 +793,8 @@ public final class GoapExecutor implements Executor {
             List<Action> allActions,
             ActionRegistry registry,
             RunTrace trace,
-            Map<String, String> runMetadata
+            Map<String, String> runMetadata,
+            RunPrincipal principal
     ) {
         Set<ActionId> excluded = new LinkedHashSet<>();
         ActionId guardBlockedAction = null;
@@ -771,7 +846,7 @@ public final class GoapExecutor implements Executor {
             }
 
             Action action = actionOpt.get();
-            PolicyDecision decision = policyGuard.evaluate(action, blackboard);
+            PolicyDecision decision = policyGuard.evaluate(action, blackboard, principal);
             LOGGER.debug("Policy evaluated: runId={}, actionId={}, decision={}",
                     runId, action.id().value(), decision);
             trace.append(TraceEventType.POLICY_EVALUATED, action.id(), "Policy evaluated", Map.of(
@@ -810,7 +885,8 @@ public final class GoapExecutor implements Executor {
                         plan,
                         state,
                         maskingPolicy.maskData(objectPreview(blackboard.snapshotEntries())),
-                        attributes
+                        attributes,
+                        principal
                 ));
                 trace.append(TraceEventType.HUMAN_REVIEW_DECIDED, action.id(),
                         review.message(), Map.of(
@@ -947,7 +1023,8 @@ public final class GoapExecutor implements Executor {
             List<ActionId> executedActionIds,
             Deque<Action> compensationStack,
             ActionId pendingActionId,
-            String message
+            String message,
+            RunPrincipal principal
     ) {
         LOGGER.debug("Saving suspended run: runId={}, pendingActionId={}, executedActions={}, compensationStack={}",
                 runId, pendingActionId.value(), executedActionIds.size(), compensationStack.size());
@@ -961,7 +1038,8 @@ public final class GoapExecutor implements Executor {
                 message,
                 SnapshotState.SUSPENDED,
                 Instant.now(),
-                null
+                null,
+                principal
         ));
     }
 
@@ -974,7 +1052,8 @@ public final class GoapExecutor implements Executor {
             String message,
             String eventType,
             String correlationId,
-            Instant deadline
+            Instant deadline,
+            RunPrincipal principal
     ) {
         LOGGER.debug("Saving event wait: runId={}, eventType={}, correlationId={}, deadline={}",
                 runId, eventType, correlationId, deadline);
@@ -987,7 +1066,8 @@ public final class GoapExecutor implements Executor {
                 message,
                 eventType,
                 correlationId,
-                deadline
+                deadline,
+                principal
         ));
     }
 
@@ -996,7 +1076,8 @@ public final class GoapExecutor implements Executor {
             Goal goal,
             Blackboard blackboard,
             List<ActionId> executedActionIds,
-            Deque<Action> compensationStack
+            Deque<Action> compensationStack,
+            RunPrincipal principal
     ) {
         if (!durabilityEnabled) {
             return;
@@ -1011,7 +1092,8 @@ public final class GoapExecutor implements Executor {
                 "Running checkpoint",
                 SnapshotState.RUNNING,
                 Instant.now(),
-                null
+                null,
+                principal
         ));
     }
 
@@ -1022,7 +1104,8 @@ public final class GoapExecutor implements Executor {
             List<ActionId> executedActionIds,
             Deque<Action> compensationStack,
             RunTrace trace,
-            ActionId actionId
+            ActionId actionId,
+            RunPrincipal principal
     ) {
         if (!durabilityEnabled) {
             return;
@@ -1042,7 +1125,8 @@ public final class GoapExecutor implements Executor {
                 "Running checkpoint",
                 SnapshotState.RUNNING,
                 Instant.now(),
-                null
+                null,
+                principal
         ));
     }
 

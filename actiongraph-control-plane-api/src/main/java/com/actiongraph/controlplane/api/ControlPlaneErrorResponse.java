@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 public final class ControlPlaneErrorResponse {
     public static final String BAD_REQUEST = "BAD_REQUEST";
     public static final String CONFLICT = "CONFLICT";
+    public static final String FORBIDDEN = "FORBIDDEN";
     public static final String NOT_CLAIMABLE = "NOT_CLAIMABLE";
     public static final String NOT_FOUND = "NOT_FOUND";
     public static final String UNAUTHORIZED = "UNAUTHORIZED";
@@ -42,6 +43,10 @@ public final class ControlPlaneErrorResponse {
 
     public static ControlPlaneErrorResponse conflict(@Nullable String message) {
         return of(CONFLICT, message);
+    }
+
+    public static ControlPlaneErrorResponse forbidden(@Nullable String message) {
+        return of(FORBIDDEN, message);
     }
 
     public static ControlPlaneErrorResponse notClaimable(@Nullable String message) {

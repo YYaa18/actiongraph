@@ -2,6 +2,7 @@ package com.actiongraph.policy;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.action.ActionRiskLevel;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.planning.Plan;
 
@@ -39,8 +40,23 @@ public record HumanReviewRequest(
         Plan planPreview,
         Set<Condition> currentState,
         Map<String, String> blackboardPreview,
-        Map<String, String> attributes
+        Map<String, String> attributes,
+        RunPrincipal requestedBy
 ) {
+    public HumanReviewRequest(
+            String runId,
+            ActionId actionId,
+            ActionRiskLevel riskLevel,
+            boolean requiredByAction,
+            Plan planPreview,
+            Set<Condition> currentState,
+            Map<String, String> blackboardPreview,
+            Map<String, String> attributes
+    ) {
+        this(runId, actionId, riskLevel, requiredByAction, planPreview, currentState, blackboardPreview,
+                attributes, RunPrincipal.anonymous());
+    }
+
     public HumanReviewRequest(
             String runId,
             ActionId actionId,
@@ -63,5 +79,6 @@ public record HumanReviewRequest(
         currentState = Set.copyOf(Objects.requireNonNull(currentState, "currentState"));
         blackboardPreview = Map.copyOf(Objects.requireNonNull(blackboardPreview, "blackboardPreview"));
         attributes = Map.copyOf(Objects.requireNonNull(attributes, "attributes"));
+        requestedBy = requestedBy == null ? RunPrincipal.anonymous() : requestedBy;
     }
 }

@@ -1,6 +1,7 @@
 package com.actiongraph.policy;
 
 import com.actiongraph.action.Action;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.runtime.Blackboard;
 
 /**
@@ -24,4 +25,18 @@ public interface ExecutionPolicyGuard {
      * @return non-null policy decision
      */
     PolicyDecision evaluate(Action action, Blackboard blackboard);
+
+    /**
+     * Evaluates whether the action may execute for the supplied principal.
+     *
+     * <p>The default delegates to the legacy two-argument hook for compatibility.
+     *
+     * @param action candidate action; never {@code null}
+     * @param blackboard current run Blackboard; never {@code null}
+     * @param principal run principal; never {@code null}
+     * @return non-null policy decision
+     */
+    default PolicyDecision evaluate(Action action, Blackboard blackboard, RunPrincipal principal) {
+        return evaluate(action, blackboard);
+    }
 }

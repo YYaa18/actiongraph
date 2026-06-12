@@ -1,13 +1,16 @@
 package com.actiongraph.humanreview.api.spring;
 
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
-import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
 import com.actiongraph.humanreview.api.HumanReviewApiService;
 import com.actiongraph.humanreview.api.HumanReviewTaskNotFoundException;
 import com.actiongraph.humanreview.api.HumanReviewTaskResponse;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.policy.HumanReviewDecision;
 import com.actiongraph.policy.StageAlreadyDecidedException;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointGroup;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,23 +31,25 @@ import org.jspecify.annotations.Nullable;
 @RestController
 @RequestMapping("${actiongraph.human-review.api.path:/actiongraph/human-review/tasks}")
 public final class ActionGraphHumanReviewApiController {
-    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
     private static final String UNAUTHORIZED_MESSAGE = "Human review API token is missing or invalid";
 
     private final HumanReviewApiService apiService;
     private final ActionGraphHumanReviewApiProperties properties;
+    private final ActionGraphEndpointAccessVerifier accessVerifier;
 
     public ActionGraphHumanReviewApiController(
             HumanReviewApiService apiService,
-            ActionGraphHumanReviewApiProperties properties
+            ActionGraphHumanReviewApiProperties properties,
+            ActionGraphEndpointAccessVerifier accessVerifier
     ) {
         this.apiService = Objects.requireNonNull(apiService, "apiService");
         this.properties = Objects.requireNonNull(properties, "properties");
+        this.accessVerifier = Objects.requireNonNull(accessVerifier, "accessVerifier");
     }
 
     @GetMapping("/pending")
     public List<HumanReviewTaskResponse> pending(@RequestHeader HttpHeaders headers) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return apiService.pendingTasks();
     }
 
@@ -53,7 +58,7 @@ public final class ActionGraphHumanReviewApiController {
             @RequestHeader HttpHeaders headers,
             @PathVariable("runId") String runId
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return apiService.tasksForRun(runId);
     }
 
@@ -63,7 +68,7 @@ public final class ActionGraphHumanReviewApiController {
             @PathVariable("runId") String runId,
             @PathVariable("actionId") String actionId
     ) {
-        verifyToken(headers);
+        verifyAccess(headers);
         return apiService.task(runId, actionId);
     }
 
@@ -74,25 +79,43 @@ public final class ActionGraphHumanReviewApiController {
             @PathVariable("actionId") String actionId,
             @RequestBody HumanReviewDecisionRequest request
     ) {
-        verifyToken(headers);
+        RunPrincipal actedBy = verifyAccess(headers);
         return apiService.decide(
                 runId,
                 actionId,
                 request.expectedStageIndex(),
                 request.decision(),
-                request.reviewer(),
+                reviewer(request.reviewer(), actedBy),
                 request.comment()
         );
     }
 
-    private void verifyToken(HttpHeaders headers) {
-        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
+    private RunPrincipal verifyAccess(HttpHeaders headers) {
+        return accessVerifier.verify(
+                ActionGraphEndpointGroup.HUMAN_REVIEW,
+                properties,
+                headers::getFirst,
+                UNAUTHORIZED_MESSAGE
+        );
+    }
+
+    private String reviewer(@Nullable String requestedReviewer, RunPrincipal actedBy) {
+        if (actedBy != null && !actedBy.anonymousPrincipal()) {
+            return actedBy.subject();
+        }
+        return requestedReviewer;
     }
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenControlPlaneAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ControlPlaneErrorResponse handleForbidden(ForbiddenControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.forbidden(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -44,10 +44,14 @@ import com.actiongraph.policy.NoopReviewAttributeContributor;
 import com.actiongraph.policy.PendingHumanReviewPolicy;
 import com.actiongraph.policy.PermissionPolicy;
 import com.actiongraph.policy.ReviewAttributeContributor;
+import com.actiongraph.policy.RolePermissionPolicy;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemorySuspendedRunRepository;
 import com.actiongraph.runtime.SuspendedRunRepository;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.RunPrincipalResolver;
+import com.actiongraph.spring.security.SpringSecurityRunPrincipalResolver;
 import com.actiongraph.trace.InMemoryTraceRepository;
 import com.actiongraph.trace.TraceRepository;
 import com.actiongraph.validation.ActionGraphValidator;
@@ -113,8 +117,48 @@ public class ActionGraphAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ExecutionPolicyGuard actionGraphPolicyGuard(PermissionPolicy permissionPolicy) {
-        return new DefaultPolicyGuard(permissionPolicy);
+    public ExecutionPolicyGuard actionGraphPolicyGuard(
+            PermissionPolicy permissionPolicy,
+            ActionGraphProperties properties
+    ) {
+        return new DefaultPolicyGuard(applyRolePolicy(permissionPolicy, properties));
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @Experimental(
+            since = "0.2.0",
+            value = "Spring principal resolution is experimental until STD1 identity pilots settle."
+    )
+    public RunPrincipalResolver actionGraphRunPrincipalResolver(ActionGraphProperties properties) {
+        return new SpringSecurityRunPrincipalResolver(properties.getSecurity().getOauth2());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @Experimental(
+            since = "0.2.0",
+            value = "Endpoint security mode verification is experimental until STD1 pilots settle."
+    )
+    public ActionGraphEndpointAccessVerifier actionGraphEndpointAccessVerifier(
+            ActionGraphProperties properties,
+            RunPrincipalResolver principalResolver
+    ) {
+        return new ActionGraphEndpointAccessVerifier(properties, principalResolver);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "actionGraphEndpointSecurityWarning")
+    @Experimental(
+            since = "0.2.0",
+            value = "Endpoint security mode verification is experimental until STD1 pilots settle."
+    )
+    public SmartInitializingSingleton actionGraphEndpointSecurityWarning(ActionGraphProperties properties) {
+        return () -> {
+            if (properties.getSecurity().getMode() == ActionGraphProperties.EndpointSecurityMode.SHARED_SECRET) {
+                LOGGER.warn("ActionGraph endpoint security mode is shared-secret; use oauth2 for production deployments");
+            }
+        };
     }
 
     @Bean
@@ -725,6 +769,24 @@ public class ActionGraphAutoConfiguration {
     private Action applyExecutionPolicyOverride(Action action, Map<String, ActionExecutionPolicy> overrides) {
         ActionExecutionPolicy override = overrides.get(action.id().value());
         return override == null ? action : new ExecutionPolicyOverrideAction(action, override);
+    }
+
+    private PermissionPolicy applyRolePolicy(PermissionPolicy permissionPolicy, ActionGraphProperties properties) {
+        if (properties.getSecurity().getActionRoles().isEmpty()) {
+            return permissionPolicy;
+        }
+        Map<String, Set<String>> roleMap = new LinkedHashMap<>();
+        for (ActionGraphProperties.ActionRoleProperties role : properties.getSecurity().getActionRoles()) {
+            if (role.getActionId() == null || role.getActionId().isBlank()) {
+                throw new IllegalArgumentException("actiongraph.security.action-roles action-id must not be blank");
+            }
+            if (role.getAnyOf().isEmpty()) {
+                throw new IllegalArgumentException("actiongraph.security.action-roles any-of must not be empty for "
+                        + role.getActionId());
+            }
+            roleMap.put(role.getActionId(), Set.copyOf(role.getAnyOf()));
+        }
+        return new RolePermissionPolicy(permissionPolicy, roleMap);
     }
 
     private String resolveApiKey(ActionGraphProperties.LlmProperties llm) {

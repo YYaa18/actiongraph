@@ -2,6 +2,9 @@ package com.actiongraph.humanreview.api.spring;
 
 import com.actiongraph.humanreview.api.HumanReviewApiService;
 import com.actiongraph.policy.HumanReviewRepository;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifiers;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -35,8 +38,13 @@ public class ActionGraphHumanReviewApiWebAutoConfiguration {
     @ConditionalOnMissingBean(name = "actionGraphHumanReviewApiController")
     public ActionGraphHumanReviewApiController actionGraphHumanReviewApiController(
             HumanReviewApiService apiService,
-            ActionGraphHumanReviewApiProperties properties
+            ActionGraphHumanReviewApiProperties properties,
+            ObjectProvider<ActionGraphEndpointAccessVerifier> accessVerifier
     ) {
-        return new ActionGraphHumanReviewApiController(apiService, properties);
+        return new ActionGraphHumanReviewApiController(
+                apiService,
+                properties,
+                ActionGraphEndpointAccessVerifiers.getOrSharedSecretDefault(accessVerifier)
+        );
     }
 }

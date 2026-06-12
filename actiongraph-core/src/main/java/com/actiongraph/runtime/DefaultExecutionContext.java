@@ -2,7 +2,10 @@ package com.actiongraph.runtime;
 
 import com.actiongraph.api.Internal;
 import com.actiongraph.action.ExecutionContext;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.trace.TraceRepository;
+
+import java.util.Objects;
 
 /**
  * Immutable default {@link ExecutionContext} implementation.
@@ -16,9 +19,26 @@ public record DefaultExecutionContext(
         Blackboard blackboard,
         TraceRepository trace,
         String runId,
-        int attempt
+        int attempt,
+        RunPrincipal principal
 ) implements ExecutionContext {
     public DefaultExecutionContext(Blackboard blackboard, TraceRepository trace, String runId) {
-        this(blackboard, trace, runId, 1);
+        this(blackboard, trace, runId, 1, RunPrincipal.anonymous());
+    }
+
+    public DefaultExecutionContext(Blackboard blackboard, TraceRepository trace, String runId, int attempt) {
+        this(blackboard, trace, runId, attempt, RunPrincipal.anonymous());
+    }
+
+    public DefaultExecutionContext {
+        Objects.requireNonNull(blackboard, "blackboard");
+        Objects.requireNonNull(trace, "trace");
+        if (runId == null || runId.isBlank()) {
+            throw new IllegalArgumentException("runId must not be blank");
+        }
+        if (attempt <= 0) {
+            throw new IllegalArgumentException("attempt must be positive");
+        }
+        principal = principal == null ? RunPrincipal.anonymous() : principal;
     }
 }

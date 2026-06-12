@@ -2,13 +2,16 @@ package com.actiongraph.humanreview.spring;
 
 import com.actiongraph.action.ActionId;
 import com.actiongraph.controlplane.api.ControlPlaneErrorResponse;
-import com.actiongraph.controlplane.auth.ControlPlaneTokenVerifier;
+import com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException;
 import com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.policy.HumanReviewCallback;
 import com.actiongraph.policy.HumanReviewCallbackHandler;
 import com.actiongraph.policy.HumanReviewDecision;
 import com.actiongraph.policy.HumanReviewTask;
 import com.actiongraph.policy.StageAlreadyDecidedException;
+import com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier;
+import com.actiongraph.spring.security.ActionGraphEndpointGroup;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,18 +29,20 @@ import org.jspecify.annotations.Nullable;
 @RestController
 @RequestMapping("${actiongraph.human-review.callback-endpoint.path:/actiongraph/human-review/callbacks}")
 public final class ActionGraphHumanReviewCallbackController {
-    private static final ControlPlaneTokenVerifier TOKEN_VERIFIER = new ControlPlaneTokenVerifier();
     private static final String UNAUTHORIZED_MESSAGE = "Human review callback token is missing or invalid";
 
     private final HumanReviewCallbackHandler handler;
     private final ActionGraphHumanReviewCallbackProperties properties;
+    private final ActionGraphEndpointAccessVerifier accessVerifier;
 
     public ActionGraphHumanReviewCallbackController(
             HumanReviewCallbackHandler handler,
-            ActionGraphHumanReviewCallbackProperties properties
+            ActionGraphHumanReviewCallbackProperties properties,
+            ActionGraphEndpointAccessVerifier accessVerifier
     ) {
         this.handler = Objects.requireNonNull(handler, "handler");
         this.properties = Objects.requireNonNull(properties, "properties");
+        this.accessVerifier = Objects.requireNonNull(accessVerifier, "accessVerifier");
     }
 
     @PostMapping
@@ -45,13 +50,13 @@ public final class ActionGraphHumanReviewCallbackController {
             @RequestHeader HttpHeaders headers,
             @RequestBody HumanReviewCallbackRequest request
     ) {
-        verifyToken(headers);
+        RunPrincipal actedBy = verifyAccess(headers);
         HumanReviewTask task = handler.handle(new HumanReviewCallback(
                 request.runId(),
                 new ActionId(request.actionId()),
                 request.expectedStageIndex(),
                 request.decision(),
-                request.reviewer(),
+                reviewer(request.reviewer(), actedBy),
                 request.comment()
         ));
         return new HumanReviewCallbackResponse(
@@ -65,14 +70,32 @@ public final class ActionGraphHumanReviewCallbackController {
         );
     }
 
-    private void verifyToken(HttpHeaders headers) {
-        TOKEN_VERIFIER.verify(properties, headers::getFirst, UNAUTHORIZED_MESSAGE);
+    private RunPrincipal verifyAccess(HttpHeaders headers) {
+        return accessVerifier.verify(
+                ActionGraphEndpointGroup.HUMAN_REVIEW,
+                properties,
+                headers::getFirst,
+                UNAUTHORIZED_MESSAGE
+        );
+    }
+
+    private String reviewer(@Nullable String requestedReviewer, RunPrincipal actedBy) {
+        if (actedBy != null && !actedBy.anonymousPrincipal()) {
+            return actedBy.subject();
+        }
+        return requestedReviewer;
     }
 
     @ExceptionHandler(UnauthorizedControlPlaneAccessException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ControlPlaneErrorResponse handleUnauthorized(UnauthorizedControlPlaneAccessException exception) {
         return ControlPlaneErrorResponse.unauthorized(exception.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenControlPlaneAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ControlPlaneErrorResponse handleForbidden(ForbiddenControlPlaneAccessException exception) {
+        return ControlPlaneErrorResponse.forbidden(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

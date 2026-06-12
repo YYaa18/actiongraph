@@ -1,6 +1,7 @@
 package com.actiongraph.policy;
 
 import com.actiongraph.action.Action;
+import com.actiongraph.identity.RunPrincipal;
 import com.actiongraph.runtime.Blackboard;
 
 import java.util.Arrays;
@@ -39,8 +40,13 @@ public final class DefaultPolicyGuard implements ExecutionPolicyGuard {
 
     @Override
     public PolicyDecision evaluate(Action action, Blackboard blackboard) {
+        return evaluate(action, blackboard, RunPrincipal.anonymous());
+    }
+
+    @Override
+    public PolicyDecision evaluate(Action action, Blackboard blackboard, RunPrincipal principal) {
         for (PermissionPolicy policy : permissionPolicies) {
-            if (!policy.canExecute(action, blackboard)) {
+            if (!policy.canExecute(action, blackboard, principal)) {
                 return PolicyDecision.DENY;
             }
         }

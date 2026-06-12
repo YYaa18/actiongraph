@@ -406,6 +406,7 @@ CLASS public static final class com.actiongraph.controlplane.api.ActionGraphRunt
 CLASS public final class com.actiongraph.controlplane.api.ControlPlaneErrorResponse
   FIELD public static final java.lang.String BAD_REQUEST
   FIELD public static final java.lang.String CONFLICT
+  FIELD public static final java.lang.String FORBIDDEN
   FIELD public static final java.lang.String NOT_CLAIMABLE
   FIELD public static final java.lang.String NOT_FOUND
   FIELD public static final java.lang.String UNAUTHORIZED
@@ -413,6 +414,7 @@ CLASS public final class com.actiongraph.controlplane.api.ControlPlaneErrorRespo
   METHOD public static com.actiongraph.controlplane.api.ControlPlaneErrorResponse badRequest(java.lang.String)
   METHOD public static com.actiongraph.controlplane.api.ControlPlaneErrorResponse conflict(java.lang.String)
   METHOD public java.lang.String error()
+  METHOD public static com.actiongraph.controlplane.api.ControlPlaneErrorResponse forbidden(java.lang.String)
   METHOD public java.lang.String getError()
   METHOD public java.lang.String getMessage()
   METHOD public java.lang.String message()
@@ -436,6 +438,8 @@ CLASS public final class com.actiongraph.controlplane.auth.ControlPlaneTokenVeri
   METHOD public boolean isAuthorized(com.actiongraph.controlplane.auth.SharedSecretTokenProtection,java.lang.String)
   METHOD public void verify(com.actiongraph.controlplane.auth.SharedSecretTokenProperties,java.util.function.Function,java.lang.String)
   METHOD public void verify(com.actiongraph.controlplane.auth.SharedSecretTokenProtection,java.lang.String,java.lang.String)
+CLASS public final class com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException
+  CONSTRUCTOR public com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException(java.lang.String)
 CLASS public abstract interface com.actiongraph.controlplane.auth.SharedSecretTokenProperties
   METHOD public abstract java.lang.String getSharedSecret()
   METHOD public abstract java.lang.String getTokenHeader()
@@ -456,14 +460,22 @@ CLASS public final class com.actiongraph.ActionGraph
   METHOD public java.lang.String actionGraphFingerprint()
   METHOD public static com.actiongraph.ActionGraph$Builder builder()
   METHOD public com.actiongraph.ChatResult chat(java.lang.String)
+  METHOD public com.actiongraph.ChatResult chat(java.lang.String,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.ChatResult chat(java.lang.String,java.util.Map)
+  METHOD public com.actiongraph.ChatResult chat(java.lang.String,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.ChatResult chat(java.lang.String,java.util.Map,java.util.Map)
+  METHOD public com.actiongraph.ChatResult chat(java.lang.String,java.util.Map,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public java.util.Optional goalFingerprint(java.lang.String)
   METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String)
+  METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.RunResult start(com.actiongraph.interpretation.GoalInterpretation,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult start(com.actiongraph.interpretation.GoalInterpretation,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.RunResult start(java.lang.String,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult start(java.lang.String,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.RunResult start(java.lang.String,java.util.Map,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult start(java.lang.String,java.util.Map,java.util.Map,com.actiongraph.identity.RunPrincipal)
 CLASS public static final class com.actiongraph.ActionGraph$Builder
   METHOD public com.actiongraph.ActionGraph$Builder action(com.actiongraph.action.Action)
   METHOD public com.actiongraph.ActionGraph$Builder actionRegistry(com.actiongraph.action.ActionRegistry)
@@ -565,6 +577,7 @@ CLASS public final class com.actiongraph.action.DefaultActionRegistry
 CLASS public abstract interface com.actiongraph.action.ExecutionContext
   METHOD public default int attempt()
   METHOD public abstract com.actiongraph.runtime.Blackboard blackboard()
+  METHOD public default com.actiongraph.identity.RunPrincipal principal()
   METHOD public abstract java.lang.String runId()
   METHOD public abstract com.actiongraph.trace.TraceRepository trace()
 CLASS public abstract annotation com.actiongraph.action.annotation.ActionGraphAction
@@ -641,6 +654,7 @@ CLASS public final class com.actiongraph.events.EventWaitSweeper
 CLASS public final class com.actiongraph.events.ExternalEventGateway
   CONSTRUCTOR public com.actiongraph.events.ExternalEventGateway(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,java.util.Collection,com.actiongraph.action.ActionRegistry,java.util.Collection)
   METHOD public com.actiongraph.events.DeliveryResult deliver(java.lang.String,java.lang.String,com.actiongraph.events.EventPayload)
+  METHOD public com.actiongraph.events.DeliveryResult deliver(java.lang.String,java.lang.String,com.actiongraph.events.EventPayload,com.actiongraph.identity.RunPrincipal)
 CLASS public class com.actiongraph.exception.ActionGraphConfigurationException
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphConfigurationException(java.lang.String)
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphConfigurationException(java.lang.String,java.lang.Throwable)
@@ -671,6 +685,19 @@ CLASS public final class com.actiongraph.graph.ActionGraphExporter
   METHOD public java.lang.String toMermaid(java.util.Collection)
   METHOD public java.lang.String toMermaid(java.util.Collection,com.actiongraph.planning.Goal)
   METHOD public java.lang.String toMermaid(java.util.Collection,com.actiongraph.planning.Goal,java.util.Set)
+CLASS public final record com.actiongraph.identity.RunPrincipal
+  FIELD public static final java.lang.String ANONYMOUS_SUBJECT
+  CONSTRUCTOR public com.actiongraph.identity.RunPrincipal(java.lang.String,java.lang.String,java.util.List,java.util.Map)
+  METHOD public static com.actiongraph.identity.RunPrincipal anonymous()
+  METHOD public boolean anonymousPrincipal()
+  METHOD public java.util.Map attributes()
+  METHOD public java.lang.String clientId()
+  METHOD public java.util.List delegationChain()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public static com.actiongraph.identity.RunPrincipal of(java.lang.String)
+  METHOD public java.lang.String subject()
+  METHOD public final java.lang.String toString()
 CLASS public final record com.actiongraph.interpretation.ClarificationQuestion
   CONSTRUCTOR public com.actiongraph.interpretation.ClarificationQuestion(java.lang.String)
   METHOD public final boolean equals(java.lang.Object)
@@ -1019,11 +1046,13 @@ CLASS public final class com.actiongraph.policy.DefaultPolicyGuard
   CONSTRUCTOR public com.actiongraph.policy.DefaultPolicyGuard(com.actiongraph.policy.PermissionPolicy[])
   CONSTRUCTOR public com.actiongraph.policy.DefaultPolicyGuard(java.util.List)
   METHOD public com.actiongraph.policy.PolicyDecision evaluate(com.actiongraph.action.Action,com.actiongraph.runtime.Blackboard)
+  METHOD public com.actiongraph.policy.PolicyDecision evaluate(com.actiongraph.action.Action,com.actiongraph.runtime.Blackboard,com.actiongraph.identity.RunPrincipal)
 CLASS public final class com.actiongraph.policy.DenyingHumanReviewPolicy
   CONSTRUCTOR public com.actiongraph.policy.DenyingHumanReviewPolicy()
   METHOD public com.actiongraph.policy.HumanReviewResult review(com.actiongraph.policy.HumanReviewRequest)
 CLASS public abstract interface com.actiongraph.policy.ExecutionPolicyGuard
   METHOD public abstract com.actiongraph.policy.PolicyDecision evaluate(com.actiongraph.action.Action,com.actiongraph.runtime.Blackboard)
+  METHOD public default com.actiongraph.policy.PolicyDecision evaluate(com.actiongraph.action.Action,com.actiongraph.runtime.Blackboard,com.actiongraph.identity.RunPrincipal)
 CLASS public final enum com.actiongraph.policy.HumanReviewDecision
   FIELD public static final com.actiongraph.policy.HumanReviewDecision APPROVED
   FIELD public static final com.actiongraph.policy.HumanReviewDecision DENIED
@@ -1035,6 +1064,7 @@ CLASS public abstract interface com.actiongraph.policy.HumanReviewPolicy
 CLASS public final record com.actiongraph.policy.HumanReviewRequest
   CONSTRUCTOR public com.actiongraph.policy.HumanReviewRequest(java.lang.String,com.actiongraph.action.ActionId,com.actiongraph.action.ActionRiskLevel,boolean,com.actiongraph.planning.Plan,java.util.Set,java.util.Map)
   CONSTRUCTOR public com.actiongraph.policy.HumanReviewRequest(java.lang.String,com.actiongraph.action.ActionId,com.actiongraph.action.ActionRiskLevel,boolean,com.actiongraph.planning.Plan,java.util.Set,java.util.Map,java.util.Map)
+  CONSTRUCTOR public com.actiongraph.policy.HumanReviewRequest(java.lang.String,com.actiongraph.action.ActionId,com.actiongraph.action.ActionRiskLevel,boolean,com.actiongraph.planning.Plan,java.util.Set,java.util.Map,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.action.ActionId actionId()
   METHOD public java.util.Map attributes()
   METHOD public java.util.Map blackboardPreview()
@@ -1042,6 +1072,7 @@ CLASS public final record com.actiongraph.policy.HumanReviewRequest
   METHOD public final boolean equals(java.lang.Object)
   METHOD public final int hashCode()
   METHOD public com.actiongraph.planning.Plan planPreview()
+  METHOD public com.actiongraph.identity.RunPrincipal requestedBy()
   METHOD public boolean requiredByAction()
   METHOD public com.actiongraph.action.ActionRiskLevel riskLevel()
   METHOD public java.lang.String runId()
@@ -1072,6 +1103,7 @@ CLASS public final class com.actiongraph.policy.PendingHumanReviewPolicy
   METHOD public com.actiongraph.policy.HumanReviewResult review(com.actiongraph.policy.HumanReviewRequest)
 CLASS public abstract interface com.actiongraph.policy.PermissionPolicy
   METHOD public default boolean canExecute(com.actiongraph.action.Action,com.actiongraph.runtime.Blackboard)
+  METHOD public default boolean canExecute(com.actiongraph.action.Action,com.actiongraph.runtime.Blackboard,com.actiongraph.identity.RunPrincipal)
 CLASS public final enum com.actiongraph.policy.PolicyDecision
   FIELD public static final com.actiongraph.policy.PolicyDecision ALLOW
   FIELD public static final com.actiongraph.policy.PolicyDecision DENY
@@ -1080,6 +1112,12 @@ CLASS public final enum com.actiongraph.policy.PolicyDecision
   METHOD public static com.actiongraph.policy.PolicyDecision[] values()
 CLASS public abstract interface com.actiongraph.policy.ReviewAttributeContributor
   METHOD public abstract java.util.Map contribute(com.actiongraph.action.Action,com.actiongraph.runtime.Blackboard)
+CLASS public final class com.actiongraph.policy.RolePermissionPolicy
+  CONSTRUCTOR public com.actiongraph.policy.RolePermissionPolicy(com.actiongraph.policy.PermissionPolicy,java.util.Map)
+  CONSTRUCTOR public com.actiongraph.policy.RolePermissionPolicy(java.util.Map)
+  METHOD public boolean canExecute(com.actiongraph.action.Action,com.actiongraph.runtime.Blackboard)
+  METHOD public boolean canExecute(com.actiongraph.action.Action,com.actiongraph.runtime.Blackboard,com.actiongraph.identity.RunPrincipal)
+  METHOD public java.util.Map requiredRolesByActionId()
 CLASS public abstract interface com.actiongraph.runtime.Blackboard
   METHOD public abstract void addCondition(com.actiongraph.planning.Condition)
   METHOD public abstract java.util.Set conditions()
@@ -1107,10 +1145,12 @@ CLASS public final record com.actiongraph.runtime.BlackboardKey
 CLASS public final record com.actiongraph.runtime.DefaultExecutionContext
   CONSTRUCTOR public com.actiongraph.runtime.DefaultExecutionContext(com.actiongraph.runtime.Blackboard,com.actiongraph.trace.TraceRepository,java.lang.String)
   CONSTRUCTOR public com.actiongraph.runtime.DefaultExecutionContext(com.actiongraph.runtime.Blackboard,com.actiongraph.trace.TraceRepository,java.lang.String,int)
+  CONSTRUCTOR public com.actiongraph.runtime.DefaultExecutionContext(com.actiongraph.runtime.Blackboard,com.actiongraph.trace.TraceRepository,java.lang.String,int,com.actiongraph.identity.RunPrincipal)
   METHOD public int attempt()
   METHOD public com.actiongraph.runtime.Blackboard blackboard()
   METHOD public final boolean equals(java.lang.Object)
   METHOD public final int hashCode()
+  METHOD public com.actiongraph.identity.RunPrincipal principal()
   METHOD public java.lang.String runId()
   METHOD public final java.lang.String toString()
   METHOD public com.actiongraph.trace.TraceRepository trace()
@@ -1128,12 +1168,15 @@ CLASS public final class com.actiongraph.runtime.GoapExecutor
   CONSTRUCTOR public com.actiongraph.runtime.GoapExecutor(com.actiongraph.planning.Planner,com.actiongraph.policy.ExecutionPolicyGuard,com.actiongraph.trace.TraceRepository,int)
   METHOD public static com.actiongraph.runtime.GoapExecutor$Builder builder()
   METHOD public void recordEventDelivered(java.lang.String,java.lang.String,java.lang.String,com.actiongraph.events.EventPayload)
+  METHOD public void recordEventDelivered(java.lang.String,java.lang.String,java.lang.String,com.actiongraph.events.EventPayload,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.RunResult recover(com.actiongraph.runtime.SuspendedRun,java.util.Collection,com.actiongraph.action.ActionRegistry,com.actiongraph.durability.RecoveryPolicy)
   METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,java.util.Collection,com.actiongraph.action.ActionRegistry)
   METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,java.util.Collection,com.actiongraph.action.ActionRegistry,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,java.util.Collection,com.actiongraph.action.ActionRegistry,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.RunResult resumeFromWaitingEvent(com.actiongraph.runtime.SuspendedRun,java.util.Collection,com.actiongraph.action.ActionRegistry,java.lang.String,java.lang.String,com.actiongraph.events.EventPayload)
   METHOD public com.actiongraph.runtime.RunResult run(com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.Collection,com.actiongraph.action.ActionRegistry)
   METHOD public com.actiongraph.runtime.RunResult run(com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.Collection,com.actiongraph.action.ActionRegistry,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult run(com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.Collection,com.actiongraph.action.ActionRegistry,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.SuspendedRunRepository suspendedRunRepository()
   METHOD public com.actiongraph.runtime.RunResult timeoutWaitingEvent(com.actiongraph.runtime.SuspendedRun,java.util.Collection,com.actiongraph.action.ActionRegistry)
   METHOD public com.actiongraph.trace.TraceRepository traceRepository()
@@ -1212,7 +1255,9 @@ CLASS public final enum com.actiongraph.runtime.SnapshotState
 CLASS public final record com.actiongraph.runtime.SuspendedRun
   CONSTRUCTOR public com.actiongraph.runtime.SuspendedRun(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,com.actiongraph.action.ActionId,java.lang.String)
   CONSTRUCTOR public com.actiongraph.runtime.SuspendedRun(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,com.actiongraph.action.ActionId,java.lang.String,com.actiongraph.runtime.SnapshotState,java.time.Instant,com.actiongraph.action.ActionId)
+  CONSTRUCTOR public com.actiongraph.runtime.SuspendedRun(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,com.actiongraph.action.ActionId,java.lang.String,com.actiongraph.runtime.SnapshotState,java.time.Instant,com.actiongraph.action.ActionId,com.actiongraph.identity.RunPrincipal)
   CONSTRUCTOR public com.actiongraph.runtime.SuspendedRun(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,com.actiongraph.action.ActionId,java.lang.String,com.actiongraph.runtime.SnapshotState,java.time.Instant,com.actiongraph.action.ActionId,java.lang.String,java.lang.String,java.time.Instant)
+  CONSTRUCTOR public com.actiongraph.runtime.SuspendedRun(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,com.actiongraph.action.ActionId,java.lang.String,com.actiongraph.runtime.SnapshotState,java.time.Instant,com.actiongraph.action.ActionId,java.lang.String,java.lang.String,java.time.Instant,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.Blackboard blackboard()
   METHOD public java.util.List compensationStack()
   METHOD public final boolean equals(java.lang.Object)
@@ -1226,10 +1271,12 @@ CLASS public final record com.actiongraph.runtime.SuspendedRun
   METHOD public com.actiongraph.action.ActionId inFlightActionId()
   METHOD public java.lang.String message()
   METHOD public com.actiongraph.action.ActionId pendingActionId()
+  METHOD public com.actiongraph.identity.RunPrincipal principal()
   METHOD public java.lang.String runId()
   METHOD public com.actiongraph.runtime.SnapshotState snapshotState()
   METHOD public final java.lang.String toString()
   METHOD public static com.actiongraph.runtime.SuspendedRun waitingForEvent(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,java.lang.String,java.lang.String,java.lang.String,java.time.Instant)
+  METHOD public static com.actiongraph.runtime.SuspendedRun waitingForEvent(java.lang.String,com.actiongraph.planning.Goal,com.actiongraph.runtime.Blackboard,java.util.List,java.util.List,java.lang.String,java.lang.String,java.lang.String,java.time.Instant,com.actiongraph.identity.RunPrincipal)
 CLASS public final class com.actiongraph.runtime.SuspendedRunNotClaimableException
   CONSTRUCTOR public com.actiongraph.runtime.SuspendedRunNotClaimableException(java.lang.String)
   METHOD public java.lang.String runId()
@@ -1252,21 +1299,27 @@ CLASS public final class com.actiongraph.runtime.api.ActionGraphRuntimeApiServic
   METHOD public com.actiongraph.runtime.api.RuntimeInterpretationResponse interpret(java.lang.String,java.util.Map)
   METHOD public com.actiongraph.runtime.api.RuntimeRunResponse resume(java.lang.String)
   METHOD public com.actiongraph.runtime.api.RuntimeRunResponse resume(java.lang.String,java.util.Map)
+  METHOD public com.actiongraph.runtime.api.RuntimeRunResponse resume(java.lang.String,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.api.RuntimeStartResponse start(com.actiongraph.interpretation.GoalInterpretation)
   METHOD public com.actiongraph.runtime.api.RuntimeStartResponse start(com.actiongraph.interpretation.GoalInterpretation,java.util.Map)
+  METHOD public com.actiongraph.runtime.api.RuntimeStartResponse start(com.actiongraph.interpretation.GoalInterpretation,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public com.actiongraph.runtime.api.RuntimeStartResponse start(java.lang.String)
   METHOD public com.actiongraph.runtime.api.RuntimeStartResponse start(java.lang.String,java.util.Map)
   METHOD public com.actiongraph.runtime.api.RuntimeStartResponse start(java.lang.String,java.util.Map,java.util.Map)
+  METHOD public com.actiongraph.runtime.api.RuntimeStartResponse start(java.lang.String,java.util.Map,java.util.Map,com.actiongraph.identity.RunPrincipal)
 CLASS public abstract interface com.actiongraph.runtime.api.ActionGraphRuntimeOperations
   METHOD public abstract com.actiongraph.runtime.api.RuntimeInterpretationResponse interpret(java.lang.String)
   METHOD public abstract com.actiongraph.runtime.api.RuntimeInterpretationResponse interpret(java.lang.String,java.util.Map)
   METHOD public abstract com.actiongraph.runtime.api.RuntimeRunResponse resume(java.lang.String)
   METHOD public abstract com.actiongraph.runtime.api.RuntimeRunResponse resume(java.lang.String,java.util.Map)
+  METHOD public default com.actiongraph.runtime.api.RuntimeRunResponse resume(java.lang.String,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public abstract com.actiongraph.runtime.api.RuntimeStartResponse start(com.actiongraph.interpretation.GoalInterpretation)
   METHOD public abstract com.actiongraph.runtime.api.RuntimeStartResponse start(com.actiongraph.interpretation.GoalInterpretation,java.util.Map)
+  METHOD public default com.actiongraph.runtime.api.RuntimeStartResponse start(com.actiongraph.interpretation.GoalInterpretation,java.util.Map,com.actiongraph.identity.RunPrincipal)
   METHOD public abstract com.actiongraph.runtime.api.RuntimeStartResponse start(java.lang.String)
   METHOD public abstract com.actiongraph.runtime.api.RuntimeStartResponse start(java.lang.String,java.util.Map)
   METHOD public abstract com.actiongraph.runtime.api.RuntimeStartResponse start(java.lang.String,java.util.Map,java.util.Map)
+  METHOD public default com.actiongraph.runtime.api.RuntimeStartResponse start(java.lang.String,java.util.Map,java.util.Map,com.actiongraph.identity.RunPrincipal)
 CLASS public final record com.actiongraph.runtime.api.RuntimeInterpretationResponse
   CONSTRUCTOR public com.actiongraph.runtime.api.RuntimeInterpretationResponse(java.lang.String,java.util.Map,java.util.List,java.lang.String,boolean,java.lang.String,java.util.List)
   METHOD public java.lang.String clarificationQuestion()
@@ -1609,6 +1662,7 @@ CLASS public abstract interface com.actiongraph.policy.HumanReviewRepository
   METHOD public abstract void savePending(com.actiongraph.policy.HumanReviewTask)
 CLASS public final record com.actiongraph.policy.HumanReviewTask
   CONSTRUCTOR public com.actiongraph.policy.HumanReviewTask(java.lang.String,com.actiongraph.action.ActionId,com.actiongraph.action.ActionRiskLevel,boolean,java.util.List,java.util.Set,java.util.Map,com.actiongraph.policy.HumanReviewDecision,java.lang.String,java.lang.String,java.time.Instant,java.time.Instant)
+  CONSTRUCTOR public com.actiongraph.policy.HumanReviewTask(java.lang.String,com.actiongraph.action.ActionId,com.actiongraph.action.ActionRiskLevel,boolean,java.util.List,java.util.Set,java.util.Map,java.util.Map,com.actiongraph.identity.RunPrincipal,com.actiongraph.policy.HumanReviewDecision,java.lang.String,java.lang.String,java.time.Instant,java.time.Instant,java.util.List,int,java.util.List)
   CONSTRUCTOR public com.actiongraph.policy.HumanReviewTask(java.lang.String,com.actiongraph.action.ActionId,com.actiongraph.action.ActionRiskLevel,boolean,java.util.List,java.util.Set,java.util.Map,java.util.Map,com.actiongraph.policy.HumanReviewDecision,java.lang.String,java.lang.String,java.time.Instant,java.time.Instant,java.util.List,int,java.util.List)
   METHOD public com.actiongraph.action.ActionId actionId()
   METHOD public java.util.Map attributes()
@@ -1624,6 +1678,7 @@ CLASS public final record com.actiongraph.policy.HumanReviewTask
   METHOD public static com.actiongraph.policy.HumanReviewTask pending(com.actiongraph.policy.HumanReviewRequest,java.lang.String)
   METHOD public static com.actiongraph.policy.HumanReviewTask pending(com.actiongraph.policy.HumanReviewRequest,java.lang.String,com.actiongraph.policy.ApprovalChain)
   METHOD public java.util.List planPreview()
+  METHOD public com.actiongraph.identity.RunPrincipal requestedBy()
   METHOD public boolean requiredByAction()
   METHOD public java.lang.String reviewer()
   METHOD public com.actiongraph.action.ActionRiskLevel riskLevel()
@@ -1821,9 +1876,11 @@ CLASS public final class com.actiongraph.persistence.jdbc.PersistenceJsonCodec
   METHOD public static com.fasterxml.jackson.databind.ObjectMapper defaultObjectMapper()
   METHOD public java.util.List readActionIds(java.lang.String)
   METHOD public java.util.Set readConditions(java.lang.String)
+  METHOD public com.actiongraph.identity.RunPrincipal readRunPrincipal(java.lang.String)
   METHOD public java.util.Map readTraceData(java.lang.String)
   METHOD public java.lang.String writeActionIds(java.util.List)
   METHOD public java.lang.String writeConditions(java.util.Set)
+  METHOD public java.lang.String writeRunPrincipal(com.actiongraph.identity.RunPrincipal)
   METHOD public java.lang.String writeTraceData(java.util.Map)
 CLASS public final record com.actiongraph.persistence.jdbc.TraceRunPage
   CONSTRUCTOR public com.actiongraph.persistence.jdbc.TraceRunPage(int,int,long,java.util.List)
@@ -1865,9 +1922,10 @@ CLASS public final class com.actiongraph.persistence.jdbc.UnsupportedSuspendedRu
 
 MODULE actiongraph-spring-boot-starter
 CLASS public final class com.actiongraph.catalog.spring.ActionGraphComponentCatalogController
-  CONSTRUCTOR public com.actiongraph.catalog.spring.ActionGraphComponentCatalogController(com.actiongraph.catalog.ActionGraphComponentCatalogService,com.actiongraph.catalog.spring.ActionGraphComponentCatalogProperties)
+  CONSTRUCTOR public com.actiongraph.catalog.spring.ActionGraphComponentCatalogController(com.actiongraph.catalog.ActionGraphComponentCatalogService,com.actiongraph.catalog.spring.ActionGraphComponentCatalogProperties,com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier)
   METHOD public com.actiongraph.catalog.ActionGraphComponentCatalog catalog(org.springframework.http.HttpHeaders)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.IllegalArgumentException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleForbidden(com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleNotFound(com.actiongraph.catalog.spring.ComponentCatalogEntryNotFoundException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
   METHOD public com.actiongraph.catalog.ActionGraphComponent module(org.springframework.http.HttpHeaders,java.lang.String)
@@ -1889,17 +1947,18 @@ CLASS public class com.actiongraph.catalog.spring.ActionGraphComponentCatalogPro
   METHOD public void setTokenHeader(java.lang.String)
 CLASS public class com.actiongraph.catalog.spring.ActionGraphComponentCatalogWebAutoConfiguration
   CONSTRUCTOR public com.actiongraph.catalog.spring.ActionGraphComponentCatalogWebAutoConfiguration()
-  METHOD public com.actiongraph.catalog.spring.ActionGraphComponentCatalogController actionGraphComponentCatalogController(com.actiongraph.catalog.ActionGraphComponentCatalogService,com.actiongraph.catalog.spring.ActionGraphComponentCatalogProperties)
+  METHOD public com.actiongraph.catalog.spring.ActionGraphComponentCatalogController actionGraphComponentCatalogController(com.actiongraph.catalog.ActionGraphComponentCatalogService,com.actiongraph.catalog.spring.ActionGraphComponentCatalogProperties,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.catalog.ActionGraphComponentCatalogService actionGraphComponentCatalogService()
 CLASS public final class com.actiongraph.catalog.spring.ComponentCatalogEntryNotFoundException
   CONSTRUCTOR public com.actiongraph.catalog.spring.ComponentCatalogEntryNotFoundException(java.lang.String,java.lang.String,java.lang.String)
 CLASS public class com.actiongraph.console.export.spring.ActionGraphConsoleExportAutoConfiguration
   CONSTRUCTOR public com.actiongraph.console.export.spring.ActionGraphConsoleExportAutoConfiguration()
-  METHOD public com.actiongraph.console.export.spring.ActionGraphConsoleExportController actionGraphConsoleExportController(com.actiongraph.console.export.ActionGraphConsoleExportService,com.actiongraph.console.spring.ActionGraphConsoleProperties)
+  METHOD public com.actiongraph.console.export.spring.ActionGraphConsoleExportController actionGraphConsoleExportController(com.actiongraph.console.export.ActionGraphConsoleExportService,com.actiongraph.console.spring.ActionGraphConsoleProperties,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.console.export.ActionGraphConsoleExportService actionGraphConsoleExportService(com.actiongraph.console.ActionGraphConsoleService)
 CLASS public final class com.actiongraph.console.export.spring.ActionGraphConsoleExportController
-  CONSTRUCTOR public com.actiongraph.console.export.spring.ActionGraphConsoleExportController(com.actiongraph.console.export.ActionGraphConsoleExportService,com.actiongraph.console.spring.ActionGraphConsoleProperties)
+  CONSTRUCTOR public com.actiongraph.console.export.spring.ActionGraphConsoleExportController(com.actiongraph.console.export.ActionGraphConsoleExportService,com.actiongraph.console.spring.ActionGraphConsoleProperties,com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.IllegalArgumentException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleForbidden(com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleNotFound(com.actiongraph.console.ConsoleRunNotFoundException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
   METHOD public org.springframework.http.ResponseEntity runsCsv(org.springframework.http.HttpHeaders,java.lang.Integer,java.lang.Integer,java.lang.String,java.lang.Boolean)
@@ -1910,10 +1969,11 @@ CLASS public class com.actiongraph.console.jdbc.spring.ActionGraphConsoleJdbcAut
   METHOD public com.actiongraph.console.ConsoleRunRepository actionGraphConsoleRunRepository(javax.sql.DataSource,org.springframework.beans.factory.ObjectProvider)
 CLASS public class com.actiongraph.console.spring.ActionGraphConsoleApiAutoConfiguration
   CONSTRUCTOR public com.actiongraph.console.spring.ActionGraphConsoleApiAutoConfiguration()
-  METHOD public com.actiongraph.console.spring.ActionGraphConsoleApiController actionGraphConsoleApiController(com.actiongraph.console.ActionGraphConsoleService,com.actiongraph.console.spring.ActionGraphConsoleProperties)
+  METHOD public com.actiongraph.console.spring.ActionGraphConsoleApiController actionGraphConsoleApiController(com.actiongraph.console.ActionGraphConsoleService,com.actiongraph.console.spring.ActionGraphConsoleProperties,org.springframework.beans.factory.ObjectProvider)
 CLASS public final class com.actiongraph.console.spring.ActionGraphConsoleApiController
-  CONSTRUCTOR public com.actiongraph.console.spring.ActionGraphConsoleApiController(com.actiongraph.console.ActionGraphConsoleService,com.actiongraph.console.spring.ActionGraphConsoleProperties)
+  CONSTRUCTOR public com.actiongraph.console.spring.ActionGraphConsoleApiController(com.actiongraph.console.ActionGraphConsoleService,com.actiongraph.console.spring.ActionGraphConsoleProperties,com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.IllegalArgumentException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleForbidden(com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleNotFound(com.actiongraph.console.ConsoleRunNotFoundException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
   METHOD public com.actiongraph.console.ConsoleRunsResponse recentRuns(org.springframework.http.HttpHeaders,java.lang.Integer,java.lang.Integer,java.lang.String,java.lang.Boolean)
@@ -1946,12 +2006,13 @@ CLASS public class com.actiongraph.console.spring.ActionGraphConsoleUiAutoConfig
 CLASS public class com.actiongraph.console.studio.spring.ActionGraphStudioAutoConfiguration
   CONSTRUCTOR public com.actiongraph.console.studio.spring.ActionGraphStudioAutoConfiguration()
   METHOD public com.actiongraph.console.studio.GoalStudioService actionGraphGoalStudioService(com.actiongraph.llm.LlmClient,com.actiongraph.interpretation.GoalCatalog,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.console.studio.spring.ActionGraphStudioProperties,org.springframework.core.env.Environment)
-  METHOD public com.actiongraph.console.studio.spring.ActionGraphStudioController actionGraphStudioController(com.actiongraph.console.studio.GoalStudioService,com.actiongraph.console.studio.spring.ActionGraphStudioProperties)
+  METHOD public com.actiongraph.console.studio.spring.ActionGraphStudioController actionGraphStudioController(com.actiongraph.console.studio.GoalStudioService,com.actiongraph.console.studio.spring.ActionGraphStudioProperties,org.springframework.beans.factory.ObjectProvider)
 CLASS public final class com.actiongraph.console.studio.spring.ActionGraphStudioController
-  CONSTRUCTOR public com.actiongraph.console.studio.spring.ActionGraphStudioController(com.actiongraph.console.studio.GoalStudioService,com.actiongraph.console.studio.spring.ActionGraphStudioProperties)
+  CONSTRUCTOR public com.actiongraph.console.studio.spring.ActionGraphStudioController(com.actiongraph.console.studio.GoalStudioService,com.actiongraph.console.studio.spring.ActionGraphStudioProperties,com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier)
   METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse approve(org.springframework.http.HttpHeaders,java.lang.String,com.actiongraph.console.studio.spring.ActionGraphStudioController$ApproveSessionRequest)
   METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse create(org.springframework.http.HttpHeaders,com.actiongraph.console.studio.spring.ActionGraphStudioController$CreateSessionRequest)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.RuntimeException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleForbidden(com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
   METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse refine(org.springframework.http.HttpHeaders,java.lang.String,com.actiongraph.console.studio.spring.ActionGraphStudioController$RefineSessionRequest)
   METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse session(org.springframework.http.HttpHeaders,java.lang.String)
@@ -1992,9 +2053,10 @@ CLASS public class com.actiongraph.console.studio.spring.ActionGraphStudioProper
   METHOD public void setSourceEnv(java.lang.String)
   METHOD public void setTokenHeader(java.lang.String)
 CLASS public final class com.actiongraph.events.spring.ActionGraphEventCallbackController
-  CONSTRUCTOR public com.actiongraph.events.spring.ActionGraphEventCallbackController(com.actiongraph.events.ExternalEventGateway,com.actiongraph.spring.ActionGraphProperties)
+  CONSTRUCTOR public com.actiongraph.events.spring.ActionGraphEventCallbackController(com.actiongraph.events.ExternalEventGateway,com.actiongraph.spring.ActionGraphProperties,com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier)
   METHOD public com.actiongraph.events.spring.ActionGraphEventCallbackController$EventCallbackResponse handle(org.springframework.http.HttpHeaders,java.lang.String,java.lang.String,java.lang.String)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.IllegalArgumentException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleForbidden(com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
 CLASS public static final record com.actiongraph.events.spring.ActionGraphEventCallbackController$EventCallbackResponse
   CONSTRUCTOR public com.actiongraph.events.spring.ActionGraphEventCallbackController$EventCallbackResponse(java.lang.String,java.lang.String,com.actiongraph.events.DeliveryResult)
@@ -2006,7 +2068,7 @@ CLASS public static final record com.actiongraph.events.spring.ActionGraphEventC
   METHOD public final java.lang.String toString()
 CLASS public class com.actiongraph.events.spring.ActionGraphEventCallbackWebAutoConfiguration
   CONSTRUCTOR public com.actiongraph.events.spring.ActionGraphEventCallbackWebAutoConfiguration()
-  METHOD public com.actiongraph.events.spring.ActionGraphEventCallbackController actionGraphEventCallbackController(com.actiongraph.events.ExternalEventGateway,com.actiongraph.spring.ActionGraphProperties)
+  METHOD public com.actiongraph.events.spring.ActionGraphEventCallbackController actionGraphEventCallbackController(com.actiongraph.events.ExternalEventGateway,com.actiongraph.spring.ActionGraphProperties,org.springframework.beans.factory.ObjectProvider)
 CLASS public class com.actiongraph.governance.humanreview.spring.ActionGraphGovernanceHumanReviewAutoConfiguration
   CONSTRUCTOR public com.actiongraph.governance.humanreview.spring.ActionGraphGovernanceHumanReviewAutoConfiguration()
   METHOD public com.actiongraph.policy.ApprovalChainResolver actionGraphApprovalChainResolver(com.actiongraph.governance.spring.ActionGraphGovernanceProperties)
@@ -2048,10 +2110,11 @@ CLASS public static final class com.actiongraph.governance.spring.ActionGraphGov
   METHOD public void setBlockedKeys(java.util.Set)
   METHOD public void setEnabled(boolean)
 CLASS public final class com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiController
-  CONSTRUCTOR public com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiController(com.actiongraph.humanreview.api.HumanReviewApiService,com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiProperties)
+  CONSTRUCTOR public com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiController(com.actiongraph.humanreview.api.HumanReviewApiService,com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiProperties,com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier)
   METHOD public com.actiongraph.humanreview.api.HumanReviewTaskResponse decide(org.springframework.http.HttpHeaders,java.lang.String,java.lang.String,com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiController$HumanReviewDecisionRequest)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.IllegalArgumentException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleConflict(com.actiongraph.policy.StageAlreadyDecidedException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleForbidden(com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleNotFound(com.actiongraph.humanreview.api.HumanReviewTaskNotFoundException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
   METHOD public java.util.List pending(org.springframework.http.HttpHeaders)
@@ -2079,7 +2142,7 @@ CLASS public class com.actiongraph.humanreview.api.spring.ActionGraphHumanReview
   METHOD public void setTokenHeader(java.lang.String)
 CLASS public class com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiWebAutoConfiguration
   CONSTRUCTOR public com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiWebAutoConfiguration()
-  METHOD public com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiController actionGraphHumanReviewApiController(com.actiongraph.humanreview.api.HumanReviewApiService,com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiProperties)
+  METHOD public com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiController actionGraphHumanReviewApiController(com.actiongraph.humanreview.api.HumanReviewApiService,com.actiongraph.humanreview.api.spring.ActionGraphHumanReviewApiProperties,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.humanreview.api.HumanReviewApiService actionGraphHumanReviewApiService(com.actiongraph.policy.HumanReviewRepository)
 CLASS public class com.actiongraph.humanreview.jdbc.spring.ActionGraphHumanReviewJdbcAutoConfiguration
   CONSTRUCTOR public com.actiongraph.humanreview.jdbc.spring.ActionGraphHumanReviewJdbcAutoConfiguration()
@@ -2090,10 +2153,11 @@ CLASS public class com.actiongraph.humanreview.spring.ActionGraphHumanReviewAuto
   METHOD public com.actiongraph.policy.HumanReviewPolicy actionGraphHumanReviewPolicy(com.actiongraph.policy.HumanReviewRepository,com.actiongraph.policy.ApprovalChainResolver)
   METHOD public com.actiongraph.policy.HumanReviewRepository actionGraphHumanReviewRepository()
 CLASS public final class com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController
-  CONSTRUCTOR public com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController(com.actiongraph.policy.HumanReviewCallbackHandler,com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackProperties)
+  CONSTRUCTOR public com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController(com.actiongraph.policy.HumanReviewCallbackHandler,com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackProperties,com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier)
   METHOD public com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController$HumanReviewCallbackResponse handle(org.springframework.http.HttpHeaders,com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController$HumanReviewCallbackRequest)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.IllegalArgumentException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleConflict(com.actiongraph.policy.StageAlreadyDecidedException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleForbidden(com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleNotFound(java.lang.IllegalStateException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
 CLASS public static final record com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController$HumanReviewCallbackRequest
@@ -2132,7 +2196,7 @@ CLASS public class com.actiongraph.humanreview.spring.ActionGraphHumanReviewCall
   METHOD public void setTokenHeader(java.lang.String)
 CLASS public class com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackWebAutoConfiguration
   CONSTRUCTOR public com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackWebAutoConfiguration()
-  METHOD public com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController actionGraphHumanReviewCallbackController(com.actiongraph.policy.HumanReviewCallbackHandler,com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackProperties)
+  METHOD public com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackController actionGraphHumanReviewCallbackController(com.actiongraph.policy.HumanReviewCallbackHandler,com.actiongraph.humanreview.spring.ActionGraphHumanReviewCallbackProperties,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.policy.HumanReviewCallbackHandler actionGraphHumanReviewCallbackHandler(com.actiongraph.policy.HumanReviewRepository)
 CLASS public class com.actiongraph.jdbc.spring.ActionGraphJdbcAutoConfiguration
   CONSTRUCTOR public com.actiongraph.jdbc.spring.ActionGraphJdbcAutoConfiguration()
@@ -2180,8 +2244,9 @@ CLASS public final class com.actiongraph.observability.spring.MicrometerObservat
   CONSTRUCTOR public com.actiongraph.observability.spring.MicrometerObservationSink(io.micrometer.core.instrument.MeterRegistry)
   METHOD public void observe(com.actiongraph.observability.ObservationEvent)
 CLASS public final class com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController
-  CONSTRUCTOR public com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController(com.actiongraph.runtime.api.ActionGraphRuntimeOperations,com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiProperties)
+  CONSTRUCTOR public com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController(com.actiongraph.runtime.api.ActionGraphRuntimeOperations,com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiProperties,com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.IllegalArgumentException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleForbidden(com.actiongraph.controlplane.auth.ForbiddenControlPlaneAccessException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleNotClaimable(com.actiongraph.runtime.SuspendedRunNotClaimableException)
   METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
   METHOD public com.actiongraph.runtime.api.RuntimeInterpretationResponse interpret(org.springframework.http.HttpHeaders,com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController$RuntimeGoalRequest)
@@ -2209,7 +2274,7 @@ CLASS public class com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiPrope
   METHOD public void setTraceHeaders(java.util.List)
 CLASS public class com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiWebAutoConfiguration
   CONSTRUCTOR public com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiWebAutoConfiguration()
-  METHOD public com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController actionGraphRuntimeApiController(com.actiongraph.runtime.api.ActionGraphRuntimeOperations,com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiProperties)
+  METHOD public com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController actionGraphRuntimeApiController(com.actiongraph.runtime.api.ActionGraphRuntimeOperations,com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiProperties,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.runtime.api.ActionGraphRuntimeApiService actionGraphRuntimeApiService(com.actiongraph.ActionGraph,com.actiongraph.interpretation.GoalInterpreter)
 CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphAutoConfiguration()
@@ -2217,6 +2282,8 @@ CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   METHOD public com.actiongraph.action.ActionRegistry actionGraphActionRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.DataMaskingPolicy actionGraphDataMaskingPolicy()
   METHOD public com.actiongraph.llm.LlmClient actionGraphDeepSeekLlmClient(com.actiongraph.spring.ActionGraphProperties)
+  METHOD public com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier actionGraphEndpointAccessVerifier(com.actiongraph.spring.ActionGraphProperties,com.actiongraph.spring.security.RunPrincipalResolver)
+  METHOD public org.springframework.beans.factory.SmartInitializingSingleton actionGraphEndpointSecurityWarning(com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.events.EventWaitSweeper actionGraphEventWaitSweeper(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.action.ActionRegistry)
   METHOD public org.springframework.context.SmartLifecycle actionGraphEventWaitSweeperLifecycle(com.actiongraph.events.EventWaitSweeper,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.runtime.GoapExecutor actionGraphExecutor(com.actiongraph.planning.Planner,com.actiongraph.policy.ExecutionPolicyGuard,com.actiongraph.policy.HumanReviewPolicy,com.actiongraph.trace.TraceRepository,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.policy.DataMaskingPolicy,com.actiongraph.policy.ReviewAttributeContributor,com.actiongraph.observability.ObservationSink,com.actiongraph.spring.ActionGraphProperties)
@@ -2228,8 +2295,9 @@ CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   METHOD public com.actiongraph.llm.LlmClient actionGraphOpenAiCompatibleLlmClient(com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.PermissionPolicy actionGraphPermissionPolicy()
   METHOD public com.actiongraph.planning.Planner actionGraphPlanner(com.actiongraph.spring.ActionGraphProperties)
-  METHOD public com.actiongraph.policy.ExecutionPolicyGuard actionGraphPolicyGuard(com.actiongraph.policy.PermissionPolicy)
+  METHOD public com.actiongraph.policy.ExecutionPolicyGuard actionGraphPolicyGuard(com.actiongraph.policy.PermissionPolicy,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.ReviewAttributeContributor actionGraphReviewAttributeContributor()
+  METHOD public com.actiongraph.spring.security.RunPrincipalResolver actionGraphRunPrincipalResolver(com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.durability.RunRecoverer actionGraphRunRecoverer(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.action.ActionRegistry,com.actiongraph.spring.ActionGraphProperties)
   METHOD public org.springframework.context.SmartLifecycle actionGraphRunRecovererLifecycle(com.actiongraph.durability.RunRecoverer,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.runtime.SuspendedRunRepository actionGraphSuspendedRunRepository()
@@ -2245,9 +2313,16 @@ CLASS public class com.actiongraph.spring.ActionGraphProperties
   METHOD public com.actiongraph.spring.ActionGraphProperties$GoalsProperties getGoals()
   METHOD public com.actiongraph.spring.ActionGraphProperties$LlmProperties getLlm()
   METHOD public com.actiongraph.spring.ActionGraphProperties$PlannerProperties getPlanner()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$SecurityProperties getSecurity()
   METHOD public com.actiongraph.spring.ActionGraphProperties$SeedersProperties getSeeders()
   METHOD public com.actiongraph.spring.ActionGraphProperties$SeedingProperties getSeeding()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ValidationProperties getValidation()
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ActionRoleProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ActionRoleProperties()
+  METHOD public java.lang.String getActionId()
+  METHOD public java.util.List getAnyOf()
+  METHOD public void setActionId(java.lang.String)
+  METHOD public void setAnyOf(java.util.List)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ActionsProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ActionsProperties()
   METHOD public boolean isAutoRegisterAnnotated()
@@ -2274,6 +2349,23 @@ CLASS public static final class com.actiongraph.spring.ActionGraphProperties$Dur
   METHOD public void setRecovererPeriod(java.time.Duration)
   METHOD public void setRecovery(com.actiongraph.durability.RecoveryPolicy)
   METHOD public void setStaleAfter(java.time.Duration)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$EndpointScopesProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$EndpointScopesProperties()
+  METHOD public java.util.List getConsole()
+  METHOD public java.util.List getEvents()
+  METHOD public java.util.List getHumanReview()
+  METHOD public java.util.List getRuntimeApi()
+  METHOD public java.util.List getStudio()
+  METHOD public void setConsole(java.util.List)
+  METHOD public void setEvents(java.util.List)
+  METHOD public void setHumanReview(java.util.List)
+  METHOD public void setRuntimeApi(java.util.List)
+  METHOD public void setStudio(java.util.List)
+CLASS public static final enum com.actiongraph.spring.ActionGraphProperties$EndpointSecurityMode
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$EndpointSecurityMode OAUTH2
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$EndpointSecurityMode SHARED_SECRET
+  METHOD public static com.actiongraph.spring.ActionGraphProperties$EndpointSecurityMode valueOf(java.lang.String)
+  METHOD public static com.actiongraph.spring.ActionGraphProperties$EndpointSecurityMode[] values()
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$EventsProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$EventsProperties()
   METHOD public com.actiongraph.spring.ActionGraphProperties$CallbackEndpointProperties getCallbackEndpoint()
@@ -2361,12 +2453,29 @@ CLASS public static final enum com.actiongraph.spring.ActionGraphProperties$LlmP
   FIELD public static final com.actiongraph.spring.ActionGraphProperties$LlmProvider OPENAI_COMPATIBLE
   METHOD public static com.actiongraph.spring.ActionGraphProperties$LlmProvider valueOf(java.lang.String)
   METHOD public static com.actiongraph.spring.ActionGraphProperties$LlmProvider[] values()
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$OAuth2Properties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$OAuth2Properties()
+  METHOD public java.lang.String getClientIdClaim()
+  METHOD public java.lang.String getDelegationChainClaim()
+  METHOD public java.lang.String getFallbackClientIdClaim()
+  METHOD public java.lang.String getRolesClaim()
+  METHOD public void setClientIdClaim(java.lang.String)
+  METHOD public void setDelegationChainClaim(java.lang.String)
+  METHOD public void setFallbackClientIdClaim(java.lang.String)
+  METHOD public void setRolesClaim(java.lang.String)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$PlannerProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$PlannerProperties()
   METHOD public int getMaxDepth()
   METHOD public int getMaxExpansions()
   METHOD public void setMaxDepth(int)
   METHOD public void setMaxExpansions(int)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$SecurityProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$SecurityProperties()
+  METHOD public java.util.List getActionRoles()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$EndpointScopesProperties getEndpoints()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$EndpointSecurityMode getMode()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$OAuth2Properties getOauth2()
+  METHOD public void setMode(com.actiongraph.spring.ActionGraphProperties$EndpointSecurityMode)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$SeedersProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$SeedersProperties()
   METHOD public boolean isAutoRegisterAnnotated()
@@ -2390,4 +2499,24 @@ CLASS public final class com.actiongraph.spring.SpringGoalValueConverterResolver
   CONSTRUCTOR public com.actiongraph.spring.SpringGoalValueConverterResolver(org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.interpretation.annotation.GoalValueConverterResolver)
   METHOD public com.actiongraph.interpretation.annotation.GoalValueConverter resolve(java.lang.Class)
   METHOD public java.util.Optional resolveForType(java.lang.Class)
+CLASS public final class com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier
+  CONSTRUCTOR public com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier(com.actiongraph.spring.ActionGraphProperties,com.actiongraph.spring.security.RunPrincipalResolver)
+  METHOD public com.actiongraph.identity.RunPrincipal verify(com.actiongraph.spring.security.ActionGraphEndpointGroup,com.actiongraph.controlplane.auth.SharedSecretTokenProperties,java.util.function.Function,java.lang.String)
+CLASS public final class com.actiongraph.spring.security.ActionGraphEndpointAccessVerifiers
+  METHOD public static com.actiongraph.spring.security.ActionGraphEndpointAccessVerifier getOrSharedSecretDefault(org.springframework.beans.factory.ObjectProvider)
+CLASS public final enum com.actiongraph.spring.security.ActionGraphEndpointGroup
+  FIELD public static final com.actiongraph.spring.security.ActionGraphEndpointGroup CONSOLE
+  FIELD public static final com.actiongraph.spring.security.ActionGraphEndpointGroup EVENTS
+  FIELD public static final com.actiongraph.spring.security.ActionGraphEndpointGroup HUMAN_REVIEW
+  FIELD public static final com.actiongraph.spring.security.ActionGraphEndpointGroup RUNTIME_API
+  FIELD public static final com.actiongraph.spring.security.ActionGraphEndpointGroup STUDIO
+  METHOD public static com.actiongraph.spring.security.ActionGraphEndpointGroup valueOf(java.lang.String)
+  METHOD public static com.actiongraph.spring.security.ActionGraphEndpointGroup[] values()
+CLASS public abstract interface com.actiongraph.spring.security.RunPrincipalResolver
+  METHOD public default java.util.Set currentScopes()
+  METHOD public abstract com.actiongraph.identity.RunPrincipal resolve()
+CLASS public final class com.actiongraph.spring.security.SpringSecurityRunPrincipalResolver
+  CONSTRUCTOR public com.actiongraph.spring.security.SpringSecurityRunPrincipalResolver(com.actiongraph.spring.ActionGraphProperties$OAuth2Properties)
+  METHOD public java.util.Set currentScopes()
+  METHOD public com.actiongraph.identity.RunPrincipal resolve()
 

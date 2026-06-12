@@ -12,6 +12,119 @@ available for pilots, documented, and tested, but they are intentionally outside
 the post-1.0 binary compatibility freeze until at least one minor release proves
 the shape in real integrations.
 
+## 0. Identity And Endpoint Security
+
+`RunPrincipal` is the run identity contract. It answers who initiated a run,
+which client system carried the request, and which delegation chain was involved.
+The core runtime keeps this explicit: application code can pass a principal to
+`ActionGraph.start(...)`, `ActionGraph.chat(...)`, `ActionGraph.resume(...)`, or
+the lower-level `GoapExecutor` overloads. When no principal is supplied,
+ActionGraph uses `RunPrincipal.anonymous()` and existing behavior is unchanged.
+
+```java
+RunPrincipal principal = new RunPrincipal(
+        "user:alice",
+        "loan-portal",
+        List.of("branch-teller"),
+        Map.of("roles", "maker")
+);
+
+RunResult result = actionGraph.start(
+        "loan.precheck",
+        Map.of("applicationId", "LN-1001"),
+        principal
+);
+```
+
+The principal is a property of the run. It is persisted in suspended snapshots
+and reused after human review, external event delivery, and crash recovery. The
+actor that moves a run forward is recorded separately as `actedBy` in trace
+events such as `RUN_RESUMED` and `EVENT_DELIVERED`.
+
+Actions can read the initiating principal from their `ExecutionContext`:
+
+```java
+public ActionResult execute(ExecutionContext context) {
+    RunPrincipal principal = context.principal();
+    auditService.noteInitiator(context.runId(), principal.subject());
+    return ActionResult.ok();
+}
+```
+
+`PermissionPolicy` has a principal-aware default method. Existing two-argument
+policies still work because the new method delegates to the old one by default.
+New policies can connect to an enterprise IAM system without changing the
+runtime:
+
+```java
+class IamPermissionPolicy implements PermissionPolicy {
+    @Override
+    public boolean canExecute(Action action, Blackboard blackboard, RunPrincipal principal) {
+        return iam.canInvoke(principal.subject(), action.id().value());
+    }
+}
+```
+
+For a minimal built-in role gate, configure any-of action roles. Roles are read
+from `RunPrincipal.attributes()["roles"]` as a comma-separated value.
+
+```yaml
+actiongraph:
+  security:
+    action-roles:
+      - action-id: loan.approval.submit
+        any-of: [checker, supervisor]
+```
+
+Spring Boot users can upgrade control-plane endpoints from shared-secret
+development mode to OAuth2 resource-server mode. Shared-secret remains the
+default for local development and emits a startup warning. OAuth2 mode requires
+`spring-boot-starter-oauth2-resource-server` on the application classpath.
+
+```yaml
+actiongraph:
+  security:
+    mode: oauth2
+    oauth2:
+      roles-claim: roles
+      client-id-claim: azp
+      fallback-client-id-claim: client_id
+    endpoints:
+      runtime-api: [actiongraph.runtime]
+      human-review: [actiongraph.human-review]
+      events: [actiongraph.events]
+      console: [actiongraph.console]
+      studio: [actiongraph.studio]
+```
+
+The starter's default `RunPrincipalResolver` reads Spring Security's current
+authentication. For JWT authentication, `sub` becomes `RunPrincipal.subject`,
+`azp` or `client_id` becomes `clientId`, the configured roles claim becomes
+`attributes["roles"]`, and `scope`/`SCOPE_...` authorities are used for endpoint
+scope checks. Applications with a gateway or proprietary IAM can replace the
+resolver with a Bean:
+
+```java
+@Bean
+RunPrincipalResolver runPrincipalResolver(EnterpriseSecurityContext security) {
+    return new RunPrincipalResolver() {
+        @Override
+        public RunPrincipal resolve() {
+            return security.currentPrincipal();
+        }
+
+        @Override
+        public Set<String> currentScopes() {
+            return security.currentScopes();
+        }
+    };
+}
+```
+
+Core never reads `SecurityContext`, ThreadLocal state, HTTP headers, or JWT
+claims directly. Those concerns stay in the Spring adapter so non-web, batch,
+message consumer, and Java 8 control-plane clients can pass identity explicitly.
+
 ## 1. Contribution Packaging
 
 `ActionGraphContribution` is the packaging SPI for a business domain. A
