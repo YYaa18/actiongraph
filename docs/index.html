@@ -3,61 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ActionGraph | Governed Java Agent Runtime</title>
-<meta name="description" content="ActionGraph 是面向 Java 企业业务系统的类型化 GOAP Agent 框架，用两注解金路径、schema 自动绑定、确定性规划、人审恢复、补偿、审计与控制面能力把自然语言目标安全落到业务 Action。">
-<meta name="theme-color" content="#143c27">
+<title>ActionGraph | Governed Action Graph Runtime for Java</title>
+<meta name="description" content="ActionGraph 是面向 Java 企业系统的 Governed Action Graph Runtime。它用 Goal schema、确定性 GOAP 规划、RunPrincipal、人审、事件等待、JDBC 恢复、控制面、OpenTelemetry 和解释评测，把大模型意图安全落到业务 Action。">
+<meta name="theme-color" content="#123c2a">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ActionGraph">
-<meta property="og:title" content="ActionGraph — Governed Java Agent Runtime">
-<meta property="og:description" content="类型化 GOAP Agent 运行时：两注解接入、schema 自动绑定、确定性规划、多级人审、Saga 补偿、防篡改审计。LLM 负责理解目标，业务系统拥有最终裁决权。">
+<meta property="og:title" content="ActionGraph | Governed Action Graph Runtime for Java">
+<meta property="og:description" content="让模型解释目标，让 Java 运行时掌控计划、权限、审批、补偿、恢复、审计和评测。">
 <meta property="og:image" content="assets/actiongraph-hero.jpg">
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ActionGraph — Governed Java Agent Runtime">
-<meta name="twitter:description" content="类型化 GOAP Agent 运行时：schema 自动绑定、确定性规划、多级人审、Saga 补偿、防篡改审计。">
+<meta name="twitter:title" content="ActionGraph | Governed Action Graph Runtime for Java">
+<meta name="twitter:description" content="面向企业 Agent 执行的 Java Action Graph Runtime。">
 <meta name="twitter:image" content="assets/actiongraph-hero.jpg">
 <link rel="canonical" href="./">
-<link rel="preload" as="image" href="assets/actiongraph-hero.jpg" fetchpriority="high">
 <link rel="icon" href="assets/actiongraph-mark.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="assets/actiongraph-hero.jpg" fetchpriority="high">
 <style>
   :root {
-    --page: #ffffff;
-    --section: #f6f8fa;
-    --section-strong: #eef4f7;
-    --surface: #ffffff;
-    --ink: #12211b;
-    --ink-2: #24342d;
-    --muted: #5f6f68;
-    --faint: #84918b;
-    --line: #dbe4df;
-    --line-strong: #b9c9c1;
-    --green: #20a05b;
-    --green-strong: #0f7d43;
-    --green-soft: #e5f6ed;
-    --blue: #2467d6;
-    --blue-soft: #e8f0ff;
-    --amber: #c97b13;
-    --amber-soft: #fff3df;
-    --coral: #c94e4e;
+    --page: #fbfcfb;
+    --paper: #ffffff;
+    --ink: #102019;
+    --ink-soft: #293a32;
+    --muted: #5f6d66;
+    --faint: #84938c;
+    --line: #dce5e0;
+    --line-strong: #bdcbc4;
+    --green: #159052;
+    --green-strong: #0e6f3f;
+    --green-soft: #e3f5eb;
+    --blue: #2d65c7;
+    --blue-soft: #e9f0ff;
+    --amber: #b87312;
+    --amber-soft: #fff3dd;
+    --coral: #b94c48;
     --coral-soft: #fff0ee;
-    --code-bg: #101914;
-    --code-text: #e8f3ee;
-    --code-dim: #96a79e;
-    --code-green: #7ee29b;
-    --code-blue: #8db8ff;
-    --code-amber: #ffd07a;
+    --slate: #13221b;
+    --slate-2: #1c2d25;
+    --code: #101914;
+    --code-text: #e8f4ee;
+    --code-dim: #98aaa0;
+    --code-green: #83e6a4;
+    --code-blue: #94bdff;
+    --code-amber: #ffd27a;
     --radius: 8px;
-    --shadow: 0 18px 60px rgba(20, 40, 32, 0.12);
     --max: 1180px;
-    --header: 72px;
+    --header: 74px;
+    --shadow: 0 18px 54px rgba(15, 32, 24, 0.12);
   }
 
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+  html { scroll-behavior: smooth; scroll-padding-top: 92px; }
   body {
     margin: 0;
-    color: var(--ink);
     background: var(--page);
+    color: var(--ink);
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     font-size: 16px;
     line-height: 1.65;
@@ -66,8 +66,24 @@
 
   a { color: inherit; text-decoration: none; }
   p { margin: 0; }
-  code, pre {
-    font-family: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  code, pre { font-family: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace; }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    padding: 10px 16px;
+    color: #fff;
+    background: var(--green-strong);
+    border-radius: 0 0 8px 0;
+    font-weight: 800;
+  }
+  .skip-link:focus { left: 0; }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--green-strong);
+    outline-offset: 2px;
+    border-radius: 6px;
   }
 
   .site-header {
@@ -75,8 +91,8 @@
     top: 0;
     z-index: 50;
     min-height: var(--header);
-    background: rgba(255, 255, 255, 0.92);
-    border-bottom: 1px solid rgba(219, 228, 223, 0.9);
+    background: rgba(251, 252, 251, 0.92);
+    border-bottom: 1px solid rgba(220, 229, 224, 0.95);
     backdrop-filter: blur(16px);
   }
 
@@ -87,20 +103,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 28px;
+    gap: 22px;
   }
 
-  .brand {
-    display: inline-flex;
-    align-items: center;
-    flex: 0 0 auto;
-  }
-
-  .brand-logo {
-    display: block;
-    width: 184px;
-    height: auto;
-  }
+  .brand { display: inline-flex; align-items: center; flex: 0 0 auto; }
+  .brand-logo { display: block; width: 184px; height: auto; }
 
   .nav-links {
     display: flex;
@@ -109,67 +116,41 @@
     gap: 2px;
     color: var(--muted);
     font-size: 14px;
-    font-weight: 650;
+    font-weight: 720;
   }
 
   .nav-links a {
-    padding: 10px 12px;
+    padding: 10px 10px;
     border-radius: 7px;
   }
-
   .nav-links a:hover,
   .nav-links a.active {
     color: var(--green-strong);
     background: var(--green-soft);
   }
 
-  .nav-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
+  .nav-actions { display: flex; align-items: center; gap: 10px; }
   .button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     min-height: 42px;
-    padding: 10px 16px;
+    padding: 10px 15px;
     border: 1px solid var(--line-strong);
     border-radius: 7px;
-    color: var(--ink);
     background: #fff;
+    color: var(--ink);
     font-size: 14px;
-    font-weight: 760;
+    font-weight: 780;
     line-height: 1;
     cursor: pointer;
-    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
+    transition: transform 160ms ease, border-color 160ms ease, color 160ms ease, background 160ms ease;
   }
-
-  .button:hover {
-    transform: translateY(-1px);
-    border-color: var(--green);
-    color: var(--green-strong);
-  }
-
-  .button.primary {
-    border-color: #143c27;
-    background: #143c27;
-    color: #fff;
-  }
-
-  .button.primary:hover {
-    background: var(--green-strong);
-    border-color: var(--green-strong);
-    color: #fff;
-  }
-
-  .button svg {
-    width: 17px;
-    height: 17px;
-    stroke-width: 2;
-  }
+  .button:hover { transform: translateY(-1px); border-color: var(--green); color: var(--green-strong); }
+  .button.primary { background: var(--slate); border-color: var(--slate); color: #fff; }
+  .button.primary:hover { background: var(--green-strong); border-color: var(--green-strong); color: #fff; }
+  .button svg { width: 17px; height: 17px; stroke-width: 2; }
 
   .mobile-toggle {
     display: none;
@@ -181,1188 +162,552 @@
     color: var(--ink);
     cursor: pointer;
   }
-
-  .mobile-toggle svg {
-    width: 20px;
-    height: 20px;
-    stroke-width: 2;
-  }
-
-  .skip-link {
-    position: absolute;
-    left: -9999px;
-    top: 0;
-    z-index: 100;
-    padding: 10px 16px;
-    background: #143c27;
-    color: #fff;
-    border-radius: 0 0 8px 0;
-    font-weight: 700;
-  }
-
-  .skip-link:focus {
-    left: 0;
-  }
-
-  a:focus-visible,
-  button:focus-visible {
-    outline: 2px solid var(--green-strong);
-    outline-offset: 2px;
-    border-radius: 6px;
-  }
-
-  .hero-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 18px;
-  }
-
-  .hero-badges span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.85);
-    color: var(--ink-2);
-    font-size: 12.5px;
-    font-weight: 700;
-    letter-spacing: 0;
-  }
-
-  .hero-badges span::before {
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-  }
-
-  .stats-band {
-    border-bottom: 1px solid var(--line);
-    background: var(--section);
-  }
-
-  .stats-inner {
-    width: min(var(--max), calc(100% - 40px));
-    margin: 0 auto;
-    padding: 34px 0 30px;
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
-  }
-
-  .stat-cell b {
-    display: block;
-    font-size: clamp(24px, 2.6vw, 34px);
-    font-weight: 800;
-    color: var(--green-strong);
-    line-height: 1.15;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .stat-cell span {
-    display: block;
-    margin-top: 4px;
-    color: var(--muted);
-    font-size: 13.5px;
-    line-height: 1.5;
-  }
-
-  .discipline-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 22px;
-    padding-top: 18px;
-    border-top: 1px solid var(--line);
-  }
-
-  .discipline-row span {
-    padding: 5px 12px;
-    border-radius: 999px;
-    background: var(--green-soft);
-    color: var(--green-strong);
-    font-size: 12.5px;
-    font-weight: 700;
-  }
-
-  .footer-legal {
-    width: min(var(--max), calc(100% - 40px));
-    margin: 0 auto;
-    padding: 18px 0 26px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 20px;
-    align-items: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
-    color: var(--faint);
-    font-size: 13px;
-  }
-
-  .footer-legal a {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .act {
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    gap: 18px;
-    margin-top: 34px;
-  }
-
-  .act-no {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    background: #143c27;
-    color: #9df0b2;
-    font-weight: 800;
-    font-size: 18px;
-  }
-
-  .act h3 { margin: 8px 0 8px; font-size: clamp(17px, 1.8vw, 21px); }
-  .act > div > p { color: var(--muted); margin-bottom: 12px; max-width: 62em; }
-
-  .code-pair {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    align-items: start;
-  }
-
-  .code-pair > *,
-  .act > *,
-  .setup-grid > *,
-  .video-grid > *,
-  .journey > *,
-  .journey-step > *,
-  .adoption > *,
-  .split > *,
-  .code-grid > *,
-  .control-plane > *,
-  .model-grid > *,
-  .feature-grid > *,
-  .ops-grid > *,
-  .sample-grid > *,
-  .doc-grid > *,
-  .module-grid > * {
-    min-width: 0;
-  }
-
-  .code-pair .label {
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-transform: uppercase;
-    color: var(--faint);
-    margin: 0 0 6px 2px;
-  }
-
-  pre.snippet, pre.output {
-    margin: 0;
-    padding: 14px 16px;
-    border-radius: var(--radius);
-    overflow-x: auto;
-    max-width: 100%;
-    font-size: 12.5px;
-    line-height: 1.6;
-  }
-
-  pre.snippet { background: var(--code-bg); color: var(--code-text); }
-  pre.snippet .code-dim { color: var(--code-dim); }
-  pre.output {
-    background: #f3f7f4;
-    border: 1px solid var(--line);
-    color: #29372f;
-  }
-
-  pre.output .ok { color: var(--green-strong); font-weight: 700; }
-  pre.output .warn { color: var(--amber); font-weight: 700; }
-  pre.output .bad { color: var(--coral); font-weight: 700; }
-
-  .tutorial-run {
-    margin-top: 30px;
-    border-left: 4px solid var(--green);
-    background: var(--green-soft);
-    border-radius: 0 var(--radius) var(--radius) 0;
-    padding: 16px 20px;
-  }
-
-  .tutorial-run a {
-    color: var(--green-strong);
-    font-weight: 760;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .journey {
-    display: grid;
-    gap: 14px;
-    margin-top: 24px;
-  }
-
-  .journey-step {
-    display: grid;
-    grid-template-columns: minmax(0, 0.36fr) minmax(0, 1fr);
-    gap: 24px;
-    padding: 22px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: #fff;
-  }
-
-  .journey-meta {
-    color: var(--green-strong);
-    font-size: 13px;
-    font-weight: 820;
-    text-transform: uppercase;
-  }
-
-  .journey-step h3 {
-    margin: 8px 0 0;
-    color: var(--ink);
-    font-size: 21px;
-    line-height: 1.28;
-  }
-
-  .journey-step p {
-    color: var(--muted);
-    font-size: 15px;
-    line-height: 1.66;
-  }
-
-  .journey-step ul {
-    margin: 12px 0 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 8px;
-  }
-
-  .journey-step li {
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
-  .journey-step li strong {
-    color: var(--ink);
-  }
-
-  .evidence-block {
-    margin-top: 26px;
-  }
-
-  @media (max-width: 880px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .code-pair { grid-template-columns: 1fr; }
-    .act { grid-template-columns: 1fr; }
-    .act-no { width: 36px; height: 36px; font-size: 15px; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
-  }
+  .mobile-toggle svg { width: 20px; height: 20px; stroke-width: 2; }
 
   .hero {
     position: relative;
-    min-height: min(720px, calc(100vh - 88px));
+    min-height: min(700px, calc(100vh - 120px));
     overflow: hidden;
     border-bottom: 1px solid var(--line);
     background-image:
-      linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 38%, rgba(255, 255, 255, 0.36) 68%, rgba(255, 255, 255, 0.08) 100%),
+      linear-gradient(90deg, rgba(251, 252, 251, 0.99) 0%, rgba(251, 252, 251, 0.92) 43%, rgba(251, 252, 251, 0.38) 72%, rgba(251, 252, 251, 0.08) 100%),
       url("assets/actiongraph-hero.jpg");
     background-size: cover;
     background-position: center right;
   }
-
   .hero::after {
     content: "";
     position: absolute;
     inset: auto 0 0 0;
-    height: 130px;
+    height: 150px;
+    background: linear-gradient(to bottom, rgba(251,252,251,0), var(--page));
     pointer-events: none;
-    background: linear-gradient(to bottom, rgba(255,255,255,0), #fff);
   }
-
   .hero-inner {
     position: relative;
     z-index: 1;
     width: min(var(--max), calc(100% - 40px));
     margin: 0 auto;
-    padding: 86px 0 94px;
+    padding: 76px 0 66px;
   }
-
-  .hero-copy {
-    max-width: 660px;
-  }
-
-  h1 {
-    margin: 0;
-    color: #0f1e17;
-    font-size: 72px;
-    line-height: 0.98;
-    font-weight: 860;
+  .hero-copy { max-width: 760px; }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+    padding: 5px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.78);
+    color: var(--green-strong);
+    font-size: 12px;
+    font-weight: 840;
+    text-transform: uppercase;
     letter-spacing: 0;
   }
-
-  .hero-subtitle {
-    margin-top: 28px;
-    color: var(--ink-2);
-    font-size: 24px;
-    line-height: 1.38;
-    font-weight: 760;
-    max-width: 640px;
+  .eyebrow::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
   }
-
+  h1 {
+    margin: 22px 0 0;
+    color: #0e1d16;
+    font-size: clamp(54px, 8vw, 92px);
+    line-height: 0.95;
+    font-weight: 880;
+    letter-spacing: 0;
+  }
+  .hero-subtitle {
+    max-width: 710px;
+    margin-top: 28px;
+    color: var(--ink-soft);
+    font-size: clamp(22px, 3vw, 34px);
+    line-height: 1.2;
+    font-weight: 820;
+  }
   .hero-body {
-    margin-top: 20px;
+    max-width: 650px;
+    margin-top: 22px;
     color: var(--muted);
     font-size: 18px;
-    line-height: 1.75;
-    max-width: 610px;
+    line-height: 1.78;
   }
-
-  .hero-actions {
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+  .hero-badges {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 32px;
+    gap: 8px;
+    margin-top: 42px;
   }
-
-  .hero-command {
-    margin-top: 46px;
-    display: grid;
-    grid-template-columns: minmax(0, 420px) minmax(0, 300px);
-    gap: 14px;
-    align-items: stretch;
-  }
-
-  .terminal {
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: var(--code-bg);
-    box-shadow: var(--shadow);
-  }
-
-  .terminal pre {
-    font-size: 12px;
-  }
-
-  .terminal-head {
-    height: 36px;
-    display: flex;
+  .hero-badges span {
+    display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 0 14px;
-    background: #17241d;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    min-height: 30px;
+    padding: 5px 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.82);
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    font-weight: 740;
   }
 
-  .dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: #6b7d72;
-  }
-
-  .dot:nth-child(1) { background: #f36d64; }
-  .dot:nth-child(2) { background: #f2bd52; }
-  .dot:nth-child(3) { background: #4fc979; }
-
-  pre {
-    margin: 0;
-    padding: 18px 20px 20px;
-    color: var(--code-text);
-    overflow-x: auto;
-    font-size: 13px;
-    line-height: 1.58;
-  }
-
-  .code-key { color: var(--code-blue); }
-  .code-string { color: var(--code-green); }
-  .code-comment { color: var(--code-dim); }
-  .code-anno { color: var(--code-amber); }
-
-  .hero-facts {
-    display: grid;
-    gap: 10px;
-  }
-
-  .fact {
-    min-height: 74px;
-    padding: 14px 16px;
-    border: 1px solid rgba(185, 201, 193, 0.75);
-    border-radius: var(--radius);
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(10px);
-  }
-
-  .fact b {
-    display: block;
-    color: var(--ink);
-    font-size: 14px;
-    line-height: 1.2;
-  }
-
-  .fact span {
-    display: block;
-    margin-top: 4px;
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.45;
-  }
-
-  .proof-strip {
+  .signal-band {
     position: relative;
     z-index: 2;
     width: min(var(--max), calc(100% - 40px));
-    margin: -50px auto 0;
+    margin: -58px auto 0;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     border: 1px solid var(--line);
     border-radius: var(--radius);
     overflow: hidden;
-    background: #fff;
-    box-shadow: 0 16px 50px rgba(18, 33, 27, 0.09);
+    background: var(--paper);
+    box-shadow: var(--shadow);
   }
-
-  .proof {
+  .signal {
+    min-height: 140px;
     padding: 24px;
-    min-height: 122px;
     border-right: 1px solid var(--line);
   }
+  .signal:last-child { border-right: 0; }
+  .signal strong { display: block; color: var(--ink); font-size: 15px; line-height: 1.35; }
+  .signal span { display: block; margin-top: 9px; color: var(--muted); font-size: 14px; line-height: 1.58; }
 
-  .proof:last-child { border-right: 0; }
-
-  .proof strong {
-    display: block;
-    font-size: 15px;
-    color: var(--ink);
-  }
-
-  .proof span {
-    display: block;
-    margin-top: 8px;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
-  .section {
-    padding: 94px 0;
-  }
-
-  .section.tight { padding: 72px 0; }
-  .section.alt { background: var(--section); }
-  .section.tint { background: linear-gradient(180deg, #f5faf7, #eef5f2); }
-
-  .wrap {
-    width: min(var(--max), calc(100% - 40px));
-    margin: 0 auto;
-  }
-
+  .section { padding: 96px 0; }
+  .section.tight { padding: 74px 0; }
+  .section.alt { background: #f3f7f5; }
+  .section.dark { background: var(--slate); color: #e8f4ee; }
+  .wrap { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
   .section-head {
     display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
-    gap: 48px;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr);
+    gap: 52px;
     align-items: end;
-    margin-bottom: 42px;
+    margin-bottom: 44px;
   }
-
   .section-head.full {
     display: block;
-    max-width: 820px;
+    max-width: 840px;
   }
-
   h2 {
     margin: 0;
     color: var(--ink);
-    font-size: 44px;
-    line-height: 1.08;
-    font-weight: 840;
+    font-size: clamp(34px, 4.5vw, 52px);
+    line-height: 1.07;
+    font-weight: 860;
     letter-spacing: 0;
   }
-
+  .dark h2 { color: #fff; }
   .section-lead {
     color: var(--muted);
     font-size: 18px;
     line-height: 1.75;
   }
-
-  .split {
-    display: grid;
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-    gap: 42px;
-    align-items: start;
-  }
-
-  .prose {
-    color: var(--muted);
-    font-size: 17px;
-    line-height: 1.75;
-  }
-
-  .prose p + p { margin-top: 16px; }
-  .prose strong { color: var(--ink); }
-  .prose a {
-    color: var(--green-strong);
-    font-weight: 760;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .problem-list {
-    display: grid;
-    gap: 12px;
-  }
-
-  .problem {
-    display: grid;
-    grid-template-columns: 30px 1fr;
-    gap: 12px;
-    padding: 18px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: #fff;
-  }
-
-  .problem svg {
-    width: 22px;
-    height: 22px;
-    margin-top: 2px;
-    color: var(--coral);
-    stroke-width: 2;
-  }
-
-  .problem b {
-    display: block;
-    color: var(--ink);
-    font-size: 15px;
-    line-height: 1.35;
-  }
-
-  .problem span {
-    display: block;
-    margin-top: 5px;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.58;
-  }
-
-  .model-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 28px;
-  }
-
-  .model-step {
-    position: relative;
-    min-height: 190px;
-    padding: 18px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: #fff;
-  }
-
-  .model-step::after {
-    content: "";
-    position: absolute;
-    top: 40px;
-    right: -13px;
-    width: 14px;
-    height: 1px;
-    background: var(--line-strong);
-  }
-
-  .model-step:last-child::after { display: none; }
-
-  .step-number {
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: var(--green-soft);
-    color: var(--green-strong);
-    font-size: 14px;
-    font-weight: 820;
-  }
-
-  .model-step h3,
-  .feature h3,
-  .sample h3,
-  .doc-link h3,
-  .module-card h3,
-  .ops-card h3 {
-    margin: 16px 0 8px;
-    color: var(--ink);
-    font-size: 18px;
-    line-height: 1.25;
-    letter-spacing: 0;
-  }
-
-  .model-step p,
-  .feature p,
-  .sample p,
-  .doc-link p,
-  .module-card p,
-  .ops-card p {
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.6;
-  }
-
-  .code-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-    gap: 18px;
-    align-items: start;
-  }
-
-  .code-panel {
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: var(--code-bg);
-    box-shadow: var(--shadow);
-  }
-
-  .code-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 42px;
-    padding: 0 14px 0 16px;
-    color: #d9e8df;
-    background: #17241d;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    font-size: 13px;
-    font-weight: 760;
-  }
-
-  .copy-btn {
-    min-width: 34px;
-    height: 28px;
-    display: inline-grid;
-    place-items: center;
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 6px;
-    color: #d9e8df;
-    background: rgba(255,255,255,0.04);
-    cursor: pointer;
-  }
-
-  .copy-btn:hover { border-color: rgba(126, 226, 155, 0.58); color: var(--code-green); }
-  .copy-btn svg { width: 15px; height: 15px; stroke-width: 2; }
-
-  .setup-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    margin: 0 0 18px;
-  }
-
-  .setup-card {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: #fff;
-    padding: 20px;
-  }
-
-  .setup-card span {
-    display: inline-grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--green-soft);
-    color: var(--green-strong);
-    font-size: 13px;
-    font-weight: 820;
-  }
-
-  .setup-card b {
-    display: block;
-    margin-top: 14px;
-    color: var(--ink);
-    font-size: 16px;
-    line-height: 1.35;
-  }
-
-  .setup-card p {
-    margin-top: 8px;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.6;
-  }
-
-  .config-block {
-    margin-top: 22px;
-  }
-
-  .video-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-    align-items: start;
-  }
-
-  .video-card {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: #fff;
-    overflow: hidden;
-  }
-
-  .video-frame {
-    position: relative;
-    background: #0f1e17;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .video-frame video {
-    display: block;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: #0f1e17;
-  }
-
-  .video-content {
-    padding: 22px;
-  }
-
-  .video-kicker {
-    display: inline-flex;
-    align-items: center;
-    min-height: 26px;
-    padding: 4px 9px;
-    border-radius: 6px;
-    background: var(--green-soft);
-    color: var(--green-strong);
-    font-size: 12px;
-    font-weight: 780;
-  }
-
-  .video-kicker.blue {
-    background: var(--blue-soft);
-    color: var(--blue);
-  }
-
-  .video-card h3 {
-    margin: 14px 0 8px;
-    color: var(--ink);
-    font-size: 22px;
-    line-height: 1.25;
-  }
-
-  .video-card p {
-    color: var(--muted);
-    font-size: 15px;
-    line-height: 1.65;
-  }
-
-  .video-points {
-    display: grid;
-    gap: 8px;
-    margin: 16px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .video-points li {
-    display: grid;
-    grid-template-columns: 18px 1fr;
-    gap: 8px;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
-  .video-points li::before {
-    content: "";
-    width: 8px;
-    height: 8px;
-    margin-top: 8px;
-    border-radius: 50%;
-    background: var(--green);
-  }
-
-  .video-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 18px;
-  }
-
-  .config-block h3,
-  .journey-intro h3,
-  .evidence-block h3 {
-    margin: 0 0 10px;
-    color: var(--ink);
-    font-size: 22px;
-    line-height: 1.25;
-  }
-
-  .config-block > p,
-  .journey-intro p,
-  .evidence-block > p {
-    max-width: 820px;
-    color: var(--muted);
-    font-size: 15px;
-    line-height: 1.68;
-  }
-
-  .table-wrap {
-    margin-top: 16px;
-    overflow-x: auto;
-    border-radius: var(--radius);
-  }
-
-  .feature-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .feature,
-  .sample,
-  .doc-link,
-  .module-card,
-  .ops-card {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: #fff;
-    padding: 22px;
-  }
-
-  .feature-icon {
-    width: 38px;
-    height: 38px;
-    display: grid;
-    place-items: center;
-    border-radius: 8px;
-    background: var(--green-soft);
-    color: var(--green-strong);
-  }
-
-  .feature-icon.blue { background: var(--blue-soft); color: var(--blue); }
-  .feature-icon.amber { background: var(--amber-soft); color: var(--amber); }
-  .feature-icon.coral { background: var(--coral-soft); color: var(--coral); }
-
-  .feature-icon svg {
-    width: 21px;
-    height: 21px;
-    stroke-width: 2;
-  }
-
-  .module-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .module-card {
-    padding: 20px;
-    min-height: 190px;
-  }
-
-  .module-tag {
-    display: inline-flex;
-    align-items: center;
-    min-height: 26px;
-    padding: 4px 9px;
-    border-radius: 6px;
-    background: var(--section);
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 760;
-  }
-
-  .module-tag.runtime { background: var(--green-soft); color: var(--green-strong); }
-  .module-tag.java8 { background: var(--blue-soft); color: var(--blue); }
-  .module-tag.ops { background: var(--amber-soft); color: var(--amber); }
-
-  .matrix {
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: #fff;
-  }
-
-  .matrix th,
-  .matrix td {
-    padding: 15px 16px;
-    text-align: left;
-    border-bottom: 1px solid var(--line);
-    vertical-align: top;
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
-  .matrix th {
-    color: var(--ink);
-    background: var(--section);
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0;
-  }
-
-  .matrix tr:last-child td { border-bottom: 0; }
-  .matrix code {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 5px;
-    color: var(--ink);
-    background: #eef4f1;
-    font-size: 12.5px;
-  }
-
-  .control-plane {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 18px;
-  }
-
-  .endpoint-list {
-    display: grid;
-    gap: 8px;
-    margin-top: 16px;
-  }
-
-  .endpoint {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    min-height: 42px;
-    padding: 10px 12px;
-    border-radius: 7px;
-    background: var(--section);
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.45;
-  }
-
-  .method {
-    flex: 0 0 auto;
-    min-width: 44px;
-    padding: 2px 6px;
-    border-radius: 5px;
-    text-align: center;
-    color: var(--green-strong);
-    background: var(--green-soft);
-    font-size: 11px;
-    font-weight: 820;
-  }
-
-  .method.post {
-    color: var(--blue);
-    background: var(--blue-soft);
-  }
-
-  .endpoint code {
-    color: var(--ink);
-    background: transparent;
-    font-size: 13px;
-    overflow-wrap: anywhere;
-  }
-
-  .ops-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .ops-card {
-    min-height: 220px;
-    padding: 24px;
-  }
-
-  .ops-card ul,
-  .sample ul {
-    margin: 16px 0 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 8px;
-  }
-
-  .ops-card li,
-  .sample li {
-    position: relative;
-    padding-left: 18px;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
-  .ops-card li::before,
-  .sample li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.65em;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-  }
-
-  .sample-grid,
+  .dark .section-lead { color: #b7c9bf; }
+
+  .position-grid,
+  .governance-grid,
+  .standard-grid,
+  .module-grid,
   .doc-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
   }
 
-  .sample h3,
-  .doc-link h3 {
-    margin-top: 0;
+  .card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper);
+    padding: 24px;
+    min-width: 0;
   }
+  .card h3 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 20px;
+    line-height: 1.28;
+    letter-spacing: 0;
+  }
+  .card p {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 14.5px;
+    line-height: 1.65;
+  }
+  .card .tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    margin-bottom: 16px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: var(--green-soft);
+    color: var(--green-strong);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .tag.blue { background: var(--blue-soft); color: var(--blue); }
+  .tag.amber { background: var(--amber-soft); color: var(--amber); }
+  .tag.coral { background: var(--coral-soft); color: var(--coral); }
 
-  .run-command {
-    display: block;
+  .contract-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
     margin-top: 18px;
-    padding: 12px;
-    border-radius: 7px;
-    color: #d9e8df;
-    background: var(--code-bg);
-    overflow-x: auto;
-    font-size: 12.5px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--line);
+  }
+  .contract-cell {
+    padding: 22px;
+    background: #fff;
+  }
+  .contract-cell b {
+    display: block;
+    color: var(--ink);
+    font-size: 15px;
+  }
+  .contract-cell span {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 14px;
     line-height: 1.55;
   }
 
-  .doc-link {
-    min-height: 150px;
-    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-  }
-
-  .doc-link:hover {
-    transform: translateY(-2px);
-    border-color: var(--green);
-    box-shadow: 0 12px 34px rgba(20, 40, 32, 0.1);
-  }
-
-  .doc-link .path {
-    display: block;
-    margin-top: 14px;
-    color: var(--green-strong);
-    font-size: 13px;
-    font-weight: 760;
-    overflow-wrap: anywhere;
-  }
-
-  .adoption {
+  .timeline {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .stage {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr) minmax(0, 0.86fr);
+    gap: 22px;
+    align-items: start;
+    padding: 24px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    overflow: hidden;
     background: #fff;
   }
-
-  .adoption-step {
-    min-height: 196px;
-    padding: 24px;
-    border-right: 1px solid var(--line);
+  .stage-no {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: var(--slate);
+    color: #9df0b2;
+    font-size: 18px;
+    font-weight: 860;
   }
+  .stage h3 {
+    margin: 2px 0 8px;
+    color: var(--ink);
+    font-size: 21px;
+    line-height: 1.25;
+  }
+  .stage p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+  .stage ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 7px;
+  }
+  .stage li {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .stage li strong { color: var(--ink); }
 
-  .adoption-step:last-child { border-right: 0; }
-  .adoption-step b {
+  .runtime-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 18px;
+    align-items: start;
+  }
+  .pipeline {
+    display: grid;
+    gap: 10px;
+  }
+  .pipeline-step {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+  }
+  .pipeline-step span {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--green-soft);
+    color: var(--green-strong);
+    font-size: 13px;
+    font-weight: 860;
+  }
+  .pipeline-step b {
     display: block;
     color: var(--ink);
     font-size: 16px;
     line-height: 1.35;
   }
-
-  .adoption-step span {
-    display: block;
-    margin-top: 10px;
+  .pipeline-step p {
+    margin-top: 4px;
     color: var(--muted);
     font-size: 14px;
     line-height: 1.58;
   }
 
-  .callout {
-    margin-top: 28px;
-    padding: 24px;
-    border: 1px solid var(--line-strong);
-    border-left: 4px solid var(--green);
+  .code-panel {
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--code);
+    box-shadow: var(--shadow);
+  }
+  .code-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 42px;
+    padding: 0 14px 0 16px;
+    background: #18251f;
+    color: #dcebe3;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .copy-btn {
+    width: 34px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    color: #dcebe3;
+    cursor: pointer;
+  }
+  .copy-btn svg { width: 15px; height: 15px; stroke-width: 2; }
+  .copy-btn:hover { color: var(--code-green); border-color: rgba(131,230,164,0.55); }
+  pre {
+    margin: 0;
+    padding: 20px;
+    overflow-x: auto;
+    color: var(--code-text);
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+  .code-anno { color: var(--code-amber); }
+  .code-key { color: var(--code-blue); }
+  .code-string { color: var(--code-green); }
+  .code-dim { color: var(--code-dim); }
+
+  .governance-grid .card,
+  .standard-grid .card { min-height: 220px; }
+  .dark .card {
+    background: var(--slate-2);
+    border-color: rgba(255,255,255,0.12);
+  }
+  .dark .card h3 { color: #fff; }
+  .dark .card p { color: #b7c9bf; }
+
+  .matrix-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius);
+  }
+  .matrix-wrap.top-space { margin-top: 28px; }
+  .matrix {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--line);
+    background: #fff;
+  }
+  .matrix th,
+  .matrix td {
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .matrix th {
+    color: var(--ink);
+    background: #eef4f1;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0;
+  }
+  .matrix tr:last-child td { border-bottom: 0; }
+  .matrix code {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: #edf4f0;
+    color: var(--ink);
+    font-size: 12.5px;
+  }
+
+  .module-card {
+    min-height: 164px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    padding: 20px;
+  }
+  .module-card span {
+    display: inline-flex;
+    min-height: 24px;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #f0f4f2;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 820;
+  }
+  .module-card h3 {
+    margin: 14px 0 8px;
+    color: var(--ink);
+    font-size: 17px;
+    line-height: 1.3;
+  }
+  .module-card p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.58;
+  }
+
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .video-card {
+    overflow: hidden;
+    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: #fff;
   }
-
-  .callout strong {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--ink);
-    font-size: 18px;
+  .video-frame {
+    background: var(--slate);
+    border-bottom: 1px solid var(--line);
   }
-
-  .callout p {
+  .video-frame video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--slate);
+  }
+  .video-content { padding: 22px; }
+  .video-content h3 {
+    margin: 12px 0 8px;
+    color: var(--ink);
+    font-size: 22px;
+    line-height: 1.25;
+  }
+  .video-content p {
     color: var(--muted);
     font-size: 15px;
-    line-height: 1.68;
+    line-height: 1.65;
+  }
+  .video-content .button { margin-top: 18px; }
+
+  .doc-link {
+    display: block;
+    min-height: 158px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    padding: 22px;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .doc-link:hover {
+    transform: translateY(-2px);
+    border-color: var(--green);
+    box-shadow: 0 12px 34px rgba(15, 32, 24, 0.1);
+  }
+  .doc-link h3 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 18px;
+    line-height: 1.28;
+  }
+  .doc-link p {
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .doc-link .path {
+    display: block;
+    margin-top: 14px;
+    color: var(--green-strong);
+    font-size: 12.5px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
   }
 
   .footer {
-    padding: 56px 0;
-    color: #d7e4dd;
     background: #101914;
+    color: #dcebe3;
+    padding: 56px 0 0;
   }
-
   .footer-grid {
     width: min(var(--max), calc(100% - 40px));
     margin: 0 auto;
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) repeat(3, minmax(0, 0.45fr));
+    grid-template-columns: minmax(0, 1.05fr) repeat(3, minmax(0, 0.48fr));
     gap: 36px;
   }
-
-  .footer b {
-    color: #fff;
-    font-size: 15px;
-  }
-
-  .footer p,
-  .footer a {
-    color: #aebfb6;
-    font-size: 14px;
-    line-height: 1.75;
-  }
-
-  .footer a {
-    display: block;
-    margin-top: 8px;
-  }
-
-  .footer a:hover { color: #9df0b2; }
-
   .footer-brand {
     display: inline-flex;
     align-items: center;
     gap: 12px;
     margin-bottom: 10px;
   }
-
-  .footer-brand img {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
+  .footer-brand img { width: 34px; height: 34px; border-radius: 8px; }
+  .footer b { color: #fff; font-size: 15px; }
+  .footer p, .footer a {
+    color: #aebfb6;
+    font-size: 14px;
+    line-height: 1.75;
   }
+  .footer a { display: block; margin-top: 8px; }
+  .footer a:hover { color: #9df0b2; }
+  .footer-legal {
+    width: min(var(--max), calc(100% - 40px));
+    margin: 34px auto 0;
+    padding: 18px 0 26px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.14);
+    color: #8fa399;
+    font-size: 13px;
+  }
+  .footer-legal a { text-decoration: underline; text-underline-offset: 3px; }
 
   @media (max-width: 1120px) {
     .nav-links { display: none; }
@@ -1374,6 +719,7 @@
       top: 78px;
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
       padding: 10px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -1381,137 +727,98 @@
       box-shadow: var(--shadow);
     }
     .site-header.menu-open .nav-links a { padding: 12px; }
-    .hero-command { grid-template-columns: 1fr; max-width: 640px; }
-    .proof-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .proof:nth-child(2) { border-right: 0; }
-    .proof:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .signal-band,
+    .contract-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .signal:nth-child(2) { border-right: 0; }
+    .signal:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
     .section-head,
-    .split,
-    .code-grid,
-    .control-plane { grid-template-columns: 1fr; }
-    .model-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .model-step::after { display: none; }
-    .feature-grid,
-    .video-grid,
-    .ops-grid,
-    .sample-grid,
+    .runtime-grid { grid-template-columns: 1fr; }
+    .stage { grid-template-columns: 72px minmax(0, 1fr); }
+    .stage ul { grid-column: 2; }
+    .position-grid,
+    .governance-grid,
+    .standard-grid,
+    .module-grid,
     .doc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .adoption { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .adoption-step:nth-child(2) { border-right: 0; }
-    .adoption-step:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
     .footer-grid { grid-template-columns: 1fr 1fr; }
   }
 
   @media (max-width: 720px) {
     :root { --header: 66px; }
     .nav-shell { width: min(calc(100% - 28px), var(--max)); gap: 12px; }
-    .nav-actions .button:not(.primary) { display: none; }
     .brand-logo { width: 156px; }
+    .nav-actions .button:not(.primary) { display: none; }
     .hero {
-      min-height: 690px;
+      min-height: 640px;
       background-image:
-        linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.96) 48%, rgba(255,255,255,0.72) 78%, rgba(255,255,255,0.28) 100%),
+        linear-gradient(180deg, rgba(251,252,251,0.99) 0%, rgba(251,252,251,0.95) 48%, rgba(251,252,251,0.68) 80%, rgba(251,252,251,0.24) 100%),
         url("assets/actiongraph-hero.jpg");
       background-size: 980px auto;
       background-position: 62% bottom;
     }
     .hero-inner {
       width: min(calc(100% - 28px), var(--max));
-      padding: 50px 0 290px;
+      padding: 48px 0 154px;
     }
-    h1 { font-size: 46px; line-height: 1.02; }
-    .hero-subtitle { font-size: 20px; line-height: 1.42; }
     .hero-body { font-size: 16px; }
-    .hero-command { display: none; }
-    .proof-strip {
+    .hero-badges { margin-top: 26px; }
+    .signal-band {
       width: min(calc(100% - 28px), var(--max));
       margin-top: -36px;
       grid-template-columns: 1fr;
     }
-    .proof {
+    .signal,
+    .signal:nth-child(2),
+    .signal:nth-child(-n+2) {
       min-height: 0;
-      padding: 18px;
       border-right: 0;
       border-bottom: 1px solid var(--line);
+      padding: 18px;
     }
-    .proof:last-child { border-bottom: 0; }
+    .signal:last-child { border-bottom: 0; }
     .section { padding: 68px 0; }
     .section.tight { padding: 54px 0; }
     .wrap { width: min(calc(100% - 28px), var(--max)); }
-    .section-head { gap: 18px; margin-bottom: 28px; }
-    h2 { font-size: 32px; line-height: 1.12; }
-    .section-lead { font-size: 16px; line-height: 1.65; }
-    .model-grid,
-    .setup-grid,
-    .video-grid,
-    .feature-grid,
-    .ops-grid,
-    .sample-grid,
-    .doc-grid,
+    .position-grid,
+    .governance-grid,
+    .standard-grid,
     .module-grid,
-    .adoption,
+    .doc-grid,
+    .video-grid,
+    .contract-row,
     .footer-grid { grid-template-columns: 1fr; }
-    .adoption-step,
-    .adoption-step:nth-child(2) {
-      border-right: 0;
-      border-bottom: 1px solid var(--line);
-    }
-    .adoption-step:last-child { border-bottom: 0; }
-    .matrix {
-      display: block;
-      overflow-x: auto;
-      border-radius: var(--radius);
-    }
-    .table-wrap .matrix { min-width: 760px; }
-    .journey-step { grid-template-columns: 1fr; gap: 12px; }
-    .nav-actions .button.primary { padding: 10px 12px; }
+    .stage { grid-template-columns: 1fr; gap: 14px; }
+    .stage ul { grid-column: auto; }
+    .matrix { min-width: 760px; }
+    .site-header.menu-open .nav-links { grid-template-columns: 1fr; left: 14px; right: 14px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      scroll-behavior: auto !important;
-      transition: none !important;
-      animation: none !important;
-    }
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
 <body>
-<a class="skip-link" href="#why">跳到主要内容</a>
+<a class="skip-link" href="#positioning">跳到主要内容</a>
 <header class="site-header" id="top">
   <div class="nav-shell">
     <a class="brand" href="#top" aria-label="ActionGraph 首页">
       <img class="brand-logo" src="assets/actiongraph-logo.svg" alt="ActionGraph">
     </a>
     <nav class="nav-links" aria-label="主导航">
-      <a href="#why">价值定位</a>
-      <a href="#model">运行模型</a>
-      <a href="#quickstart">金路径</a>
+      <a href="#positioning">定位</a>
+      <a href="#path">金路径</a>
+      <a href="#runtime">运行模型</a>
+      <a href="#governance">治理</a>
+      <a href="#standardization">标准化</a>
+      <a href="#modules">生态</a>
       <a href="#videos">视频</a>
-      <a href="#capabilities">核心能力</a>
-      <a href="#modules">模块</a>
-      <a href="#control-plane">控制面</a>
-      <a href="#samples">案例</a>
       <a href="#docs">文档</a>
     </nav>
     <div class="nav-actions">
-      <a class="button" href="../README.zh-CN.md">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-        </svg>
-        README
-      </a>
-      <a class="button primary" href="#quickstart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-          <path d="M5 12h14"></path>
-          <path d="M13 5l7 7-7 7"></path>
-        </svg>
-        开始接入
-      </a>
+      <a class="button" href="../README.zh-CN.md">README</a>
+      <a class="button primary" href="quick-start.html">快速开始</a>
       <button class="mobile-toggle" type="button" aria-label="打开导航" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
           <path d="M4 7h16"></path>
@@ -1527,341 +834,367 @@
   <section class="hero" aria-label="ActionGraph">
     <div class="hero-inner">
       <div class="hero-copy">
+        <span class="eyebrow">Governed Action Graph Runtime</span>
         <h1>ActionGraph</h1>
-        <p class="hero-subtitle">把企业业务能力组织成可规划、可审批、可恢复的 Agent Action 图。</p>
-        <p class="hero-body">ActionGraph 让模型只负责理解目标，让 Java 业务系统定义可执行能力、参数契约和治理边界。两注解即可进入金路径，运行时负责 schema 绑定、确定性规划、人审挂起、补偿恢复与审计证据。</p>
+        <p class="hero-subtitle">让大模型解释目标，让 Java 运行时掌控业务执行。</p>
+        <p class="hero-body">ActionGraph 把 Goal、Action、Condition、Policy、Trace 组织成一个可治理的 Agent 执行边界。模型不能直接生成计划、调用数据库或绕过审批；业务系统通过类型化 Action 图保留最终控制权。</p>
         <div class="hero-actions">
-          <a class="button primary" href="#quickstart">
+          <a class="button primary" href="quick-start.html">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
               <path d="M5 12h14"></path>
               <path d="M13 5l7 7-7 7"></path>
             </svg>
             进入金路径
           </a>
-          <a class="button" href="#model">
+          <a class="button" href="#standardization">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path d="M3 12h6l3-8 3 16 3-8h3"></path>
+              <path d="M4 19V5"></path>
+              <path d="M4 19h16"></path>
+              <path d="M8 15l3-3 3 2 4-6"></path>
             </svg>
-            理解运行模型
+            查看生产标准
           </a>
         </div>
         <div class="hero-badges" aria-label="项目状态">
           <span>v0.2.0-SNAPSHOT</span>
+          <span>Java 21 Runtime</span>
+          <span>Java 8 Control-plane Client</span>
+          <span>Spring Boot Starter</span>
           <span>Apache-2.0</span>
-          <span>Java 21 运行时 · Java 8 控制面客户端</span>
-          <span>423 项自动化测试基线</span>
-        </div>
-        <div class="hero-command" aria-label="代码示例">
-          <div class="terminal">
-            <div class="terminal-head" aria-hidden="true">
-              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            </div>
-<pre><code><span class="code-anno">@ActionGraphGoal</span>(
-  type = <span class="code-string">"renewal.quote"</span>,
-  targetConditions = <span class="code-string">"renewal:APPROVAL_REQUESTED"</span>,
-  seedConditions = <span class="code-string">"renewal:CUSTOMER_ID_PRESENT"</span>,
-  schema = RenewalRequest.class)
-void renewalQuoteGoal() {}
-
-<span class="code-anno">@ActionGraphAction</span>(
-  id = <span class="code-string">"renewal.customer.load"</span>,
-  preconditions = <span class="code-string">"renewal:CUSTOMER_ID_PRESENT"</span>,
-  effects = <span class="code-string">"renewal:CUSTOMER_LOADED"</span>)
-Customer load(RenewalRequest request) {
-  <span class="code-key">return</span> customerService.load(request.customerId());
-}</code></pre>
-          </div>
-          <div class="hero-facts">
-            <div class="fact">
-              <b>两注解进入正门</b>
-              <span>Goal schema 声明参数契约，Action 声明可执行能力。</span>
-            </div>
-            <div class="fact">
-              <b>LLM 不生成 Plan</b>
-              <span>自然语言可由模型解释，执行路径由符号规划器搜索。</span>
-            </div>
-            <div class="fact">
-              <b>治理内建到运行中</b>
-              <span>审批、补偿、恢复、脱敏与 Trace 证据围绕同一个 runId 展开。</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <div class="proof-strip" aria-label="核心摘要">
-    <div class="proof">
-      <strong>Deterministic planning</strong>
-      <span>基于 Action precondition / effect 搜索路径，同样输入得到同样计划。</span>
+  <div class="signal-band" aria-label="核心契约">
+    <div class="signal">
+      <strong>目标契约</strong>
+      <span>Goal schema、配置化 Goal、Studio bundle 都进入同一个 GoalCatalog。</span>
     </div>
-    <div class="proof">
-      <strong>Schema contract</strong>
-      <span>Goal schema 自动绑定到类型化 Blackboard，常规接入无需手写 Seeder。</span>
+    <div class="signal">
+      <strong>执行契约</strong>
+      <span>确定性 GOAP planner 只看 condition/effect，每一步之后重新规划。</span>
     </div>
-    <div class="proof">
-      <strong>Human review</strong>
-      <span>需要人审的高风险步骤可多级挂起，审批后以同一 runId 原子认领恢复。</span>
+    <div class="signal">
+      <strong>治理契约</strong>
+      <span>RunPrincipal、Policy、Human Review、Compensation 和 Trace 全链路贯通。</span>
     </div>
-    <div class="proof">
-      <strong>Audit evidence</strong>
-      <span>Trace 哈希链、CSV/JSONL 导出、只读 Console read model 面向监管。</span>
+    <div class="signal">
+      <strong>运营契约</strong>
+      <span>JDBC 恢复、事件等待、Console、OTel 和解释评测服务生产治理。</span>
     </div>
   </div>
 
-  <section class="stats-band" aria-label="工程数据">
-  <div class="stats-inner">
-    <div class="stats-grid">
-      <div class="stat-cell">
-        <b>8 μs</b>
-        <span>单次规划耗时（5 步链，确定性 GOAP，JIT 预热后）</span>
-      </div>
-      <div class="stat-cell">
-        <b>≈6,000 /s</b>
-        <span>并发冒烟吞吐（200 虚拟线程共享单 executor，内存仓储）</span>
-      </div>
-      <div class="stat-cell">
-        <b>423</b>
-        <span>自动化测试基线，覆盖并发竞争、跨重启恢复、补偿与防篡改</span>
-      </div>
-      <div class="stat-cell">
-        <b>10</b>
-        <span>模块，新增需治理台账审批，公共 API 由 japicmp 快照守护</span>
-      </div>
-    </div>
-    <div class="discipline-row" aria-label="工程纪律">
-      <span>japicmp 二进制兼容检查</span>
-      <span>JSpecify 空安全标注</span>
-      <span>@Experimental / @Internal API 分级</span>
-      <span>文档一致性守卫测试</span>
-      <span>挂起恢复原子认领</span>
-      <span>Trace SHA-256 哈希链</span>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="why">
+  <section class="section" id="positioning">
     <div class="wrap">
       <div class="section-head">
-        <h2>把 Agent 能做什么，定义成可审查的工程契约。</h2>
-        <p class="section-lead">ActionGraph 面向已有核心业务系统的团队：把订单、续约、理赔、转账、审批等能力封装成 Action 图，让 Agent 能办事，同时保留企业系统需要的边界、证据和控制权。</p>
+        <h2>它不是把 LLM 接到业务系统上，而是给 Agent 执行权建立边界。</h2>
+        <p class="section-lead">ActionGraph 的核心定位是企业 Agent 执行底座。模型只产出目标类型和参数，运行时负责计划、校验、审批、恢复和审计；业务 Action 仍由 Java 服务显式声明。</p>
       </div>
-      <div class="split">
-        <div class="prose">
-          <p>在企业系统里，让 LLM 直接调 API 或写 SQL 通常不可控、不可复现，也难以审计。只做问答机器人又无法把流程办完。每个业务系统各自接 AI，则会重复建设 prompt、审批、审计、回滚和运维标准。</p>
-          <p><strong>ActionGraph 选择工程化路线：</strong>应用只暴露经过审查的 Action，Goal schema 定义参数契约，规划器只看 condition/effect，运行时每一步都经过权限、人审、runtime guard 和补偿边界。LLM 可以解释目标，但不能直接操作业务状态。</p>
-        </div>
-        <div class="problem-list" aria-label="常见方案问题">
-          <div class="problem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
-            <div><b>LLM 直连 API</b><span>计划不可复现，越权和重复副作用难以治理。</span></div>
-          </div>
-          <div class="problem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h6"></path><path d="M17 3h4v4"></path><path d="M14 10l7-7"></path></svg>
-            <div><b>只有问答机器人</b><span>能解释制度，不能稳定完成审批、下单、生成草稿等流程。</span></div>
-          </div>
-          <div class="problem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
-            <div><b>系统各自接 AI</b><span>prompt、审计、回滚、人审和运维标准分散，长期成本高。</span></div>
-          </div>
-        </div>
+      <div class="position-grid">
+        <article class="card">
+          <span class="tag coral">不是 LLM Plan Executor</span>
+          <h3>模型不决定执行步骤</h3>
+          <p>LLM 可以把自然语言解释为 GoalType 与参数，但不会生成 Action 顺序。执行路径由 GoapPlanner 根据 precondition/effect 搜索，结果可复现、可测试、可审计。</p>
+        </article>
+        <article class="card">
+          <span class="tag blue">不是流程图复刻</span>
+          <h3>每一步后都能改道</h3>
+          <p>运行态事实会写入 Blackboard，Action 执行后重新规划。核心系统失败、策略变化、外部事件到达时，不需要把所有分支提前写死成流程。</p>
+        </article>
+        <article class="card">
+          <span class="tag amber">不是控制台附属功能</span>
+          <h3>运行时先有契约，再有界面</h3>
+          <p>Console、Component Catalog、Goal Studio、HTTP clients 都是控制面；应用代码优先依赖 ActionGraph 根门面和明确的 runtime contracts。</p>
+        </article>
+      </div>
+      <div class="contract-row" aria-label="模型与运行时分工">
+        <div class="contract-cell"><b>模型输出</b><span>GoalType、参数、缺参澄清；不输出计划。</span></div>
+        <div class="contract-cell"><b>框架负责</b><span>绑定 schema、规划路径、执行 Action、管理挂起与恢复。</span></div>
+        <div class="contract-cell"><b>业务负责</b><span>领域 Action、权限语义、金额提取、实体映射和最终裁决。</span></div>
+        <div class="contract-cell"><b>运营负责</b><span>端点暴露、IAM、审计归档、评测门禁和生产观测。</span></div>
       </div>
     </div>
   </section>
 
-  <section class="section alt" id="model">
+  <section class="section alt" id="path">
     <div class="wrap">
       <div class="section-head full">
-        <h2>从自然语言到业务副作用，运行链路保持可复现。</h2>
-        <p class="section-lead">运行时把目标解释、schema 自动绑定、确定性规划、逐步执行、人审/事件挂起、恢复和补偿串成一个闭环。每一步执行后都会重新规划，因此运行时事实变化可以自动改道。</p>
+        <h2>金路径不是一个样例，而是一条可扩展的采用路线。</h2>
+        <p class="section-lead">从两注解接入到生产评测，ActionGraph 的能力按层开放。团队可以先让一个业务 Goal 跑通，再逐步加入身份、审批、持久化、控制面和解释质量治理。</p>
       </div>
-      <div class="model-grid">
-        <article class="model-step">
-          <div class="step-number">1</div>
-          <h3>解释目标</h3>
-          <p>GoalInterpreter 把用户输入映射为 GoalType 与参数。LLM 解释器可用，规则解释器可降级。</p>
+      <div class="timeline" aria-label="ActionGraph 采用路径">
+        <article class="stage">
+          <div><span class="stage-no">01</span></div>
+          <div>
+            <h3>声明目标与业务能力</h3>
+            <p>用 <code>@ActionGraphGoal(schema=...)</code> 定义目标参数契约，用 <code>@ActionGraphAction</code> 把已有 Service 方法暴露为可规划 Action。</p>
+          </div>
+          <ul>
+            <li><strong>核心 API：</strong>@GoalParameter、@GoalSchema、description</li>
+            <li><strong>结果：</strong>GoalCatalog + ActionRegistry</li>
+          </ul>
         </article>
-        <article class="model-step">
-          <div class="step-number">2</div>
-          <h3>绑定 schema</h3>
-          <p>Goal schema record 自动接收 customerId、orderId 等参数并写入类型化 Blackboard；复杂装配再使用显式 Seeder。</p>
+        <article class="stage">
+          <div><span class="stage-no">02</span></div>
+          <div>
+            <h3>让框架完成常规装配</h3>
+            <p>schema 自动 seeding 默认开启，参数按 record 绑定并写入 Blackboard。复杂引用解析使用 <code>TypedGoalValueConverter</code> 或显式 Seeder。</p>
+          </div>
+          <ul>
+            <li><strong>核心配置：</strong>actiongraph.seeding.auto</li>
+            <li><strong>逃生口：</strong>@BindGoalParams、SeedResult</li>
+          </ul>
         </article>
-        <article class="model-step">
-          <div class="step-number">3</div>
-          <h3>确定性规划</h3>
-          <p>GoapPlanner 只根据 Action 的 precondition 与 effect 搜索可达路径，不让 LLM 生成计划。</p>
+        <article class="stage">
+          <div><span class="stage-no">03</span></div>
+          <div>
+            <h3>从根门面发起运行</h3>
+            <p>业务代码调用 <code>ActionGraph.start</code>、<code>chat</code>、<code>resume</code>。需要身份时传入 <code>RunPrincipal</code>，该身份会进入策略、人审任务、挂起快照和 Trace。</p>
+          </div>
+          <ul>
+            <li><strong>入口：</strong>start / chat / resume</li>
+            <li><strong>身份：</strong>subject、clientId、delegationChain、roles</li>
+          </ul>
         </article>
-        <article class="model-step">
-          <div class="step-number">4</div>
-          <h3>受控执行</h3>
-          <p>GoapExecutor 按步骤执行，检查权限、runtime guard、金额规则与人审策略。</p>
+        <article class="stage">
+          <div><span class="stage-no">04</span></div>
+          <div>
+            <h3>把治理放进行动前</h3>
+            <p>Runtime Guard、PermissionPolicy、额度规则、人审链和补偿都在副作用发生前进入执行路径。拒绝、失败和未知结果都有明确状态。</p>
+          </div>
+          <ul>
+            <li><strong>状态：</strong>SUSPENDED_PENDING_REVIEW、DENIED_BY_POLICY</li>
+            <li><strong>保证：</strong>原子 claim resume，逆序 compensation</li>
+          </ul>
         </article>
-        <article class="model-step">
-          <div class="step-number">5</div>
-          <h3>恢复与审计</h3>
-          <p>挂起快照、外部事件、补偿栈、Trace 哈希链与 Console read model 形成可追踪证据链。</p>
+        <article class="stage">
+          <div><span class="stage-no">05</span></div>
+          <div>
+            <h3>进入生产运行形态</h3>
+            <p>JDBC 持久化 Trace、挂起快照、Memory、人审任务和 Console read model；外部事件通过 <code>ActionResult.waiting(...)</code> 恢复同一个 run。</p>
+          </div>
+          <ul>
+            <li><strong>生产域：</strong>durability、events、persistence.jdbc</li>
+            <li><strong>证据：</strong>Trace hash chain、CSV/JSONL export</li>
+          </ul>
+        </article>
+        <article class="stage">
+          <div><span class="stage-no">06</span></div>
+          <div>
+            <h3>把解释质量纳入工程门禁</h3>
+            <p>Goal Studio 只在非生产环境起草 Goal bundle，解释器用 JSONL golden set 和生产脱敏采样持续评测，观测输出可进入 Micrometer 或 OpenTelemetry。</p>
+          </div>
+          <ul>
+            <li><strong>门禁：</strong>Goal fingerprint、Action graph fingerprint</li>
+            <li><strong>评测：</strong>goalType、parameters、clarification accuracy</li>
+          </ul>
         </article>
       </div>
     </div>
   </section>
 
-  <section class="section" id="quickstart">
+  <section class="section" id="runtime">
     <div class="wrap">
       <div class="section-head">
-        <h2>接入路径：两注解定义能力，一个门面发起运行。</h2>
-        <p class="section-lead">金路径从主 starter、Goal schema、Action 注解和根门面 ActionGraph 开始。先让 start(...) 跑通，再按 L1-L4 逐步加入人审、自然语言、持久化和跨服务事件。</p>
+        <h2>运行模型保持简单：解释目标，绑定事实，规划路径，受控执行。</h2>
+        <p class="section-lead">ActionGraph 把不稳定的自然语言入口和可审计的业务执行分开。每一次运行都有 runId、principal、fingerprints、Trace 和明确的终态或挂起态。</p>
       </div>
-      <div class="setup-grid" aria-label="接入路径">
-        <article class="setup-card">
-          <span>1</span>
-          <b>引入运行时 starter</b>
-          <p>用 BOM 锁定版本，引入主 starter，默认自动扫描 Spring Bean 上的 Action 与 Goal 注解。</p>
-        </article>
-        <article class="setup-card">
-          <span>2</span>
-          <b>声明目标契约与能力</b>
-          <p>用 @ActionGraphGoal(schema=...) 声明参数契约，用 @ActionGraphAction 声明可执行业务能力。</p>
-        </article>
-        <article class="setup-card">
-          <span>3</span>
-          <b>从根门面启动</b>
-          <p>业务代码只注入 ActionGraph，调用 start、chat 或 resume；运营面 API 按需单独启用。</p>
-        </article>
-      </div>
-
-      <div class="code-grid">
-        <div class="code-panel">
-          <div class="code-title">
-            <span>build.gradle.kts</span>
-            <button class="copy-btn" type="button" data-copy="gradle" aria-label="复制 Gradle 示例">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            </button>
-          </div>
-<pre><code id="gradle">dependencies {
-  implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
-
-  implementation("com.actiongraph:actiongraph-spring-boot-starter")
-  implementation("com.actiongraph:actiongraph-llm-deepseek")
-}</code></pre>
+      <div class="runtime-grid">
+        <div class="pipeline" aria-label="运行模型">
+          <div class="pipeline-step"><span>1</span><div><b>Interpret</b><p>GoalInterpreter 输出 GoalInterpretation；缺参时返回 clarification，不启动运行。</p></div></div>
+          <div class="pipeline-step"><span>2</span><div><b>Seed</b><p>Goal schema record 或显式 Seeder 写入 Blackboard，并添加 seed conditions。</p></div></div>
+          <div class="pipeline-step"><span>3</span><div><b>Plan</b><p>GoapPlanner 基于当前 condition/effect 搜索可达路径，不读取模型生成的步骤。</p></div></div>
+          <div class="pipeline-step"><span>4</span><div><b>Execute</b><p>每个 Action 执行前检查权限、runtime guard、人审、retry、timeout 和 policy。</p></div></div>
+          <div class="pipeline-step"><span>5</span><div><b>Suspend / Resume</b><p>人审和外部事件暂停同一个 run；审批或事件到达后原子认领并恢复。</p></div></div>
+          <div class="pipeline-step"><span>6</span><div><b>Evidence</b><p>Trace、fingerprints、hash chain、Console read model 和评测采样形成证据面。</p></div></div>
         </div>
         <div class="code-panel">
           <div class="code-title">
-            <span>Schema-first Goal</span>
-            <button class="copy-btn" type="button" data-copy="adapter" aria-label="复制 Action 示例">
+            <span>Schema-first Goal + Governed Action</span>
+            <button class="copy-btn" type="button" data-copy="runtime-code" aria-label="复制代码示例">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             </button>
           </div>
-<pre><code id="adapter">@Component
-class HelloAgent {
-  @ActionGraphGoal(type = "hello.finish",
-      targetConditions = "hello:DONE",
-      seedConditions = "hello:INPUT_PRESENT",
-      schema = InputId.class)
-  void goal() {}
+<pre><code id="runtime-code"><span class="code-anno">@ActionGraphGoal</span>(
+    type = <span class="code-string">"renewal.quote"</span>,
+    description = <span class="code-string">"Prepare a renewal quote and request approval."</span>,
+    targetConditions = <span class="code-string">"renewal:APPROVAL_REQUESTED"</span>,
+    seedConditions = <span class="code-string">"renewal:CUSTOMER_ID_PRESENT"</span>,
+    schema = RenewalRequest.class)
+void renewalQuoteGoal() {}
 
-  @ActionGraphAction(id = "hello.finish",
-      preconditions = "hello:INPUT_PRESENT",
-      effects = "hello:DONE")
-  void finish(InputId input) {}
-}
-
-record InputId(
-    @GoalParameter(name = "id", description = "业务输入编号", example = "A-1")
-    String value
+record RenewalRequest(
+    <span class="code-anno">@GoalParameter</span>(name = <span class="code-string">"customerId"</span>, example = <span class="code-string">"C001"</span>)
+    String customerId
 ) {}
 
-RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code></pre>
-        </div>
-      </div>
+<span class="code-anno">@ActionGraphAction</span>(
+    id = <span class="code-string">"renewal.customer.load"</span>,
+    description = <span class="code-string">"Load customer profile for renewal."</span>,
+    preconditions = <span class="code-string">"renewal:CUSTOMER_ID_PRESENT"</span>,
+    effects = <span class="code-string">"renewal:CUSTOMER_LOADED"</span>)
+CustomerProfile load(RenewalRequest request) {
+    <span class="code-key">return</span> customerService.load(request.customerId());
+}
 
-      <div class="config-block">
-        <h3>配置属性速查</h3>
-        <p>配置以属性契约呈现，重点说明每个开关的运行语义、默认边界和生产审查要点。完整环境配置由接入应用按开发、测试和生产环境分别维护。</p>
-        <div class="table-wrap">
-          <table class="matrix">
-            <thead>
-              <tr>
-                <th>属性域</th>
-                <th>关键属性</th>
-                <th>默认语义</th>
-                <th>生产建议</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>规划器</td>
-                <td><code>planner.max-depth</code><br><code>planner.max-expansions</code></td>
-                <td>限制 GOAP 搜索深度与扩展次数，防止异常 Action 图导致无限探索。</td>
-                <td>按业务链路长度设置上限，并用测试覆盖不可达与多路径场景。</td>
-              </tr>
-              <tr>
-                <td>执行器</td>
-                <td><code>executor.max-steps</code><br><code>actions.auto-register-annotated</code></td>
-                <td>限制单次 run 的最大执行步数；可选择是否自动注册注解式 Action。</td>
-                <td>生产建议显式管理 Action 包扫描范围，避免测试或内部动作进入运行时。</td>
-              </tr>
-              <tr>
-                <td>Goal 与 Seeding</td>
-                <td><code>goals.auto-register-annotated</code><br><code>seeding.auto</code><br><code>seeders.auto-register-annotated</code></td>
-                <td>默认注册注解式 Goal，并按 schema 自动完成参数绑定与 seed conditions；显式 Seeder 仍可覆盖复杂装配。</td>
-                <td>金路径保持 <code>seeding.auto=true</code>；只有需要完全手工装配的服务才关闭自动绑定。</td>
-              </tr>
-              <tr>
-                <td>Runtime API</td>
-                <td><code>runtime.api.enabled</code><br><code>runtime.api.path</code><br><code>runtime.api.trace-headers</code></td>
-                <td>默认关闭。启用后提供 interpret、run、resume 三类运行端点。</td>
-                <td>通过网关暴露；只把 request/correlation/source 等审计头写入 Trace。</td>
-              </tr>
-              <tr>
-                <td>组件目录</td>
-                <td><code>component-catalog.enabled</code><br><code>component-catalog.path</code></td>
-                <td>默认关闭。启用后提供模块、profile、compatibility 的机器可读目录。</td>
-                <td>用于部署检查、网关治理和老系统集成，不承载运行时写操作。</td>
-              </tr>
-              <tr>
-                <td>JDBC 持久化</td>
-                <td><code>persistence.jdbc.enabled</code><br><code>suspended-run-claim-timeout</code><br><code>blackboard.allowed-packages</code></td>
-                <td>启用后可持久化 Trace、SuspendedRun、read model、Memory 与人审任务。</td>
-                <td>生产恢复挂起快照前必须收敛 Blackboard 类型白名单。</td>
-              </tr>
-              <tr>
-                <td>人审与回调</td>
-                <td><code>human-review.api.enabled</code><br><code>callback-endpoint.enabled</code><br><code>risk-based-approval-chain</code></td>
-                <td>默认关闭。启用后支持待审查询、决策写入、外部回调和风险链路由。</td>
-                <td>审批系统应校验 stage index，避免重复回调推进下一阶段。</td>
-              </tr>
-              <tr>
-                <td>Console</td>
-                <td><code>console.enabled</code><br><code>console.default-limit</code><br><code>console.max-limit</code></td>
-                <td>只读运行列表、Trace 时间线、审计链验证与 CSV/JSONL 导出。</td>
-                <td>只面向运维或审计内网暴露，不承担恢复、审批或补偿动作。</td>
-              </tr>
-              <tr>
-                <td>数据治理</td>
-                <td><code>masking.enabled</code><br><code>masking.blocked-keys</code><br><code>limits.rules[]</code></td>
-                <td>Trace 与审批预览可脱敏；金额规则可硬拒绝，并为人审动作追加升级属性。</td>
-                <td>金额提取器由业务提供；hard-limit 与 review-limit 应纳入变更审批。</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+RunPrincipal principal = <span class="code-key">new</span> RunPrincipal(
+    <span class="code-string">"sales-user-42"</span>, <span class="code-string">"crm-gateway"</span>, List.of(), Map.of(<span class="code-string">"roles"</span>, <span class="code-string">"sales"</span>));
 
-      <div class="callout">
-        <strong>ActionGraph 正门保持窄。</strong>
-        <p>业务发起面只有 start、chat、resume。常规目标由 schema 自动绑定，显式 Seeder 只处理多对象写入、业务实体映射或自定义 seed conditions。审批决策、事件投递、恢复扫描和 Console 查询属于运营面。</p>
+RunResult result = actionGraph.start(
+    <span class="code-string">"renewal.quote"</span>, Map.of(<span class="code-string">"customerId"</span>, <span class="code-string">"C001"</span>), principal);</code></pre>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="section tint" id="videos">
+  <section class="section dark" id="governance">
     <div class="wrap">
       <div class="section-head">
-        <h2>两支视频，分别讲清价值判断和技术落地。</h2>
-        <p class="section-lead">第一支面向业务负责人，用业务语言说明为什么 ActionGraph 值得推广；第二支面向技术团队，放慢节奏解释 Action 契约、配置域、运行效果、人审恢复和审计证据。</p>
+        <h2>治理不是运行之后补日志，而是在 Action 执行前做裁决。</h2>
+        <p class="section-lead">ActionGraph 将身份、权限、金额、人审、补偿、外部事件和审计链路放到同一个运行模型里，避免每个业务系统重复做一套脆弱的 AI 执行治理。</p>
       </div>
+      <div class="governance-grid">
+        <article class="card">
+          <span class="tag blue">Identity</span>
+          <h3>RunPrincipal 全链路传播</h3>
+          <p>start、chat、resume 都支持 principal overload。subject、clientId、delegation chain 和 roles 可进入 ExecutionContext、policy、人审任务、挂起快照和 Trace。</p>
+        </article>
+        <article class="card">
+          <span class="tag">Security</span>
+          <h3>Spring endpoint security bridge</h3>
+          <p>控制面端点支持 shared-secret 开发模式和 OAuth2 resource-server 模式。Runtime、Console、Studio、Human Review、Events 各自配置 scope。</p>
+        </article>
+        <article class="card">
+          <span class="tag amber">Policy</span>
+          <h3>角色门禁与额度策略</h3>
+          <p><code>security.action-roles[]</code> 为 action 配置 any-of 角色；治理模块提供金额提取、hard-limit、review-limit、脱敏和风险审批链路由。</p>
+        </article>
+        <article class="card">
+          <span class="tag coral">Human Review</span>
+          <h3>高风险 Action 挂起</h3>
+          <p>requiresHumanReview 的 Action 创建审批任务并保存快照。审批通过后同一 runId 恢复；拒绝后进入补偿路径，不继续猜测。</p>
+        </article>
+        <article class="card">
+          <span class="tag blue">Event Wait</span>
+          <h3>等待外部系统，而不是阻塞线程</h3>
+          <p><code>ActionResult.waiting(...)</code> 将运行挂起为 <code>SUSPENDED_WAITING_EVENT</code>。EventApplier 折叠回调数据，运行继续使用同一 Trace 序列。</p>
+        </article>
+        <article class="card">
+          <span class="tag">Audit</span>
+          <h3>Trace、hash chain 与只读 Console</h3>
+          <p>Trace 事件按 runId 形成证据链，Console 只读查询和 CSV/JSONL 导出面向审计归档，不执行、恢复、审批或补偿运行。</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-      <div class="video-grid" aria-label="ActionGraph 视频演示">
+  <section class="section" id="standardization">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>从运行能力到推广标准，ActionGraph 已进入工程化阶段。</h2>
+        <p class="section-lead">当前版本将 Goal 生产、解释质量、端点安全、运行观测和 API 兼容性纳入工程体系。团队不再只验证单点功能，而是用一套可审计、可评测、可升级的标准化机制推动落地。</p>
+      </div>
+      <div class="standard-grid">
+        <article class="card">
+          <span class="tag blue">DX4</span>
+          <h3>配置化 Goal 与 bundle 指纹</h3>
+          <p><code>actiongraph.goals.definitions[]</code> 和 bundle import 将外部 Goal 声明编译为 GoalDefinition。action graph fingerprint 与 bundle fingerprint 用于上线一致性检查。</p>
+        </article>
+        <article class="card">
+          <span class="tag">Goal Studio</span>
+          <h3>非生产环境起草 Goal</h3>
+          <p>Studio 只生成 Goal declarations，不生成计划或 Action 顺序。它会自动验证可达性、尝试修复诊断、计算风险 profile，并导出 approved YAML bundle。</p>
+        </article>
+        <article class="card">
+          <span class="tag amber">Interpretation Quality</span>
+          <h3>解释器评测飞轮</h3>
+          <p>JSONL golden set 评估 goal type、parameters 和 clarification accuracy；生产采样保存 masked input、outcome、fallback 和 parse failure，用于持续标注。</p>
+        </article>
+        <article class="card">
+          <span class="tag coral">Observability</span>
+          <h3>Micrometer 与 OpenTelemetry GenAI</h3>
+          <p>ObservationSink 支持 Spring 自动装配。OTel sink 写入 GenAI semantic convention 属性，但不记录 prompts、模型输出、request body、tokens 或 Blackboard 原值。</p>
+        </article>
+        <article class="card">
+          <span class="tag blue">Compatibility</span>
+          <h3>公共 API 快照与稳定性标注</h3>
+          <p>public/protected surface 由 snapshot 和 japicmp 守护。<code>@Experimental</code> 与 <code>@Internal</code> 明确区分试点 API 和非应用代码依赖面。</p>
+        </article>
+        <article class="card">
+          <span class="tag">Control Plane</span>
+          <h3>Java 8 客户端与组件目录</h3>
+          <p>老系统可只引入 <code>actiongraph-control-plane-api</code>，通过 HTTP 调用 Runtime、Catalog、Human Review 和 Console，不把现代运行时 jar 放进旧 JVM。</p>
+        </article>
+      </div>
+      <div class="matrix-wrap top-space">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th>配置域</th>
+              <th>关键属性</th>
+              <th>作用边界</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Goal 生产</td>
+              <td><code>goals.definitions[]</code><br><code>goals.bundle.locations</code><br><code>studio.enabled</code></td>
+              <td>注解、配置和 Studio bundle 共用 GoalDefinition 入口；Studio 默认禁止 prod / production profile。</td>
+            </tr>
+            <tr>
+              <td>Schema 绑定</td>
+              <td><code>seeding.auto</code><br><code>seeders.auto-register-annotated</code><br><code>goals.auto-register-annotated</code></td>
+              <td>常规 Goal 自动绑定 schema record；显式 Seeder 只处理多对象写入和业务语义转换。</td>
+            </tr>
+            <tr>
+              <td>端点安全</td>
+              <td><code>security.mode</code><br><code>security.endpoints.*</code><br><code>security.action-roles[]</code></td>
+              <td>shared-secret 用于开发和轻量控制面；生产可切 OAuth2 scope，并把 JWT claims 映射为 RunPrincipal。</td>
+            </tr>
+            <tr>
+              <td>运行可靠性</td>
+              <td><code>durability.enabled</code><br><code>events.callback-endpoint.enabled</code><br><code>persistence.jdbc.enabled</code></td>
+              <td>支持崩溃恢复、外部事件等待、JDBC 快照、Trace read model、Memory 和人审任务持久化。</td>
+            </tr>
+            <tr>
+              <td>质量与观测</td>
+              <td><code>interpretation.metrics</code><br><code>interpretation.sampling.rate</code><br><code>observability.otel.enabled</code></td>
+              <td>解释质量进入指标和采样；运行事件进入 Micrometer / OTel，默认不采集敏感正文。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="modules">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>模块生态围绕部署边界设计。</h2>
+        <p class="section-lead">现代 Java 服务、Spring Boot 应用、旧 Java 8 系统、审批门户、审计控制台和部署检查工具都能只引入自己需要的 artifact。</p>
+      </div>
+      <div class="module-grid" aria-label="ActionGraph 模块生态">
+        <article class="module-card"><span>platform</span><h3>actiongraph-bom</h3><p>统一 ActionGraph 各组件版本，适合 Spring Boot 服务和多模块业务仓库。</p></article>
+        <article class="module-card"><span>core</span><h3>actiongraph-core</h3><p>Action、GOAP Planner、Executor、GoalCatalog、Blackboard、Trace、RunPrincipal、Observation SPI。</p></article>
+        <article class="module-card"><span>spring</span><h3>spring-boot-starter</h3><p>注解扫描、schema seeding、JDBC、治理、人审、控制面、Console、Studio 和安全桥自动装配。</p></article>
+        <article class="module-card"><span>java8-client</span><h3>control-plane-api</h3><p>Java 8 HTTP clients、组件目录、控制层错误契约、安全 GET retry 和 shared-secret verifier。</p></article>
+        <article class="module-card"><span>persistence</span><h3>persistence-jdbc</h3><p>Trace、SuspendedRun、Memory、人审任务、解释采样和 Console read model 的 JDBC 仓储。</p></article>
+        <article class="module-card"><span>review</span><h3>human-review</h3><p>审批任务仓储、审批链、回调处理、任务查询和决策服务，可独立于 Spring 复用。</p></article>
+        <article class="module-card"><span>governance</span><h3>governance</h3><p>脱敏、额度规则、权限策略、租户校验、风险审批链路由和 review attributes。</p></article>
+        <article class="module-card"><span>ops</span><h3>actiongraph-console</h3><p>只读运行查询、Trace 时间线、审计链验证、CSV/JSONL 导出和 Goal Studio 服务。</p></article>
+        <article class="module-card"><span>llm</span><h3>llm-deepseek</h3><p>GoalCatalog prompt、DeepSeek/OpenAI-compatible client、解释解析、fallback 和 golden-set evals。</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="videos">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>视频材料按受众拆分：推广价值和技术落地分别讲。</h2>
+        <p class="section-lead">业务负责人关心为什么值得推广；技术负责人关心真实代码、运行状态、配置属性和审计证据如何对应。</p>
+      </div>
+      <div class="video-grid">
         <article class="video-card">
           <div class="video-frame">
             <video controls preload="metadata" playsinline poster="assets/actiongraph-executive-demo-poster.png" aria-label="ActionGraph 业务价值动态演示视频">
@@ -1870,20 +1203,12 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
             </video>
           </div>
           <div class="video-content">
-            <span class="video-kicker">业务价值演示</span>
-            <h3>让非技术管理者看懂：Agent 如何安全办理业务。</h3>
-            <p>用“大额转账预约”串起目标理解、规则约束、自动改道、人审挂起、审批恢复和审计证据，重点说明 ActionGraph 的推广价值。</p>
-            <ul class="video-points">
-              <li>用业务语言解释确定性规划、人审和审计价值。</li>
-              <li>展示系统在风险、异常和审批场景下的可控行为。</li>
-              <li>适合立项沟通、领导汇报和跨部门推广预热。</li>
-            </ul>
-            <div class="video-actions">
-              <a class="button primary" href="assets/actiongraph-executive-demo.mp4">打开视频</a>
-            </div>
+            <span class="tag">业务价值演示</span>
+            <h3>让非技术管理者看懂安全执行价值。</h3>
+            <p>用“大额转账预约”展示目标理解、风险约束、自动改道、人审恢复和审计证据，适合立项沟通与跨部门推广。</p>
+            <a class="button primary" href="assets/actiongraph-executive-demo.mp4">打开视频</a>
           </div>
         </article>
-
         <article class="video-card">
           <div class="video-frame">
             <video controls preload="metadata" playsinline poster="assets/actiongraph-technical-deep-dive-poster.png" aria-label="ActionGraph 技术深潜动态演示视频">
@@ -1892,480 +1217,12 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
             </video>
           </div>
           <div class="video-content">
-            <span class="video-kicker blue">技术接入演示</span>
-            <h3>让技术团队看清：代码契约如何映射到运行效果。</h3>
-            <p>围绕“大额转账预约”解释 Action 契约、schema 绑定、配置属性、人审状态、Trace 证据和额度策略；运行效果用中文状态面板展示。</p>
-            <ul class="video-points">
-              <li>真实代码片段逐步出现，并解释每个注解的运行语义。</li>
-              <li>配置属性按表格呈现，避免长篇 YAML 淹没重点。</li>
-              <li>适合开发宣讲、架构评审和接入培训。</li>
-            </ul>
-            <div class="video-actions">
-              <a class="button primary" href="assets/actiongraph-technical-deep-dive.mp4">打开视频</a>
-            </div>
+            <span class="tag blue">技术深潜演示</span>
+            <h3>让技术团队看清代码契约和运行效果。</h3>
+            <p>按章节解释 Action 契约、配置域、运行重规划、人审状态、Trace 证据和额度策略，并以页面化运行面板呈现执行结果。</p>
+            <a class="button primary" href="assets/actiongraph-technical-deep-dive.mp4">打开视频</a>
           </div>
         </article>
-      </div>
-    </div>
-  </section>
-
-  <section class="section alt" id="capabilities">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>运行时能力围绕一个原则：模型不拥有最终裁决权。</h2>
-        <p class="section-lead">框架让 Agent 能执行，但不把业务判断交给模型。schema 契约、规划、运行时校验、审批、补偿、持久化、审计与控制面都围绕“可控执行”设计。</p>
-      </div>
-      <div class="feature-grid">
-        <article class="feature">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 17l6-6 4 4 6-8"></path><path d="M14 7h6v6"></path></svg></div>
-          <h3>确定性 GOAP 规划</h3>
-          <p>只基于 Action 前置条件与效果搜索路径，计划可复现、可测试、可审计。</p>
-        </article>
-        <article class="feature">
-          <div class="feature-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"></path><path d="M12 12l8-4.5"></path><path d="M12 12v9"></path><path d="M12 12L4 7.5"></path></svg></div>
-          <h3>Schema 自动绑定</h3>
-          <p>@ActionGraphGoal(schema=...) 自动把请求参数绑定为 record 并写入 Blackboard，复杂场景再显式扩展。</p>
-        </article>
-        <article class="feature">
-          <div class="feature-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg></div>
-          <h3>Runtime Guard</h3>
-          <p>依赖真实业务值的判断放到执行前校验，保持规划器纯净，不污染 symbolic planning。</p>
-        </article>
-        <article class="feature">
-          <div class="feature-icon coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg></div>
-          <h3>多级人工审批</h3>
-          <p>Repository-backed review 支持审批链、stage index、回调幂等与原子 suspend/resume。</p>
-        </article>
-        <article class="feature">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path><path d="M12 7v5l3 3"></path></svg></div>
-          <h3>Saga 补偿</h3>
-          <p>失败或审批拒绝时按已执行 Action 逆序补偿，降低孤儿副作用残留。</p>
-        </article>
-        <article class="feature">
-          <div class="feature-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h5"></path></svg></div>
-          <h3>Trace 哈希链</h3>
-          <p>TraceEvent 按 runId 形成链式 SHA-256 哈希，Console 可显示审计链完整性。</p>
-        </article>
-        <article class="feature">
-          <div class="feature-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18"></path><path d="M8 6v12"></path><path d="M16 6v12"></path><path d="M5 18h14"></path></svg></div>
-          <h3>敏感数据脱敏</h3>
-          <p>Trace 与审批预览可脱敏身份证、银行卡、手机号、邮箱和指定字段。</p>
-        </article>
-        <article class="feature">
-          <div class="feature-icon coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1v22"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
-          <h3>额度与风险策略</h3>
-          <p>业务方提供 AmountExtractor 后，可按 action / 币种设置硬拒绝，并在进入人审时追加金额升级审批阶段。</p>
-        </article>
-        <article class="feature">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16v16H4z"></path><path d="M9 4v16"></path><path d="M15 4v16"></path><path d="M4 9h16"></path><path d="M4 15h16"></path></svg></div>
-          <h3>结构化记忆</h3>
-          <p>MemoryRepository 与 MemoryContextLoader 进入 core，Spring 与 JDBC 可自动切换。</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="modules">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>模块边界清晰，按部署形态组合。</h2>
-        <p class="section-lead">每个模块都有清晰边界。Spring 服务可以用主 starter 快速收敛能力，非 Spring 和 Java 8 老系统也可以只引入控制面或 HTTP client。</p>
-      </div>
-      <div class="module-grid">
-        <article class="module-card">
-          <span class="module-tag runtime">runtime</span>
-          <h3>actiongraph-core</h3>
-          <p>Action、Planner、Executor、Policy、Trace、GoalCatalog、Runtime API service、Memory API 与 JSpecify 空安全合同。</p>
-        </article>
-        <article class="module-card">
-  <span class="module-tag runtime">spring</span>
-  <h3>spring-boot-starter</h3>
-  <p>注解扫描、schema 自动 seeding、默认 Bean、按配置启用的 JDBC 仓储、治理、人审、Runtime/Catalog/Review/Console 端点。</p>
-        </article>
-        <article class="module-card">
-          <span class="module-tag java8">java8-client</span>
-          <h3>control-plane-api</h3>
-          <p>Java 8 组件目录、控制层响应契约、JSpecify 空安全合同、聚合 HTTP client、split clients 与 token verifier。</p>
-        </article>
-        <article class="module-card">
-          <span class="module-tag ops">ops</span>
-          <h3>actiongraph-console</h3>
-          <p>只读运行查询、JDBC read model、Trace 详情、审计链验证、CSV/JSONL 导出。</p>
-        </article>
-        <article class="module-card">
-          <span class="module-tag runtime">review</span>
-          <h3>human-review</h3>
-          <p>审批任务仓储、审批链、回调处理、task API service 和 repository-backed policy。</p>
-        </article>
-        <article class="module-card">
-          <span class="module-tag runtime">governance</span>
-          <h3>governance</h3>
-          <p>脱敏、额度规则、权限策略、review attributes 与风险审批链路由。</p>
-        </article>
-        <article class="module-card">
-          <span class="module-tag ops">persistence</span>
-          <h3>persistence-jdbc</h3>
-          <p>Trace、SuspendedRun、Trace read model、Memory 与 HumanReview 的 JDBC 仓储。</p>
-        </article>
-        <article class="module-card">
-          <span class="module-tag runtime">llm</span>
-          <h3>llm-deepseek</h3>
-          <p>Provider-neutral 目标解释、GoalCatalog prompt、结构化输出解析与 DeepSeek 兼容客户端。</p>
-        </article>
-      </div>
-      <div style="margin-top: 18px; overflow-x: auto;">
-        <table class="matrix">
-          <thead>
-            <tr>
-              <th>推荐组合</th>
-              <th>适用场景</th>
-              <th>典型模块</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>core-runtime</code></td>
-              <td>最小纯 Java 运行内核，需要完全手工装配。</td>
-              <td><code>actiongraph-core</code></td>
-            </tr>
-            <tr>
-              <td><code>spring-business-runtime</code></td>
-              <td>Spring Boot 业务服务接入 ActionGraph，但不公开控制面端点。</td>
-              <td><code>actiongraph-spring-boot-starter</code></td>
-            </tr>
-            <tr>
-              <td><code>durable-spring-runtime</code></td>
-              <td>生产运行态需要 JDBC Trace、挂起、Memory 和审批任务。</td>
-              <td><code>spring-boot-starter</code> + DataSource + JDBC switch</td>
-            </tr>
-            <tr>
-              <td><code>full-control-plane</code></td>
-              <td>单个服务同时拥有 Runtime、Component Catalog、Human Review 与 Console 端点。</td>
-              <td><code>spring-boot-starter</code> + endpoint enabled properties</td>
-            </tr>
-            <tr>
-              <td><code>java8-legacy-client</code></td>
-              <td>Java 8 老系统通过 HTTP、网关、ESB 或 sidecar 调用部署好的 ActionGraph 服务。</td>
-              <td><code>actiongraph-control-plane-api</code></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <section class="section tint" id="control-plane">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>控制面按端点族发布，默认保持收敛。</h2>
-        <p class="section-lead">主 starter 收敛端点自动装配，但每个端点族都有自己的 path、token header、shared-secret 与 enabled 开关。启用端点不会创建业务 Action、LLM client 或领域解释器。</p>
-      </div>
-      <div class="control-plane">
-        <article class="ops-card">
-          <h3>Runtime API</h3>
-          <p>解释、启动、恢复运行。metadata overload 会把白名单请求头写入 Trace，并在高风险挂起时合并到审批 attributes。</p>
-          <div class="endpoint-list">
-            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/runtime/interpret</code></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/runtime/runs</code></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/runtime/runs/{runId}/resume</code></div>
-          </div>
-        </article>
-        <article class="ops-card">
-          <h3>Component Catalog</h3>
-          <p>机器可读模块目录、能力标签、依赖提示、兼容性标签和推荐组合方案，适合部署检查与网关治理。</p>
-          <div class="endpoint-list">
-            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/components</code></div>
-            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/components/modules/{module}</code></div>
-            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/components/compatibility/{compatibility}</code></div>
-          </div>
-        </article>
-        <article class="ops-card">
-          <h3>Human Review</h3>
-          <p>审批任务查询、详情、决策写入与外部系统回调。stage index 防止重复回调误推进下一阶段。</p>
-          <div class="endpoint-list">
-            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/human-review/tasks/pending</code></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/human-review/tasks/runs/{runId}/actions/{actionId}/decision</code></div>
-            <div class="endpoint"><span class="method post">POST</span><code>/actiongraph/human-review/callbacks</code></div>
-          </div>
-        </article>
-        <article class="ops-card">
-          <h3>Console</h3>
-          <p>只读运行列表、筛选、Trace 时间线、审计链验证、CSV/JSONL 导出。Console 不执行、恢复、审批、拒绝或补偿运行。</p>
-          <div class="endpoint-list">
-            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/console/runs</code></div>
-            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/console/runs/{runId}/trace</code></div>
-            <div class="endpoint"><span class="method">GET</span><code>/actiongraph/console/runs/{runId}/trace/export.jsonl</code></div>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="governance">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>治理逻辑进入执行路径，而不是事后补丁。</h2>
-        <p class="section-lead">权限、脱敏、额度、人审、补偿、哈希链和恢复快照全部围绕同一个 runId 与 Trace 序列展开，方便企业控制台和审计系统追踪。</p>
-      </div>
-      <div class="ops-grid">
-        <article class="ops-card">
-          <h3>权限与额度</h3>
-          <p>PermissionPolicy 与 ExecutionPolicyGuard 在执行前判定动作是否允许；金额规则可硬拒绝，并为进入人审的动作追加金额升级属性。</p>
-          <ul>
-            <li>按 action id 与 currency 配置 hard-limit / review-limit</li>
-            <li>AmountExtractor 由业务侧提供，不让框架猜业务金额</li>
-            <li>RiskBasedChainResolver 根据 amountEscalated 追加 amount-authorization 阶段</li>
-            <li>规则权限与租户校验可在非 Spring 服务手工装配</li>
-          </ul>
-        </article>
-        <article class="ops-card">
-          <h3>人审挂起与恢复</h3>
-          <p>requiresHumanReview 的 Action 创建审批任务并保存挂起快照，审批后从同一个 runId 原子 claim 恢复，避免重复副作用。</p>
-          <ul>
-            <li>PENDING 只挂起，不补偿</li>
-            <li>APPROVED 推进阶段，最终阶段通过后继续执行</li>
-            <li>DENIED 终止并触发已执行 Action 的逆序补偿</li>
-          </ul>
-        </article>
-        <article class="ops-card">
-          <h3>审计与脱敏</h3>
-          <p>Trace 事件先经过 DataMaskingPolicy，再写入哈希链。挂起快照保持无损恢复，不做脱敏。</p>
-          <ul>
-            <li>Trace detail/data 与审批预览支持字段与正则脱敏</li>
-            <li>TraceChainVerifier 可识别断链与篡改</li>
-            <li>Console read model 可分页筛选并导出归档证据</li>
-          </ul>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section class="section alt" id="operations">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>生产契约覆盖持久化、恢复、安全与兼容性。</h2>
-        <p class="section-lead">JDBC 持久化、Java 8 老系统、控制层 token、GET 重试、Blackboard 类型白名单和 snapshot version 都是发布契约的一部分。</p>
-      </div>
-      <div class="adoption">
-        <div class="adoption-step">
-          <b>JDBC persistence</b>
-          <span>启用 <code>actiongraph.persistence.jdbc.enabled=true</code> 后，Trace、SuspendedRun、Trace read model、Memory 和 Human Review repository 可切到 JDBC。</span>
-        </div>
-        <div class="adoption-step">
-          <b>Blackboard allowlist</b>
-          <span>生产恢复挂起快照时建议配置 <code>allowed-packages</code>，在反序列化前拒绝不允许的类型。</span>
-        </div>
-        <div class="adoption-step">
-          <b>Java 8 control plane</b>
-          <span><code>actiongraph-control-plane-api</code> 编译为 Java 8，无 Spring、JDBC、LLM、Servlet 或 JSON 依赖。</span>
-        </div>
-        <div class="adoption-step">
-          <b>Safe GET retries</b>
-          <span>可对组件目录、人审查询和 Console 只读查询开启 GET 重试；会产生副作用的 POST 不自动重试。</span>
-        </div>
-      </div>
-      <div class="callout">
-        <strong>控制面 shared-secret 不是企业 IAM。</strong>
-        <p>内置 token verifier 负责 Header 名校验、未配置 shared-secret 时跳过读取、常量时间比较 token。生产身份认证、RBAC、租户权限、网络边界和审计策略仍应由接入系统、API 网关或企业安全平台负责。</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="samples">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>样例以业务形态组织，而不是功能清单。</h2>
-        <p class="section-lead">样例覆盖真实业务环节：续约报价、订单取消、理赔资料预审分别展示目标解释、schema 绑定、runtime guard、人审挂起恢复和审计报告。</p>
-      </div>
-      <div class="sample-grid">
-        <article class="sample">
-          <h3>续约报价</h3>
-          <p>客户资料、当前合同、续约资格、报价草稿和销售审批。</p>
-          <ul>
-            <li>RuleBasedRenewalGoalInterpreter</li>
-            <li>RenewalGoalAnnotations</li>
-            <li>SalesApprovalRequestAction</li>
-          </ul>
-          <code class="run-command">Task: :actiongraph-samples:run</code>
-        </article>
-        <article class="sample">
-          <h3>订单取消</h3>
-          <p>订单查询、取消资格、取消草稿、运营审批和补偿。</p>
-          <ul>
-            <li>OrderLookupAction</li>
-            <li>CancellationEligibilityCheckAction</li>
-            <li>OperationsApprovalRequestAction</li>
-          </ul>
-          <code class="run-command">Task: :actiongraph-samples:runOrderCancellationSample</code>
-        </article>
-        <article class="sample">
-          <h3>理赔资料预审</h3>
-          <p>资料查询、预审评估、赔付申请、人审回调和批量指标报告。</p>
-          <ul>
-            <li>ClaimsPrecheckBatchMetricsApp</li>
-            <li>JSONL callback replay</li>
-            <li>CSV / Markdown / HTML report</li>
-          </ul>
-          <code class="run-command">Tasks: runClaimsPrecheckSample · runClaimsPrecheckBatchMetrics</code>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section class="section tint" id="tutorial">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>端到端导览：同一条业务线贯穿规划、审批与审计。</h2>
-        <p class="section-lead"><b>transfer-demo</b> 以“大额转账预约”为主线，按一次真实运行的顺序呈现框架职责，覆盖目标解释、规划执行、审批恢复、策略拦截和审计归档。</p>
-      </div>
-
-      <div class="journey-intro">
-        <h3>场景主线</h3>
-        <p>用户提出“为客户 C001 预约 80 万元的大额转账”。运行时需要确认参数、绑定 schema、规划可达路径、处理余额接口重试、触发限额升级审批、挂起等待人审、恢复同一 run，并最终给出可验证的 Trace 证据。</p>
-      </div>
-
-      <div class="journey" aria-label="端到端导览">
-        <article class="journey-step">
-          <div>
-            <div class="journey-meta">01 · Intent</div>
-            <h3>解释器只确认目标与参数</h3>
-          </div>
-          <div>
-            <p>自然语言入口负责把请求映射到 GoalType、customerId、amount 等业务参数；缺参时返回澄清问题。计划仍由 GOAP planner 根据 Action 图搜索，LLM 不直接生成执行步骤。</p>
-            <ul>
-              <li><strong>输入：</strong>客户、金额、业务意图。</li>
-              <li><strong>产物：</strong>Goal + schema record + seed conditions。</li>
-            </ul>
-          </div>
-        </article>
-
-        <article class="journey-step">
-          <div>
-            <div class="journey-meta">02 · Contract</div>
-            <h3>启动前校验 Action 图</h3>
-          </div>
-          <div>
-            <p>框架在应用启动或注册阶段检查 condition/effect 是否闭合。拼写错误、命名空间不匹配和悬空 Action 会尽早暴露，避免把不可达路径留到生产运行时才发现。</p>
-            <ul>
-              <li><strong>检查：</strong>缺失条件、悬空动作、相近 effect 诊断。</li>
-              <li><strong>价值：</strong>把“AI 能走哪些路”变成可审查的工程契约。</li>
-            </ul>
-          </div>
-        </article>
-
-        <article class="journey-step">
-          <div>
-            <div class="journey-meta">03 · Execution</div>
-            <h3>每一步执行后重新规划</h3>
-          </div>
-          <div>
-            <p>余额实时接口失败时，Action 的重试策略先处理短暂异常；当 runtime guard 判断核心系统不可用时，规划器会根据当前事实改道到快照余额链路。业务编排不需要把每个 fallback 手写成流程分支。</p>
-            <ul>
-              <li><strong>运行策略：</strong>maxAttempts、backoff、runtime guard。</li>
-              <li><strong>改道条件：</strong>Blackboard 事实变化后触发下一轮 planner 选择。</li>
-            </ul>
-          </div>
-        </article>
-
-        <article class="journey-step">
-          <div>
-            <div class="journey-meta">04 · Review</div>
-            <h3>高风险动作挂起，而不是继续猜测</h3>
-          </div>
-          <div>
-            <p>80 万元超过 review-limit 后，风险链路在原审批链上追加 amount-authorization。运行进入 SUSPENDED_PENDING_REVIEW，保存挂起快照与补偿栈；审批通过后以同一 runId 原子认领恢复。</p>
-            <ul>
-              <li><strong>人审链：</strong>checker-review、authorization、amount-authorization。</li>
-              <li><strong>并发语义：</strong>重复 resume 只有一个请求能成功 claim。</li>
-            </ul>
-          </div>
-        </article>
-
-        <article class="journey-step">
-          <div>
-            <div class="journey-meta">05 · Evidence</div>
-            <h3>审计证据随运行产生</h3>
-          </div>
-          <div>
-            <p>Trace 事件先经过脱敏策略，再进入哈希链。Console read model 可以展示运行列表、Trace 时间线、审计链验证结果和导出文件；挂起快照保留恢复所需原值，不与展示层脱敏混淆。</p>
-            <ul>
-              <li><strong>审计对象：</strong>Trace sequence、hash chain、review attributes。</li>
-              <li><strong>展示边界：</strong>审批预览和 Console 输出脱敏，恢复快照保持语义完整。</li>
-            </ul>
-          </div>
-        </article>
-
-        <article class="journey-step">
-          <div>
-            <div class="journey-meta">06 · Policy</div>
-            <h3>硬限额在副作用发生前拦截</h3>
-          </div>
-          <div>
-            <p>当金额超过 hard-limit，Policy 在执行草稿创建前拒绝动作，后续副作用不会发生。review-limit 只负责进入人审后的金额升级，不替代业务权限、租户校验或企业 IAM。</p>
-            <ul>
-              <li><strong>拒绝点：</strong>Action 执行前。</li>
-              <li><strong>治理边界：</strong>ActionGraph 提供策略挂点，业务系统保留最终裁决。</li>
-            </ul>
-          </div>
-        </article>
-
-        <article class="journey-step">
-          <div>
-            <div class="journey-meta">07 · Durability</div>
-            <h3>进程崩溃，副作用零孤儿</h3>
-          </div>
-          <div>
-            <p>开启 durability 后，每个 Action 成功即写检查点，执行前登记执行意图（WAL）。故障注入场景模拟进程在高风险窗口中断——草稿已在远端创建、检查点未落。重启后的恢复器认领异常中断的运行记录：意图未清，该步按「结果未知」先补偿再重做，随后续跑进审批、照常挂起。真实输出：草稿创建成功×2、恢复性补偿×1 → 净草稿恰好 1 份；51 条 Trace 事件跨崩溃、恢复与审批连续编号，哈希链验证通过。</p>
-            <ul>
-              <li><strong>恢复语义：</strong>in-flight 步与超时同一哲学——结果未知，补偿＋重做实现等效恰好一次。</li>
-              <li><strong>运维含义：</strong>编排服务可进行滚动发布；实测每步检查点开销 0.054 ms。</li>
-            </ul>
-          </div>
-        </article>
-      </div>
-
-      <div class="evidence-block">
-        <h3>证据产物</h3>
-        <p>transfer-demo 的输出按证据类型组织，覆盖 Action 图、运行状态、人审记录和 Trace 哈希链，便于架构评审、开发接入和审计归档。</p>
-        <div class="table-wrap">
-          <table class="matrix">
-            <thead>
-              <tr>
-                <th>证据类型</th>
-                <th>说明</th>
-                <th>对应能力</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Mermaid Action 图</td>
-                <td>展示 Action、condition 与可达路径，适合放入架构评审或变更记录。</td>
-                <td>GoalCatalog、ActionGraphExporter、启动校验</td>
-              </tr>
-              <tr>
-                <td>运行状态序列</td>
-                <td>从 STARTED、ACTION_RETRIED、SUSPENDED_PENDING_REVIEW 到 COMPLETED，串起一次完整 run。</td>
-                <td>GoapExecutor、retry、suspend/resume</td>
-              </tr>
-              <tr>
-                <td>审批任务记录</td>
-                <td>记录审批链、stage index、review attributes 与最终决策，支持外部审批系统回调。</td>
-                <td>Human Review、RiskBasedChainResolver</td>
-              </tr>
-              <tr>
-                <td>Trace 哈希链</td>
-                <td>逐事件 SHA-256 链接，可验证断链、篡改和导出文件完整性。</td>
-                <td>RunTrace、TraceHasher、TraceChainVerifier</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="tutorial-run">
-        <b>离线运行路径</b><br>
-        先在框架仓库根执行 <code>./gradlew publishToMavenLocal</code>，再进入 transfer-demo 工程运行 <code>./gradlew bootRun</code>。完整接入手册见
-        <a href="quick-start.html">快速接入指南</a>。
       </div>
     </div>
   </section>
@@ -2373,60 +1230,19 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
   <section class="section alt" id="docs">
     <div class="wrap">
       <div class="section-head">
-        <h2>文档入口按接入阶段组织。</h2>
-        <p class="section-lead">先走 Golden Path，再进入控制面、生产持久化、人审、事件和 SPI。每个入口都对应一个明确的接入阶段，避免开发者在第一天就被底层接口淹没。</p>
+        <h2>文档入口按工作任务组织。</h2>
+        <p class="section-lead">从“接入第一个 Goal”到“生产推广和治理”，每个入口对应一个明确任务。底层 SPI 和内部 PRD 不再占据第一阅读路径。</p>
       </div>
       <div class="doc-grid">
-        <a class="doc-link" href="quick-start.html">
-          <h3>快速接入指南</h3>
-          <p>按 L0-L4 完成依赖、Goal schema、Action、自然语言、人审、持久化和跨服务事件。</p>
-          <span class="path">docs/quick-start.html</span>
-        </a>
-        <a class="doc-link" href="frameworkization/golden-path.md">
-          <h3>Golden Path</h3>
-          <p>明确应用代码优先使用的正门：Goal schema、Action 注解、Spring starter 和 ActionGraph 根门面。</p>
-          <span class="path">docs/frameworkization/golden-path.md</span>
-        </a>
-        <a class="doc-link" href="learning-path.md">
-          <h3>学习路径</h3>
-          <p>把 L0-L4、打包、SPI、运营和内部设计记录分层，帮助团队按阶段推广。</p>
-          <span class="path">docs/learning-path.md</span>
-        </a>
-        <a class="doc-link" href="api/">
-          <h3>API Reference</h3>
-          <p>GitHub Pages 部署时生成的各模块 Javadoc，以及机器可读 public API snapshot。</p>
-          <span class="path">docs/api/index.html</span>
-        </a>
-        <a class="doc-link" href="frameworkization/runtime-api.md">
-          <h3>Runtime API</h3>
-          <p>复用 interpret / start / resume 入口服务，或通过 Spring MVC 暴露运行端点。</p>
-          <span class="path">docs/frameworkization/runtime-api.md</span>
-        </a>
-        <a class="doc-link" href="frameworkization/component-catalog.md">
-          <h3>Component Catalog</h3>
-          <p>机器可读模块目录、能力标签、兼容性标签和推荐组合 profile。</p>
-          <span class="path">docs/frameworkization/component-catalog.md</span>
-        </a>
-        <a class="doc-link" href="frameworkization/control-plane-api.md">
-          <h3>Control Plane API</h3>
-          <p>Java 8 控制层契约、聚合 HTTP client、split clients、properties 配置和 token verifier。</p>
-          <span class="path">docs/frameworkization/control-plane-api.md</span>
-        </a>
-        <a class="doc-link" href="frameworkization/human-review.md">
-          <h3>Human Review</h3>
-          <p>Repository-backed 审批任务、审批链、回调处理、stage index 与恢复语义。</p>
-          <span class="path">docs/frameworkization/human-review.md</span>
-        </a>
-        <a class="doc-link" href="frameworkization/jdbc-persistence.md">
-          <h3>JDBC Persistence</h3>
-          <p>Trace、挂起快照、read model、Memory、人审任务和 Blackboard 类型白名单。</p>
-          <span class="path">docs/frameworkization/jdbc-persistence.md</span>
-        </a>
-        <a class="doc-link" href="frameworkization/extension-points.md">
-          <h3>Extension Points</h3>
-          <p>面向进阶场景：Contribution 打包、显式 Seeder、自定义转换器、图导出、LLM 与事件扩展。</p>
-          <span class="path">docs/frameworkization/extension-points.md</span>
-        </a>
+        <a class="doc-link" href="quick-start.html"><h3>快速开始</h3><p>按 L0-L4 接入 Goal schema、Action、chat、人审、持久化和外部事件。</p><span class="path">docs/quick-start.html</span></a>
+        <a class="doc-link" href="frameworkization/golden-path.md"><h3>Golden Path</h3><p>明确应用代码的推荐入口和 Packaging / SPI / Internal 分层。</p><span class="path">docs/frameworkization/golden-path.md</span></a>
+        <a class="doc-link" href="frameworkization/goal-studio.md"><h3>Goal Studio</h3><p>非生产环境起草、验证、修复和导出 Goal bundle 的完整边界。</p><span class="path">docs/frameworkization/goal-studio.md</span></a>
+        <a class="doc-link" href="frameworkization/interpretation-evals.md"><h3>解释评测</h3><p>JSONL golden set、accuracy 指标、masked sampling 和报告输出。</p><span class="path">docs/frameworkization/interpretation-evals.md</span></a>
+        <a class="doc-link" href="frameworkization/control-plane-starter.md"><h3>控制面与安全</h3><p>Runtime、Console、Studio、人审、Events 端点以及 OAuth2 scope 模式。</p><span class="path">docs/frameworkization/control-plane-starter.md</span></a>
+        <a class="doc-link" href="frameworkization/runtime-api.md"><h3>Runtime API</h3><p>HTTP 适配、metadata、RunPrincipal 和 Java 8 gateway 调用方式。</p><span class="path">docs/frameworkization/runtime-api.md</span></a>
+        <a class="doc-link" href="frameworkization/ms1-durability.md"><h3>Durability</h3><p>崩溃恢复、heartbeat、in-flight unknown outcome 和补偿重做语义。</p><span class="path">docs/frameworkization/ms1-durability.md</span></a>
+        <a class="doc-link" href="frameworkization/jdbc-persistence.md"><h3>JDBC Persistence</h3><p>Trace、挂起快照、Memory、人审任务、解释采样和 Blackboard allowlist。</p><span class="path">docs/frameworkization/jdbc-persistence.md</span></a>
+        <a class="doc-link" href="api/"><h3>API Reference</h3><p>GitHub Pages 生成的 Javadoc 与 checked-in public API snapshot。</p><span class="path">docs/api/index.html</span></a>
       </div>
     </div>
   </section>
@@ -2439,26 +1255,24 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
         <img src="assets/actiongraph-mark.svg" alt="" aria-hidden="true">
         <b>ActionGraph</b>
       </div>
-      <p>Typed GOAP runtime for governed business action execution in Java. Built for schema-first adoption, deterministic planning, human review, compensation, audit evidence, and legacy-friendly control-plane integration.</p>
+      <p>Governed Action Graph Runtime for Java enterprise Agent execution. Built for deterministic planning, typed schemas, principal-aware governance, review, recovery, audit evidence, and interpretation quality engineering.</p>
     </div>
     <div>
       <b>Start</b>
-      <a href="#quickstart">快速开始</a>
-      <a href="quick-start.html">完整接入指南</a>
+      <a href="quick-start.html">快速开始</a>
       <a href="frameworkization/golden-path.md">Golden Path</a>
       <a href="../README.zh-CN.md">中文 README</a>
     </div>
     <div>
-      <b>Reference</b>
-      <a href="api/">API Reference</a>
-      <a href="frameworkization/spring-boot-starter.md">Spring Boot Starter</a>
-      <a href="frameworkization/runtime-api.md">Runtime API</a>
-      <a href="frameworkization/control-plane-api.md">Control Plane API</a>
+      <b>Operate</b>
+      <a href="frameworkization/control-plane-starter.md">Control Plane</a>
+      <a href="frameworkization/jdbc-persistence.md">JDBC Persistence</a>
+      <a href="frameworkization/interpretation-evals.md">Interpretation Evals</a>
     </div>
     <div>
-      <b>Operate</b>
-      <a href="frameworkization/human-review.md">Human Review</a>
-      <a href="frameworkization/jdbc-persistence.md">JDBC Persistence</a>
+      <b>Reference</b>
+      <a href="api/">API Reference</a>
+      <a href="frameworkization/extension-points.md">Extension Points</a>
       <a href="frameworkization/component-catalog.md">Component Catalog</a>
     </div>
   </div>
@@ -2482,7 +1296,7 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
     mobileToggle.setAttribute("aria-expanded", String(open));
   });
 
-  navLinks.forEach((link) => {
+  navLinks.forEach(link => {
     link.addEventListener("click", () => {
       header.classList.remove("menu-open");
       mobileToggle.setAttribute("aria-expanded", "false");
@@ -2490,35 +1304,27 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
   });
 
   const sections = navLinks
-    .map((link) => document.querySelector(link.getAttribute("href")))
+    .map(link => document.querySelector(link.getAttribute("href")))
     .filter(Boolean);
 
   const observer = new IntersectionObserver((entries) => {
-    const visible = entries
-      .filter((entry) => entry.isIntersecting)
-      .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-    if (!visible) return;
-    navLinks.forEach((link) => {
-      link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`);
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      navLinks.forEach(link => {
+        link.classList.toggle("active", link.getAttribute("href") === `#${entry.target.id}`);
+      });
     });
-  }, { rootMargin: "-20% 0px -62% 0px", threshold: [0.08, 0.2, 0.45] });
+  }, { rootMargin: "-42% 0px -50% 0px", threshold: 0.01 });
 
-  sections.forEach((section) => observer.observe(section));
+  sections.forEach(section => observer.observe(section));
 
-  const copyButtons = document.querySelectorAll("[data-copy]");
-  copyButtons.forEach((button) => {
+  document.querySelectorAll("[data-copy]").forEach(button => {
     button.addEventListener("click", async () => {
       const target = document.getElementById(button.dataset.copy);
-      if (!target) return;
-      try {
-        await navigator.clipboard.writeText(target.textContent.trim());
-        const previous = button.innerHTML;
-        button.textContent = "OK";
-        window.setTimeout(() => { button.innerHTML = previous; }, 1100);
-      } catch (error) {
-        button.textContent = "Err";
-        window.setTimeout(() => { button.textContent = ""; }, 1100);
-      }
+      if (!target || !navigator.clipboard) return;
+      await navigator.clipboard.writeText(target.textContent);
+      button.setAttribute("aria-label", "已复制代码示例");
+      setTimeout(() => button.setAttribute("aria-label", "复制代码示例"), 1400);
     });
   });
 </script>
