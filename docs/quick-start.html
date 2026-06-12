@@ -296,18 +296,45 @@ dependencies {
     <span class="a">@GoalParameter</span>(description = <span class="s">"要取消的订单编号"</span>, example = <span class="s">"O100"</span>)
     String orderId
 ) {}</code></pre>
-<p>Seeder 仍然由业务实现，因为只有业务系统知道参数该怎样变成 Blackboard 初始状态；它可以是普通 Bean，不需要配置类。</p>
+<p>Seeder 仍然由业务实现，因为只有业务系统知道参数该怎样变成 Blackboard 初始状态；但它可以是普通方法，不需要配置类，也不需要手写注册。</p>
 <pre><code><span class="a">@Component</span>
-<span class="k">final class</span> OrderCancellationSeeder <span class="k">implements</span> GoalBlackboardSeeder {
-    <span class="a">@Override</span>
-    <span class="k">public</span> GoalType goalType() {
-        <span class="k">return new</span> GoalType(<span class="s">"order.cancel"</span>);
+<span class="k">final class</span> OrderCancellationSeeders {
+
+    <span class="a">@ActionGraphGoalSeeder</span>(
+        goal = <span class="s">"order.cancel"</span>,
+        seedConditions = <span class="s">"order:ORDER_ID_PRESENT"</span>
+    )
+    OrderId seedOrderId(
+        <span class="a">@GoalParam</span>(<span class="s">"orderId"</span>) String orderId
+    ) {
+        <span class="k">return new</span> OrderId(orderId);
+    }
+}</code></pre>
+<p>引用解析也可以保持业务可控：框架只定义 converter 接口，实际查询由业务 Bean 完成。</p>
+<pre><code><span class="a">@Component</span>
+<span class="k">final class</span> ProductReferenceToId <span class="k">implements</span> GoalValueConverter&lt;Long&gt; {
+    <span class="k">private final</span> ProductService productService;
+
+    ProductReferenceToId(ProductService productService) {
+        <span class="k">this</span>.productService = productService;
     }
 
     <span class="a">@Override</span>
-    <span class="k">public void</span> seed(GoalParameters params, Blackboard bb) {
-        bb.put(<span class="k">new</span> OrderId(params.get(<span class="s">"orderId"</span>).orElseThrow()));
-        bb.addCondition(Condition.of(<span class="s">"order:ORDER_ID_PRESENT"</span>));
+    <span class="k">public</span> Long convert(String ref, GoalParameterBindingContext ctx) {
+        <span class="k">return</span> productService.findByReference(ref).getId();
+    }
+}
+
+<span class="a">@Component</span>
+<span class="k">final class</span> ProductSeeders {
+    <span class="a">@ActionGraphGoalSeeder</span>(goal = <span class="s">"product.delete"</span>,
+                           seedConditions = <span class="s">"product:DELETE_REQUESTED"</span>)
+    <span class="a">@BlackboardValue</span>(<span class="s">"productId"</span>)
+    Long seedProductId(
+        <span class="a">@GoalParam</span>(value = <span class="s">"productRef"</span>, converter = ProductReferenceToId.class)
+        Long productId
+    ) {
+        <span class="k">return</span> productId;
     }
 }</code></pre>
 

@@ -10,6 +10,7 @@ import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.action.ExecutionContext;
 import com.actiongraph.action.annotation.ActionGraphAction;
 import com.actiongraph.action.annotation.ActionGraphGuard;
+import com.actiongraph.action.annotation.BlackboardValue;
 import com.actiongraph.contribution.ActionGraphContribution;
 import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
@@ -19,7 +20,11 @@ import com.actiongraph.interpretation.GoalParameterDefinition;
 import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.annotation.ActionGraphGoal;
+import com.actiongraph.interpretation.annotation.ActionGraphGoalSeeder;
+import com.actiongraph.interpretation.annotation.GoalParam;
 import com.actiongraph.interpretation.annotation.GoalParameter;
+import com.actiongraph.interpretation.annotation.GoalParameterBindingContext;
+import com.actiongraph.interpretation.annotation.GoalValueConverter;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.OpenAiCompatibleChatClient;
 import com.actiongraph.observability.NoopObservationSink;
@@ -39,6 +44,7 @@ import com.actiongraph.policy.ReviewAttributeContributor;
 import com.actiongraph.runtime.Executor;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunStatus;
+import com.actiongraph.runtime.BlackboardKey;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -49,6 +55,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,6 +67,8 @@ class ActionGraphAutoConfigurationTest {
     private static final Condition DONE_TYPO = Condition.of("spring-test:DNOE");
     private static final GoalType TEST_GOAL_TYPE = new GoalType("spring-test.finish");
     private static final GoalType ANNOTATED_GOAL_TYPE = new GoalType("spring-test.annotated-finish");
+    private static final String ANNOTATED_SEEDER_GOAL = "spring-test.annotated-seed";
+    private static final GoalType ANNOTATED_SEEDER_GOAL_TYPE = new GoalType(ANNOTATED_SEEDER_GOAL);
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(ActionGraphAutoConfiguration.class));
@@ -175,6 +184,35 @@ class ActionGraphAutoConfigurationTest {
                 .withBean(AnnotatedWorkflow.class)
                 .withBean(AnnotatedGoalDeclarations.class)
                 .run(context -> assertThat(context.getBean(GoalCatalog.class).byType(ANNOTATED_GOAL_TYPE)).isEmpty());
+    }
+
+    @Test
+    void autoRegistersAnnotatedGoalSeedersFromSpringBeansAndUsesConverterBeans() {
+        contextRunner
+                .withBean(AnnotatedSeederDeclarations.class)
+                .withBean(SpringInputIdConverter.class, () -> new SpringInputIdConverter("bean-"))
+                .run(context -> {
+                    GoalBlackboardSeeder seeder = context.getBean(GoalBlackboardSeederRegistry.class)
+                            .byGoalType(ANNOTATED_SEEDER_GOAL_TYPE)
+                            .orElseThrow();
+                    InMemoryBlackboard blackboard = new InMemoryBlackboard();
+
+                    seeder.seed(GoalParameters.of(Map.of("inputId", "I-1")), blackboard);
+
+                    assertThat(blackboard.get(BlackboardKey.of(InputId.class, "input")))
+                            .contains(new InputId("bean-I-1"));
+                    assertThat(blackboard.conditions()).containsExactly(INPUT_PRESENT);
+                });
+    }
+
+    @Test
+    void canDisableAnnotatedGoalSeederRegistration() {
+        contextRunner
+                .withPropertyValues("actiongraph.seeders.auto-register-annotated=false")
+                .withBean(AnnotatedSeederDeclarations.class)
+                .withBean(SpringInputIdConverter.class, () -> new SpringInputIdConverter("bean-"))
+                .run(context -> assertThat(context.getBean(GoalBlackboardSeederRegistry.class)
+                        .byGoalType(ANNOTATED_SEEDER_GOAL_TYPE)).isEmpty());
     }
 
     @Test
@@ -477,6 +515,30 @@ class ActionGraphAutoConfigurationTest {
                 seedConditions = "spring-test:INPUT_PRESENT"
         )
         void finish(@GoalParameter(name = "inputId", description = "Input identifier", example = "I-1") String ignored) {
+        }
+    }
+
+    static final class AnnotatedSeederDeclarations {
+        @ActionGraphGoalSeeder(goal = ANNOTATED_SEEDER_GOAL, seedConditions = "spring-test:INPUT_PRESENT")
+        @BlackboardValue("input")
+        InputId seed(
+                @GoalParam(value = "inputId", converter = SpringInputIdConverter.class)
+                InputId inputId
+        ) {
+            return inputId;
+        }
+    }
+
+    static final class SpringInputIdConverter implements GoalValueConverter<InputId> {
+        private final String prefix;
+
+        SpringInputIdConverter(String prefix) {
+            this.prefix = prefix;
+        }
+
+        @Override
+        public InputId convert(String rawValue, GoalParameterBindingContext context) {
+            return new InputId(prefix + rawValue);
         }
     }
 

@@ -19,6 +19,7 @@ import com.actiongraph.interpretation.GoalCatalog;
 import com.actiongraph.interpretation.GoalDefinition;
 import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalFactory;
+import com.actiongraph.interpretation.annotation.AnnotatedGoalSeederFactory;
 import com.actiongraph.llm.DeepSeekChatClient;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.OpenAiCompatibleChatClient;
@@ -349,19 +350,29 @@ public class ActionGraphAutoConfiguration {
     )
     public GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(
             ObjectProvider<GoalBlackboardSeeder> seeders,
-            ObjectProvider<ActionGraphContribution> contributions
+            ObjectProvider<ActionGraphContribution> contributions,
+            ConfigurableListableBeanFactory beanFactory,
+            ActionGraphProperties properties
     ) {
         GoalBlackboardSeederRegistry registry = new GoalBlackboardSeederRegistry();
         seeders.orderedStream().forEach(registry::register);
         Map<GoalType, String> sources = new LinkedHashMap<>();
         for (ActionGraphContribution contribution : contributions.orderedStream().toList()) {
-            for (GoalBlackboardSeeder seeder : contribution.seeders()) {
+            List<GoalBlackboardSeeder> contributionSeeders = new java.util.ArrayList<>(contribution.seeders());
+            contributionSeeders.addAll(AnnotatedGoalSeederFactory.seeders(contribution.annotatedBeans().toArray()));
+            for (GoalBlackboardSeeder seeder : contributionSeeders) {
                 String previous = sources.putIfAbsent(seeder.goalType(), contribution.getClass().getName());
                 if (previous != null) {
                     throw new ActionGraphConfigurationException("Duplicate blackboard seeder for goal type "
                             + seeder.goalType().value() + " from contributions " + previous
                             + " and " + contribution.getClass().getName());
                 }
+                registry.register(seeder);
+            }
+        }
+        if (properties.getSeeders().isAutoRegisterAnnotated()) {
+            for (GoalBlackboardSeeder seeder : new AnnotatedSpringBeanGoalSeederRegistrar(beanFactory)
+                    .annotatedSeeders()) {
                 registry.register(seeder);
             }
         }

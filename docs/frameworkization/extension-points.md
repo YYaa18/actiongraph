@@ -117,7 +117,106 @@ actiongraph:
     auto-register-annotated: false
 ```
 
-## 3. Goal Validation
+## 3. Annotated Goal Seeders
+
+Seeder code is where most application boilerplate used to collect: reading
+`GoalParameters`, converting strings into domain types, resolving references,
+putting values into the Blackboard, and adding seed conditions. DX now supports
+annotated seeder methods for that binding layer.
+
+```java
+@Component
+final class ProductSeeders {
+    @ActionGraphGoalSeeder(
+            goal = "product.create",
+            seedConditions = "product:CREATE_REQUESTED"
+    )
+    Product seedCreate(
+            @GoalParam("name") String name,
+            @GoalParam("price") BigDecimal price,
+            @GoalParam("stock") int stock,
+            @GoalParam(value = "status", required = false, converter = ProductStatusConverter.class)
+            ProductStatus status
+    ) {
+        Product product = new Product();
+        product.setName(name);
+        product.setPrice(price);
+        product.setStock(stock);
+        product.setStatus(status == null ? ProductStatus.ON_SALE : status);
+        return product;
+    }
+}
+```
+
+The starter scans Spring Beans for `@ActionGraphGoalSeeder` and registers the
+inferred `GoalBlackboardSeeder` automatically. Non-Spring users can build
+seeders explicitly:
+
+```java
+List<GoalBlackboardSeeder> seeders =
+        AnnotatedGoalSeederFactory.seeders(new ProductSeeders());
+```
+
+Built-in conversion covers `String`, `Integer`/`int`, `Long`/`long`,
+`BigDecimal`, `Double`/`double`, `Boolean`/`boolean`, and enums. Complex
+conversion stays in application code through `GoalValueConverter<T>`.
+
+```java
+@Component
+final class ProductReferenceToId implements GoalValueConverter<Long> {
+    private final ProductService productService;
+
+    ProductReferenceToId(ProductService productService) {
+        this.productService = productService;
+    }
+
+    @Override
+    public Long convert(String rawValue, GoalParameterBindingContext context) {
+        return productService.findByReference(rawValue).getId();
+    }
+}
+```
+
+Spring resolves converter classes from the BeanFactory first, so converters can
+depend on services, repositories, HTTP clients, or policy components. Without
+Spring, converters must expose a no-arg constructor or be supplied through a
+custom `GoalValueConverterResolver`.
+
+Simple seeder methods return one object and ActionGraph writes it to the
+Blackboard. Use `@BlackboardValue` on the method to write a keyed value:
+
+```java
+@ActionGraphGoalSeeder(goal = "product.delete", seedConditions = "product:DELETE_REQUESTED")
+@BlackboardValue("productId")
+Long seedProductId(
+        @GoalParam(value = "productRef", converter = ProductReferenceToId.class)
+        Long productId
+) {
+    return productId;
+}
+```
+
+When a seeder must write multiple values, return `SeedResult`:
+
+```java
+return SeedResult.builder()
+        .put(Long.class, "productId", productId)
+        .put(product)
+        .addCondition("product:REFERENCE_RESOLVED")
+        .build();
+```
+
+Direct `GoalParameters` and `Blackboard` parameters are also supported as escape
+hatches. Auto-registration can be disabled for applications that assemble
+registries manually:
+
+```yaml
+actiongraph:
+  seeders:
+    auto-register-annotated: false
+```
+
+## 4. Goal Validation
 
 `GoalDefinition` now supports `seedConditions`, the static facts a seeder is
 expected to place on the initial Blackboard. The planner still trusts runtime
@@ -164,7 +263,7 @@ Seeder drift can be tested explicitly:
 SeederConformance.assertSeedsDeclaredConditions(seeder, sampleParameters, goalDefinition);
 ```
 
-## 4. Graph Export
+## 5. Graph Export
 
 `ActionGraphExporter` renders the registered action graph for development
 review and security/architecture walkthroughs. Mermaid output can be pasted into
@@ -190,7 +289,7 @@ Graph semantics:
 The exporter reuses the same closure algorithm as validation, so the graph view
 and startup diagnostics stay aligned.
 
-## 5. LLM Provider Extension
+## 6. LLM Provider Extension
 
 The model boundary remains `LlmClient`: models produce goals and parameters,
 never plans or executable actions.
@@ -229,7 +328,7 @@ Plaintext `actiongraph.llm.api-key` is rejected during property binding. Store
 the actual key in an environment variable or enterprise secret manager and only
 put the variable name in application configuration.
 
-## 6. Retry And Timeout
+## 7. Retry And Timeout
 
 `Action.executionPolicy()` controls runtime retry and per-attempt timeout. The
 default is legacy behavior: one attempt, no backoff, no timeout.
@@ -282,7 +381,7 @@ Runtime Trace adds two event types:
 These events are experimental in `0.1.x` and should be treated as audit-preview
 signals until the retry/idempotency convention has been validated in pilots.
 
-## 7. Durability And Cross-Service Actions
+## 8. Durability And Cross-Service Actions
 
 MS1 adds optional step-level durability for services that orchestrate remote
 Actions. It is off by default:
