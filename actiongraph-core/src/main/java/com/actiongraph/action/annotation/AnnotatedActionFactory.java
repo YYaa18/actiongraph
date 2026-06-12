@@ -143,6 +143,11 @@ public final class AnnotatedActionFactory {
         }
 
         @Override
+        public String description() {
+            return metadata.description();
+        }
+
+        @Override
         public Set<Class<?>> inputTypes() {
             return Set.copyOf(Arrays.asList(actionMethod.method().getParameterTypes()));
         }

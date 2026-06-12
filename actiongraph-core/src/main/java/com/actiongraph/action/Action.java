@@ -31,6 +31,20 @@ public interface Action {
     ActionId id();
 
     /**
+     * Human-readable description used by graph export, studio prompts, and
+     * operator previews.
+     *
+     * @return non-null description, empty when not documented
+     */
+    @Experimental(
+            since = "0.2.0",
+            value = "Action descriptions are experimental until Goal Studio composition workflows settle."
+    )
+    default String description() {
+        return "";
+    }
+
+    /**
      * Declares Blackboard value types expected before execution.
      *
      * @return non-null set of required input types

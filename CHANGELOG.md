@@ -26,6 +26,9 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 - Experimental Goal seeder DX refinements: automatic schema seeding from `@ActionGraphGoal(schema=...)`, `@GoalSchema(atLeastOne=...)`, `@BindGoalParams` record binding for explicit seeders, `TypedGoalValueConverter` type-level conversion, inherited Goal `seedConditions`, and default seed-condition seeders for no-parameter goals.
 - Experimental root `ActionGraph` facade plus `ChatResult`, providing the Golden Path `start`, `chat`, and `resume` entry point for application code.
 - Golden Path documentation (`golden-path.md`, `learning-path.md`, and L0-L4 quick start) plus a guard test that keeps L0 free of advanced SPI concepts.
+- Experimental configuration-defined Goals with typed parameter seeding, startup validation, duplicate-source diagnostics, Goal and Action graph fingerprints in `RUN_STARTED` trace, and fingerprint-checked bundle import.
+- Experimental Goal Studio for non-production drafting: LLM-generated Goal declarations only, validation auto-repair, framework-computed risk profiles, token-protected Spring endpoints, production-profile hard fail, and approved YAML bundle export.
+- Optional Action descriptions on `Action` and `@ActionGraphAction`, surfaced in graph export and Goal Studio prompts.
 
 ### Changed
 

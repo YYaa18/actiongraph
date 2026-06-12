@@ -128,6 +128,46 @@ CLASS public final class com.actiongraph.console.jdbc.JdbcConsoleRunRepository
   METHOD public java.util.Optional findRun(java.lang.String)
   METHOD public com.actiongraph.console.ConsoleRunPage findRuns(com.actiongraph.console.ConsoleRunQuery)
   METHOD public java.util.List findTraceEvents(java.lang.String)
+CLASS public abstract interface com.actiongraph.console.studio.GoalStudioLanguageModel
+  METHOD public abstract java.lang.String complete(java.lang.String,java.lang.String,int)
+CLASS public final record com.actiongraph.console.studio.GoalStudioRiskItem
+  CONSTRUCTOR public com.actiongraph.console.studio.GoalStudioRiskItem(java.lang.String,java.lang.String,com.actiongraph.action.ActionRiskLevel,boolean,boolean)
+  METHOD public java.lang.String actionId()
+  METHOD public java.lang.String description()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public boolean missingDescription()
+  METHOD public boolean requiresHumanReview()
+  METHOD public com.actiongraph.action.ActionRiskLevel riskLevel()
+  METHOD public final java.lang.String toString()
+CLASS public final class com.actiongraph.console.studio.GoalStudioService
+  CONSTRUCTOR public com.actiongraph.console.studio.GoalStudioService(com.actiongraph.console.studio.GoalStudioLanguageModel,com.actiongraph.interpretation.GoalCatalog,com.actiongraph.action.ActionRegistry,com.actiongraph.interpretation.config.ConfiguredGoalDefinitionFactory,int,java.nio.file.Path,java.lang.String)
+  METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse approve(java.lang.String,java.lang.String)
+  METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse createSession(java.lang.String)
+  METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse refine(java.lang.String,java.lang.String)
+  METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse session(java.lang.String)
+CLASS public final record com.actiongraph.console.studio.GoalStudioSessionResponse
+  CONSTRUCTOR public com.actiongraph.console.studio.GoalStudioSessionResponse(java.lang.String,com.actiongraph.console.studio.GoalStudioStatus,java.lang.String,com.actiongraph.interpretation.config.ConfiguredGoalDefinition,boolean,java.util.List,java.util.List,java.util.List,int,java.lang.String,java.lang.String)
+  METHOD public java.lang.String bundle()
+  METHOD public java.lang.String bundlePath()
+  METHOD public java.lang.String description()
+  METHOD public java.util.List diagnostics()
+  METHOD public com.actiongraph.interpretation.config.ConfiguredGoalDefinition draft()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public java.lang.String id()
+  METHOD public java.util.List previewPlan()
+  METHOD public boolean reachable()
+  METHOD public int repairAttempts()
+  METHOD public java.util.List riskProfile()
+  METHOD public com.actiongraph.console.studio.GoalStudioStatus status()
+  METHOD public final java.lang.String toString()
+CLASS public final enum com.actiongraph.console.studio.GoalStudioStatus
+  FIELD public static final com.actiongraph.console.studio.GoalStudioStatus APPROVED
+  FIELD public static final com.actiongraph.console.studio.GoalStudioStatus DRAFT_INVALID
+  FIELD public static final com.actiongraph.console.studio.GoalStudioStatus DRAFT_VALID
+  METHOD public static com.actiongraph.console.studio.GoalStudioStatus valueOf(java.lang.String)
+  METHOD public static com.actiongraph.console.studio.GoalStudioStatus[] values()
 
 MODULE actiongraph-control-plane-api
 CLASS public final class com.actiongraph.catalog.ActionGraphComponent
@@ -413,10 +453,12 @@ CLASS public final class com.actiongraph.controlplane.auth.UnauthorizedControlPl
 
 MODULE actiongraph-core
 CLASS public final class com.actiongraph.ActionGraph
+  METHOD public java.lang.String actionGraphFingerprint()
   METHOD public static com.actiongraph.ActionGraph$Builder builder()
   METHOD public com.actiongraph.ChatResult chat(java.lang.String)
   METHOD public com.actiongraph.ChatResult chat(java.lang.String,java.util.Map)
   METHOD public com.actiongraph.ChatResult chat(java.lang.String,java.util.Map,java.util.Map)
+  METHOD public java.util.Optional goalFingerprint(java.lang.String)
   METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String)
   METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,java.util.Map)
   METHOD public com.actiongraph.runtime.RunResult start(com.actiongraph.interpretation.GoalInterpretation,java.util.Map)
@@ -451,6 +493,7 @@ CLASS public final record com.actiongraph.ChatResult
 CLASS public abstract interface com.actiongraph.action.Action
   METHOD public default com.actiongraph.action.CompensationResult compensate(com.actiongraph.action.ExecutionContext)
   METHOD public abstract int cost()
+  METHOD public default java.lang.String description()
   METHOD public abstract java.util.Set effects()
   METHOD public abstract com.actiongraph.action.ActionResult execute(com.actiongraph.action.ExecutionContext)
   METHOD public default com.actiongraph.action.ActionExecutionPolicy executionPolicy()
@@ -527,6 +570,7 @@ CLASS public abstract interface com.actiongraph.action.ExecutionContext
 CLASS public abstract annotation com.actiongraph.action.annotation.ActionGraphAction
   METHOD public abstract long backoffMillis()
   METHOD public abstract int cost()
+  METHOD public abstract java.lang.String description()
   METHOD public abstract java.lang.String[] effects()
   METHOD public abstract java.lang.String id()
   METHOD public abstract int maxAttempts()
@@ -617,6 +661,10 @@ CLASS public class com.actiongraph.exception.ActionGraphNotFoundException
   CONSTRUCTOR public com.actiongraph.exception.ActionGraphNotFoundException(java.lang.String,java.lang.String,java.lang.String)
   METHOD public java.lang.String resourceId()
   METHOD public java.lang.String resourceType()
+CLASS public final class com.actiongraph.fingerprint.ActionGraphFingerprints
+  METHOD public static java.lang.String actionGraph(java.util.Collection)
+  METHOD public static java.lang.String goal(com.actiongraph.interpretation.GoalDefinition)
+  METHOD public static java.lang.String goals(java.util.Collection)
 CLASS public final class com.actiongraph.graph.ActionGraphExporter
   CONSTRUCTOR public com.actiongraph.graph.ActionGraphExporter()
   METHOD public java.lang.String toDot(java.util.Collection)
@@ -649,16 +697,19 @@ CLASS public final class com.actiongraph.interpretation.GoalCatalog
 CLASS public final record com.actiongraph.interpretation.GoalDefinition
   CONSTRUCTOR public com.actiongraph.interpretation.GoalDefinition(com.actiongraph.interpretation.GoalType,java.lang.String,com.actiongraph.planning.Goal,java.util.List)
   CONSTRUCTOR public com.actiongraph.interpretation.GoalDefinition(com.actiongraph.interpretation.GoalType,java.lang.String,com.actiongraph.planning.Goal,java.util.List,java.lang.Class,java.util.Set)
+  CONSTRUCTOR public com.actiongraph.interpretation.GoalDefinition(com.actiongraph.interpretation.GoalType,java.lang.String,com.actiongraph.planning.Goal,java.util.List,java.lang.Class,java.util.Set,boolean)
   CONSTRUCTOR public com.actiongraph.interpretation.GoalDefinition(com.actiongraph.interpretation.GoalType,java.lang.String,com.actiongraph.planning.Goal,java.util.List,java.util.Set)
   METHOD public java.lang.String description()
   METHOD public final boolean equals(java.lang.Object)
   METHOD public com.actiongraph.planning.Goal goal()
   METHOD public final int hashCode()
+  METHOD public boolean parameterSeeding()
   METHOD public java.util.List parameters()
   METHOD public java.lang.Class schema()
   METHOD public java.util.Set seedConditions()
   METHOD public final java.lang.String toString()
   METHOD public com.actiongraph.interpretation.GoalType type()
+  METHOD public com.actiongraph.interpretation.GoalDefinition withParameterSeeding()
 CLASS public final record com.actiongraph.interpretation.GoalInterpretation
   CONSTRUCTOR public com.actiongraph.interpretation.GoalInterpretation(com.actiongraph.interpretation.GoalType,com.actiongraph.interpretation.GoalParameters,java.util.Set,java.util.Optional,java.util.Optional)
   METHOD public java.util.Optional clarificationQuestion()
@@ -677,15 +728,19 @@ CLASS public abstract interface com.actiongraph.interpretation.GoalInterpreter
   METHOD public default com.actiongraph.interpretation.GoalInterpretation interpret(java.lang.String,com.actiongraph.interpretation.GoalParameters)
 CLASS public final record com.actiongraph.interpretation.GoalParameterDefinition
   CONSTRUCTOR public com.actiongraph.interpretation.GoalParameterDefinition(java.lang.String,java.lang.String,boolean,java.util.Optional)
+  CONSTRUCTOR public com.actiongraph.interpretation.GoalParameterDefinition(java.lang.String,java.lang.String,boolean,java.util.Optional,java.lang.Class)
   METHOD public java.lang.String description()
   METHOD public final boolean equals(java.lang.Object)
   METHOD public java.util.Optional example()
   METHOD public final int hashCode()
   METHOD public java.lang.String name()
   METHOD public static com.actiongraph.interpretation.GoalParameterDefinition optional(java.lang.String,java.lang.String,java.lang.String)
+  METHOD public static com.actiongraph.interpretation.GoalParameterDefinition optional(java.lang.String,java.lang.String,java.lang.String,java.lang.Class)
   METHOD public boolean required()
   METHOD public static com.actiongraph.interpretation.GoalParameterDefinition required(java.lang.String,java.lang.String,java.lang.String)
+  METHOD public static com.actiongraph.interpretation.GoalParameterDefinition required(java.lang.String,java.lang.String,java.lang.String,java.lang.Class)
   METHOD public final java.lang.String toString()
+  METHOD public java.lang.Class type()
 CLASS public final record com.actiongraph.interpretation.GoalParameters
   CONSTRUCTOR public com.actiongraph.interpretation.GoalParameters(java.util.Map)
   METHOD public static com.actiongraph.interpretation.GoalParameters empty()
@@ -745,8 +800,10 @@ CLASS public abstract annotation com.actiongraph.interpretation.annotation.GoalP
 CLASS public final class com.actiongraph.interpretation.annotation.GoalParameterBinder
   CONSTRUCTOR public com.actiongraph.interpretation.annotation.GoalParameterBinder(com.actiongraph.interpretation.annotation.GoalValueConverterResolver)
   METHOD public java.lang.Object bindParameter(java.lang.reflect.Parameter,com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard)
+  METHOD public java.lang.Object bindParameterDefinition(com.actiongraph.interpretation.GoalParameterDefinition,com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard)
   METHOD public java.lang.Object bindRecord(java.lang.Class,com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard)
   METHOD public java.lang.Object bindRecord(java.lang.Class,com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard,boolean)
+  METHOD public java.lang.Object bindValue(java.lang.String,java.lang.Class,boolean,com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard)
   METHOD public static com.actiongraph.interpretation.annotation.GoalParameterBinder reflection()
   METHOD public void validateRecordSchema(java.lang.Class)
 CLASS public final record com.actiongraph.interpretation.annotation.GoalParameterBindingContext
@@ -792,6 +849,34 @@ CLASS public static final record com.actiongraph.interpretation.annotation.SeedR
   METHOD public java.lang.Object value()
 CLASS public abstract interface com.actiongraph.interpretation.annotation.TypedGoalValueConverter
   METHOD public abstract java.lang.Class targetType()
+CLASS public final record com.actiongraph.interpretation.config.ConfiguredGoalDefinition
+  CONSTRUCTOR public com.actiongraph.interpretation.config.ConfiguredGoalDefinition(java.lang.String,java.lang.String,boolean,java.util.List,java.util.List,java.util.List,java.lang.String)
+  METHOD public java.lang.String description()
+  METHOD public boolean enabled()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public java.util.List parameters()
+  METHOD public java.util.List seedConditions()
+  METHOD public java.lang.String source()
+  METHOD public java.util.List targetConditions()
+  METHOD public final java.lang.String toString()
+  METHOD public java.lang.String type()
+CLASS public final class com.actiongraph.interpretation.config.ConfiguredGoalDefinitionFactory
+  CONSTRUCTOR public com.actiongraph.interpretation.config.ConfiguredGoalDefinitionFactory(com.actiongraph.interpretation.annotation.GoalValueConverterResolver)
+  CONSTRUCTOR public com.actiongraph.interpretation.config.ConfiguredGoalDefinitionFactory(java.lang.ClassLoader,com.actiongraph.interpretation.annotation.GoalValueConverterResolver)
+  METHOD public com.actiongraph.interpretation.GoalDefinition definition(com.actiongraph.interpretation.config.ConfiguredGoalDefinition)
+  METHOD public java.util.List definitions(java.util.Collection)
+  METHOD public java.lang.Class resolveType(java.lang.String,java.lang.String)
+CLASS public final record com.actiongraph.interpretation.config.ConfiguredGoalParameter
+  CONSTRUCTOR public com.actiongraph.interpretation.config.ConfiguredGoalParameter(java.lang.String,java.lang.String,boolean,java.lang.String,java.lang.String)
+  METHOD public java.lang.String description()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public java.lang.String example()
+  METHOD public final int hashCode()
+  METHOD public java.lang.String name()
+  METHOD public boolean required()
+  METHOD public final java.lang.String toString()
+  METHOD public java.lang.String type()
 CLASS public final class com.actiongraph.memory.InMemoryMemoryRepository
   CONSTRUCTOR public com.actiongraph.memory.InMemoryMemoryRepository()
   METHOD public void delete(java.lang.String)
@@ -1858,6 +1943,54 @@ CLASS public class com.actiongraph.console.spring.ActionGraphConsoleServiceAutoC
 CLASS public class com.actiongraph.console.spring.ActionGraphConsoleUiAutoConfiguration
   CONSTRUCTOR public com.actiongraph.console.spring.ActionGraphConsoleUiAutoConfiguration()
   METHOD public com.actiongraph.console.spring.ActionGraphConsolePageController actionGraphConsolePageController(com.actiongraph.console.spring.ActionGraphConsoleProperties)
+CLASS public class com.actiongraph.console.studio.spring.ActionGraphStudioAutoConfiguration
+  CONSTRUCTOR public com.actiongraph.console.studio.spring.ActionGraphStudioAutoConfiguration()
+  METHOD public com.actiongraph.console.studio.GoalStudioService actionGraphGoalStudioService(com.actiongraph.llm.LlmClient,com.actiongraph.interpretation.GoalCatalog,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.console.studio.spring.ActionGraphStudioProperties,org.springframework.core.env.Environment)
+  METHOD public com.actiongraph.console.studio.spring.ActionGraphStudioController actionGraphStudioController(com.actiongraph.console.studio.GoalStudioService,com.actiongraph.console.studio.spring.ActionGraphStudioProperties)
+CLASS public final class com.actiongraph.console.studio.spring.ActionGraphStudioController
+  CONSTRUCTOR public com.actiongraph.console.studio.spring.ActionGraphStudioController(com.actiongraph.console.studio.GoalStudioService,com.actiongraph.console.studio.spring.ActionGraphStudioProperties)
+  METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse approve(org.springframework.http.HttpHeaders,java.lang.String,com.actiongraph.console.studio.spring.ActionGraphStudioController$ApproveSessionRequest)
+  METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse create(org.springframework.http.HttpHeaders,com.actiongraph.console.studio.spring.ActionGraphStudioController$CreateSessionRequest)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleBadRequest(java.lang.RuntimeException)
+  METHOD public com.actiongraph.controlplane.api.ControlPlaneErrorResponse handleUnauthorized(com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException)
+  METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse refine(org.springframework.http.HttpHeaders,java.lang.String,com.actiongraph.console.studio.spring.ActionGraphStudioController$RefineSessionRequest)
+  METHOD public com.actiongraph.console.studio.GoalStudioSessionResponse session(org.springframework.http.HttpHeaders,java.lang.String)
+CLASS public static final record com.actiongraph.console.studio.spring.ActionGraphStudioController$ApproveSessionRequest
+  CONSTRUCTOR public com.actiongraph.console.studio.spring.ActionGraphStudioController$ApproveSessionRequest(java.lang.String)
+  METHOD public java.lang.String approver()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public final java.lang.String toString()
+CLASS public static final record com.actiongraph.console.studio.spring.ActionGraphStudioController$CreateSessionRequest
+  CONSTRUCTOR public com.actiongraph.console.studio.spring.ActionGraphStudioController$CreateSessionRequest(java.lang.String)
+  METHOD public java.lang.String description()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public final java.lang.String toString()
+CLASS public static final record com.actiongraph.console.studio.spring.ActionGraphStudioController$RefineSessionRequest
+  CONSTRUCTOR public com.actiongraph.console.studio.spring.ActionGraphStudioController$RefineSessionRequest(java.lang.String)
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public java.lang.String feedback()
+  METHOD public final int hashCode()
+  METHOD public final java.lang.String toString()
+CLASS public class com.actiongraph.console.studio.spring.ActionGraphStudioProperties
+  CONSTRUCTOR public com.actiongraph.console.studio.spring.ActionGraphStudioProperties()
+  METHOD public java.nio.file.Path getBundleDirectory()
+  METHOD public java.util.List getForbiddenProfiles()
+  METHOD public int getMaxAutoRepairs()
+  METHOD public java.lang.String getPath()
+  METHOD public java.lang.String getSharedSecret()
+  METHOD public java.lang.String getSourceEnv()
+  METHOD public java.lang.String getTokenHeader()
+  METHOD public boolean isEnabled()
+  METHOD public void setBundleDirectory(java.nio.file.Path)
+  METHOD public void setEnabled(boolean)
+  METHOD public void setForbiddenProfiles(java.util.List)
+  METHOD public void setMaxAutoRepairs(int)
+  METHOD public void setPath(java.lang.String)
+  METHOD public void setSharedSecret(java.lang.String)
+  METHOD public void setSourceEnv(java.lang.String)
+  METHOD public void setTokenHeader(java.lang.String)
 CLASS public final class com.actiongraph.events.spring.ActionGraphEventCallbackController
   CONSTRUCTOR public com.actiongraph.events.spring.ActionGraphEventCallbackController(com.actiongraph.events.ExternalEventGateway,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.events.spring.ActionGraphEventCallbackController$EventCallbackResponse handle(org.springframework.http.HttpHeaders,java.lang.String,java.lang.String,java.lang.String)
@@ -2089,7 +2222,7 @@ CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   METHOD public com.actiongraph.runtime.GoapExecutor actionGraphExecutor(com.actiongraph.planning.Planner,com.actiongraph.policy.ExecutionPolicyGuard,com.actiongraph.policy.HumanReviewPolicy,com.actiongraph.trace.TraceRepository,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.policy.DataMaskingPolicy,com.actiongraph.policy.ReviewAttributeContributor,com.actiongraph.observability.ObservationSink,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.events.ExternalEventGateway actionGraphExternalEventGateway(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.interpretation.GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,com.actiongraph.interpretation.GoalCatalog,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
-  METHOD public com.actiongraph.interpretation.GoalCatalog actionGraphGoalCatalog(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
+  METHOD public com.actiongraph.interpretation.GoalCatalog actionGraphGoalCatalog(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.action.ActionRegistry,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.HumanReviewPolicy actionGraphHumanReviewPolicy()
   METHOD public com.actiongraph.observability.ObservationSink actionGraphObservationSink()
   METHOD public com.actiongraph.llm.LlmClient actionGraphOpenAiCompatibleLlmClient(com.actiongraph.spring.ActionGraphProperties)
@@ -2165,8 +2298,46 @@ CLASS public static final class com.actiongraph.spring.ActionGraphProperties$Exe
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ExecutorProperties()
   METHOD public int getMaxSteps()
   METHOD public void setMaxSteps(int)
+CLASS public static final enum com.actiongraph.spring.ActionGraphProperties$FingerprintMismatchMode
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$FingerprintMismatchMode FAIL
+  FIELD public static final com.actiongraph.spring.ActionGraphProperties$FingerprintMismatchMode WARN
+  METHOD public static com.actiongraph.spring.ActionGraphProperties$FingerprintMismatchMode valueOf(java.lang.String)
+  METHOD public static com.actiongraph.spring.ActionGraphProperties$FingerprintMismatchMode[] values()
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$GoalBundleProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$GoalBundleProperties()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$FingerprintMismatchMode getFingerprintMismatch()
+  METHOD public java.util.List getLocations()
+  METHOD public void setFingerprintMismatch(com.actiongraph.spring.ActionGraphProperties$FingerprintMismatchMode)
+  METHOD public void setLocations(java.util.List)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$GoalDefinitionProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$GoalDefinitionProperties()
+  METHOD public java.lang.String getDescription()
+  METHOD public java.util.List getParameters()
+  METHOD public java.util.List getSeedConditions()
+  METHOD public java.util.List getTargetConditions()
+  METHOD public java.lang.String getType()
+  METHOD public boolean isEnabled()
+  METHOD public void setDescription(java.lang.String)
+  METHOD public void setEnabled(boolean)
+  METHOD public void setSeedConditions(java.util.List)
+  METHOD public void setTargetConditions(java.util.List)
+  METHOD public void setType(java.lang.String)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$GoalParameterProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$GoalParameterProperties()
+  METHOD public java.lang.String getDescription()
+  METHOD public java.lang.String getExample()
+  METHOD public java.lang.String getName()
+  METHOD public java.lang.String getType()
+  METHOD public boolean isRequired()
+  METHOD public void setDescription(java.lang.String)
+  METHOD public void setExample(java.lang.String)
+  METHOD public void setName(java.lang.String)
+  METHOD public void setRequired(boolean)
+  METHOD public void setType(java.lang.String)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$GoalsProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$GoalsProperties()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$GoalBundleProperties getBundle()
+  METHOD public java.util.List getDefinitions()
   METHOD public boolean isAutoRegisterAnnotated()
   METHOD public void setAutoRegisterAnnotated(boolean)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$LlmProperties
@@ -2214,4 +2385,9 @@ CLASS public static final class com.actiongraph.spring.ActionGraphProperties$Val
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ValidationProperties()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ValidationMode getMode()
   METHOD public void setMode(com.actiongraph.spring.ActionGraphProperties$ValidationMode)
+CLASS public final class com.actiongraph.spring.SpringGoalValueConverterResolver
+  CONSTRUCTOR public com.actiongraph.spring.SpringGoalValueConverterResolver(org.springframework.beans.factory.config.ConfigurableListableBeanFactory)
+  CONSTRUCTOR public com.actiongraph.spring.SpringGoalValueConverterResolver(org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.interpretation.annotation.GoalValueConverterResolver)
+  METHOD public com.actiongraph.interpretation.annotation.GoalValueConverter resolve(java.lang.Class)
+  METHOD public java.util.Optional resolveForType(java.lang.Class)
 

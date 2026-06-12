@@ -7,6 +7,7 @@ import com.actiongraph.interpretation.annotation.GoalParameterBinder;
 import com.actiongraph.interpretation.annotation.GoalValueConverterResolver;
 import com.actiongraph.planning.Condition;
 import com.actiongraph.runtime.Blackboard;
+import com.actiongraph.runtime.BlackboardKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +69,10 @@ public final class GoalBlackboardSeederRegistry {
                         definition.seedConditions(), binder));
                 continue;
             }
+            if (definition.parameterSeeding()) {
+                register(new ParameterGoalBlackboardSeeder(definition, binder));
+                continue;
+            }
             if (!definition.seedConditions().isEmpty()
                     && definition.parameters().stream().noneMatch(GoalParameterDefinition::required)) {
                 register(new SeedConditionSeeder(definition.type(), definition.seedConditions()));
@@ -118,6 +123,46 @@ public final class GoalBlackboardSeederRegistry {
         @Override
         public Optional<Set<Condition>> declaredSeedConditions() {
             return Optional.of(seedConditions);
+        }
+    }
+
+    private static final class ParameterGoalBlackboardSeeder implements GoalBlackboardSeeder {
+        private final GoalType goalType;
+        private final java.util.List<GoalParameterDefinition> parameters;
+        private final Set<Condition> seedConditions;
+        private final GoalParameterBinder binder;
+
+        private ParameterGoalBlackboardSeeder(GoalDefinition definition, GoalParameterBinder binder) {
+            this.goalType = definition.type();
+            this.parameters = java.util.List.copyOf(definition.parameters());
+            this.seedConditions = Set.copyOf(definition.seedConditions());
+            this.binder = Objects.requireNonNull(binder, "binder");
+        }
+
+        @Override
+        public GoalType goalType() {
+            return goalType;
+        }
+
+        @Override
+        public void seed(GoalParameters parameters, Blackboard blackboard) {
+            for (GoalParameterDefinition parameter : this.parameters) {
+                Object value = binder.bindParameterDefinition(parameter, parameters, blackboard);
+                if (value != null) {
+                    putNamedValue(blackboard, parameter.type(), parameter.name(), value);
+                }
+            }
+            seedConditions.forEach(blackboard::addCondition);
+        }
+
+        @Override
+        public Optional<Set<Condition>> declaredSeedConditions() {
+            return Optional.of(seedConditions);
+        }
+
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        private void putNamedValue(Blackboard blackboard, Class<?> type, String name, Object value) {
+            blackboard.put(BlackboardKey.of((Class) type, name), value);
         }
     }
 

@@ -121,7 +121,8 @@ public final class AnnotatedGoalFactory {
         for (Parameter parameter : parameters) {
             definitions.add(parameterDefinition(
                     parameter.getAnnotation(GoalParameter.class),
-                    inferredParameterName(parameter)
+                    inferredParameterName(parameter),
+                    parameter.getType()
             ));
         }
         return List.copyOf(definitions);
@@ -136,7 +137,8 @@ public final class AnnotatedGoalFactory {
             for (RecordComponent component : schema.getRecordComponents()) {
                 definitions.add(parameterDefinition(
                         component.getAnnotation(GoalParameter.class),
-                        component.getName()
+                        component.getName(),
+                        component.getType()
                 ));
             }
             return List.copyOf(definitions);
@@ -147,12 +149,17 @@ public final class AnnotatedGoalFactory {
                 .toList();
         List<GoalParameterDefinition> definitions = new ArrayList<>();
         for (Field field : fields) {
-            definitions.add(parameterDefinition(field.getAnnotation(GoalParameter.class), field.getName()));
+            definitions.add(parameterDefinition(field.getAnnotation(GoalParameter.class), field.getName(),
+                    field.getType()));
         }
         return List.copyOf(definitions);
     }
 
-    private static GoalParameterDefinition parameterDefinition(GoalParameter annotation, String inferredName) {
+    private static GoalParameterDefinition parameterDefinition(
+            GoalParameter annotation,
+            String inferredName,
+            Class<?> type
+    ) {
         String name = inferredName;
         String description = humanize(inferredName);
         boolean required = true;
@@ -163,7 +170,7 @@ public final class AnnotatedGoalFactory {
             required = annotation.required();
             example = annotation.example().isBlank() ? Optional.empty() : Optional.of(annotation.example());
         }
-        return new GoalParameterDefinition(name, description, required, example);
+        return new GoalParameterDefinition(name, description, required, example, type);
     }
 
     private static String inferredParameterName(Parameter parameter) {

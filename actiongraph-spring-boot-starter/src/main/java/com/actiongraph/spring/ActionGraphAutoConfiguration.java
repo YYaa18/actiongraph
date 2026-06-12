@@ -14,6 +14,7 @@ import com.actiongraph.events.EventApplier;
 import com.actiongraph.events.EventWaitSweeper;
 import com.actiongraph.events.ExternalEventGateway;
 import com.actiongraph.exception.ActionGraphConfigurationException;
+import com.actiongraph.fingerprint.ActionGraphFingerprints;
 import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.interpretation.GoalCatalog;
@@ -23,6 +24,9 @@ import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalFactory;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalSeederFactory;
 import com.actiongraph.interpretation.annotation.GoalValueConverterResolver;
+import com.actiongraph.interpretation.config.ConfiguredGoalDefinition;
+import com.actiongraph.interpretation.config.ConfiguredGoalDefinitionFactory;
+import com.actiongraph.interpretation.config.ConfiguredGoalParameter;
 import com.actiongraph.llm.DeepSeekChatClient;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.OpenAiCompatibleChatClient;
@@ -57,6 +61,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,8 +73,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @AutoConfiguration
 @EnableConfigurationProperties(ActionGraphProperties.class)
@@ -316,34 +326,38 @@ public class ActionGraphAutoConfiguration {
             ObjectProvider<GoalDefinition> goalDefinitions,
             ObjectProvider<ActionGraphContribution> contributions,
             ConfigurableListableBeanFactory beanFactory,
+            ActionRegistry actionRegistry,
             ActionGraphProperties properties
     ) {
         GoalCatalog catalog = new GoalCatalog();
-        goalDefinitions.orderedStream().forEach(catalog::register);
         Map<GoalType, String> sources = new LinkedHashMap<>();
+        goalDefinitions.orderedStream().forEach(goal ->
+                registerGoal(catalog, sources, goal, "GoalDefinition bean"));
         for (ActionGraphContribution contribution : contributions.orderedStream().toList()) {
             for (GoalDefinition goal : contribution.goals()) {
-                String previous = sources.putIfAbsent(goal.type(), contribution.getClass().getName());
-                if (previous != null) {
-                    throw new ActionGraphConfigurationException("Duplicate goal type " + goal.type().value()
-                            + " from contributions " + previous + " and " + contribution.getClass().getName());
-                }
-                catalog.register(goal);
+                registerGoal(catalog, sources, goal, "contribution " + contribution.getClass().getName());
             }
             for (GoalDefinition goal : AnnotatedGoalFactory.definitions(contribution.annotatedBeans().toArray())) {
-                String previous = sources.putIfAbsent(goal.type(), contribution.getClass().getName());
-                if (previous != null) {
-                    throw new ActionGraphConfigurationException("Duplicate goal type " + goal.type().value()
-                            + " from contributions " + previous + " and " + contribution.getClass().getName());
-                }
-                catalog.register(goal);
+                registerGoal(catalog, sources, goal,
+                        "annotated bean from contribution " + contribution.getClass().getName());
             }
         }
         if (properties.getGoals().isAutoRegisterAnnotated()) {
             for (GoalDefinition goal : new AnnotatedSpringBeanGoalRegistrar(beanFactory).annotatedGoals()) {
-                catalog.register(goal);
+                registerGoal(catalog, sources, goal, "annotated Spring bean");
             }
         }
+        GoalValueConverterResolver converterResolver =
+                new AnnotatedSpringBeanGoalSeederRegistrar(beanFactory, catalog).converterResolver();
+        ConfiguredGoalDefinitionFactory factory = new ConfiguredGoalDefinitionFactory(converterResolver);
+        for (ConfiguredGoalDefinition configured : configuredGoalDefinitions(properties)) {
+            if (configured.enabled()) {
+                registerGoal(catalog, sources, factory.definition(configured), configured.source());
+            }
+        }
+        List<SourcedGoalDefinition> bundledGoals = loadBundleGoalDefinitions(properties, factory,
+                ActionGraphFingerprints.actionGraph(actionRegistry.all()));
+        bundledGoals.forEach(goal -> registerGoal(catalog, sources, goal.definition(), goal.source()));
         return catalog;
     }
 
@@ -416,7 +430,9 @@ public class ActionGraphAutoConfiguration {
         if (goalInterpreter != null) {
             builder.goalInterpreter(goalInterpreter);
         }
-        return builder.build();
+        ActionGraph actionGraph = builder.build();
+        LOGGER.info("ActionGraph actionGraphFingerprint={}", actionGraph.actionGraphFingerprint());
+        return actionGraph;
     }
 
     @Bean
@@ -468,6 +484,195 @@ public class ActionGraphAutoConfiguration {
         }
     }
 
+    private void registerGoal(
+            GoalCatalog catalog,
+            Map<GoalType, String> sources,
+            GoalDefinition goal,
+            String source
+    ) {
+        String previous = sources.putIfAbsent(goal.type(), source);
+        if (previous != null) {
+            throw new ActionGraphConfigurationException("Duplicate goal type " + goal.type().value()
+                    + " from " + previous + " and " + source);
+        }
+        catalog.register(goal);
+    }
+
+    private List<ConfiguredGoalDefinition> configuredGoalDefinitions(ActionGraphProperties properties) {
+        List<ConfiguredGoalDefinition> definitions = new java.util.ArrayList<>();
+        List<ActionGraphProperties.GoalDefinitionProperties> configured =
+                properties.getGoals().getDefinitions();
+        for (int i = 0; i < configured.size(); i++) {
+            ActionGraphProperties.GoalDefinitionProperties definition = configured.get(i);
+            definitions.add(configuredGoalDefinition(definition, "actiongraph.goals.definitions[" + i + "]"));
+        }
+        return List.copyOf(definitions);
+    }
+
+    private ConfiguredGoalDefinition configuredGoalDefinition(
+            ActionGraphProperties.GoalDefinitionProperties definition,
+            String source
+    ) {
+        List<ConfiguredGoalParameter> parameters = new java.util.ArrayList<>();
+        for (ActionGraphProperties.GoalParameterProperties parameter : definition.getParameters()) {
+            parameters.add(new ConfiguredGoalParameter(
+                    parameter.getName(),
+                    parameter.getType(),
+                    parameter.isRequired(),
+                    parameter.getDescription(),
+                    parameter.getExample()
+            ));
+        }
+        return new ConfiguredGoalDefinition(
+                definition.getType(),
+                definition.getDescription(),
+                definition.isEnabled(),
+                definition.getTargetConditions(),
+                definition.getSeedConditions(),
+                parameters,
+                source
+        );
+    }
+
+    private List<SourcedGoalDefinition> loadBundleGoalDefinitions(
+            ActionGraphProperties properties,
+            ConfiguredGoalDefinitionFactory factory,
+            String currentActionGraphFingerprint
+    ) {
+        List<SourcedGoalDefinition> definitions = new java.util.ArrayList<>();
+        List<String> locations = properties.getGoals().getBundle().getLocations();
+        for (String location : locations) {
+            if (location == null || location.isBlank()) {
+                throw new ActionGraphConfigurationException("actiongraph.goals.bundle.locations must not contain blanks");
+            }
+            BundleReadResult bundle = readBundle(location.trim(), factory);
+            if (!bundle.bundleFingerprint().equals(bundle.declaredBundleFingerprint())) {
+                throw new ActionGraphConfigurationException("Goal bundle " + location
+                        + " fingerprint self-check failed: declared " + bundle.declaredBundleFingerprint()
+                        + " but computed " + bundle.bundleFingerprint());
+            }
+            if (!bundle.actionGraphFingerprint().equals(currentActionGraphFingerprint)) {
+                String message = "Goal bundle " + location + " was validated against action graph fingerprint "
+                        + bundle.actionGraphFingerprint() + " but current fingerprint is "
+                        + currentActionGraphFingerprint;
+                if (properties.getGoals().getBundle().getFingerprintMismatch()
+                        == ActionGraphProperties.FingerprintMismatchMode.FAIL) {
+                    throw new ActionGraphConfigurationException(message);
+                }
+                LOGGER.warn(message);
+            }
+            definitions.addAll(bundle.definitions());
+        }
+        return List.copyOf(definitions);
+    }
+
+    private BundleReadResult readBundle(String location, ConfiguredGoalDefinitionFactory factory) {
+        Resource resource = new DefaultResourceLoader().getResource(location);
+        if (!resource.exists()) {
+            throw new ActionGraphConfigurationException("Goal bundle does not exist: " + location);
+        }
+        YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
+        yaml.setResources(resource);
+        Properties properties = yaml.getObject();
+        if (properties == null) {
+            throw new ActionGraphConfigurationException("Goal bundle is empty: " + location);
+        }
+        String declaredBundleFingerprint = requireProperty(properties,
+                "actiongraph-bundle.bundle-fingerprint", location);
+        String actionGraphFingerprint = requireProperty(properties,
+                "actiongraph-bundle.action-graph-fingerprint", location);
+        List<ConfiguredGoalDefinition> configured = parseConfiguredGoalDefinitions(
+                properties, "actiongraph-bundle.definitions", location);
+        List<SourcedGoalDefinition> definitions = configured.stream()
+                .filter(ConfiguredGoalDefinition::enabled)
+                .map(declaration -> new SourcedGoalDefinition(factory.definition(declaration), declaration.source()))
+                .toList();
+        List<GoalDefinition> rawDefinitions = definitions.stream()
+                .map(SourcedGoalDefinition::definition)
+                .toList();
+        return new BundleReadResult(
+                List.copyOf(definitions),
+                declaredBundleFingerprint,
+                actionGraphFingerprint,
+                ActionGraphFingerprints.goals(rawDefinitions)
+        );
+    }
+
+    private List<ConfiguredGoalDefinition> parseConfiguredGoalDefinitions(
+            Properties properties,
+            String prefix,
+            String source
+    ) {
+        List<ConfiguredGoalDefinition> definitions = new java.util.ArrayList<>();
+        for (int index : indexes(properties, prefix)) {
+            String base = prefix + "[" + index + "]";
+            definitions.add(new ConfiguredGoalDefinition(
+                    property(properties, base + ".type"),
+                    property(properties, base + ".description"),
+                    Boolean.parseBoolean(property(properties, base + ".enabled", "true")),
+                    list(properties, base + ".target-conditions"),
+                    list(properties, base + ".seed-conditions"),
+                    parseConfiguredGoalParameters(properties, base + ".parameters"),
+                    source + "#" + base
+            ));
+        }
+        return List.copyOf(definitions);
+    }
+
+    private List<ConfiguredGoalParameter> parseConfiguredGoalParameters(Properties properties, String prefix) {
+        List<ConfiguredGoalParameter> parameters = new java.util.ArrayList<>();
+        for (int index : indexes(properties, prefix)) {
+            String base = prefix + "[" + index + "]";
+            parameters.add(new ConfiguredGoalParameter(
+                    property(properties, base + ".name"),
+                    property(properties, base + ".type", "string"),
+                    Boolean.parseBoolean(property(properties, base + ".required", "true")),
+                    property(properties, base + ".description"),
+                    property(properties, base + ".example")
+            ));
+        }
+        return List.copyOf(parameters);
+    }
+
+    private List<Integer> indexes(Properties properties, String prefix) {
+        Pattern pattern = Pattern.compile(Pattern.quote(prefix) + "\\[(\\d+)]\\..+");
+        return properties.stringPropertyNames().stream()
+                .map(pattern::matcher)
+                .filter(Matcher::matches)
+                .map(matcher -> Integer.parseInt(matcher.group(1)))
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    private List<String> list(Properties properties, String prefix) {
+        Pattern pattern = Pattern.compile(Pattern.quote(prefix) + "\\[(\\d+)]");
+        return properties.stringPropertyNames().stream()
+                .map(pattern::matcher)
+                .filter(Matcher::matches)
+                .sorted(java.util.Comparator.comparingInt(matcher -> Integer.parseInt(matcher.group(1))))
+                .map(matcher -> properties.getProperty(matcher.group()))
+                .toList();
+    }
+
+    private String requireProperty(Properties properties, String key, String source) {
+        String value = property(properties, key);
+        if (value.isBlank()) {
+            throw new ActionGraphConfigurationException("Goal bundle " + source
+                    + " is missing required property " + key);
+        }
+        return value;
+    }
+
+    private String property(Properties properties, String key) {
+        return property(properties, key, "");
+    }
+
+    private String property(Properties properties, String key, String defaultValue) {
+        String value = properties.getProperty(key);
+        return value == null ? defaultValue : value;
+    }
+
     private void registerSeeder(
             GoalBlackboardSeederRegistry registry,
             GoalCatalog catalog,
@@ -489,6 +694,17 @@ public class ActionGraphAutoConfiguration {
                                 + " but seeder declares " + declared);
             }
         }));
+    }
+
+    private record BundleReadResult(
+            List<SourcedGoalDefinition> definitions,
+            String declaredBundleFingerprint,
+            String actionGraphFingerprint,
+            String bundleFingerprint
+    ) {
+    }
+
+    private record SourcedGoalDefinition(GoalDefinition definition, String source) {
     }
 
     private Map<String, ActionExecutionPolicy> executionPolicyOverrides(ActionGraphProperties properties) {

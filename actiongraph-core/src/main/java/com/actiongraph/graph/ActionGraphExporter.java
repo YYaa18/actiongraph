@@ -42,6 +42,9 @@ public final class ActionGraphExporter {
             String actionId = actionId(action);
             output.append("  ").append(actionId).append("[\"").append(escape(action.id().value()))
                     .append("\\nrisk=").append(action.riskLevel());
+            if (!action.description().isBlank()) {
+                output.append("\\n").append(escape(action.description()));
+            }
             if (action.requiresHumanReview()) {
                 output.append("\\nhuman-review");
             }
@@ -74,6 +77,9 @@ public final class ActionGraphExporter {
         for (Action action : ordered(actions)) {
             output.append("  \"").append(escapeDot(action.id().value())).append("\" [shape=box,label=\"")
                     .append(escapeDot(action.id().value())).append("\\nrisk=").append(action.riskLevel());
+            if (!action.description().isBlank()) {
+                output.append("\\n").append(escapeDot(action.description()));
+            }
             if (action.requiresHumanReview()) {
                 output.append("\\nhuman-review");
             }

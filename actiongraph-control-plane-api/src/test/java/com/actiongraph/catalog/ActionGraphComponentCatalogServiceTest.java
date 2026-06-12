@@ -425,6 +425,7 @@ class ActionGraphComponentCatalogServiceTest {
             documentedModules.addAll(parseModules(document,
                     "(?<![A-Za-z0-9_./-])(actiongraph-[a-z0-9]+(?:-[a-z0-9]+)*)(?![A-Za-z0-9_./-])"));
         }
+        documentedModules.remove("actiongraph-bundle"); // YAML configuration root, not a published artifact.
 
         assertThat(documentedModules)
                 .as("documented ActionGraph artifact names should be real catalog modules")

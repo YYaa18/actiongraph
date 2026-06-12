@@ -13,6 +13,12 @@ import java.lang.annotation.Target;
 public @interface ActionGraphAction {
     String id();
 
+    @Experimental(
+            since = "0.2.0",
+            value = "Action descriptions are experimental until Goal Studio composition workflows settle."
+    )
+    String description() default "";
+
     String[] preconditions() default {};
 
     String[] effects() default {};

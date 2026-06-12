@@ -29,6 +29,7 @@ class ActionGraphExporterTest {
                 .startsWith("flowchart LR")
                 .contains("c_dx_START")
                 .contains("a_demo_finish")
+                .contains("Finish the demo capability.")
                 .contains("risk=HIGH")
                 .contains("human-review")
                 .contains(":::target")
@@ -36,6 +37,7 @@ class ActionGraphExporterTest {
                 .contains("a_demo_finish --> c_dx_DONE");
         assertThat(dot)
                 .startsWith("digraph ActionGraph")
+                .contains("Finish the demo capability.")
                 .contains("\"dx:START\" -> \"demo.finish\"")
                 .contains("\"demo.finish\" -> \"dx:DONE\"");
     }
@@ -45,6 +47,11 @@ class ActionGraphExporterTest {
             @Override
             public ActionId id() {
                 return new ActionId(id);
+            }
+
+            @Override
+            public String description() {
+                return "Finish the demo capability.";
             }
 
             @Override

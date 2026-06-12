@@ -5,6 +5,7 @@ import com.actiongraph.api.Internal;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.exception.ActionGraphInputException;
 import com.actiongraph.exception.ActionGraphIntegrationException;
+import com.actiongraph.interpretation.GoalParameterDefinition;
 import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.runtime.Blackboard;
 
@@ -75,6 +76,42 @@ public final class GoalParameterBinder {
 
     public <T> T bindRecord(Class<T> targetType, GoalParameters parameters, Blackboard blackboard) {
         return bindRecord(targetType, parameters, blackboard, false);
+    }
+
+    public Object bindParameterDefinition(
+            GoalParameterDefinition definition,
+            GoalParameters parameters,
+            Blackboard blackboard
+    ) {
+        Objects.requireNonNull(definition, "definition");
+        return bindValue(definition.name(), definition.type(), definition.required(), parameters, blackboard);
+    }
+
+    public Object bindValue(
+            String name,
+            Class<?> targetType,
+            boolean required,
+            GoalParameters parameters,
+            Blackboard blackboard
+    ) {
+        Objects.requireNonNull(parameters, "parameters");
+        Objects.requireNonNull(blackboard, "blackboard");
+        String parameterName = requireName(name);
+        Class<?> parameterType = Objects.requireNonNull(targetType, "targetType");
+        Optional<String> raw = raw(parameters, parameterName);
+        if (raw.isEmpty()) {
+            if (required || parameterType.isPrimitive()) {
+                throw new ActionGraphInputException("Missing goal parameter: " + parameterName);
+            }
+            return null;
+        }
+        return convertGoalValue(
+                raw.orElseThrow(),
+                parameterType,
+                Optional.empty(),
+                GoalValueConverter.None.class,
+                new GoalParameterBindingContext(parameterName, wrapperType(parameterType), parameters, blackboard)
+        );
     }
 
     public <T> T bindRecord(
@@ -164,6 +201,13 @@ public final class GoalParameterBinder {
         return parameters.get(name)
                 .map(String::trim)
                 .filter(value -> !value.isBlank());
+    }
+
+    private String requireName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new ActionGraphConfigurationException("Goal parameter name must not be blank");
+        }
+        return name.trim();
     }
 
     private void assertAtLeastOne(

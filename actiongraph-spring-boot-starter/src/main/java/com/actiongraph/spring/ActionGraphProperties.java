@@ -155,6 +155,8 @@ public class ActionGraphProperties {
     )
     public static final class GoalsProperties {
         private boolean autoRegisterAnnotated = true;
+        private final List<GoalDefinitionProperties> definitions = new ArrayList<>();
+        private final GoalBundleProperties bundle = new GoalBundleProperties();
 
         public boolean isAutoRegisterAnnotated() {
             return autoRegisterAnnotated;
@@ -163,6 +165,167 @@ public class ActionGraphProperties {
         public void setAutoRegisterAnnotated(boolean autoRegisterAnnotated) {
             this.autoRegisterAnnotated = autoRegisterAnnotated;
         }
+
+        @Experimental(
+                since = "0.2.0",
+                value = "External goal configuration is experimental until DX4 pilots validate bundle conventions."
+        )
+        public List<GoalDefinitionProperties> getDefinitions() {
+            return definitions;
+        }
+
+        @Experimental(
+                since = "0.2.0",
+                value = "Goal bundle import is experimental until DX4 pilots validate promotion workflows."
+        )
+        public GoalBundleProperties getBundle() {
+            return bundle;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "External goal configuration is experimental until DX4 pilots validate bundle conventions."
+    )
+    public static final class GoalDefinitionProperties {
+        private String type;
+        private String description = "";
+        private boolean enabled = true;
+        private List<String> targetConditions = new ArrayList<>();
+        private List<String> seedConditions = new ArrayList<>();
+        private final List<GoalParameterProperties> parameters = new ArrayList<>();
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description == null ? "" : description;
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public List<String> getTargetConditions() {
+            return targetConditions;
+        }
+
+        public void setTargetConditions(List<String> targetConditions) {
+            this.targetConditions = targetConditions == null ? new ArrayList<>() : new ArrayList<>(targetConditions);
+        }
+
+        public List<String> getSeedConditions() {
+            return seedConditions;
+        }
+
+        public void setSeedConditions(List<String> seedConditions) {
+            this.seedConditions = seedConditions == null ? new ArrayList<>() : new ArrayList<>(seedConditions);
+        }
+
+        public List<GoalParameterProperties> getParameters() {
+            return parameters;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "External goal parameter configuration is experimental until DX4 pilots validate bundle conventions."
+    )
+    public static final class GoalParameterProperties {
+        private String name;
+        private String type = "string";
+        private boolean required = true;
+        private String description = "";
+        private String example = "";
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type == null || type.isBlank() ? "string" : type;
+        }
+
+        public boolean isRequired() {
+            return required;
+        }
+
+        public void setRequired(boolean required) {
+            this.required = required;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description == null ? "" : description;
+        }
+
+        public String getExample() {
+            return example;
+        }
+
+        public void setExample(String example) {
+            this.example = example == null ? "" : example;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Goal bundle import is experimental until DX4 pilots validate promotion workflows."
+    )
+    public static final class GoalBundleProperties {
+        private List<String> locations = new ArrayList<>();
+        private FingerprintMismatchMode fingerprintMismatch = FingerprintMismatchMode.FAIL;
+
+        public List<String> getLocations() {
+            return locations;
+        }
+
+        public void setLocations(List<String> locations) {
+            this.locations = locations == null ? new ArrayList<>() : new ArrayList<>(locations);
+        }
+
+        public FingerprintMismatchMode getFingerprintMismatch() {
+            return fingerprintMismatch;
+        }
+
+        public void setFingerprintMismatch(FingerprintMismatchMode fingerprintMismatch) {
+            this.fingerprintMismatch = fingerprintMismatch == null
+                    ? FingerprintMismatchMode.FAIL
+                    : fingerprintMismatch;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Goal bundle fingerprint policy is experimental until DX4 promotion workflows settle."
+    )
+    public enum FingerprintMismatchMode {
+        FAIL,
+        WARN
     }
 
     @Experimental(

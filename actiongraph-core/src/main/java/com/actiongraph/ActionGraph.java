@@ -7,6 +7,7 @@ import com.actiongraph.action.annotation.AnnotatedActionFactory;
 import com.actiongraph.api.Experimental;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.exception.ActionGraphInputException;
+import com.actiongraph.fingerprint.ActionGraphFingerprints;
 import com.actiongraph.interpretation.ClarificationQuestion;
 import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
@@ -53,6 +54,8 @@ public final class ActionGraph {
     private final ActionRegistry registry;
     private final @Nullable GoalInterpreter interpreter;
     private final Supplier<? extends Blackboard> blackboardFactory;
+    private final String actionGraphFingerprint;
+    private final Map<GoalType, String> goalFingerprints;
 
     private ActionGraph(Builder builder) {
         this.catalog = Objects.requireNonNull(builder.catalog, "catalog");
@@ -61,6 +64,12 @@ public final class ActionGraph {
         this.registry = Objects.requireNonNull(builder.registry, "registry");
         this.interpreter = builder.interpreter;
         this.blackboardFactory = Objects.requireNonNull(builder.blackboardFactory, "blackboardFactory");
+        this.actionGraphFingerprint = ActionGraphFingerprints.actionGraph(this.registry.all());
+        this.goalFingerprints = this.catalog.all().stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        GoalDefinition::type,
+                        ActionGraphFingerprints::goal
+                ));
         this.seeders.registerDefaultSeeders(
                 this.catalog,
                 builder.effectiveConverterResolver(),
@@ -154,8 +163,17 @@ public final class ActionGraph {
                 blackboard,
                 registry.all(),
                 registry,
-                safeStringMap(runMetadata, "run metadata key")
+                fingerprintMetadata(interpretation.goalType(), runMetadata)
         );
+    }
+
+    public String actionGraphFingerprint() {
+        return actionGraphFingerprint;
+    }
+
+    public Optional<String> goalFingerprint(String goalType) {
+        return catalog.byType(new GoalType(requireText(goalType, "goalType")))
+                .flatMap(definition -> Optional.ofNullable(goalFingerprints.get(definition.type())));
     }
 
     private GoalDefinition definition(String rawGoalType) {
@@ -228,6 +246,16 @@ public final class ActionGraph {
             safe.put(key, value == null ? "" : value);
         });
         return Map.copyOf(safe);
+    }
+
+    private Map<String, String> fingerprintMetadata(
+            GoalType goalType,
+            @Nullable Map<String, String> runMetadata
+    ) {
+        Map<String, String> merged = new LinkedHashMap<>(safeStringMap(runMetadata, "run metadata key"));
+        merged.put("goalFingerprint", goalFingerprints.getOrDefault(goalType, ""));
+        merged.put("actionGraphFingerprint", actionGraphFingerprint);
+        return Map.copyOf(merged);
     }
 
     private static String requireText(String value, String name) {

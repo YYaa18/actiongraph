@@ -16,7 +16,7 @@ ChatResult chat = actionGraph.chat("帮客户 C001 准备续约报价");
 RunResult resumed = actionGraph.resume(runId);
 ```
 
-`ActionGraph` 有意保持很窄：启动运行、从自然语言进入运行、恢复运行。它不负责审批决策写入、外部事件投递、崩溃恢复扫描、Console 导出或图预览渲染。这些属于运营面，由审批系统、MQ listener、调度器和审计工具使用。
+`ActionGraph` 有意保持很窄：启动运行、从自然语言进入运行、恢复运行。它不负责审批决策写入、外部事件投递、崩溃恢复扫描、Console 导出或图预览渲染。这些属于运营面，由审批系统（approval systems）、MQ listeners、schedulers 和 audit tools 使用。
 
 ## 四层模型
 

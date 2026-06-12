@@ -22,7 +22,12 @@ public record GoalDefinition(
                 since = "0.1.0",
                 value = "Seed-condition metadata is experimental while validation diagnostics are validated through more domains."
         )
-        Set<Condition> seedConditions
+        Set<Condition> seedConditions,
+        @Experimental(
+                since = "0.2.0",
+                value = "Parameter seeding is experimental while DX4 external goal configuration conventions settle."
+        )
+        boolean parameterSeeding
 ) {
     public GoalDefinition(
             GoalType type,
@@ -30,7 +35,7 @@ public record GoalDefinition(
             Goal goal,
             List<GoalParameterDefinition> parameters
     ) {
-        this(type, description, goal, parameters, Void.class, Set.of());
+        this(type, description, goal, parameters, Void.class, Set.of(), false);
     }
 
     public GoalDefinition(
@@ -40,7 +45,18 @@ public record GoalDefinition(
             List<GoalParameterDefinition> parameters,
             Set<Condition> seedConditions
     ) {
-        this(type, description, goal, parameters, Void.class, seedConditions);
+        this(type, description, goal, parameters, Void.class, seedConditions, false);
+    }
+
+    public GoalDefinition(
+            GoalType type,
+            String description,
+            Goal goal,
+            List<GoalParameterDefinition> parameters,
+            Class<?> schema,
+            Set<Condition> seedConditions
+    ) {
+        this(type, description, goal, parameters, schema, seedConditions, false);
     }
 
     public GoalDefinition {
@@ -50,5 +66,13 @@ public record GoalDefinition(
         parameters = List.copyOf(Objects.requireNonNull(parameters, "parameters"));
         schema = schema == null ? Void.class : schema;
         seedConditions = Set.copyOf(Objects.requireNonNull(seedConditions, "seedConditions"));
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Parameter-seeded goal definitions are experimental while DX4 external goal configuration settles."
+    )
+    public GoalDefinition withParameterSeeding() {
+        return new GoalDefinition(type, description, goal, parameters, schema, seedConditions, true);
     }
 }

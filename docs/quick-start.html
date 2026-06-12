@@ -168,7 +168,7 @@ class HelloRunner {
     return actionGraph.start("hello.finish", Map.of("id", "A-1"));
   }
 }</code></pre>
-<p>检查点：不需要编写 Seeder，<code>InputId</code> 会自动进入 Blackboard；<code>run().status()</code> 返回 <code>COMPLETED</code>。</p>
+<p>检查点：只提供 <code>InputId</code> schema 和入参 Map；<code>run().status()</code> 返回 <code>COMPLETED</code>。</p>
 </section>
 <!-- l0:end -->
 

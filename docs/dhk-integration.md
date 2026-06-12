@@ -88,6 +88,19 @@ dhk bdd verify --feature module-consolidation
 
 验收人（Claude）的检查方式相应变更：先 `dhk bdd verify` 看证据状态，再抽查代码——**证据缺失或失败的交付直接打回，不进入人工验收**。
 
+## Codex 交付模板
+
+每一刀交付必须把“完成”定义为代码已经进入远端仓库，而不是只停在本地工作区。交付说明固定包含：
+
+1. 本地工作目录路径；
+2. 实跑命令与结果，例如 `./gradlew build --rerun-tasks`、demo 命令、DHK 证据命令；
+3. 变更范围摘要；
+4. `git status --short` 说明，明确哪些未跟踪文件不属于本刀；
+5. 已执行 `git commit` 与 `git push`；
+6. 本刀 commit 哈希。
+
+验收第一步先核 `git log --oneline -3`、关键符号 grep 与远端同步状态。没有 commit 哈希的交付视为未完成；没有 push 的交付不能进入放行结论。
+
 ## 6. 阶段对齐
 
 - 本方案 L1 立即执行，不占 F1 排期；
