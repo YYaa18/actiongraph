@@ -1704,24 +1704,24 @@ OrderRecord lookup(OrderId orderId) {
   <section class="section" id="quickstart">
     <div class="wrap">
       <div class="section-head">
-        <h2>接入路径：先声明能力，再开放运行边界。</h2>
-        <p class="section-lead">Spring Boot 应用从依赖、Action adapter 和少量开关开始接入。运行配置按能力域拆解，便于架构评审、环境差异管理和生产变更审查。</p>
+        <h2>接入路径：写一个注解类，调用一个正门 Bean。</h2>
+        <p class="section-lead">金路径从主 starter、注解三件套和根门面 ActionGraph 开始。先让 start(...) 跑通，再按 L1-L4 逐步加入人审、自然语言、持久化和跨服务事件。</p>
       </div>
       <div class="setup-grid" aria-label="接入路径">
         <article class="setup-card">
           <span>1</span>
           <b>声明运行时依赖</b>
-          <p>用 BOM 锁定版本，主 starter 提供规划器、执行器、注解扫描、治理与可选端点自动装配。</p>
+          <p>用 BOM 锁定版本，引入主 starter，默认自动扫描 Spring Bean 上的 Action、Goal 与 Seeder 注解。</p>
         </article>
         <article class="setup-card">
           <span>2</span>
-          <b>把业务方法注册为 Action</b>
-          <p>业务服务只暴露可控方法；precondition/effect 定义可规划边界，guard 与 compensation 定义执行边界。</p>
+          <b>写注解三件套</b>
+          <p>用 @ActionGraphAction、@ActionGraphGoal、@ActionGraphGoalSeeder 声明能力、目标和参数装配。</p>
         </article>
         <article class="setup-card">
           <span>3</span>
-          <b>按域启用生产能力</b>
-          <p>Runtime API、JDBC、人审、Console、脱敏与限额都通过属性开关显式启用，默认不扩大暴露面。</p>
+          <b>从正门启动</b>
+          <p>业务代码只注入 ActionGraph，调用 start、chat 或 resume；运营面 API 按需单独启用。</p>
         </article>
       </div>
 
@@ -1742,33 +1742,31 @@ OrderRecord lookup(OrderId orderId) {
         </div>
         <div class="code-panel">
           <div class="code-title">
-            <span>Action adapter</span>
+            <span>Hello Agent</span>
             <button class="copy-btn" type="button" data-copy="adapter" aria-label="复制 Action 示例">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             </button>
           </div>
-<pre><code id="adapter">@Service
-class OrderCancellationWorkflow {
-  @ActionGraphAction(
-    id = "order.lookup",
-    preconditions = "order-cancellation:ORDER_ID_PRESENT",
-    effects = "order-cancellation:ORDER_LOADED",
-    riskLevel = ActionRiskLevel.READ_ONLY
-  )
-  OrderRecord lookup(OrderId orderId) {
-    return orderService.lookup(orderId);
+<pre><code id="adapter">@Component
+class HelloAgent {
+  @ActionGraphGoal(type = "hello.finish",
+      targetConditions = "hello:DONE",
+      seedConditions = "hello:INPUT_PRESENT")
+  void goal(@GoalParameter(name = "id", example = "A-1") String ignored) {}
+
+  @ActionGraphGoalSeeder(value = "hello.finish",
+      seedConditions = "hello:INPUT_PRESENT")
+  InputId seed(@FromGoalParam("id") String id) {
+    return new InputId(id);
   }
 
-  @ActionGraphGuard(actionId = "order.cancellation.request.draft")
-  boolean canDraft(CancellationEligibility eligibility) {
-    return eligibility.allowed();
-  }
+  @ActionGraphAction(id = "hello.finish",
+      preconditions = "hello:INPUT_PRESENT",
+      effects = "hello:DONE")
+  void finish(InputId input) {}
+}
 
-  @ActionGraphCompensation(actionId = "order.cancellation.request.draft")
-  void voidDraft(CancellationRequestDraft draft) {
-    cancellationRequestService.voidDraft(draft.requestId());
-  }
-}</code></pre>
+RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code></pre>
         </div>
       </div>
 
@@ -1840,8 +1838,8 @@ class OrderCancellationWorkflow {
       </div>
 
       <div class="callout">
-        <strong>主 starter 不创建业务 Action 或 LLM client。</strong>
-        <p>它提供规划器、执行器、仓储默认实现、注解扫描、治理策略和端点自动装配。业务动作、领域 Goal、解释器、DataSource、LLM provider 与生产权限边界仍由接入应用明确提供。</p>
+        <strong>ActionGraph 正门保持窄。</strong>
+        <p>业务发起面只有 start、chat、resume。审批决策、事件投递、恢复扫描和 Console 查询属于运营面，继续使用对应组件和端点。</p>
       </div>
     </div>
   </section>
@@ -2175,7 +2173,7 @@ class OrderCancellationWorkflow {
           <p>客户资料、当前合同、续约资格、报价草稿和销售审批。</p>
           <ul>
             <li>RuleBasedRenewalGoalInterpreter</li>
-            <li>RenewalQuoteBlackboardSeeder</li>
+            <li>RenewalGoalAnnotations</li>
             <li>SalesApprovalRequestAction</li>
           </ul>
           <code class="run-command">Task: :actiongraph-samples:run</code>

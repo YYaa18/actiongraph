@@ -4,8 +4,6 @@ import com.actiongraph.action.Action;
 import com.actiongraph.contribution.ActionGraphContribution;
 import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalDefinition;
-import com.actiongraph.samples.renewal.interpretation.RenewalGoalCatalog;
-import com.actiongraph.samples.renewal.seed.RenewalQuoteBlackboardSeeder;
 import com.actiongraph.samples.renewal.service.ApprovalService;
 import com.actiongraph.samples.renewal.service.ContractService;
 import com.actiongraph.samples.renewal.service.CustomerService;
@@ -49,11 +47,11 @@ public final class RenewalContribution implements ActionGraphContribution {
 
     @Override
     public List<GoalDefinition> goals() {
-        return RenewalGoalCatalog.create().all().stream().toList();
+        return RenewalGoalAnnotations.goals();
     }
 
     @Override
     public List<GoalBlackboardSeeder> seeders() {
-        return List.of(new RenewalQuoteBlackboardSeeder());
+        return RenewalGoalAnnotations.seeders();
     }
 }

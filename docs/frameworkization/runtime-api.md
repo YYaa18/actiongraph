@@ -1,8 +1,13 @@
 # Runtime API
 
-`actiongraph-core` provides a reusable runtime operations contract for applications that want to expose ActionGraph runs through a gateway, worker, custom controller, scheduler, MQ consumer, or batch process without rewriting the same orchestration code.
+**Layer: Golden Path / Control-plane Adapter**
 
-It composes:
+Application code should use the root `ActionGraph` facade. This document covers
+the optional runtime API adapter for applications that expose ActionGraph runs
+through a gateway, worker, custom controller, scheduler, MQ consumer, or batch
+process without rewriting the same DTO and metadata handling.
+
+The adapter delegates to the same facade and composes:
 
 - `GoalInterpreter`
 - `GoalBlackboardSeederRegistry`
@@ -11,7 +16,7 @@ It composes:
 
 It does not provide an LLM provider, create repositories, register actions, or force an HTTP endpoint shape.
 
-## Pure Java Usage
+## Pure Java Adapter Usage
 
 ```java
 ActionGraphRuntimeOperations runtime = new ActionGraphRuntimeApiService(
@@ -40,7 +45,11 @@ RuntimeRunResponse resumed = runtime.resume(
 );
 ```
 
-`ActionGraphRuntimeApiService` is the default `ActionGraphRuntimeOperations` implementation. Applications can inject the interface into their own Spring controller, Dubbo facade, MQ consumer, scheduler, batch worker, or gateway adapter. Production systems should not invoke Gradle or sample CLI commands; samples are executable documentation only.
+`ActionGraphRuntimeApiService` is the default `ActionGraphRuntimeOperations`
+adapter. Business code should inject `ActionGraph`; custom controllers, Dubbo
+facades, MQ consumers, schedulers, batch workers, or gateway adapters can keep
+using this DTO-oriented interface. Production systems should not invoke Gradle
+or sample CLI commands; samples are executable documentation only.
 
 `start` returns `CLARIFICATION_REQUIRED` when the interpreter needs more parameters and does not execute any business Action in that branch. When the interpretation is ready, the service seeds a fresh Blackboard and runs the supplied `GoapExecutor` until the run reaches a terminal status or suspends.
 
@@ -81,7 +90,7 @@ actiongraph:
         - X-Source-System
 ```
 
-The endpoint requires `actiongraph.runtime.api.enabled=true`, a servlet web application plus `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry` beans. It exposes only:
+The endpoint requires `actiongraph.runtime.api.enabled=true`, a servlet web application plus the root `ActionGraph` facade and a `GoalInterpreter` bean. It exposes only:
 
 ```text
 POST /actiongraph/runtime/interpret

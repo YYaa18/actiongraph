@@ -885,7 +885,9 @@ class ActionGraphComponentCatalogServiceTest {
 
         assertThat(invocationSpi)
                 .contains("ActionGraph is a framework ecosystem")
+                .contains("ActionGraph` is the golden-path API")
                 .contains("ActionGraphRuntimeOperations")
+                .contains("custom control-plane adapters")
                 .contains("BatchGoalInterpreter")
                 .contains("structured source records should bypass LLM interpretation")
                 .contains("ActionGraphRuntimeGateway")
@@ -893,22 +895,69 @@ class ActionGraphComponentCatalogServiceTest {
                 .contains("LlmClient")
                 .contains("Do not invoke Gradle or sample CLI commands from production");
         assertThat(runtimeApi)
+                .contains("Application code should use the root `ActionGraph` facade")
                 .contains("ActionGraphRuntimeOperations runtime = new ActionGraphRuntimeApiService")
-                .contains("Production systems should not invoke Gradle or sample CLI commands")
+                .contains("Business code should inject `ActionGraph`")
+                .contains("Production systems should not invoke Gradle")
+                .contains("sample CLI commands")
                 .contains("BatchGoalInterpreter")
                 .contains("LlmClient");
         assertThat(readme)
+                .contains("root `ActionGraph` facade")
                 .contains("Runtime operations SPI")
                 .contains("Batch goal interpretation SPI")
                 .contains("docs/frameworkization/runtime-invocation-spi.md");
         assertThat(chineseReadme)
-                .contains("目标解释与 Runtime SPI")
+                .contains("根门面 `ActionGraph`")
+                .contains("ActionGraph 正门与 Runtime SPI")
                 .contains("批量目标解释 SPI")
                 .contains("生产系统不应该通过 Gradle 或样例命令行")
                 .contains("docs/frameworkization/runtime-invocation-spi.md");
         assertThat(combined)
                 .doesNotContain("production should run Gradle")
                 .doesNotContain("生产通过 Gradle");
+    }
+
+    @Test
+    void goldenPathDocsKeepL0ConceptBudgetSmall() throws IOException {
+        Path root = repositoryRoot();
+        String quickStart = Files.readString(root.resolve("docs/quick-start.html"), StandardCharsets.UTF_8);
+        String goldenPath = Files.readString(root.resolve("docs/frameworkization/golden-path.md"),
+                StandardCharsets.UTF_8);
+        String learningPath = Files.readString(root.resolve("docs/learning-path.md"), StandardCharsets.UTF_8);
+        String helloTest = Files.readString(root.resolve(
+                "actiongraph-spring-boot-starter/src/test/java/com/actiongraph/spring/HelloAgentGoldenPathTest.java"),
+                StandardCharsets.UTF_8);
+
+        String l0 = between(quickStart, "<!-- l0:start -->", "<!-- l0:end -->");
+        assertThat(l0)
+                .contains("ActionGraph", "actionGraph.start", "@ActionGraphAction",
+                        "@ActionGraphGoal", "@ActionGraphGoalSeeder")
+                .doesNotContain("Blackboard", "Contribution", "Planner");
+        assertThat(goldenPath)
+                .contains("Golden Path")
+                .contains("Packaging")
+                .contains("SPI")
+                .contains("Internal")
+                .contains("ActionGraphRuntimeApiService")
+                .contains("approval systems")
+                .contains("MQ listeners")
+                .contains("schedulers")
+                .contains("audit tools");
+        assertThat(learningPath)
+                .contains("L0 Hello Agent")
+                .contains("frameworkization/golden-path.md")
+                .contains("frameworkization/extension-points.md")
+                .contains("PRD-DX2.md");
+
+        long sourceLines = helloTest.lines()
+                .filter(line -> !line.isBlank())
+                .filter(line -> !line.startsWith("package "))
+                .filter(line -> !line.startsWith("import "))
+                .count();
+        assertThat(sourceLines)
+                .as("HelloAgentGoldenPathTest should stay below the DX2 40-line concept budget")
+                .isLessThanOrEqualTo(40);
     }
 
     @Test
@@ -1032,6 +1081,14 @@ class ActionGraphComponentCatalogServiceTest {
             modules.add(matcher.group(1));
         }
         return modules;
+    }
+
+    private String between(String content, String startMarker, String endMarker) {
+        int start = content.indexOf(startMarker);
+        int end = content.indexOf(endMarker);
+        assertThat(start).as("document should contain " + startMarker).isGreaterThanOrEqualTo(0);
+        assertThat(end).as("document should contain " + endMarker).isGreaterThan(start);
+        return content.substring(start + startMarker.length(), end);
     }
 
     private java.util.List<Path> documentationFiles(Path root) throws IOException {

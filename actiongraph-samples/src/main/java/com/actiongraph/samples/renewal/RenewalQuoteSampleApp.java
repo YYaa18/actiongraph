@@ -1,7 +1,10 @@
 package com.actiongraph.samples.renewal;
 
+import com.actiongraph.ActionGraph;
+import com.actiongraph.ChatResult;
 import com.actiongraph.action.Action;
 import com.actiongraph.action.DefaultActionRegistry;
+import com.actiongraph.samples.renewal.interpretation.RenewalGoalCatalog;
 import com.actiongraph.samples.renewal.interpretation.RenewalGoalInterpreterFactory;
 import com.actiongraph.samples.renewal.narration.RenewalPlanExplainer;
 import com.actiongraph.samples.renewal.narration.RenewalRunSummarizer;
@@ -26,6 +29,7 @@ import com.actiongraph.runtime.RunResult;
 import com.actiongraph.trace.InMemoryTraceRepository;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class RenewalQuoteSampleApp {
     private RenewalQuoteSampleApp() {
@@ -47,7 +51,6 @@ public final class RenewalQuoteSampleApp {
             return;
         }
 
-        InMemoryBlackboard blackboard = new InMemoryBlackboard();
         RenewalContribution contribution = new RenewalContribution(
                 new InMemoryCustomerService(),
                 new InMemoryContractService(),
@@ -58,7 +61,8 @@ public final class RenewalQuoteSampleApp {
 
         GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
         contribution.seeders().forEach(seeders::register);
-        seeders.seed(interpretation, blackboard);
+        InMemoryBlackboard previewBlackboard = new InMemoryBlackboard();
+        seeders.seed(interpretation, previewBlackboard);
 
         List<Action> actions = contribution.actions();
         DefaultActionRegistry registry = RenewalActionFactory.registry(actions);
@@ -67,7 +71,7 @@ public final class RenewalQuoteSampleApp {
 
         Plan plan = planner.plan(
                 interpretation.goal().orElseThrow(),
-                blackboard.conditions(),
+                previewBlackboard.conditions(),
                 actions
         ).orElseThrow(() -> new IllegalStateException("No plan found before execution"));
         System.out.println(new RenewalPlanExplainer().explain(plan));
@@ -79,7 +83,23 @@ public final class RenewalQuoteSampleApp {
                 traceRepository
         );
 
-        RunResult result = executor.run(interpretation.goal().orElseThrow(), blackboard, actions, registry);
+        AtomicReference<InMemoryBlackboard> runBlackboard = new AtomicReference<>();
+        ActionGraph actionGraph = ActionGraph.builder()
+                .goalCatalog(RenewalGoalCatalog.create())
+                .seeders(seeders)
+                .actionRegistry(registry)
+                .executor(executor)
+                .goalInterpreter(interpreter)
+                .blackboardFactory(() -> {
+                    InMemoryBlackboard blackboard = new InMemoryBlackboard();
+                    runBlackboard.set(blackboard);
+                    return blackboard;
+                })
+                .build();
+
+        ChatResult chat = actionGraph.chat(input);
+        RunResult result = chat.run();
+        InMemoryBlackboard blackboard = runBlackboard.get();
         System.out.println("status=" + result.status());
         System.out.println("executedActions=" + result.executedActions());
         System.out.println("finalConditions=" + result.finalState());

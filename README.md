@@ -36,7 +36,8 @@ It lets application teams expose ordinary business methods as typed Actions, the
 - Optional pure Java annotation adapter for registering ordinary methods as Actions
 - Optional structured memory context component
 - Optional Spring Boot starter for structured memory
-- Runtime operations SPI for goal interpretation, start, resume, and request metadata trace capture
+- Root `ActionGraph` facade for golden-path `start`, `chat`, and `resume`
+- Runtime operations SPI for control-plane adapters, HTTP DTOs, and request metadata trace capture
 - Batch goal interpretation SPI for application-owned token-efficient batch workers
 - Java 8 compatible machine-readable component catalog and composition profiles
 - Java 8 compatible control-plane contracts plus properties-based aggregate configuration, safe GET retries, and lightweight aggregate, runtime, component catalog, human-review, and console HTTP clients
@@ -147,7 +148,7 @@ Non-Spring services can use `actiongraph-core` directly when they want structure
 
 Spring services get structured memory defaults and `MemoryContextLoader` from `actiongraph-spring-boot-starter`. It provides an in-memory `MemoryRepository` by default and backs off to a JDBC `MemoryRepository` when `actiongraph.persistence.jdbc.enabled=true` and a `DataSource` is available.
 
-Non-Spring services can use `actiongraph-core` directly when they want GoalCatalog metadata, rule-based goal interpreters, Goal-to-Blackboard seeding, or the stable `ActionGraphRuntimeOperations` interface for `interpret` / `start` / `resume` without adopting an LLM provider or Spring MVC. The default implementation composes a `GoalInterpreter`, `GoalBlackboardSeederRegistry`, `GoapExecutor`, and `ActionRegistry`, and its start/resume metadata overloads can record request ids or source systems in trace events. It does not provide an LLM provider, persistence, or a forced HTTP endpoint shape by itself. Applications can wrap that interface in their own controller, MQ consumer, scheduler, ESB adapter, or batch worker. Spring MVC applications can add `actiongraph-spring-boot-starter` and enable `actiongraph.runtime.api.enabled=true` to expose the same entry surface:
+Modern application code should inject the root `ActionGraph` facade and call `start(goalType, parameters)`, `chat(input, knownParameters)`, or `resume(runId)`. Non-Spring services can build the same facade from `actiongraph-core` when they want GoalCatalog metadata, rule-based goal interpreters, annotated seeders, and deterministic execution without Spring MVC. `ActionGraphRuntimeOperations` and `ActionGraphRuntimeApiService` remain the control-plane HTTP adapter shape for custom controllers, MQ consumers, ESB adapters, Java 8 gateways, and request-metadata capture. Spring MVC applications can add `actiongraph-spring-boot-starter` and enable `actiongraph.runtime.api.enabled=true` to expose that adapter:
 
 ```text
 Runtime API: POST /actiongraph/runtime/interpret

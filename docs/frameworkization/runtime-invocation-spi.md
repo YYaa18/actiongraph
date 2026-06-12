@@ -2,7 +2,20 @@
 
 ActionGraph is a framework ecosystem, not a deployment shape. Production systems should not invoke Gradle tasks or sample CLI commands to start runs. They should own their controller, message consumer, scheduler, batch worker, ESB adapter, or sidecar and compose ActionGraph through stable interfaces.
 
-## Primary Contract
+## Primary Facade
+
+Modern in-process application code should depend on the root facade:
+
+```java
+RunResult result = actionGraph.start("order.cancel", Map.of("orderId", "O100"));
+ChatResult chat = actionGraph.chat("帮客户 C001 准备续约报价");
+RunResult resumed = actionGraph.resume(runId);
+```
+
+`ActionGraph` is the golden-path API for application code. It keeps the
+business entry surface narrow: start, chat, and resume.
+
+## Control-plane Adapter Contract
 
 `actiongraph-core` exposes `ActionGraphRuntimeOperations`:
 
@@ -32,7 +45,10 @@ public interface ActionGraphRuntimeOperations {
 }
 ```
 
-`ActionGraphRuntimeApiService` is the default implementation. Applications can inject the interface, wrap it with their own authorization/audit/idempotency layer, or provide another implementation for tests, gateways, or tenant-specific routing.
+`ActionGraphRuntimeApiService` is the default adapter implementation over the
+root `ActionGraph` facade. Applications can still inject the interface, wrap it
+with their own authorization/audit/idempotency layer, or provide another
+implementation for tests, gateways, or tenant-specific routing.
 
 The optional Spring MVC runtime endpoints are only one adapter over the same contract. A production service can also write its own Spring controller, Dubbo facade, MQ consumer, scheduled job, or batch worker that calls `ActionGraphRuntimeOperations` directly.
 
@@ -79,7 +95,8 @@ Other providers should implement `LlmClient` or a higher-level `BatchGoalInterpr
 
 Do not invoke Gradle or sample CLI commands from production. Samples are executable documentation. Production entrypoints should compose the framework contracts:
 
-- `ActionGraphRuntimeOperations` for modern in-process runtime integration;
+- `ActionGraph` for modern in-process runtime integration;
+- `ActionGraphRuntimeOperations` for custom control-plane adapters;
 - `ActionGraphRuntimeGateway` / `ActionGraphRuntimeHttpClient` for Java 8 or out-of-process callers;
 - `BatchGoalInterpreter` when the caller owns token-efficient batch interpretation;
 - `LlmClient` when a provider module owns model-specific transport.

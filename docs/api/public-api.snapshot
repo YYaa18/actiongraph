@@ -412,6 +412,39 @@ CLASS public final class com.actiongraph.controlplane.auth.UnauthorizedControlPl
   CONSTRUCTOR public com.actiongraph.controlplane.auth.UnauthorizedControlPlaneAccessException(java.lang.String)
 
 MODULE actiongraph-core
+CLASS public final class com.actiongraph.ActionGraph
+  METHOD public static com.actiongraph.ActionGraph$Builder builder()
+  METHOD public com.actiongraph.ChatResult chat(java.lang.String)
+  METHOD public com.actiongraph.ChatResult chat(java.lang.String,java.util.Map)
+  METHOD public com.actiongraph.ChatResult chat(java.lang.String,java.util.Map,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String)
+  METHOD public com.actiongraph.runtime.RunResult resume(java.lang.String,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult start(com.actiongraph.interpretation.GoalInterpretation,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult start(java.lang.String,java.util.Map)
+  METHOD public com.actiongraph.runtime.RunResult start(java.lang.String,java.util.Map,java.util.Map)
+CLASS public static final class com.actiongraph.ActionGraph$Builder
+  METHOD public com.actiongraph.ActionGraph$Builder action(com.actiongraph.action.Action)
+  METHOD public com.actiongraph.ActionGraph$Builder actionRegistry(com.actiongraph.action.ActionRegistry)
+  METHOD public com.actiongraph.ActionGraph$Builder actions(java.util.Collection)
+  METHOD public com.actiongraph.ActionGraph$Builder annotatedBeans(java.lang.Object[])
+  METHOD public com.actiongraph.ActionGraph$Builder blackboardFactory(java.util.function.Supplier)
+  METHOD public com.actiongraph.ActionGraph build()
+  METHOD public com.actiongraph.ActionGraph$Builder executor(com.actiongraph.runtime.GoapExecutor)
+  METHOD public com.actiongraph.ActionGraph$Builder goal(com.actiongraph.interpretation.GoalDefinition)
+  METHOD public com.actiongraph.ActionGraph$Builder goalCatalog(com.actiongraph.interpretation.GoalCatalog)
+  METHOD public com.actiongraph.ActionGraph$Builder goalInterpreter(com.actiongraph.interpretation.GoalInterpreter)
+  METHOD public com.actiongraph.ActionGraph$Builder goals(java.util.Collection)
+  METHOD public com.actiongraph.ActionGraph$Builder seeder(com.actiongraph.interpretation.GoalBlackboardSeeder)
+  METHOD public com.actiongraph.ActionGraph$Builder seeders(com.actiongraph.interpretation.GoalBlackboardSeederRegistry)
+CLASS public final record com.actiongraph.ChatResult
+  CONSTRUCTOR public com.actiongraph.ChatResult(com.actiongraph.interpretation.GoalInterpretation,com.actiongraph.runtime.RunResult)
+  METHOD public com.actiongraph.interpretation.ClarificationQuestion clarification()
+  METHOD public final boolean equals(java.lang.Object)
+  METHOD public final int hashCode()
+  METHOD public com.actiongraph.interpretation.GoalInterpretation interpretation()
+  METHOD public com.actiongraph.runtime.RunResult run()
+  METHOD public boolean started()
+  METHOD public final java.lang.String toString()
 CLASS public abstract interface com.actiongraph.action.Action
   METHOD public default com.actiongraph.action.CompensationResult compensate(com.actiongraph.action.ExecutionContext)
   METHOD public abstract int cost()
@@ -1103,6 +1136,7 @@ CLASS public abstract interface com.actiongraph.runtime.SuspendedRunRepository
   METHOD public abstract void save(com.actiongraph.runtime.SuspendedRun)
   METHOD public default void saveCheckpoint(com.actiongraph.runtime.SuspendedRun)
 CLASS public final class com.actiongraph.runtime.api.ActionGraphRuntimeApiService
+  CONSTRUCTOR public com.actiongraph.runtime.api.ActionGraphRuntimeApiService(com.actiongraph.ActionGraph,com.actiongraph.interpretation.GoalInterpreter)
   CONSTRUCTOR public com.actiongraph.runtime.api.ActionGraphRuntimeApiService(com.actiongraph.interpretation.GoalInterpreter,com.actiongraph.interpretation.GoalBlackboardSeederRegistry,com.actiongraph.runtime.GoapExecutor,com.actiongraph.action.ActionRegistry)
   CONSTRUCTOR public com.actiongraph.runtime.api.ActionGraphRuntimeApiService(com.actiongraph.interpretation.GoalInterpreter,com.actiongraph.interpretation.GoalBlackboardSeederRegistry,com.actiongraph.runtime.GoapExecutor,com.actiongraph.action.ActionRegistry,java.util.function.Supplier)
   METHOD public com.actiongraph.runtime.api.RuntimeInterpretationResponse interpret(java.lang.String)
@@ -2019,9 +2053,10 @@ CLASS public class com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiPrope
 CLASS public class com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiWebAutoConfiguration
   CONSTRUCTOR public com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiWebAutoConfiguration()
   METHOD public com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiController actionGraphRuntimeApiController(com.actiongraph.runtime.api.ActionGraphRuntimeOperations,com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiProperties)
-  METHOD public com.actiongraph.runtime.api.ActionGraphRuntimeApiService actionGraphRuntimeApiService(com.actiongraph.interpretation.GoalInterpreter,com.actiongraph.interpretation.GoalBlackboardSeederRegistry,com.actiongraph.runtime.GoapExecutor,com.actiongraph.action.ActionRegistry)
+  METHOD public com.actiongraph.runtime.api.ActionGraphRuntimeApiService actionGraphRuntimeApiService(com.actiongraph.ActionGraph,com.actiongraph.interpretation.GoalInterpreter)
 CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphAutoConfiguration()
+  METHOD public com.actiongraph.ActionGraph actionGraph(com.actiongraph.interpretation.GoalCatalog,com.actiongraph.interpretation.GoalBlackboardSeederRegistry,com.actiongraph.runtime.GoapExecutor,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.action.ActionRegistry actionGraphActionRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.DataMaskingPolicy actionGraphDataMaskingPolicy()
   METHOD public com.actiongraph.llm.LlmClient actionGraphDeepSeekLlmClient(com.actiongraph.spring.ActionGraphProperties)

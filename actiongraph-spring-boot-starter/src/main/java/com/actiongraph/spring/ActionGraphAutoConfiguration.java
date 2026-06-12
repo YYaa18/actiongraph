@@ -1,5 +1,6 @@
 package com.actiongraph.spring;
 
+import com.actiongraph.ActionGraph;
 import com.actiongraph.action.Action;
 import com.actiongraph.action.ActionExecutionPolicy;
 import com.actiongraph.action.ActionId;
@@ -17,6 +18,7 @@ import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.interpretation.GoalCatalog;
 import com.actiongraph.interpretation.GoalDefinition;
+import com.actiongraph.interpretation.GoalInterpreter;
 import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalFactory;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalSeederFactory;
@@ -380,6 +382,31 @@ public class ActionGraphAutoConfiguration {
             }
         }
         return registry;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @Experimental(
+            since = "0.2.0",
+            value = "The root ActionGraph Spring bean is experimental until DX2 pilots validate the golden path."
+    )
+    public ActionGraph actionGraph(
+            GoalCatalog catalog,
+            GoalBlackboardSeederRegistry seeders,
+            GoapExecutor executor,
+            ActionRegistry registry,
+            ObjectProvider<GoalInterpreter> interpreter
+    ) {
+        ActionGraph.Builder builder = ActionGraph.builder()
+                .goalCatalog(catalog)
+                .seeders(seeders)
+                .executor(executor)
+                .actionRegistry(registry);
+        GoalInterpreter goalInterpreter = interpreter.getIfAvailable();
+        if (goalInterpreter != null) {
+            builder.goalInterpreter(goalInterpreter);
+        }
+        return builder.build();
     }
 
     @Bean

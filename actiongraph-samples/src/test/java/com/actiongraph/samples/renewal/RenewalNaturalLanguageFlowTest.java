@@ -1,10 +1,11 @@
 package com.actiongraph.samples.renewal;
 
+import com.actiongraph.ActionGraph;
 import com.actiongraph.action.Action;
 import com.actiongraph.action.DefaultActionRegistry;
 import com.actiongraph.samples.renewal.domain.ApprovalRequest;
+import com.actiongraph.samples.renewal.interpretation.RenewalGoalCatalog;
 import com.actiongraph.samples.renewal.interpretation.RenewalGoalInterpreterFactory;
-import com.actiongraph.samples.renewal.seed.RenewalQuoteBlackboardSeeder;
 import com.actiongraph.samples.renewal.service.InMemoryApprovalService;
 import com.actiongraph.samples.renewal.service.InMemoryContractService;
 import com.actiongraph.samples.renewal.service.InMemoryCustomerService;
@@ -13,9 +14,7 @@ import com.actiongraph.samples.renewal.service.InMemoryRenewalPolicyService;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.llm.LlmResponse;
 import com.actiongraph.llm.LlmRequest;
-import com.actiongraph.planning.GoapPlanner;
 import com.actiongraph.policy.AutoApproveHumanReviewPolicy;
-import com.actiongraph.policy.DefaultPolicyGuard;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunStatus;
@@ -43,15 +42,8 @@ class RenewalNaturalLanguageFlowTest {
                 }
                 """);
         }));
-        var interpretation = interpreter.interpret("帮客户 C001 的合同弄个续约报价");
-
-        assertThat(capturedRequest.get().systemPrompt()).contains("prepareRenewalQuote");
-        assertThat(capturedRequest.get().systemPrompt()).contains("customerId (required)");
-
-        InMemoryBlackboard blackboard = new InMemoryBlackboard();
         GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
-        seeders.register(new RenewalQuoteBlackboardSeeder());
-        seeders.seed(interpretation, blackboard);
+        RenewalGoalAnnotations.seeders().forEach(seeders::register);
 
         List<Action> actions = RenewalActionFactory.actions(
                 new InMemoryCustomerService(),
@@ -61,16 +53,28 @@ class RenewalNaturalLanguageFlowTest {
                 new InMemoryApprovalService()
         );
         DefaultActionRegistry registry = RenewalActionFactory.registry(actions);
-        GoapExecutor executor = new GoapExecutor(
-                new GoapPlanner(),
-                new DefaultPolicyGuard(),
-                new AutoApproveHumanReviewPolicy(),
-                new InMemoryTraceRepository()
-        );
+        AtomicReference<InMemoryBlackboard> blackboard = new AtomicReference<>();
+        ActionGraph actionGraph = ActionGraph.builder()
+                .goalCatalog(RenewalGoalCatalog.create())
+                .seeders(seeders)
+                .actionRegistry(registry)
+                .executor(GoapExecutor.builder()
+                        .humanReviewPolicy(new AutoApproveHumanReviewPolicy())
+                        .traceRepository(new InMemoryTraceRepository())
+                        .build())
+                .goalInterpreter(interpreter)
+                .blackboardFactory(() -> {
+                    InMemoryBlackboard value = new InMemoryBlackboard();
+                    blackboard.set(value);
+                    return value;
+                })
+                .build();
 
-        var result = executor.run(interpretation.goal().orElseThrow(), blackboard, actions, registry);
+        var result = actionGraph.chat("帮客户 C001 的合同弄个续约报价").run();
 
+        assertThat(capturedRequest.get().systemPrompt()).contains("prepareRenewalQuote");
+        assertThat(capturedRequest.get().systemPrompt()).contains("customerId (required)");
         assertThat(result.status()).isEqualTo(RunStatus.COMPLETED);
-        assertThat(blackboard.get(ApprovalRequest.class)).isPresent();
+        assertThat(blackboard.get().get(ApprovalRequest.class)).isPresent();
     }
 }

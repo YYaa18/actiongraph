@@ -1,10 +1,10 @@
 package com.actiongraph.runtime.api;
 
+import com.actiongraph.ActionGraph;
 import com.actiongraph.action.ActionRegistry;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.interpretation.GoalInterpretation;
 import com.actiongraph.interpretation.GoalInterpreter;
-import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;
@@ -16,12 +16,20 @@ import java.util.function.Supplier;
 
 import org.jspecify.annotations.Nullable;
 
+/**
+ * Control-plane HTTP adapter service.
+ *
+ * <p>Application code should prefer the root {@link ActionGraph} facade. This
+ * service keeps the runtime DTO/disposition shape used by HTTP adapters.
+ */
 public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOperations {
+    private final ActionGraph actionGraph;
     private final GoalInterpreter interpreter;
-    private final GoalBlackboardSeederRegistry seeders;
-    private final GoapExecutor executor;
-    private final ActionRegistry registry;
-    private final Supplier<? extends Blackboard> blackboardFactory;
+
+    public ActionGraphRuntimeApiService(ActionGraph actionGraph, GoalInterpreter interpreter) {
+        this.actionGraph = Objects.requireNonNull(actionGraph, "actionGraph");
+        this.interpreter = Objects.requireNonNull(interpreter, "interpreter");
+    }
 
     public ActionGraphRuntimeApiService(
             GoalInterpreter interpreter,
@@ -39,11 +47,13 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
             ActionRegistry registry,
             Supplier<? extends Blackboard> blackboardFactory
     ) {
-        this.interpreter = Objects.requireNonNull(interpreter, "interpreter");
-        this.seeders = Objects.requireNonNull(seeders, "seeders");
-        this.executor = Objects.requireNonNull(executor, "executor");
-        this.registry = Objects.requireNonNull(registry, "registry");
-        this.blackboardFactory = Objects.requireNonNull(blackboardFactory, "blackboardFactory");
+        this(ActionGraph.builder()
+                .goalInterpreter(interpreter)
+                .seeders(seeders)
+                .executor(executor)
+                .actionRegistry(registry)
+                .blackboardFactory(blackboardFactory)
+                .build(), interpreter);
     }
 
     @Override
@@ -88,18 +98,7 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
             return RuntimeStartResponse.clarificationRequired(interpretationResponse);
         }
 
-        Blackboard blackboard = Objects.requireNonNull(
-                blackboardFactory.get(),
-                "blackboardFactory returned null"
-        );
-        seeders.seed(interpretation, blackboard);
-        RunResult result = executor.run(
-                interpretation.goal().orElseThrow(),
-                blackboard,
-                registry.all(),
-                registry,
-                safeStringMap(runMetadata, "run metadata key")
-        );
+        RunResult result = actionGraph.start(interpretation, safeStringMap(runMetadata, "run metadata key"));
         return RuntimeStartResponse.runStarted(interpretationResponse, RuntimeRunResponse.from(result));
     }
 
@@ -113,21 +112,18 @@ public final class ActionGraphRuntimeApiService implements ActionGraphRuntimeOpe
         if (runId == null || runId.isBlank()) {
             throw new IllegalArgumentException("runId must not be blank");
         }
-        return RuntimeRunResponse.from(executor.resume(runId, registry.all(), registry,
-                safeStringMap(runMetadata, "run metadata key")));
+        return RuntimeRunResponse.from(actionGraph.resume(runId, safeStringMap(runMetadata, "run metadata key")));
     }
 
     private GoalInterpretation interpretGoal(String input, @Nullable Map<String, String> knownParameters) {
         if (input == null || input.isBlank()) {
             throw new IllegalArgumentException("input must not be blank");
         }
-        Map<String, String> safeKnownParameters = knownParameters == null
-                ? Map.of()
-                : Map.copyOf(knownParameters);
+        Map<String, String> safeKnownParameters = safeStringMap(knownParameters, "known parameter key");
         if (safeKnownParameters.isEmpty()) {
             return interpreter.interpret(input);
         }
-        return interpreter.interpret(input, GoalParameters.of(safeKnownParameters));
+        return interpreter.interpret(input, com.actiongraph.interpretation.GoalParameters.of(safeKnownParameters));
     }
 
     private static Map<String, String> safeStringMap(@Nullable Map<String, String> values, String keyName) {

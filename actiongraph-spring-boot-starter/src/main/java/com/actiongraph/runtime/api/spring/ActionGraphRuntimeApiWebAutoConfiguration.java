@@ -1,9 +1,7 @@
 package com.actiongraph.runtime.api.spring;
 
-import com.actiongraph.action.ActionRegistry;
-import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
+import com.actiongraph.ActionGraph;
 import com.actiongraph.interpretation.GoalInterpreter;
-import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.api.ActionGraphRuntimeApiService;
 import com.actiongraph.runtime.api.ActionGraphRuntimeOperations;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -29,20 +27,13 @@ import org.springframework.context.annotation.Bean;
 @EnableConfigurationProperties(ActionGraphRuntimeApiProperties.class)
 public class ActionGraphRuntimeApiWebAutoConfiguration {
     @Bean
-    @ConditionalOnBean({
-            GoalInterpreter.class,
-            GoalBlackboardSeederRegistry.class,
-            GoapExecutor.class,
-            ActionRegistry.class
-    })
+    @ConditionalOnBean({ActionGraph.class, GoalInterpreter.class})
     @ConditionalOnMissingBean(ActionGraphRuntimeOperations.class)
     public ActionGraphRuntimeApiService actionGraphRuntimeApiService(
-            GoalInterpreter interpreter,
-            GoalBlackboardSeederRegistry seeders,
-            GoapExecutor executor,
-            ActionRegistry registry
+            ActionGraph actionGraph,
+            GoalInterpreter interpreter
     ) {
-        return new ActionGraphRuntimeApiService(interpreter, seeders, executor, registry);
+        return new ActionGraphRuntimeApiService(actionGraph, interpreter);
     }
 
     @Bean

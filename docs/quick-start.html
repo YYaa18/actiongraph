@@ -7,591 +7,252 @@
 <style>
   :root {
     --bg: #f7f8fa;
-    --surface: #ffffff;
-    --text: #1f2329;
-    --text-dim: #5f6673;
-    --accent: #2e6fd8;
-    --accent-soft: #e8f0fd;
-    --border: #e2e6ec;
-    --code-bg: #20242c;
+    --surface: #fff;
+    --ink: #1f2329;
+    --muted: #5f6673;
+    --line: #e2e6ec;
+    --green: #147a4b;
+    --green-soft: #e7f4ed;
+    --blue: #2e6fd8;
+    --blue-soft: #e8f0fd;
+    --code: #20242c;
     --code-text: #e4e8ef;
-    --code-keyword: #7eb3ff;
-    --code-string: #9ed27e;
-    --code-comment: #7d8694;
-    --code-anno: #f0b860;
-    --ok: #1d8a4e;
-    --warn: #c77700;
-    --danger: #c4423d;
-    --radius: 10px;
+    --warn: #9c6500;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+  * { box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15px;
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   }
-  .layout { display: flex; max-width: 1280px; margin: 0 auto; }
+  .layout { display: flex; max-width: 1240px; margin: 0 auto; }
   nav {
-    width: 240px; flex-shrink: 0; position: sticky; top: 0; height: 100vh;
-    padding: 32px 16px; overflow-y: auto; border-right: 1px solid var(--border);
+    width: 230px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 30px 16px;
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
   }
-  nav .logo { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
-  nav .ver { font-size: 12px; color: var(--text-dim); margin-bottom: 24px; }
+  nav strong { display: block; margin-bottom: 4px; font-size: 16px; }
+  nav span { display: block; margin-bottom: 22px; color: var(--muted); font-size: 12px; }
   nav a {
-    display: block; padding: 6px 10px; border-radius: 6px; color: var(--text-dim);
-    text-decoration: none; font-size: 13.5px; margin-bottom: 2px;
+    display: block;
+    padding: 6px 10px;
+    border-radius: 7px;
+    color: var(--muted);
+    text-decoration: none;
   }
-  nav a:hover { background: var(--accent-soft); color: var(--accent); }
-  nav a.sub { padding-left: 24px; font-size: 13px; }
-  main { flex: 1; min-width: 0; padding: 40px 48px 120px; }
-  h1 { font-size: 30px; margin-bottom: 8px; }
-  .subtitle { color: var(--text-dim); font-size: 16px; margin-bottom: 32px; }
-  h2 {
-    font-size: 22px; margin: 56px 0 16px; padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
-  h2 .step-no {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px; border-radius: 50%; background: var(--accent);
-    color: #fff; font-size: 15px; margin-right: 10px; vertical-align: -3px;
-  }
-  h3 { font-size: 16.5px; margin: 28px 0 10px; }
-  p { margin-bottom: 12px; }
-  ul, ol { margin: 0 0 14px 22px; }
-  li { margin-bottom: 6px; }
+  nav a:hover { background: var(--green-soft); color: var(--green); }
+  main { flex: 1; min-width: 0; padding: 42px 48px 96px; }
+  h1 { margin: 0 0 8px; font-size: 32px; }
+  h2 { margin: 52px 0 16px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 23px; }
+  h3 { margin: 26px 0 10px; font-size: 17px; }
+  p { margin: 0 0 13px; }
+  ul { margin: 0 0 16px 22px; padding: 0; }
+  li { margin-bottom: 5px; }
   code {
-    background: #edf0f4; padding: 1.5px 6px; border-radius: 4px;
-    font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; font-size: 13px;
+    padding: 1px 5px;
+    border-radius: 5px;
+    background: #edf0f4;
+    font: 13px "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   }
   pre {
-    background: var(--code-bg); color: var(--code-text); padding: 18px 20px;
-    border-radius: var(--radius); overflow-x: auto; margin: 14px 0 20px;
-    font-size: 13px; line-height: 1.65;
+    margin: 14px 0 20px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    border-radius: 8px;
+    background: var(--code);
+    color: var(--code-text);
+    font-size: 13px;
+    line-height: 1.62;
   }
-  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
-  .k { color: var(--code-keyword); }
-  .s { color: var(--code-string); }
-  .c { color: var(--code-comment); font-style: italic; }
-  .a { color: var(--code-anno); }
-  table {
-    width: 100%; border-collapse: collapse; margin: 14px 0 20px;
-    background: var(--surface); border-radius: var(--radius); overflow: hidden;
-    border: 1px solid var(--border); font-size: 14px;
-  }
-  th { background: #f0f3f7; text-align: left; padding: 10px 14px; font-weight: 600; }
-  td { padding: 9px 14px; border-top: 1px solid var(--border); vertical-align: top; }
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 18px 22px; margin: 14px 0 20px;
-  }
-  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); }
-  .callout.warn { border-left-color: var(--warn); background: #fdf4e5; }
-  .callout.danger { border-left-color: var(--danger); background: #fcecec; }
-  .callout .title { font-weight: 600; margin-bottom: 6px; }
+  pre code { padding: 0; background: transparent; color: inherit; font-size: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; background: var(--surface); }
+  th, td { padding: 10px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: #f0f3f7; }
+  .subtitle { max-width: 780px; color: var(--muted); font-size: 16px; }
   .badge {
-    display: inline-block; padding: 1px 9px; border-radius: 20px;
-    font-size: 12px; font-weight: 600;
+    display: inline-block;
+    margin-right: 8px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--green-soft);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
   }
-  .badge.ok { background: #e2f4e9; color: var(--ok); }
-  .badge.warn { background: #fdf0dc; color: var(--warn); }
-  .badge.danger { background: #fbe3e2; color: var(--danger); }
-  .badge.info { background: var(--accent-soft); color: var(--accent); }
-  .arch {
-    display: flex; flex-direction: column; gap: 0; align-items: center;
-    margin: 20px 0 24px;
+  .card {
+    margin: 14px 0 20px;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
   }
-  .arch-row {
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: var(--radius); padding: 12px 24px; width: 100%; max-width: 640px;
-    text-align: center;
-  }
-  .arch-row b { display: block; font-size: 14.5px; }
-  .arch-row span { font-size: 12.5px; color: var(--text-dim); }
-  .arch-row.hl { border-color: var(--accent); background: var(--accent-soft); }
-  .arch-arrow { color: var(--text-dim); font-size: 18px; line-height: 1.4; }
-  .flow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0 18px; }
-  .flow .node {
-    background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px;
-    padding: 8px 14px; font-size: 13px; text-align: center;
-  }
-  .flow .node.hl { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
-  .flow .arr { color: var(--text-dim); }
-  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 13px; }
+  .callout { border-left: 4px solid var(--green); background: var(--green-soft); }
+  .warn { border-left-color: var(--warn); background: #fff5df; }
+  .levels { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 24px 0; }
+  .level { padding: 13px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  .level b { display: block; margin-bottom: 4px; }
+  .level span { color: var(--muted); font-size: 13px; }
   @media (max-width: 900px) {
     nav { display: none; }
-    main { padding: 24px 20px 80px; }
+    main { padding: 26px 20px 72px; }
+    .levels { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 <div class="layout">
-
 <nav>
-  <div class="logo">ActionGraph</div>
-  <div class="ver">快速接入指南 · v0.2.0-SNAPSHOT</div>
-  <a href="#intro">这是什么</a>
-  <a href="#arch">架构与职责边界</a>
-  <a href="#modules">模块与依赖</a>
-  <a href="#step1" class="sub">① 引入依赖</a>
-  <a href="#step2" class="sub">② 编写 Action 适配器</a>
-  <a href="#step3" class="sub">③ 注册 Goal 与 Seeder</a>
-  <a href="#step4" class="sub">④ 接入 LLM 解释器</a>
-  <a href="#step5" class="sub">⑤ 运行与处理结果</a>
-  <a href="#review">人工审批与挂起恢复</a>
-  <a href="#masking">敏感数据脱敏</a>
-  <a href="#trace-chain">审计链防篡改</a>
-  <a href="#amount-limits">单笔额度策略</a>
-  <a href="#persistence">持久化（生产必读）</a>
-  <a href="#config">配置项</a>
-  <a href="#design">Action 设计规范</a>
-  <a href="#pitfalls">常见坑</a>
-  <a href="#checklist">上线检查清单</a>
+  <strong>ActionGraph</strong>
+  <span>快速接入 · v0.2.0-SNAPSHOT</span>
+  <a href="#l0">L0 Hello Agent</a>
+  <a href="#l1">L1 门禁与人审</a>
+  <a href="#l2">L2 自然语言入口</a>
+  <a href="#l3">L3 生产化</a>
+  <a href="#l4">L4 跨服务</a>
+  <a href="#next">继续阅读</a>
 </nav>
-
 <main>
-
 <h1>ActionGraph 快速接入指南</h1>
-<p class="subtitle">把你系统里已有的 Java 业务能力封装成可规划、可审计、可补偿的 Agent 能力 —— 半天完成首个接入。</p>
+<p class="subtitle">金路径只有一条：加主 starter，写一个注解类，注入根门面 <code>ActionGraph</code>，调用 <code>start(...)</code> 或 <code>chat(...)</code>。其他接口仍保留，但先不用学。</p>
 
-<h2 id="intro">这是什么</h2>
-<p>ActionGraph 是公司内部的 <b>类型化 GOAP Agent 运行时框架</b>。它让用户用自然语言提出业务目标，由确定性规划器（不是 LLM）从你注册的业务 Action 中搜索出执行路径，逐步执行、每步重规划，高风险动作自动进入人工审批，全过程可审计、失败可补偿。</p>
-<div class="card callout">
-  <div class="title">核心分工 —— 一句话记住</div>
-  LLM 只负责「理解目标、补全参数、解释结果」；<b>规划由确定性算法完成，业务规则仍由你的业务服务裁决</b>。LLM 永远无法绕过你注册的 Action 白名单去碰数据库或 API。
-</div>
-<p>你作为业务系统接入方，只需要做三件事：<b>把业务能力标注成 Action</b>、<b>注册业务目标（Goal）</b>、<b>处理运行结果状态</b>。规划、执行、审批、补偿、审计都由框架完成。</p>
-
-<h2 id="arch">架构与职责边界</h2>
-<div class="arch">
-  <div class="arch-row"><b>用户自然语言</b><span>"帮客户 C001 准备一份续约报价"</span></div>
-  <div class="arch-arrow">↓</div>
-  <div class="arch-row"><b>Goal 解释层（LLM，可降级）</b><span>识别 GoalType · 抽取参数 · 缺参追问 —— 不生成执行计划</span></div>
-  <div class="arch-arrow">↓</div>
-  <div class="arch-row hl"><b>GOAP 规划器（确定性 A*/BFS 搜索）</b><span>按 precondition / effect 在你注册的 Action 中搜索路径</span></div>
-  <div class="arch-arrow">↓</div>
-  <div class="arch-row hl"><b>执行器（每步执行后重规划）</b><span>权限闸门 · runtime guard · 人工审批挂起 · 失败逆序补偿</span></div>
-  <div class="arch-arrow">↓</div>
-  <div class="arch-row"><b>你的业务服务</b><span>真正的校验与状态变更 —— 拥有最终裁决权</span></div>
-  <div class="arch-arrow">↓</div>
-  <div class="arch-row"><b>审计 Trace / 挂起快照 / 审批任务 / 结构化记忆</b><span>内存或 JDBC 持久化</span></div>
+<div class="levels">
+  <div class="level"><b>L0</b><span>15 分钟跑通 Hello Agent</span></div>
+  <div class="level"><b>L1</b><span>加门禁、人审和恢复</span></div>
+  <div class="level"><b>L2</b><span>接自然语言解释器</span></div>
+  <div class="level"><b>L3</b><span>启用持久化与治理</span></div>
+  <div class="level"><b>L4</b><span>等待外部事件恢复</span></div>
 </div>
 
-<h2 id="modules">模块与依赖</h2>
-<table>
-  <tr><th>Maven 坐标（version 0.2.0-SNAPSHOT）</th><th>内容</th><th>什么时候需要</th></tr>
-  <tr><td><code>com.actiongraph:actiongraph-bom</code></td><td>版本对齐 BOM</td><td><b>推荐先引入</b>，之后各组件无需重复写版本号</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-spring-boot-starter</code></td><td>主 Spring Boot 集成：自动装配、注解 Bean 扫描、JDBC 仓储、结构化记忆、仓储型人审、治理策略、运行入口 / 组件目录 / 人审 HTTP 端点</td><td><b>业务执行型 Spring Boot 应用常用</b>，HTTP 端点仍由各自 <code>enabled</code> 配置显式打开</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-core</code></td><td>规划器、执行器、Action SPI、注解适配器、审批契约、Trace、GoalCatalog、运行入口服务、结构化记忆</td><td>非 Spring 应用需要最小运行内核、目标解释契约、启动/恢复入口服务、结构化记忆，或用注解注册普通方法时直接依赖它</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-control-plane-api</code></td><td>Java 8 组件目录 + 控制层契约 + .properties 聚合配置 + 安全 GET 重试 + 聚合 / Runtime / Component Catalog / Human Review / Console HTTP client + 共享密钥 token 校验</td><td>自研网关、自定义 endpoint adapter、Java 8 老系统、审批门户或审计控制台需要读取组件目录、复用 <code>error/message</code> 响应结构、用一个聚合客户端、配置文件或拆分客户端调用已部署 Runtime API / 组件目录 / 人审任务 / Console 审计端点，或复用 token 语义时引入；内置 endpoint starter 会传递引入</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-human-review</code></td><td>审批任务仓储 / 审批链 / 回调处理 / 查询决策服务 / repository-backed policy</td><td>非 Spring 服务需要对接外部审批系统时引入</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-llm-deepseek</code></td><td>通用 LLM 解释器 + GoalCatalog prompt 渲染 + 结构化输出解析 + DeepSeek 兼容客户端</td><td>需要自然语言目标解释或使用 DeepSeek 兼容接口时</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-governance</code></td><td>脱敏 / 额度 / 规则权限 / 额度审批属性 / 多级审批路由</td><td>非 Spring 服务需要复用治理策略时引入</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-persistence-jdbc</code></td><td>Trace / 挂起 / Trace read model / Memory / 审批任务 JDBC 仓储</td><td>非 Spring 或完全手工接线时使用</td></tr>
-  <tr><td><code>com.actiongraph:actiongraph-console</code></td><td>只读 Console 查询、JDBC read model 与 CSV/JSONL 审计导出</td><td>自研控制台、CLI、批处理或网关适配时使用，不引入 Spring MVC endpoint</td></tr>
-</table>
-<p><code>actiongraph-control-plane-api</code> 是 Java 8 兼容的控制层契约包：提供 <code>{"error":"UNAUTHORIZED","message":"..."}</code> 这类统一错误响应 DTO，也提供零外部依赖的 <code>ActionGraphControlPlaneHttpClient</code>、<code>ActionGraphControlPlaneHttpClientProperties</code>、<code>ActionGraphRuntimeHttpClient</code>、<code>ActionGraphComponentCatalogHttpClient</code>、<code>ActionGraphHumanReviewHttpClient</code> 与 <code>ActionGraphConsoleHttpClient</code>，用于老系统从一个 <code>/actiongraph</code> 根路径、<code>.properties</code> / 配置中心键或拆分网关地址调用 <code>/interpret</code>、<code>/runs</code>、<code>/runs/{runId}/resume</code>、组件目录端点、人审任务查询/决策端点、审批回调端点、Console 运行/Trace 查询和 CSV/JSONL 审计导出端点。查询类 GET 可按需开启瞬时失败重试；启动运行、恢复运行、审批决策和回调等 POST 不自动重试，避免重复副作用。它还提供共享密钥 Header token 校验：未配置 <code>shared-secret</code> 时跳过校验，配置后使用常量时间比较。内置 Runtime API、Component Catalog、Human Review API、审批回调和 Console starter 都会复用它；企业 IAM、RBAC、租户权限和网关策略仍由接入系统负责。</p>
-<p>组件目录会为每个模块暴露 <code>compatibility</code> 标签；当前 <code>actiongraph-control-plane-api</code> 是 Java 8 应用可以直接引入的 <code>java8-client</code> artifact，现代运行时、Spring、JDBC、治理、LLM 与 Console 模块是 <code>java21-plus</code>，样例是 <code>sample-only</code>。Spring 目录端点支持 <code>/actiongraph/components/compatibility/java8-client</code> 过滤，方便网关、部署检查或老系统接入脚手架自动判断可引入边界。</p>
-
-<h2 id="step1"><span class="step-no">1</span>引入依赖</h2>
-<pre><code><span class="c">// build.gradle.kts</span>
+<!-- l0:start -->
+<section id="l0">
+<h2><span class="badge">Golden Path</span>L0 · Hello Agent（15 分钟）</h2>
+<p>先只掌握 3 个概念：Action 是可执行业务能力，Condition 是符号事实，Goal 是目标事实集合。</p>
+<pre><code>// build.gradle.kts
 dependencies {
-    implementation(platform(<span class="s">"com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"</span>))
-
-    implementation(<span class="s">"com.actiongraph:actiongraph-spring-boot-starter"</span>)
-    implementation(<span class="s">"com.actiongraph:actiongraph-llm-deepseek"</span>)
+  implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
+  implementation("com.actiongraph:actiongraph-spring-boot-starter")
 }</code></pre>
-<p>主 starter 引入后无需任何注解开关，自动装配以下 Bean（全部 <code>@ConditionalOnMissingBean</code>，你随时可以用自己的 <code>@Bean</code> 覆盖）：<code>Planner</code>、<code>GoapExecutor</code>、<code>ActionRegistry</code>、<code>ExecutionPolicyGuard</code>、<code>HumanReviewPolicy</code>、<code>TraceRepository</code>、<code>SuspendedRunRepository</code>、<code>MemoryContextLoader</code> 等。JDBC、治理、人审、Console 和控制层端点仍由属性开关控制。</p>
+<pre><code>@Component
+class HelloAgent {
+  @ActionGraphGoal(type = "hello.finish",
+      targetConditions = "hello:DONE",
+      seedConditions = "hello:INPUT_PRESENT")
+  void goal(@GoalParameter(name = "id", example = "A-1") String ignored) {}
 
-<h2 id="step2"><span class="step-no">2</span>编写 Action 适配器（核心工作量）</h2>
-<p>不需要实现任何框架接口 —— 在普通 Spring Bean 的方法上加注解即可。方法参数自动按类型从 Blackboard 取，非 void 返回值自动写回 Blackboard。</p>
-<pre><code><span class="a">@Component</span>
-<span class="k">public class</span> OrderCancellationAgentAdapter {
+  @ActionGraphGoalSeeder(value = "hello.finish",
+      seedConditions = "hello:INPUT_PRESENT")
+  InputId seed(@FromGoalParam("id") String id) {
+    return new InputId(id);
+  }
 
-    <span class="k">private final</span> OrderService orderService;            <span class="c">// ← 你已有的业务服务</span>
-    <span class="k">private final</span> CancellationRequestService requestService;
-
-    <span class="c">// 1. 查询类 Action：READ_ONLY，无需补偿</span>
-    <span class="a">@ActionGraphAction</span>(
-        id = <span class="s">"order.lookup"</span>,
-        preconditions = <span class="s">"order:ORDER_ID_PRESENT"</span>,
-        effects = <span class="s">"order:ORDER_LOADED"</span>,
-        riskLevel = ActionRiskLevel.READ_ONLY
-    )
-    OrderRecord lookup(OrderId orderId) {
-        <span class="k">return</span> orderService.find(orderId);
-    }
-
-    <span class="c">// 2. 写入类 Action：声明风险等级，必须配补偿</span>
-    <span class="a">@ActionGraphAction</span>(
-        id = <span class="s">"order.cancellation.request.draft"</span>,
-        preconditions = {<span class="s">"order:ORDER_LOADED"</span>, <span class="s">"order:ELIGIBILITY_CHECKED"</span>},
-        effects = <span class="s">"order:REQUEST_DRAFTED"</span>,
-        riskLevel = ActionRiskLevel.MEDIUM
-    )
-    CancellationRequestDraft draft(OrderRecord order, CancellationEligibility eligibility) {
-        <span class="k">return</span> requestService.createDraft(order);
-    }
-
-    <span class="c">// 3. 运行期值断言：规划期不可知的业务事实，执行前由框架求值</span>
-    <span class="a">@ActionGraphGuard</span>(actionId = <span class="s">"order.cancellation.request.draft"</span>)
-    <span class="k">boolean</span> canDraft(CancellationEligibility eligibility) {
-        <span class="k">return</span> eligibility.eligible();
-    }
-
-    <span class="c">// 4. 补偿（Saga）：执行链失败或审批被拒时，框架逆序调用</span>
-    <span class="a">@ActionGraphCompensation</span>(actionId = <span class="s">"order.cancellation.request.draft"</span>)
-    <span class="k">void</span> voidDraft(CancellationRequestDraft draft) {
-        requestService.voidDraft(draft.requestId());
-    }
-
-    <span class="c">// 5. 高风险 Action：requiresHumanReview = true，执行前自动挂起等审批</span>
-    <span class="a">@ActionGraphAction</span>(
-        id = <span class="s">"operations.approval.request"</span>,
-        preconditions = <span class="s">"order:REQUEST_DRAFTED"</span>,
-        effects = <span class="s">"order:OPS_APPROVAL_REQUESTED"</span>,
-        riskLevel = ActionRiskLevel.HIGH,
-        requiresHumanReview = <span class="k">true</span>
-    )
-    OperationsApprovalRequest requestApproval(CancellationRequestDraft draft) {
-        <span class="k">return</span> approvalService.request(draft);
-    }
-}</code></pre>
-<div class="card callout warn">
-  <div class="title">两条硬规则</div>
-  <ul style="margin-bottom:0">
-    <li><b>Action 方法必须返回具体类型</b>（record / 实体类），返回接口或抽象类会在启动时直接报错 —— 这是刻意设计，Blackboard 按具体类型匹配。</li>
-    <li><b>condition 一律带命名空间</b>：<code>"order:ORDER_LOADED"</code>，命名空间用你的业务域名，避免与其他接入系统撞名。</li>
-  </ul>
-</div>
-
-<h2 id="step3"><span class="step-no">3</span>注册 Goal 与参数装配</h2>
-<p>Goal 声明「目标条件是什么、需要哪些参数」。直接用注解发布即可，Spring Starter 会自动推导 schema 并注册进 <code>GoalCatalog</code>，LLM prompt 也会由目录统一生成。</p>
-<pre><code><span class="a">@Component</span>
-<span class="k">final class</span> OrderCancellationGoals {
-
-    <span class="a">@ActionGraphGoal</span>(
-        type = <span class="s">"order.cancel"</span>,
-        description = <span class="s">"为指定订单发起取消申请并提交运营审批"</span>,
-        name = <span class="s">"requestOrderCancellation"</span>,
-        targetConditions = <span class="s">"order:OPS_APPROVAL_REQUESTED"</span>,
-        seedConditions = <span class="s">"order:ORDER_ID_PRESENT"</span>
-    )
-    <span class="k">void</span> requestCancellation(
-        <span class="a">@GoalParameter</span>(name = <span class="s">"orderId"</span>,
-                       description = <span class="s">"要取消的订单编号"</span>,
-                       example = <span class="s">"O100"</span>)
-        String ignored
-    ) {
-        <span class="c">// 方法体不会被调用；这里只声明 GoalCatalog 元数据</span>
-    }
-}</code></pre>
-<p>更推荐的写法是用 record 做 schema，参数顺序稳定，字段含义也更直观：</p>
-<pre><code><span class="a">@ActionGraphGoal</span>(
-    type = <span class="s">"order.cancel"</span>,
-    description = <span class="s">"为指定订单发起取消申请并提交运营审批"</span>,
-    targetConditions = <span class="s">"order:OPS_APPROVAL_REQUESTED"</span>,
-    seedConditions = <span class="s">"order:ORDER_ID_PRESENT"</span>
-)
-<span class="k">record</span> OrderCancellationGoal(
-    <span class="a">@GoalParameter</span>(description = <span class="s">"要取消的订单编号"</span>, example = <span class="s">"O100"</span>)
-    String orderId
-) {}</code></pre>
-<p>Seeder 仍然由业务实现，因为只有业务系统知道参数该怎样变成 Blackboard 初始状态；但它可以是普通方法，不需要配置类，也不需要手写注册。</p>
-<pre><code><span class="a">@Component</span>
-<span class="k">final class</span> OrderCancellationSeeders {
-
-    <span class="a">@ActionGraphGoalSeeder</span>(
-        value = <span class="s">"order.cancel"</span>,
-        seedConditions = <span class="s">"order:ORDER_ID_PRESENT"</span>
-    )
-    OrderId seedOrderId(
-        <span class="a">@FromGoalParam</span>(<span class="s">"orderId"</span>) String orderId
-    ) {
-        <span class="k">return new</span> OrderId(orderId);
-    }
-}</code></pre>
-<p>引用解析也可以保持业务可控：框架只定义 converter 接口，实际查询由业务 Bean 完成。</p>
-<pre><code><span class="a">@Component</span>
-<span class="k">final class</span> ProductReferenceToId <span class="k">implements</span> GoalValueConverter&lt;Long&gt; {
-    <span class="k">private final</span> ProductService productService;
-
-    ProductReferenceToId(ProductService productService) {
-        <span class="k">this</span>.productService = productService;
-    }
-
-    <span class="a">@Override</span>
-    <span class="k">public</span> Long convert(String ref, GoalParameterBindingContext ctx) {
-        <span class="k">return</span> productService.findByReference(ref).getId();
-    }
+  @ActionGraphAction(id = "hello.finish",
+      preconditions = "hello:INPUT_PRESENT",
+      effects = "hello:DONE")
+  void finish(InputId input) {}
 }
 
-<span class="a">@Component</span>
-<span class="k">final class</span> ProductSeeders {
-    <span class="a">@ActionGraphGoalSeeder</span>(value = <span class="s">"product.delete"</span>,
-                           seedConditions = <span class="s">"product:DELETE_REQUESTED"</span>)
-    <span class="a">@BlackboardValue</span>(<span class="s">"productId"</span>)
-    Long seedProductId(
-        <span class="a">@FromGoalParam</span>(value = <span class="s">"productRef"</span>, converter = ProductReferenceToId.class)
-        Long productId
-    ) {
-        <span class="k">return</span> productId;
-    }
+record InputId(String value) {}</code></pre>
+<pre><code>@Service
+class HelloRunner {
+  private final ActionGraph actionGraph;
+
+  HelloRunner(ActionGraph actionGraph) {
+    this.actionGraph = actionGraph;
+  }
+
+  RunResult run() {
+    return actionGraph.start("hello.finish", Map.of("id", "A-1"));
+  }
 }</code></pre>
+<p>检查点：<code>run().status()</code> 返回 <code>COMPLETED</code>。</p>
+</section>
+<!-- l0:end -->
 
-<h2 id="step4"><span class="step-no">4</span>接入 LLM 解释器（自然语言入口）</h2>
-<p>设置环境变量后组装解释器。<b>推荐挂 Fallback</b>：LLM 网络故障时自动降级到规则解释器，入口永不不可用。</p>
-<pre><code><span class="c"># 环境变量</span>
-DEEPSEEK_API_KEY=sk-xxxx          <span class="c"># 必填</span>
-DEEPSEEK_MODEL=deepseek-v4-flash  <span class="c"># 可选，有默认值</span>
-DEEPSEEK_BASE_URL=...             <span class="c"># 可选，私有网关时覆盖</span></code></pre>
-<p>真实 LLM 冒烟建议使用 GitHub Actions 的 <code>DeepSeek Smoke</code> 手动 workflow，并把 key 配置为仓库 Secret <code>DEEPSEEK_API_KEY</code>；不要把 key 写进命令历史或提交到仓库。</p>
-<pre><code><span class="a">@Bean</span>
-GoalInterpreter goalInterpreter(GoalCatalog catalog) {
-    LlmGoalInterpreter llm = <span class="k">new</span> LlmGoalInterpreter(
-        DeepSeekChatClient.fromEnvironment().orElseThrow(),
-        <span class="k">new</span> GoalCatalogPromptRenderer(catalog),   <span class="c">// prompt 由目录自动生成</span>
-        <span class="k">new</span> GoalInterpretationJsonParser(catalog.goalsByType())
-    );
-    <span class="k">return new</span> FallbackGoalInterpreter(llm, myRuleBasedInterpreter); <span class="c">// 降级兜底</span>
-}</code></pre>
-<p>解释结果 <code>GoalInterpretation</code> 只有两种形态，处理逻辑非常简单：</p>
-<ul>
-  <li><code>isReady() == true</code> → 拿到 <code>Goal</code> + 参数，进入执行；</li>
-  <li>否则 → 把 <code>clarificationQuestion()</code> 返回给用户追问（如「请提供订单编号」），用户补答后带着已知参数再调 <code>interpret(input, knownParameters)</code>。</li>
-</ul>
+<section id="l1">
+<h2><span class="badge">Golden Path</span>L1 · 加上门禁、人审和恢复</h2>
+<p>当 Action 需要看运行期对象值才能判断能否执行，用 <code>@ActionGraphGuard</code>；当动作有副作用，用 <code>@ActionGraphCompensation</code>；当动作需要人工审批，声明 <code>requiresHumanReview = true</code>。</p>
+<pre><code>@ActionGraphAction(
+    id = "order.approval.request",
+    preconditions = "order:DRAFT_CREATED",
+    effects = "order:APPROVAL_REQUESTED",
+    riskLevel = ActionRiskLevel.HIGH,
+    requiresHumanReview = true)
+ApprovalRequest requestApproval(OrderDraft draft) {
+  return approvalService.request(draft);
+}
 
-<h2 id="step5"><span class="step-no">5</span>运行与处理结果</h2>
-<pre><code><span class="a">@Service</span>
-<span class="k">public class</span> OrderAgentService {
-    <span class="k">private final</span> GoalInterpreter interpreter;
-    <span class="k">private final</span> GoalBlackboardSeederRegistry seeders;
-    <span class="k">private final</span> GoapExecutor executor;       <span class="c">// starter 自动装配</span>
-    <span class="k">private final</span> ActionRegistry registry;     <span class="c">// 注解 Bean 已自动注册进来</span>
+RunResult suspended = actionGraph.start("order.cancel", params);
+// 审批系统写入决定后，业务或回调处理器继续同一个 run
+RunResult resumed = actionGraph.resume(suspended.runId());</code></pre>
+<p>检查点：第一次运行返回 <code>SUSPENDED_PENDING_REVIEW</code>，审批通过后 <code>resume(...)</code> 返回 <code>COMPLETED</code>。</p>
+</section>
 
-    <span class="k">public</span> RunResult handle(String userInput) {
-        GoalInterpretation gi = interpreter.interpret(userInput);
-        <span class="k">if</span> (!gi.isReady()) { <span class="c">/* 返回澄清问题给前端 */</span> }
+<section id="l2">
+<h2><span class="badge">Golden Path</span>L2 · 自然语言入口</h2>
+<p>提供一个 <code>GoalInterpreter</code> Bean 后，根门面就能使用 <code>chat(...)</code>。缺参数不是异常，而是对话分支。</p>
+<pre><code>ChatResult missing = actionGraph.chat("帮这个客户准备续约报价");
+missing.started();                 // false
+missing.clarification().text();    // 追问 customerId
 
-        Blackboard bb = <span class="k">new</span> InMemoryBlackboard();
-        seeders.seed(gi, bb);
+ChatResult started = actionGraph.chat(
+    "帮这个客户准备续约报价",
+    Map.of("customerId", "C001"));
+started.run().status();            // COMPLETED 或挂起状态</code></pre>
+<p>LLM provider、prompt 渲染和结构化输出解析可以使用 <code>actiongraph-llm-deepseek</code>，也可以先用规则解释器兜底。</p>
+</section>
 
-        <span class="k">return</span> executor.run(gi.goal().orElseThrow(), bb, registry.all(), registry);
-    }
-}</code></pre>
-<h3>RunStatus 状态机 —— 每个状态都要有处理分支</h3>
-<table>
-  <tr><th>状态</th><th>含义</th><th>你该做什么</th></tr>
-  <tr><td><span class="badge ok">COMPLETED</span></td><td>目标达成</td><td>从 Blackboard 取结果对象返回用户</td></tr>
-  <tr><td><span class="badge warn">SUSPENDED_PENDING_REVIEW</span></td><td>遇高风险动作，已挂起等审批</td><td>告知用户「已提交审批」，保存 <code>runId</code>，审批后 resume（见下节）</td></tr>
-  <tr><td><span class="badge info">HALTED_UNREACHABLE</span></td><td>业务事实不满足（如订单已发货），无可达路径</td><td>把 <code>message()</code> 转译成业务话术返回用户</td></tr>
-  <tr><td><span class="badge danger">DENIED_BY_POLICY</span></td><td>权限或审批拒绝，<b>已自动逆序补偿</b></td><td>告知用户被拒原因，无需手工清理</td></tr>
-  <tr><td><span class="badge danger">FAILED_COMPENSATED</span></td><td>执行失败，补偿全部成功</td><td>告知失败，系统状态已还原</td></tr>
-  <tr><td><span class="badge danger">FAILED_COMPENSATION_INCOMPLETE</span></td><td>执行失败且<b>部分补偿失败</b></td><td><b>必须告警人工介入</b>，按 Trace 核对残留副作用</td></tr>
-</table>
-
-<h2 id="review">人工审批与挂起恢复</h2>
-<p><code>actiongraph-human-review</code> 提供的 <code>RepositoryBackedHumanReviewPolicy</code> 把审批做成了「任务表」模型，可直接对接公司现有审批系统。Spring 服务引入 <code>actiongraph-spring-boot-starter</code> 后会自动装配这套实现；非 Spring 服务可直接依赖该模块手工接线。默认是单级审批；配置 <code>actiongraph.human-review.risk-based-approval-chain=true</code> 后，金融场景可开启按风险等级路由的多级审批链。</p>
-<div class="flow">
-  <div class="node">高风险 Action 触发</div><div class="arr">→</div>
-  <div class="node hl">挂起 SUSPENDED_PENDING_REVIEW<br>审批任务入库</div><div class="arr">→</div>
-  <div class="node">审批系统读取 findPending()</div><div class="arr">→</div>
-  <div class="node">审批人 decideStage(...)</div><div class="arr">→</div>
-  <div class="node hl">resume(runId)<br>读决定继续或拒绝补偿</div>
-</div>
-<pre><code><span class="c">// 审批侧：展示待审任务（含计划预览、当前状态、Blackboard 预览）</span>
-List&lt;HumanReviewTask&gt; pending = humanReviewRepository.findPending();
-
-<span class="c">// 审批人做出决定。expectedStageIndex 来自 task.currentStageIndex()</span>
-HumanReviewTask task = pending.getFirst();
-humanReviewRepository.decideStage(task.runId(), task.actionId(), task.currentStageIndex(),
-        HumanReviewDecision.APPROVED, <span class="s">"ops-lead"</span>, <span class="s">"审批通过"</span>);
-
-<span class="c">// 恢复运行：原子认领 runId，trace 连续，挂起前动作的补偿链完整保留</span>
-RunResult resumed = executor.resume(runId, registry.all(), registry);</code></pre>
-<div class="card callout">
-  <div class="title">挂起恢复的语义保证</div>
-  resume 会先从 <code>SuspendedRunRepository</code> 原子认领挂起快照；同一个 <code>runId</code> 被重复回调或多实例并发消费时，只有一个恢复流程能继续执行业务动作。多级审批未走完时，resume 会重新挂起并保留同一条补偿栈；审批拒绝（DENIED）同样触发补偿，不会留下孤儿草稿。
-</div>
-<p><code>actiongraph-spring-boot-starter</code> 的审批回调端点通过 Header 接收共享密钥；理赔预审样板域另提供 <code>claims-precheck-review-callbacks.jsonl</code> 重放文件，用于本地验证审批系统消息格式、token 校验、重复投递幂等和 resume 连续性。</p>
-<pre><code>actiongraph:
-  human-review:
-    risk-based-approval-chain: true   <span class="c"># HIGH 两级；默认 false 保持单级</span></code></pre>
-
-<h2 id="masking">敏感数据脱敏</h2>
-<p>金融场景建议引入 <code>actiongraph-governance</code> 复用内置基础治理策略库；Spring Boot 应用通常直接引入 <code>actiongraph-spring-boot-starter</code> 并开启默认正则脱敏。它只作用于两个人类可读面：<code>TraceEvent.detail/data</code> 与 <code>HumanReviewRequest.blackboardPreview</code>；<code>SuspendedRun</code> 的 Blackboard 快照不会脱敏，确保 resume 可无损恢复。</p>
-<pre><code>actiongraph:
-  masking:
-    enabled: true
-    blocked-keys:
-      - idCard
-      - cardNo
-      - customerName</code></pre>
-<p>默认规则覆盖身份证、银行卡、手机号、邮箱；<code>blocked-keys</code> 命中的字段会整体替换为 <code>***</code>。如果需要对接行内统一脱敏服务，直接提供自己的 <code>DataMaskingPolicy</code> Bean 即可覆盖默认实现。</p>
-
-<h2 id="trace-chain">审计链防篡改</h2>
-<p>每条 <code>TraceEvent</code> 都会在写入前带上 <code>prevHash</code> 与 <code>hash</code>。哈希按 <code>runId</code> 隔离串链，计算对象是已经脱敏后的落库形态；因此监管或审计侧可以直接读取数据库里的 trace 重新计算并验证。</p>
-<pre><code>List&lt;TraceEvent&gt; events = traceRepository.findByRun(runId);
-TraceChainVerifier.ChainVerification verification =
-        new TraceChainVerifier().verify(events);
-
-if (!verification.valid()) {
-    log.warn("trace broken at seq {}", verification.firstBrokenSeq());
-}</code></pre>
-<p>JDBC trace 表会自动创建或迁移 <code>prev_hash</code> / <code>hash</code> 两列。旧版本无哈希历史行不会回填，验证器会明确报告为 pre-F0 数据。</p>
-
-<h2 id="amount-limits">单笔额度策略</h2>
-<p>额度硬限额策略由 <code>actiongraph-spring-boot-starter</code> 自动装配，只做框架治理，不猜业务语义。接入方需要提供一个 <code>AmountExtractor</code>，明确说明某个 Action 在当前 Blackboard 上对应哪一笔金额。超 review-limit 的金额会通过同一 starter 写入审批 attributes，并可配合风险审批链追加额度授权节点。</p>
-<pre><code><span class="a">@Bean</span>
-AmountExtractor amountExtractor() {
-    <span class="k">return</span> (action, blackboard) -&gt; {
-        <span class="k">if</span> (!action.id().value().equals(<span class="s">"sales.approval.request"</span>)) {
-            <span class="k">return</span> Optional.empty();
-        }
-        <span class="k">return</span> blackboard.get(QuoteDraft.class)
-                .map(draft -&gt; <span class="k">new</span> MonetaryAmount(draft.premium(), draft.currency()));
-    };
-}</code></pre>
-<pre><code>actiongraph:
-  limits:
-    rules:
-      - action-id: sales.approval.request
-        currency: CNY
-        hard-limit: 1000000      <span class="c"># 超过：DENIED_BY_POLICY，并触发已执行步骤补偿</span>
-        review-limit: 100000     <span class="c"># 超过：写入 amountEscalated 属性，审批链追加额度授权</span>
-  human-review:
-    risk-based-approval-chain: true</code></pre>
-<p>有金额但币种没有配置时会保守拒绝；没有配置 <code>AmountExtractor</code> 的系统保持现有行为。审批任务会保存 <code>amount</code>、<code>currency</code>、<code>amountEscalated</code> 等 attributes，方便审批系统展示升级原因。</p>
-
-<h2 id="persistence">持久化（生产必读）</h2>
-<p>主 starter 默认提供内存 Trace、挂起快照、Memory 与人审仓储，<b>重启即丢</b>，仅适合开发联调。Spring Boot 生产应用保留同一个依赖，只需启用 JDBC 开关；Trace、挂起运行、Memory 与审批任务会一起切到 JDBC 仓储：</p>
-<pre><code><span class="c">// build.gradle.kts</span>
-implementation(<span class="s">"com.actiongraph:actiongraph-spring-boot-starter"</span>)</code></pre>
+<section id="l3">
+<h2><span class="badge">Production</span>L3 · 生产化开关</h2>
+<p>生产化优先通过配置开启，不改变 L0/L1 的业务代码。</p>
 <pre><code>actiongraph:
   persistence:
     jdbc:
       enabled: true
       suspended-run-claim-timeout: 15m
-      tables:
-        trace-event: actiongraph_trace_event
-        suspended-run: actiongraph_suspended_run
-        human-review: actiongraph_human_review_task
-        memory: actiongraph_memory_record
       blackboard:
         allowed-packages:
-          - com.example.business</code></pre>
-<p>JDBC 开关启用后会自动提供 <code>TraceRepository</code>、<code>SuspendedRunRepository</code>、<code>JdbcTraceRunRepository</code>、<code>MemoryRepository</code> 和 <code>HumanReviewRepository</code>。所有 Bean 都是 <code>@ConditionalOnMissingBean</code>：你只覆盖一个仓储，其余仍可继续自动装配。</p>
-<p>非 Spring 服务或需要完全手工控制时，统一使用底层 <code>actiongraph-persistence-jdbc</code>：</p>
-<pre><code>BlackboardTypeRegistry blackboardTypes = BlackboardTypeRegistry.builder()
-        .allowPackage(<span class="s">"com.example.business"</span>)
-        .build();
+          - com.example.business
+  masking:
+    enabled: true
+  validation:
+    mode: fail</code></pre>
+<p>检查点：进程重启后仍可恢复挂起运行；重复 resume 只会有一次业务副作用；Trace 链可验证。</p>
+</section>
 
-TraceRepository traceRepository = <span class="k">new</span> JdbcTraceRepository(dataSource);
-SuspendedRunRepository suspendedRunRepository =
-        <span class="k">new</span> JdbcSuspendedRunRepository(dataSource, blackboardTypes);
-HumanReviewRepository humanReviewRepository =
-        <span class="k">new</span> JdbcHumanReviewRepository(dataSource);
-MemoryRepository memoryRepository =
-        <span class="k">new</span> JdbcMemoryRepository(dataSource);</code></pre>
-<div class="card callout danger">
-  <div class="title">安全边界</div>
-  挂起快照按类名 + JSON 恢复 Blackboard 对象，且为了无损 resume 不做脱敏。<b>挂起表必须视为高敏可信输入</b>：仅 runtime 服务账号可读写，严格控制库表权限，不要与低信任系统共库；生产环境应配置 <code>BlackboardTypeRegistry</code>，只允许业务包下的快照类型恢复。JDBC 挂起表同时保存 <code>snapshot_version</code>，不兼容版本会在恢复前拒绝。
+<section id="l4">
+<h2><span class="badge">Production</span>L4 · 跨服务与外部事件</h2>
+<p>当某一步要等待 MQ、回调或批处理结果，Action 返回 waiting 状态，运行会挂起到事件到达或超时。</p>
+<pre><code>return ActionResult.waiting(
+    "payment-cleared",
+    EventWaitOptions.builder()
+        .correlationId(paymentId)
+        .idempotencyKey(requestId)
+        .timeout(Duration.ofHours(2))
+        .build());</code></pre>
+<p>检查点：事件回调投递后恢复同一 run；重复投递依赖幂等键，不产生重复副作用。</p>
+</section>
+
+<section id="next">
+<h2>继续阅读</h2>
+<table>
+  <tr><th>阶段</th><th>文档</th><th>用途</th></tr>
+  <tr><td>金路径</td><td><a href="frameworkization/golden-path.md">golden-path.md</a></td><td>确认哪些写法是推荐入口，哪些属于进阶层</td></tr>
+  <tr><td>阅读地图</td><td><a href="learning-path.md">learning-path.md</a></td><td>按 L0-L4、打包、SPI、运营、内部设计继续学习</td></tr>
+  <tr><td>扩展点</td><td><a href="frameworkization/extension-points.md">extension-points.md</a></td><td>使用打包 SPI、自定义转换器、事件等待和底层接口</td></tr>
+  <tr><td>生产持久化</td><td><a href="frameworkization/jdbc-persistence.md">jdbc-persistence.md</a></td><td>JDBC 表、恢复语义、类型白名单和审计导出</td></tr>
+  <tr><td>控制面</td><td><a href="frameworkization/runtime-api.md">runtime-api.md</a></td><td>HTTP 适配、Java 8 网关和运行入口边界</td></tr>
+</table>
+<div class="card callout warn">
+  <b>正门保持窄。</b>
+  <p>业务代码用 <code>ActionGraph.start</code>、<code>ActionGraph.chat</code>、<code>ActionGraph.resume</code>。审批决策、事件投递、恢复扫描、Console 查询是运营面能力，按对应文档接入。</p>
 </div>
-<p>理赔预审样板域提供 H2 可执行契约和 PostgreSQL 方言映射：<code>actiongraph-samples/src/main/resources/sql/claims-precheck-source-contract.sql</code>、<code>actiongraph-samples/src/main/resources/sql/postgresql/claims-precheck-source-contract.sql</code>。真实库接入时建议只授予运行账号读取脱敏视图的权限。</p>
-
-<h2 id="config">配置项</h2>
-<table>
-  <tr><th>application.yml 配置</th><th>默认</th><th>说明</th></tr>
-  <tr><td><code>actiongraph.planner.max-depth</code></td><td>32</td><td>规划搜索最大深度</td></tr>
-  <tr><td><code>actiongraph.planner.max-expansions</code></td><td>10000</td><td>规划搜索最大展开数（防爆）</td></tr>
-  <tr><td><code>actiongraph.executor.max-steps</code></td><td>64</td><td>单次运行最大执行步数</td></tr>
-  <tr><td><code>actiongraph.actions.auto-register-annotated</code></td><td>true</td><td>是否自动扫描注解 Bean 注册 Action</td></tr>
-  <tr><td><code>actiongraph.runtime.api.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露解释目标、启动运行与恢复运行端点；需要 <code>actiongraph-spring-boot-starter</code>、<code>GoalInterpreter</code>、<code>GoalBlackboardSeederRegistry</code> 和运行时 Bean</td></tr>
-  <tr><td><code>actiongraph.runtime.api.path</code></td><td><code>/actiongraph/runtime</code></td><td>运行入口 API 前缀；提供 <code>POST /interpret</code>、<code>POST /runs</code>、<code>POST /runs/{runId}/resume</code></td></tr>
-  <tr><td><code>actiongraph.runtime.api.token-header</code></td><td><code>X-ActionGraph-Runtime-Token</code></td><td>启用共享密钥后用于传递运行入口 API token 的 Header 名</td></tr>
-  <tr><td><code>actiongraph.runtime.api.shared-secret</code></td><td>空</td><td>运行入口 API 共享密钥；为空时不校验，生产环境建议通过企业网关、环境变量或密钥系统注入</td></tr>
-  <tr><td><code>actiongraph.component-catalog.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露组件目录只读端点；需要显式引入 <code>actiongraph-spring-boot-starter</code></td></tr>
-  <tr><td><code>actiongraph.component-catalog.path</code></td><td><code>/actiongraph/components</code></td><td>组件目录 API 前缀；提供 <code>GET /</code>、<code>GET /modules</code>、<code>GET /modules/{module}</code>、<code>GET /profiles</code>、<code>GET /profiles/{profile}</code></td></tr>
-  <tr><td><code>actiongraph.component-catalog.token-header</code></td><td><code>X-ActionGraph-Catalog-Token</code></td><td>启用共享密钥后用于传递组件目录 token 的 Header 名</td></tr>
-  <tr><td><code>actiongraph.component-catalog.shared-secret</code></td><td>空</td><td>组件目录共享密钥；为空时不校验，生产环境建议接入企业网关或密钥系统</td></tr>
-  <tr><td><code>actiongraph.human-review.risk-based-approval-chain</code></td><td>false</td><td>是否启用 HIGH 风险动作两级审批链；需要 <code>actiongraph-spring-boot-starter</code></td></tr>
-  <tr><td><code>actiongraph.human-review.api.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露审批任务查询与决策端点；需要 <code>actiongraph-spring-boot-starter</code> 和一个 <code>HumanReviewRepository</code> Bean</td></tr>
-  <tr><td><code>actiongraph.human-review.api.path</code></td><td><code>/actiongraph/human-review/tasks</code></td><td>审批任务 API 前缀；提供 <code>GET /pending</code>、<code>GET /runs/{runId}</code>、<code>GET /runs/{runId}/actions/{actionId}</code>、<code>POST /runs/{runId}/actions/{actionId}/decision</code></td></tr>
-  <tr><td><code>actiongraph.human-review.api.token-header</code></td><td><code>X-ActionGraph-Review-Token</code></td><td>启用共享密钥后用于传递审批任务 API token 的 Header 名</td></tr>
-  <tr><td><code>actiongraph.human-review.api.shared-secret</code></td><td>空</td><td>审批任务 API 共享密钥；为空时不校验，生产环境建议通过环境变量或密钥系统注入</td></tr>
-  <tr><td><code>actiongraph.human-review.callback-endpoint.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中暴露审批回调 HTTP 端点；需要 <code>actiongraph-spring-boot-starter</code> 和一个 <code>HumanReviewRepository</code> Bean，默认内存仓储可在 JDBC 开关启用时替换</td></tr>
-  <tr><td><code>actiongraph.human-review.callback-endpoint.path</code></td><td><code>/actiongraph/human-review/callbacks</code></td><td>审批回调 HTTP 端点路径</td></tr>
-  <tr><td><code>actiongraph.human-review.callback-endpoint.token-header</code></td><td><code>X-ActionGraph-Review-Token</code></td><td>启用共享密钥后用于传递回调 token 的 Header 名</td></tr>
-  <tr><td><code>actiongraph.human-review.callback-endpoint.shared-secret</code></td><td>空</td><td>审批回调共享密钥；为空时不校验，生产环境建议通过环境变量或密钥系统注入</td></tr>
-  <tr><td><code>actiongraph.console.enabled</code></td><td>false</td><td>是否在 Spring MVC 应用中启用只读 Console 控制面；需要 <code>actiongraph-spring-boot-starter</code>，以及一个 <code>ConsoleRunRepository</code> Bean，或启用 starter 的 JDBC 仓储自动装配并提供 <code>DataSource</code></td></tr>
-  <tr><td><code>actiongraph.console.path</code></td><td><code>/actiongraph/console</code></td><td>只读 Console 页面与 HTTP 端点前缀；主 starter 提供内置页面、<code>GET /runs</code>、<code>GET /runs/{runId}</code>、<code>GET /runs/{runId}/trace</code>、<code>GET /runs/export.csv</code>、<code>GET /runs/{runId}/trace/export.csv</code> 与 <code>GET /runs/{runId}/trace/export.jsonl</code>；列表支持 <code>limit</code>、<code>offset</code>、<code>status</code>、<code>auditComplete</code></td></tr>
-  <tr><td><code>actiongraph.console.token-header</code></td><td><code>X-ActionGraph-Console-Token</code></td><td>启用共享密钥后用于传递 Console token 的 Header 名</td></tr>
-  <tr><td><code>actiongraph.console.shared-secret</code></td><td>空</td><td>Console 共享密钥；为空时不校验，生产环境建议接入企业网关或密钥系统</td></tr>
-  <tr><td><code>actiongraph.console.default-limit</code></td><td>50</td><td>查询最近运行列表时未传 <code>limit</code> 的默认条数</td></tr>
-  <tr><td><code>actiongraph.console.max-limit</code></td><td>200</td><td>查询最近运行列表允许的最大 <code>limit</code></td></tr>
-  <tr><td><code>actiongraph.masking.enabled</code></td><td>false</td><td>是否启用默认金融正则脱敏（Trace 与审批预览）</td></tr>
-  <tr><td><code>actiongraph.masking.blocked-keys</code></td><td>空</td><td>命中字段名时整体脱敏为 <code>***</code></td></tr>
-  <tr><td><code>actiongraph.limits.rules[].action-id</code></td><td>无</td><td>额度规则匹配的 Action id，支持 <code>*</code> 通配</td></tr>
-  <tr><td><code>actiongraph.limits.rules[].currency</code></td><td>无</td><td>币种；有金额但币种无规则时保守拒绝</td></tr>
-  <tr><td><code>actiongraph.limits.rules[].hard-limit</code></td><td>无</td><td>单笔硬限额，超过后拒绝执行</td></tr>
-  <tr><td><code>actiongraph.limits.rules[].review-limit</code></td><td>无</td><td>单笔审批阈值，超过后升级审批链</td></tr>
-  <tr><td><code>actiongraph.persistence.jdbc.enabled</code></td><td>false</td><td>是否启用 JDBC 仓储自动装配；Trace、挂起运行、Memory 与 Human Review 共用该开关</td></tr>
-  <tr><td><code>actiongraph.persistence.jdbc.suspended-run-claim-timeout</code></td><td>15m</td><td>JDBC resume 认领后进程崩溃时，RESUMING 快照多久后可被重新认领</td></tr>
-  <tr><td><code>actiongraph.persistence.jdbc.tables.*</code></td><td>actiongraph_* 默认表名</td><td>Trace、挂起运行、审批任务、记忆四类 JDBC 表名；相关仓储启用后才会使用</td></tr>
-  <tr><td><code>actiongraph.persistence.jdbc.blackboard.allowed-packages</code></td><td>空</td><td>挂起快照恢复时允许反序列化的业务包名前缀；生产环境建议配置</td></tr>
-  <tr><td><code>actiongraph.persistence.jdbc.blackboard.allowed-classes</code></td><td>空</td><td>挂起快照恢复时允许反序列化的具体类名</td></tr>
-</table>
-
-<h2 id="design">Action 设计规范</h2>
-<p>Action 边界是接入质量的决定因素。一个 Action 要<b>小、明确、可测试、可补偿</b>。</p>
-<table>
-  <tr><th>❌ 太大（拒绝）</th><th>✅ 正确粒度</th></tr>
-  <tr><td>「处理订单」</td><td>查询订单 / 校验可取消 / 创建取消申请 / 提交审批 / 通知客户经理</td></tr>
-</table>
-<h3>风险等级与补偿要求对照</h3>
-<table>
-  <tr><th>Action 类型</th><th>riskLevel</th><th>补偿要求</th><th>人审</th></tr>
-  <tr><td>纯查询</td><td><code>READ_ONLY</code></td><td>不需要</td><td>—</td></tr>
-  <tr><td>生成草稿 / 暂存</td><td><code>LOW / MEDIUM</code></td><td>删除草稿或标记作废</td><td>—</td></tr>
-  <tr><td>发起审批 / 通知</td><td><code>MEDIUM</code></td><td>撤回审批；通知不可回滚则发更正</td><td>视情况</td></tr>
-  <tr><td>修改正式数据 / 付款 / 退款 / 对外发送</td><td><code>HIGH</code></td><td><b>必须有补偿</b>，记录外部 requestId 供对账</td><td><b>必须 true</b></td></tr>
-</table>
-<h3>precondition 与 runtimeGuard 怎么分</h3>
-<ul>
-  <li><b>precondition</b>（注解里的字符串）：「执行了某步就会成立」的符号事实，参与路径规划。例：<code>order:ORDER_LOADED</code>。</li>
-  <li><b>@ActionGraphGuard</b>：要看<b>数据的值</b>才知道的业务事实（如 <code>eligibility.eligible()</code>），规划期不可知，执行前求值，不通过会自动尝试改道，无路则 <code>HALTED_UNREACHABLE</code>。</li>
-</ul>
-<h3>进阶：给主路径配备选 Action（动态补链）</h3>
-<p>给同一个 effect 提供第二个 Action，主路径被 guard 拦下时规划器会自动改道，无需任何流程编排代码。例如「查不到现有合同」时自动走「创建合同草稿」：两个 Action 产出同一个 <code>renewal:CURRENT_CONTRACT_LOADED</code>，下游计划完全不变。</p>
-
-<h2 id="pitfalls">常见坑</h2>
-<table>
-  <tr><th>症状</th><th>原因</th><th>解法</th></tr>
-  <tr><td>启动报 <code>must return a concrete type</code></td><td>Action 方法返回了接口/抽象类</td><td>改为返回具体 record/类</td></tr>
-  <tr><td>运行报 <code>Missing blackboard value for ...</code></td><td>上游没有 Action 产出该参数类型，或返回类型与参数声明类型不一致</td><td>核对类型链：上游返回的具体类型 == 下游参数类型</td></tr>
-  <tr><td>规划器找不到 Plan（NO_PLAN）</td><td>precondition/effect 拼写不一致、命名空间漏写、或确实缺一个 Action</td><td>把 condition 字符串抽成常量类统一引用</td></tr>
-  <tr><td>启动报 <code>Duplicate annotated action</code></td><td>两个 Bean 用了同一个 action id</td><td>action id 用「域.对象.动作」全局唯一命名</td></tr>
-  <tr><td>同类型对象互相覆盖</td><td>Blackboard 同类型默认单实例</td><td>多实例场景用 <code>BlackboardKey.of(Type.class, "key")</code> 槽位</td></tr>
-  <tr><td>LLM 不可用导致入口报错</td><td>没挂 Fallback</td><td>用 <code>FallbackGoalInterpreter</code> 包一层规则解释器</td></tr>
-</table>
-
-<h2 id="checklist">上线检查清单</h2>
-<div class="card">
-  <ul style="margin-bottom:0">
-    <li>☐ 所有写入类 Action 均配有 <code>@ActionGraphCompensation</code>，且补偿有测试覆盖</li>
-    <li>☐ 付款 / 退款 / 删数据 / 对外发送 / 改正式状态的 Action 全部 <code>requiresHumanReview = true</code></li>
-    <li>☐ condition 全部带本域命名空间，并抽成常量类</li>
-    <li>☐ 已启用 JDBC 持久化或手动替换四个仓储，挂起表写权限已收紧</li>
-    <li>☐ <code>FAILED_COMPENSATION_INCOMPLETE</code> 已接入告警</li>
-    <li>☐ 审批系统已对接 <code>findPending()</code> / <code>decideStage(... currentStageIndex ...)</code> / <code>resume()</code> 三件套</li>
-    <li>☐ 涉及金额的 Action 已配置 <code>AmountExtractor</code> 与 <code>actiongraph.limits.rules</code>，并覆盖超硬限额/升级审批测试</li>
-    <li>☐ 带真实 DEEPSEEK_API_KEY 跑通一次不含 ID 模式的自然语言输入（验证 LLM 路径真实生效）</li>
-    <li>☐ 发布纪律：存在未决挂起运行时，不删除或改名已注册的 Action id</li>
-  </ul>
-</div>
-
-<footer>
-  ActionGraph v0.2.0-SNAPSHOT · 详细设计文档见 <code>docs/PRD-v0.md</code> 与 <code>docs/frameworkization/</code> · 参考实现见 <code>actiongraph-samples</code> 模块（renewal 续约报价 / order-cancellation 订单取消 / claimsprecheck 理赔资料预审三个完整域）
-</footer>
+</section>
 
 </main>
 </div>

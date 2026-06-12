@@ -23,10 +23,14 @@ This project follows semantic versioning once 1.0 is released. Before 1.0, compa
 - Experimental external event ingress: `ActionResult.waiting(...)`, `SUSPENDED_WAITING_EVENT`, `WAITING_EVENT` snapshots, `ExternalEventGateway`, `EventApplier`, timeout sweeping, JDBC event claims, and optional Spring HTTP callbacks.
 - Experimental annotated Goal metadata: `@ActionGraphGoal`, `@GoalParameter`, automatic schema inference, Spring Boot auto-registration, and non-Spring `AnnotatedGoalFactory` support.
 - Experimental annotated Goal seeding: `@ActionGraphGoalSeeder`, `@FromGoalParam`, built-in value conversion, custom `GoalValueConverter` hooks, `SeedResult` multi-write support, and Spring Boot auto-registration.
+- Experimental root `ActionGraph` facade plus `ChatResult`, providing the Golden Path `start`, `chat`, and `resume` entry point for application code.
+- Golden Path documentation (`golden-path.md`, `learning-path.md`, and L0-L4 quick start) plus a guard test that keeps L0 free of advanced SPI concepts.
 
 ### Changed
 
 - Repository governance now treats legal, security, contribution, changelog, and compatibility policy files as required release artifacts.
+- `ActionGraphRuntimeApiService` is now documented and wired as a control-plane adapter over the root facade.
+- The renewal sample now dogfoods annotated Goal metadata/seeders and the root `ActionGraph` facade.
 
 ## 0.1.0 - 2026-06-11
 

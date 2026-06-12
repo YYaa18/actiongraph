@@ -1,10 +1,12 @@
 # ActionGraph Extension Points
 
+**Layer: Packaging / SPI**
+
 DX1 adds the first development-experience layer for teams that want to package
 business capability as reusable ActionGraph components instead of copying sample
 code into every service.
 
-All APIs in this document are marked `@Experimental` in `0.1.x`. They are
+All APIs in this document are marked `@Experimental` in `0.2.x`. They are
 available for pilots, documented, and tested, but they are intentionally outside
 the post-1.0 binary compatibility freeze until at least one minor release proves
 the shape in real integrations.
@@ -17,8 +19,8 @@ contribution can expose:
 - concrete `Action` instances;
 - `GoalDefinition` entries for `GoalCatalog`;
 - `GoalBlackboardSeeder` instances;
-- annotated POJOs that should be adapted through `AnnotatedActionFactory`
-  and `AnnotatedGoalFactory`.
+- annotated POJOs that should be adapted through `AnnotatedActionFactory`,
+  `AnnotatedGoalFactory`, and `AnnotatedGoalSeederFactory`.
 
 ```java
 public final class RenewalContribution implements ActionGraphContribution {
@@ -29,12 +31,12 @@ public final class RenewalContribution implements ActionGraphContribution {
 
     @Override
     public List<GoalDefinition> goals() {
-        return RenewalGoalCatalog.create().all().stream().toList();
+        return RenewalGoalAnnotations.goals();
     }
 
     @Override
     public List<GoalBlackboardSeeder> seeders() {
-        return List.of(new RenewalQuoteBlackboardSeeder());
+        return RenewalGoalAnnotations.seeders();
     }
 }
 ```
