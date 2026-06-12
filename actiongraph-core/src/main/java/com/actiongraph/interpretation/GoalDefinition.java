@@ -14,6 +14,11 @@ public record GoalDefinition(
         Goal goal,
         List<GoalParameterDefinition> parameters,
         @Experimental(
+                since = "0.2.0",
+                value = "Schema metadata is experimental while DX3 automatic seeding conventions settle."
+        )
+        Class<?> schema,
+        @Experimental(
                 since = "0.1.0",
                 value = "Seed-condition metadata is experimental while validation diagnostics are validated through more domains."
         )
@@ -25,7 +30,17 @@ public record GoalDefinition(
             Goal goal,
             List<GoalParameterDefinition> parameters
     ) {
-        this(type, description, goal, parameters, Set.of());
+        this(type, description, goal, parameters, Void.class, Set.of());
+    }
+
+    public GoalDefinition(
+            GoalType type,
+            String description,
+            Goal goal,
+            List<GoalParameterDefinition> parameters,
+            Set<Condition> seedConditions
+    ) {
+        this(type, description, goal, parameters, Void.class, seedConditions);
     }
 
     public GoalDefinition {
@@ -33,6 +48,7 @@ public record GoalDefinition(
         description = description == null ? "" : description;
         Objects.requireNonNull(goal, "goal");
         parameters = List.copyOf(Objects.requireNonNull(parameters, "parameters"));
+        schema = schema == null ? Void.class : schema;
         seedConditions = Set.copyOf(Objects.requireNonNull(seedConditions, "seedConditions"));
     }
 }

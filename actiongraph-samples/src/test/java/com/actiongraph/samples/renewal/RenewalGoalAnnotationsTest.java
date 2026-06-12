@@ -1,9 +1,11 @@
 package com.actiongraph.samples.renewal;
 
 import com.actiongraph.exception.ActionGraphInputException;
+import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.samples.renewal.domain.CustomerId;
+import com.actiongraph.samples.renewal.interpretation.RenewalGoalCatalog;
 import com.actiongraph.samples.renewal.interpretation.RenewalGoalTypes;
 import org.junit.jupiter.api.Test;
 
@@ -14,10 +16,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class RenewalGoalAnnotationsTest {
     @Test
-    void annotatedSeederSeedsCustomerIdAndCondition() {
+    void automaticSchemaSeederSeedsCustomerIdAndCondition() {
+        GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
+        seeders.registerDefaultSeeders(RenewalGoalCatalog.create());
         InMemoryBlackboard blackboard = new InMemoryBlackboard();
 
-        RenewalGoalAnnotations.seeders().getFirst().seed(
+        seeders.byGoalType(RenewalGoalTypes.PREPARE_RENEWAL_QUOTE).orElseThrow().seed(
                 GoalParameters.of(Map.of("customerId", "C001")),
                 blackboard
         );
@@ -37,7 +41,10 @@ class RenewalGoalAnnotationsTest {
 
     @Test
     void missingCustomerIdThrowsInputException() {
-        assertThatThrownBy(() -> RenewalGoalAnnotations.seeders().getFirst().seed(
+        GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
+        seeders.registerDefaultSeeders(RenewalGoalCatalog.create());
+
+        assertThatThrownBy(() -> seeders.byGoalType(RenewalGoalTypes.PREPARE_RENEWAL_QUOTE).orElseThrow().seed(
                 GoalParameters.empty(),
                 new InMemoryBlackboard()
         )).isInstanceOf(ActionGraphInputException.class)

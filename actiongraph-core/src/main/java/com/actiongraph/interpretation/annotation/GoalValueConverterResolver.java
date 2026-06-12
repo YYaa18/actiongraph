@@ -4,6 +4,7 @@ import com.actiongraph.api.Experimental;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 
 /**
  * Resolves converter classes declared by {@link FromGoalParam}.
@@ -15,6 +16,10 @@ import java.lang.reflect.InvocationTargetException;
 )
 public interface GoalValueConverterResolver {
     GoalValueConverter<?> resolve(Class<? extends GoalValueConverter<?>> converterType);
+
+    default Optional<GoalValueConverter<?>> resolveForType(Class<?> targetType) {
+        return Optional.empty();
+    }
 
     static GoalValueConverterResolver reflection() {
         return converterType -> {

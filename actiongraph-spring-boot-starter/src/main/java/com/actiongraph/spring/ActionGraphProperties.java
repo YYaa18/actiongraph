@@ -20,6 +20,7 @@ public class ActionGraphProperties {
     private final ExecutorProperties executor = new ExecutorProperties();
     private final ActionsProperties actions = new ActionsProperties();
     private final GoalsProperties goals = new GoalsProperties();
+    private final SeedingProperties seeding = new SeedingProperties();
     private final SeedersProperties seeders = new SeedersProperties();
     private final ValidationProperties validation = new ValidationProperties();
     private final ExecutionProperties execution = new ExecutionProperties();
@@ -45,6 +46,14 @@ public class ActionGraphProperties {
     )
     public GoalsProperties getGoals() {
         return goals;
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Automatic schema seeding configuration is experimental until DX3 pilots settle."
+    )
+    public SeedingProperties getSeeding() {
+        return seeding;
     }
 
     @Experimental(
@@ -153,6 +162,22 @@ public class ActionGraphProperties {
 
         public void setAutoRegisterAnnotated(boolean autoRegisterAnnotated) {
             this.autoRegisterAnnotated = autoRegisterAnnotated;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Automatic schema seeding configuration is experimental until DX3 pilots settle."
+    )
+    public static final class SeedingProperties {
+        private boolean auto = true;
+
+        public boolean isAuto() {
+            return auto;
+        }
+
+        public void setAuto(boolean auto) {
+            this.auto = auto;
         }
     }
 

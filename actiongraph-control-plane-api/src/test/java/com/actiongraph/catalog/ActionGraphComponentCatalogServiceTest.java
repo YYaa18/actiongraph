@@ -932,8 +932,9 @@ class ActionGraphComponentCatalogServiceTest {
         String l0 = between(quickStart, "<!-- l0:start -->", "<!-- l0:end -->");
         assertThat(l0)
                 .contains("ActionGraph", "actionGraph.start", "@ActionGraphAction",
-                        "@ActionGraphGoal", "@ActionGraphGoalSeeder")
-                .doesNotContain("Blackboard", "Contribution", "Planner");
+                        "@ActionGraphGoal", "schema = InputId.class")
+                .doesNotContain("Blackboard", "Contribution", "Planner",
+                        "@ActionGraphGoalSeeder", "@FromGoalParam", "Seeder");
         assertThat(goldenPath)
                 .contains("Golden Path")
                 .contains("Packaging")
@@ -948,7 +949,7 @@ class ActionGraphComponentCatalogServiceTest {
                 .contains("L0 Hello Agent")
                 .contains("frameworkization/golden-path.md")
                 .contains("frameworkization/extension-points.md")
-                .contains("PRD-DX2.md");
+                .contains("PRD-DX3.md");
 
         long sourceLines = helloTest.lines()
                 .filter(line -> !line.isBlank())
@@ -956,8 +957,8 @@ class ActionGraphComponentCatalogServiceTest {
                 .filter(line -> !line.startsWith("import "))
                 .count();
         assertThat(sourceLines)
-                .as("HelloAgentGoldenPathTest should stay below the DX2 40-line concept budget")
-                .isLessThanOrEqualTo(40);
+                .as("HelloAgentGoldenPathTest should stay below the DX3 35-line concept budget")
+                .isLessThanOrEqualTo(35);
     }
 
     @Test

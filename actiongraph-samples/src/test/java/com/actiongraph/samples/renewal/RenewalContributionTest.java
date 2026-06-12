@@ -12,6 +12,7 @@ import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;
 import com.actiongraph.runtime.RunStatus;
 import com.actiongraph.samples.renewal.domain.ApprovalRequest;
+import com.actiongraph.samples.renewal.interpretation.RenewalGoalCatalog;
 import com.actiongraph.samples.renewal.interpretation.RenewalGoalTypes;
 import com.actiongraph.samples.renewal.service.InMemoryApprovalService;
 import com.actiongraph.samples.renewal.service.InMemoryContractService;
@@ -38,7 +39,7 @@ class RenewalContributionTest {
         );
 
         GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
-        contribution.seeders().forEach(seeders::register);
+        seeders.registerDefaultSeeders(RenewalGoalCatalog.create());
         InMemoryBlackboard blackboard = new InMemoryBlackboard();
         GoalInterpretation interpretation = GoalInterpretation.ready(
                 RenewalGoalTypes.PREPARE_RENEWAL_QUOTE,

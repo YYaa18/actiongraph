@@ -66,18 +66,23 @@ public final class AnnotatedGoalFactory {
     }
 
     private static GoalDefinition definitionFromType(Class<?> type, ActionGraphGoal annotation) {
-        return definition(annotation, parameterDefinitionsFromSchema(type));
+        return definition(annotation, parameterDefinitionsFromSchema(type), type);
     }
 
     private static GoalDefinition definitionFromMethod(Method method, ActionGraphGoal annotation) {
         Class<?> schema = annotation.schema();
         if (schema != Void.class) {
-            return definition(annotation, parameterDefinitionsFromSchema(schema));
+            return definition(annotation, parameterDefinitionsFromSchema(schema), schema);
         }
-        return definition(annotation, parameterDefinitionsFromMethod(method));
+        Class<?> methodSchema = methodSchema(method);
+        return definition(annotation, parameterDefinitionsFromMethod(method), methodSchema);
     }
 
-    private static GoalDefinition definition(ActionGraphGoal annotation, List<GoalParameterDefinition> parameters) {
+    private static GoalDefinition definition(
+            ActionGraphGoal annotation,
+            List<GoalParameterDefinition> parameters,
+            Class<?> schema
+    ) {
         GoalType type = new GoalType(requireNonBlank(annotation.type(), "goal type"));
         String goalName = annotation.name().isBlank() ? type.value() : annotation.name().trim();
         Set<Condition> targetConditions = conditions(annotation.targetConditions(), "targetConditions");
@@ -90,8 +95,19 @@ public final class AnnotatedGoalFactory {
                 annotation.description(),
                 new Goal(goalName, targetConditions),
                 parameters,
+                schema,
                 conditions(annotation.seedConditions(), "seedConditions")
         );
+    }
+
+    private static Class<?> methodSchema(Method method) {
+        Parameter[] parameters = method.getParameters();
+        if (parameters.length == 1
+                && parameters[0].getAnnotation(GoalParameter.class) == null
+                && parameters[0].getType().isRecord()) {
+            return parameters[0].getType();
+        }
+        return Void.class;
     }
 
     private static List<GoalParameterDefinition> parameterDefinitionsFromMethod(Method method) {

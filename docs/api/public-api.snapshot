@@ -426,13 +426,16 @@ CLASS public static final class com.actiongraph.ActionGraph$Builder
   METHOD public com.actiongraph.ActionGraph$Builder action(com.actiongraph.action.Action)
   METHOD public com.actiongraph.ActionGraph$Builder actionRegistry(com.actiongraph.action.ActionRegistry)
   METHOD public com.actiongraph.ActionGraph$Builder actions(java.util.Collection)
+  METHOD public com.actiongraph.ActionGraph$Builder addConverter(com.actiongraph.interpretation.annotation.TypedGoalValueConverter)
   METHOD public com.actiongraph.ActionGraph$Builder annotatedBeans(java.lang.Object[])
+  METHOD public com.actiongraph.ActionGraph$Builder autoSeeding(boolean)
   METHOD public com.actiongraph.ActionGraph$Builder blackboardFactory(java.util.function.Supplier)
   METHOD public com.actiongraph.ActionGraph build()
   METHOD public com.actiongraph.ActionGraph$Builder executor(com.actiongraph.runtime.GoapExecutor)
   METHOD public com.actiongraph.ActionGraph$Builder goal(com.actiongraph.interpretation.GoalDefinition)
   METHOD public com.actiongraph.ActionGraph$Builder goalCatalog(com.actiongraph.interpretation.GoalCatalog)
   METHOD public com.actiongraph.ActionGraph$Builder goalInterpreter(com.actiongraph.interpretation.GoalInterpreter)
+  METHOD public com.actiongraph.ActionGraph$Builder goalValueConverterResolver(com.actiongraph.interpretation.annotation.GoalValueConverterResolver)
   METHOD public com.actiongraph.ActionGraph$Builder goals(java.util.Collection)
   METHOD public com.actiongraph.ActionGraph$Builder seeder(com.actiongraph.interpretation.GoalBlackboardSeeder)
   METHOD public com.actiongraph.ActionGraph$Builder seeders(com.actiongraph.interpretation.GoalBlackboardSeederRegistry)
@@ -634,6 +637,8 @@ CLASS public final class com.actiongraph.interpretation.GoalBlackboardSeederRegi
   CONSTRUCTOR public com.actiongraph.interpretation.GoalBlackboardSeederRegistry()
   METHOD public java.util.Optional byGoalType(com.actiongraph.interpretation.GoalType)
   METHOD public void register(com.actiongraph.interpretation.GoalBlackboardSeeder)
+  METHOD public void registerDefaultSeeders(com.actiongraph.interpretation.GoalCatalog)
+  METHOD public void registerDefaultSeeders(com.actiongraph.interpretation.GoalCatalog,com.actiongraph.interpretation.annotation.GoalValueConverterResolver,boolean)
   METHOD public void seed(com.actiongraph.interpretation.GoalInterpretation,com.actiongraph.runtime.Blackboard)
 CLASS public final class com.actiongraph.interpretation.GoalCatalog
   CONSTRUCTOR public com.actiongraph.interpretation.GoalCatalog()
@@ -643,12 +648,14 @@ CLASS public final class com.actiongraph.interpretation.GoalCatalog
   METHOD public void register(com.actiongraph.interpretation.GoalDefinition)
 CLASS public final record com.actiongraph.interpretation.GoalDefinition
   CONSTRUCTOR public com.actiongraph.interpretation.GoalDefinition(com.actiongraph.interpretation.GoalType,java.lang.String,com.actiongraph.planning.Goal,java.util.List)
+  CONSTRUCTOR public com.actiongraph.interpretation.GoalDefinition(com.actiongraph.interpretation.GoalType,java.lang.String,com.actiongraph.planning.Goal,java.util.List,java.lang.Class,java.util.Set)
   CONSTRUCTOR public com.actiongraph.interpretation.GoalDefinition(com.actiongraph.interpretation.GoalType,java.lang.String,com.actiongraph.planning.Goal,java.util.List,java.util.Set)
   METHOD public java.lang.String description()
   METHOD public final boolean equals(java.lang.Object)
   METHOD public com.actiongraph.planning.Goal goal()
   METHOD public final int hashCode()
   METHOD public java.util.List parameters()
+  METHOD public java.lang.Class schema()
   METHOD public java.util.Set seedConditions()
   METHOD public final java.lang.String toString()
   METHOD public com.actiongraph.interpretation.GoalType type()
@@ -718,18 +725,30 @@ CLASS public final class com.actiongraph.interpretation.annotation.AnnotatedGoal
   METHOD public static java.util.List definitions(java.lang.Object[])
 CLASS public final class com.actiongraph.interpretation.annotation.AnnotatedGoalSeederFactory
   METHOD public static java.util.List seeders(com.actiongraph.interpretation.annotation.GoalValueConverterResolver,java.lang.Object[])
+  METHOD public static java.util.List seeders(com.actiongraph.interpretation.annotation.GoalValueConverterResolver,java.util.Collection,java.lang.Object[])
   METHOD public static java.util.List seeders(java.lang.Object[])
+  METHOD public static java.util.List seeders(java.util.Collection,java.lang.Object[])
+CLASS public abstract annotation com.actiongraph.interpretation.annotation.BindGoalParams
+  METHOD public abstract boolean atLeastOne()
 CLASS public abstract annotation com.actiongraph.interpretation.annotation.FromGoalParam
   METHOD public abstract java.lang.Class converter()
   METHOD public abstract java.lang.String name()
   METHOD public abstract boolean required()
   METHOD public abstract java.lang.String value()
 CLASS public abstract annotation com.actiongraph.interpretation.annotation.GoalParameter
+  METHOD public abstract java.lang.Class converter()
   METHOD public abstract java.lang.String description()
   METHOD public abstract java.lang.String example()
   METHOD public abstract java.lang.String name()
   METHOD public abstract boolean required()
   METHOD public abstract java.lang.String value()
+CLASS public final class com.actiongraph.interpretation.annotation.GoalParameterBinder
+  CONSTRUCTOR public com.actiongraph.interpretation.annotation.GoalParameterBinder(com.actiongraph.interpretation.annotation.GoalValueConverterResolver)
+  METHOD public java.lang.Object bindParameter(java.lang.reflect.Parameter,com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard)
+  METHOD public java.lang.Object bindRecord(java.lang.Class,com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard)
+  METHOD public java.lang.Object bindRecord(java.lang.Class,com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard,boolean)
+  METHOD public static com.actiongraph.interpretation.annotation.GoalParameterBinder reflection()
+  METHOD public void validateRecordSchema(java.lang.Class)
 CLASS public final record com.actiongraph.interpretation.annotation.GoalParameterBindingContext
   CONSTRUCTOR public com.actiongraph.interpretation.annotation.GoalParameterBindingContext(java.lang.String,java.lang.Class,com.actiongraph.interpretation.GoalParameters,com.actiongraph.runtime.Blackboard)
   METHOD public com.actiongraph.runtime.Blackboard blackboard()
@@ -739,6 +758,8 @@ CLASS public final record com.actiongraph.interpretation.annotation.GoalParamete
   METHOD public com.actiongraph.interpretation.GoalParameters parameters()
   METHOD public java.lang.Class targetType()
   METHOD public final java.lang.String toString()
+CLASS public abstract annotation com.actiongraph.interpretation.annotation.GoalSchema
+  METHOD public abstract java.lang.String[] atLeastOne()
 CLASS public abstract interface com.actiongraph.interpretation.annotation.GoalValueConverter
   METHOD public abstract java.lang.Object convert(java.lang.String,com.actiongraph.interpretation.annotation.GoalParameterBindingContext)
 CLASS public static final class com.actiongraph.interpretation.annotation.GoalValueConverter$None
@@ -747,6 +768,7 @@ CLASS public static final class com.actiongraph.interpretation.annotation.GoalVa
 CLASS public abstract interface com.actiongraph.interpretation.annotation.GoalValueConverterResolver
   METHOD public static com.actiongraph.interpretation.annotation.GoalValueConverterResolver reflection()
   METHOD public abstract com.actiongraph.interpretation.annotation.GoalValueConverter resolve(java.lang.Class)
+  METHOD public default java.util.Optional resolveForType(java.lang.Class)
 CLASS public final class com.actiongraph.interpretation.annotation.SeedResult
   METHOD public static com.actiongraph.interpretation.annotation.SeedResult$Builder builder()
   METHOD public java.util.Set conditions()
@@ -768,6 +790,8 @@ CLASS public static final record com.actiongraph.interpretation.annotation.SeedR
   METHOD public com.actiongraph.runtime.BlackboardKey key()
   METHOD public final java.lang.String toString()
   METHOD public java.lang.Object value()
+CLASS public abstract interface com.actiongraph.interpretation.annotation.TypedGoalValueConverter
+  METHOD public abstract java.lang.Class targetType()
 CLASS public final class com.actiongraph.memory.InMemoryMemoryRepository
   CONSTRUCTOR public com.actiongraph.memory.InMemoryMemoryRepository()
   METHOD public void delete(java.lang.String)
@@ -2056,7 +2080,7 @@ CLASS public class com.actiongraph.runtime.api.spring.ActionGraphRuntimeApiWebAu
   METHOD public com.actiongraph.runtime.api.ActionGraphRuntimeApiService actionGraphRuntimeApiService(com.actiongraph.ActionGraph,com.actiongraph.interpretation.GoalInterpreter)
 CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphAutoConfiguration()
-  METHOD public com.actiongraph.ActionGraph actionGraph(com.actiongraph.interpretation.GoalCatalog,com.actiongraph.interpretation.GoalBlackboardSeederRegistry,com.actiongraph.runtime.GoapExecutor,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.ObjectProvider)
+  METHOD public com.actiongraph.ActionGraph actionGraph(com.actiongraph.interpretation.GoalCatalog,com.actiongraph.interpretation.GoalBlackboardSeederRegistry,com.actiongraph.runtime.GoapExecutor,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.ObjectProvider,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.action.ActionRegistry actionGraphActionRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.DataMaskingPolicy actionGraphDataMaskingPolicy()
   METHOD public com.actiongraph.llm.LlmClient actionGraphDeepSeekLlmClient(com.actiongraph.spring.ActionGraphProperties)
@@ -2089,6 +2113,7 @@ CLASS public class com.actiongraph.spring.ActionGraphProperties
   METHOD public com.actiongraph.spring.ActionGraphProperties$LlmProperties getLlm()
   METHOD public com.actiongraph.spring.ActionGraphProperties$PlannerProperties getPlanner()
   METHOD public com.actiongraph.spring.ActionGraphProperties$SeedersProperties getSeeders()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$SeedingProperties getSeeding()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ValidationProperties getValidation()
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$ActionsProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ActionsProperties()
@@ -2175,6 +2200,10 @@ CLASS public static final class com.actiongraph.spring.ActionGraphProperties$See
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$SeedersProperties()
   METHOD public boolean isAutoRegisterAnnotated()
   METHOD public void setAutoRegisterAnnotated(boolean)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$SeedingProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$SeedingProperties()
+  METHOD public boolean isAuto()
+  METHOD public void setAuto(boolean)
 CLASS public static final enum com.actiongraph.spring.ActionGraphProperties$ValidationMode
   FIELD public static final com.actiongraph.spring.ActionGraphProperties$ValidationMode FAIL
   FIELD public static final com.actiongraph.spring.ActionGraphProperties$ValidationMode OFF

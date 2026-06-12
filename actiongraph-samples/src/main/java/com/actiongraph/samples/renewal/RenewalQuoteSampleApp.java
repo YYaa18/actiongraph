@@ -14,6 +14,7 @@ import com.actiongraph.samples.renewal.service.InMemoryCustomerService;
 import com.actiongraph.samples.renewal.service.InMemoryQuoteService;
 import com.actiongraph.samples.renewal.service.InMemoryRenewalPolicyService;
 import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
+import com.actiongraph.interpretation.GoalCatalog;
 import com.actiongraph.interpretation.GoalInterpretation;
 import com.actiongraph.interpretation.GoalInterpreter;
 import com.actiongraph.planning.GoapPlanner;
@@ -59,8 +60,9 @@ public final class RenewalQuoteSampleApp {
                 new InMemoryApprovalService()
         );
 
+        GoalCatalog goalCatalog = RenewalGoalCatalog.create();
         GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
-        contribution.seeders().forEach(seeders::register);
+        seeders.registerDefaultSeeders(goalCatalog);
         InMemoryBlackboard previewBlackboard = new InMemoryBlackboard();
         seeders.seed(interpretation, previewBlackboard);
 
@@ -85,7 +87,7 @@ public final class RenewalQuoteSampleApp {
 
         AtomicReference<InMemoryBlackboard> runBlackboard = new AtomicReference<>();
         ActionGraph actionGraph = ActionGraph.builder()
-                .goalCatalog(RenewalGoalCatalog.create())
+                .goalCatalog(goalCatalog)
                 .seeders(seeders)
                 .actionRegistry(registry)
                 .executor(executor)

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ActionGraph 快速接入指南</title>
+<title>ActionGraph 金路径接入指南</title>
 <style>
   :root {
     --bg: #f7f8fa;
@@ -109,8 +109,8 @@
 <div class="layout">
 <nav>
   <strong>ActionGraph</strong>
-  <span>快速接入 · v0.2.0-SNAPSHOT</span>
-  <a href="#l0">L0 Hello Agent</a>
+  <span>金路径接入 · v0.2.0-SNAPSHOT</span>
+  <a href="#l0">L0 Schema-first</a>
   <a href="#l1">L1 门禁与人审</a>
   <a href="#l2">L2 自然语言入口</a>
   <a href="#l3">L3 生产化</a>
@@ -118,11 +118,11 @@
   <a href="#next">继续阅读</a>
 </nav>
 <main>
-<h1>ActionGraph 快速接入指南</h1>
-<p class="subtitle">金路径只有一条：加主 starter，写一个注解类，注入根门面 <code>ActionGraph</code>，调用 <code>start(...)</code> 或 <code>chat(...)</code>。其他接口仍保留，但先不用学。</p>
+<h1>ActionGraph 金路径接入指南</h1>
+<p class="subtitle">第一天只需要掌握正门：引入主 starter，用 <code>@ActionGraphGoal(schema=...)</code> 声明目标参数契约，用 <code>@ActionGraphAction</code> 暴露业务能力，注入根门面 <code>ActionGraph</code> 调用 <code>start(...)</code> 或 <code>chat(...)</code>。</p>
 
 <div class="levels">
-  <div class="level"><b>L0</b><span>15 分钟跑通 Hello Agent</span></div>
+  <div class="level"><b>L0</b><span>15 分钟跑通 schema-first Goal</span></div>
   <div class="level"><b>L1</b><span>加门禁、人审和恢复</span></div>
   <div class="level"><b>L2</b><span>接自然语言解释器</span></div>
   <div class="level"><b>L3</b><span>启用持久化与治理</span></div>
@@ -131,8 +131,8 @@
 
 <!-- l0:start -->
 <section id="l0">
-<h2><span class="badge">Golden Path</span>L0 · Hello Agent（15 分钟）</h2>
-<p>先只掌握 3 个概念：Action 是可执行业务能力，Condition 是符号事实，Goal 是目标事实集合。</p>
+<h2><span class="badge">Golden Path</span>L0 · Schema-first Goal（15 分钟）</h2>
+<p>先只掌握 3 个概念：Goal schema 是目标参数契约，Action 是可执行业务能力，Condition 是规划器使用的符号事实。</p>
 <pre><code>// build.gradle.kts
 dependencies {
   implementation(platform("com.actiongraph:actiongraph-bom:0.2.0-SNAPSHOT"))
@@ -142,14 +142,9 @@ dependencies {
 class HelloAgent {
   @ActionGraphGoal(type = "hello.finish",
       targetConditions = "hello:DONE",
-      seedConditions = "hello:INPUT_PRESENT")
-  void goal(@GoalParameter(name = "id", example = "A-1") String ignored) {}
-
-  @ActionGraphGoalSeeder(value = "hello.finish",
-      seedConditions = "hello:INPUT_PRESENT")
-  InputId seed(@FromGoalParam("id") String id) {
-    return new InputId(id);
-  }
+      seedConditions = "hello:INPUT_PRESENT",
+      schema = InputId.class)
+  void goal() {}
 
   @ActionGraphAction(id = "hello.finish",
       preconditions = "hello:INPUT_PRESENT",
@@ -157,7 +152,10 @@ class HelloAgent {
   void finish(InputId input) {}
 }
 
-record InputId(String value) {}</code></pre>
+record InputId(
+    @GoalParameter(name = "id", description = "业务输入编号", example = "A-1")
+    String value
+) {}</code></pre>
 <pre><code>@Service
 class HelloRunner {
   private final ActionGraph actionGraph;
@@ -170,7 +168,7 @@ class HelloRunner {
     return actionGraph.start("hello.finish", Map.of("id", "A-1"));
   }
 }</code></pre>
-<p>检查点：<code>run().status()</code> 返回 <code>COMPLETED</code>。</p>
+<p>检查点：不需要编写 Seeder，<code>InputId</code> 会自动进入 Blackboard；<code>run().status()</code> 返回 <code>COMPLETED</code>。</p>
 </section>
 <!-- l0:end -->
 
@@ -209,8 +207,12 @@ started.run().status();            // COMPLETED 或挂起状态</code></pre>
 
 <section id="l3">
 <h2><span class="badge">Production</span>L3 · 生产化开关</h2>
-<p>生产化优先通过配置开启，不改变 L0/L1 的业务代码。</p>
+<p>生产化优先通过配置开启，不改变 L0/L1 的业务代码。配置建议按属性域维护，不把整份环境配置复制进业务文档。</p>
 <pre><code>actiongraph:
+  goals:
+    auto-register-annotated: true
+  seeding:
+    auto: true
   persistence:
     jdbc:
       enabled: true
@@ -222,7 +224,7 @@ started.run().status();            // COMPLETED 或挂起状态</code></pre>
     enabled: true
   validation:
     mode: fail</code></pre>
-<p>检查点：进程重启后仍可恢复挂起运行；重复 resume 只会有一次业务副作用；Trace 链可验证。</p>
+<p>检查点：schema 自动绑定保持开启；进程重启后仍可恢复挂起运行；重复 resume 只会有一次业务副作用；Trace 链可验证。</p>
 </section>
 
 <section id="l4">
@@ -242,15 +244,15 @@ started.run().status();            // COMPLETED 或挂起状态</code></pre>
 <h2>继续阅读</h2>
 <table>
   <tr><th>阶段</th><th>文档</th><th>用途</th></tr>
-  <tr><td>金路径</td><td><a href="frameworkization/golden-path.md">golden-path.md</a></td><td>确认哪些写法是推荐入口，哪些属于进阶层</td></tr>
+  <tr><td>金路径</td><td><a href="frameworkization/golden-path.md">golden-path.md</a></td><td>确认 Goal schema、Action 注解和根门面为什么是推荐入口</td></tr>
   <tr><td>阅读地图</td><td><a href="learning-path.md">learning-path.md</a></td><td>按 L0-L4、打包、SPI、运营、内部设计继续学习</td></tr>
-  <tr><td>扩展点</td><td><a href="frameworkization/extension-points.md">extension-points.md</a></td><td>使用打包 SPI、自定义转换器、事件等待和底层接口</td></tr>
+  <tr><td>扩展点</td><td><a href="frameworkization/extension-points.md">extension-points.md</a></td><td>使用打包 SPI、显式 Seeder、自定义转换器、事件等待和底层接口</td></tr>
   <tr><td>生产持久化</td><td><a href="frameworkization/jdbc-persistence.md">jdbc-persistence.md</a></td><td>JDBC 表、恢复语义、类型白名单和审计导出</td></tr>
   <tr><td>控制面</td><td><a href="frameworkization/runtime-api.md">runtime-api.md</a></td><td>HTTP 适配、Java 8 网关和运行入口边界</td></tr>
 </table>
 <div class="card callout warn">
   <b>正门保持窄。</b>
-  <p>业务代码用 <code>ActionGraph.start</code>、<code>ActionGraph.chat</code>、<code>ActionGraph.resume</code>。审批决策、事件投递、恢复扫描、Console 查询是运营面能力，按对应文档接入。</p>
+  <p>业务代码用 <code>ActionGraph.start</code>、<code>ActionGraph.chat</code>、<code>ActionGraph.resume</code>。schema 自动绑定覆盖常规目标；审批决策、事件投递、恢复扫描、Console 查询是运营面能力，按对应文档接入。</p>
 </div>
 </section>
 

@@ -24,7 +24,7 @@ import com.actiongraph.interpretation.annotation.ActionGraphGoalSeeder;
 import com.actiongraph.interpretation.annotation.FromGoalParam;
 import com.actiongraph.interpretation.annotation.GoalParameter;
 import com.actiongraph.interpretation.annotation.GoalParameterBindingContext;
-import com.actiongraph.interpretation.annotation.GoalValueConverter;
+import com.actiongraph.interpretation.annotation.TypedGoalValueConverter;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.OpenAiCompatibleChatClient;
 import com.actiongraph.observability.NoopObservationSink;
@@ -69,6 +69,9 @@ class ActionGraphAutoConfigurationTest {
     private static final GoalType ANNOTATED_GOAL_TYPE = new GoalType("spring-test.annotated-finish");
     private static final String ANNOTATED_SEEDER_GOAL = "spring-test.annotated-seed";
     private static final GoalType ANNOTATED_SEEDER_GOAL_TYPE = new GoalType(ANNOTATED_SEEDER_GOAL);
+    private static final String ANNOTATED_TYPED_SEEDER_GOAL = "spring-test.typed-seed";
+    private static final GoalType ANNOTATED_TYPED_SEEDER_GOAL_TYPE = new GoalType(ANNOTATED_TYPED_SEEDER_GOAL);
+    private static final GoalType NO_PARAM_GOAL_TYPE = new GoalType("spring-test.no-param");
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(ActionGraphAutoConfiguration.class));
@@ -206,6 +209,95 @@ class ActionGraphAutoConfigurationTest {
     }
 
     @Test
+    void autoRegistersTypedConverterBeansByTargetType() {
+        contextRunner
+                .withBean(AnnotatedSeederDeclarations.class)
+                .withBean(SpringInputIdConverter.class, () -> new SpringInputIdConverter("typed-"))
+                .run(context -> {
+                    GoalBlackboardSeeder seeder = context.getBean(GoalBlackboardSeederRegistry.class)
+                            .byGoalType(ANNOTATED_TYPED_SEEDER_GOAL_TYPE)
+                            .orElseThrow();
+                    InMemoryBlackboard blackboard = new InMemoryBlackboard();
+
+                    seeder.seed(GoalParameters.of(Map.of("inputId", "I-2")), blackboard);
+
+                    assertThat(blackboard.get(BlackboardKey.of(InputId.class, "typed-input")))
+                            .contains(new InputId("typed-I-2"));
+                    assertThat(blackboard.conditions()).containsExactly(INPUT_PRESENT);
+                });
+    }
+
+    @Test
+    void annotatedGoalSeederInheritsSeedConditionsFromMatchingGoal() {
+        contextRunner
+                .withBean(AnnotatedWorkflow.class)
+                .withBean(AnnotatedGoalDeclarations.class)
+                .withBean(InheritingSeederDeclarations.class)
+                .run(context -> {
+                    GoalBlackboardSeeder seeder = context.getBean(GoalBlackboardSeederRegistry.class)
+                            .byGoalType(ANNOTATED_GOAL_TYPE)
+                            .orElseThrow();
+                    InMemoryBlackboard blackboard = new InMemoryBlackboard();
+
+                    seeder.seed(GoalParameters.of(Map.of("inputId", "I-3")), blackboard);
+
+                    assertThat(seeder.declaredSeedConditions()).contains(Set.of(INPUT_PRESENT));
+                    assertThat(blackboard.conditions()).containsExactly(INPUT_PRESENT);
+                });
+    }
+
+    @Test
+    void autoRegistersSchemaSeederFromAnnotatedGoalMetadata() {
+        contextRunner
+                .withBean(AnnotatedWorkflow.class)
+                .withBean(AnnotatedGoalDeclarations.class)
+                .run(context -> {
+                    GoalBlackboardSeeder seeder = context.getBean(GoalBlackboardSeederRegistry.class)
+                            .byGoalType(ANNOTATED_GOAL_TYPE)
+                            .orElseThrow();
+                    InMemoryBlackboard blackboard = new InMemoryBlackboard();
+
+                    seeder.seed(GoalParameters.of(Map.of("inputId", "I-4")), blackboard);
+
+                    assertThat(blackboard.get(InputId.class)).contains(new InputId("I-4"));
+                    assertThat(seeder.declaredSeedConditions()).contains(Set.of(INPUT_PRESENT));
+                    assertThat(blackboard.conditions()).containsExactly(INPUT_PRESENT);
+                });
+    }
+
+    @Test
+    void registersDefaultSeederForNoParameterGoalSeedConditions() {
+        contextRunner
+                .withBean(AnnotatedWorkflow.class)
+                .withBean(NoParameterGoalDeclarations.class)
+                .run(context -> {
+                    GoalBlackboardSeeder seeder = context.getBean(GoalBlackboardSeederRegistry.class)
+                            .byGoalType(NO_PARAM_GOAL_TYPE)
+                            .orElseThrow();
+                    InMemoryBlackboard blackboard = new InMemoryBlackboard();
+
+                    seeder.seed(GoalParameters.empty(), blackboard);
+
+                    assertThat(blackboard.conditions()).containsExactly(INPUT_PRESENT);
+                });
+    }
+
+    @Test
+    void canDisableAutomaticSeeding() {
+        contextRunner
+                .withPropertyValues("actiongraph.seeding.auto=false")
+                .withBean(AnnotatedWorkflow.class)
+                .withBean(AnnotatedGoalDeclarations.class)
+                .withBean(NoParameterGoalDeclarations.class)
+                .run(context -> {
+                    GoalBlackboardSeederRegistry registry = context.getBean(GoalBlackboardSeederRegistry.class);
+
+                    assertThat(registry.byGoalType(ANNOTATED_GOAL_TYPE)).isEmpty();
+                    assertThat(registry.byGoalType(NO_PARAM_GOAL_TYPE)).isEmpty();
+                });
+    }
+
+    @Test
     void canDisableAnnotatedGoalSeederRegistration() {
         contextRunner
                 .withPropertyValues("actiongraph.seeders.auto-register-annotated=false")
@@ -213,6 +305,23 @@ class ActionGraphAutoConfigurationTest {
                 .withBean(SpringInputIdConverter.class, () -> new SpringInputIdConverter("bean-"))
                 .run(context -> assertThat(context.getBean(GoalBlackboardSeederRegistry.class)
                         .byGoalType(ANNOTATED_SEEDER_GOAL_TYPE)).isEmpty());
+    }
+
+    @Test
+    void duplicateTypedConverterBeansFailFast() {
+        contextRunner
+                .withBean(AnnotatedSeederDeclarations.class)
+                .withBean("firstInputIdConverter", SpringInputIdConverter.class,
+                        () -> new SpringInputIdConverter("first-"))
+                .withBean("secondInputIdConverter", DuplicateSpringInputIdConverter.class,
+                        () -> new DuplicateSpringInputIdConverter("second-"))
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .hasMessageContaining("Multiple typed goal value converters registered")
+                            .hasMessageContaining(SpringInputIdConverter.class.getName())
+                            .hasMessageContaining(DuplicateSpringInputIdConverter.class.getName());
+                });
     }
 
     @Test
@@ -526,9 +635,10 @@ class ActionGraphAutoConfigurationTest {
                 description = "Finish the annotated Spring workflow.",
                 name = "finishSpringWorkflow",
                 targetConditions = "spring-test:DONE",
-                seedConditions = "spring-test:INPUT_PRESENT"
+                seedConditions = "spring-test:INPUT_PRESENT",
+                schema = InputId.class
         )
-        void finish(@GoalParameter(name = "inputId", description = "Input identifier", example = "I-1") String ignored) {
+        void finish() {
         }
     }
 
@@ -541,6 +651,12 @@ class ActionGraphAutoConfigurationTest {
         ) {
             return inputId;
         }
+
+        @ActionGraphGoalSeeder(value = ANNOTATED_TYPED_SEEDER_GOAL, seedConditions = "spring-test:INPUT_PRESENT")
+        @BlackboardValue("typed-input")
+        InputId typedSeed(@FromGoalParam("inputId") InputId inputId) {
+            return inputId;
+        }
     }
 
     static final class MismatchedSeederDeclarations {
@@ -549,11 +665,52 @@ class ActionGraphAutoConfigurationTest {
         }
     }
 
-    static final class SpringInputIdConverter implements GoalValueConverter<InputId> {
+    static final class InheritingSeederDeclarations {
+        @ActionGraphGoalSeeder("spring-test.annotated-finish")
+        void seed() {
+        }
+    }
+
+    static final class NoParameterGoalDeclarations {
+        @ActionGraphGoal(
+                type = "spring-test.no-param",
+                description = "No parameter goal.",
+                name = "noParam",
+                targetConditions = "spring-test:DONE",
+                seedConditions = "spring-test:INPUT_PRESENT"
+        )
+        void run() {
+        }
+    }
+
+    static final class SpringInputIdConverter implements TypedGoalValueConverter<InputId> {
         private final String prefix;
 
         SpringInputIdConverter(String prefix) {
             this.prefix = prefix;
+        }
+
+        @Override
+        public Class<InputId> targetType() {
+            return InputId.class;
+        }
+
+        @Override
+        public InputId convert(String rawValue, GoalParameterBindingContext context) {
+            return new InputId(prefix + rawValue);
+        }
+    }
+
+    static final class DuplicateSpringInputIdConverter implements TypedGoalValueConverter<InputId> {
+        private final String prefix;
+
+        DuplicateSpringInputIdConverter(String prefix) {
+            this.prefix = prefix;
+        }
+
+        @Override
+        public Class<InputId> targetType() {
+            return InputId.class;
         }
 
         @Override
@@ -635,7 +792,8 @@ class ActionGraphAutoConfigurationTest {
         return current;
     }
 
-    private record InputId(String value) {
+    private record InputId(@GoalParameter(name = "inputId", description = "Input identifier", example = "I-1")
+                           String value) {
     }
 
     private record LoadedRecord(String value) {

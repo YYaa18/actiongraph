@@ -4,17 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ActionGraph | Governed Java Agent Runtime</title>
-<meta name="description" content="ActionGraph 是面向 Java 企业业务系统的类型化 GOAP 框架，用确定性规划、人审、补偿、审计与控制面能力把自然语言目标安全落到业务 Action。">
+<meta name="description" content="ActionGraph 是面向 Java 企业业务系统的类型化 GOAP Agent 框架，用两注解金路径、schema 自动绑定、确定性规划、人审恢复、补偿、审计与控制面能力把自然语言目标安全落到业务 Action。">
 <meta name="theme-color" content="#143c27">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ActionGraph">
 <meta property="og:title" content="ActionGraph — Governed Java Agent Runtime">
-<meta property="og:description" content="类型化 GOAP Agent 运行时：确定性规划、多级人审、Saga 补偿、防篡改审计。LLM 负责理解目标，业务系统拥有最终裁决权。">
+<meta property="og:description" content="类型化 GOAP Agent 运行时：两注解接入、schema 自动绑定、确定性规划、多级人审、Saga 补偿、防篡改审计。LLM 负责理解目标，业务系统拥有最终裁决权。">
 <meta property="og:image" content="assets/actiongraph-hero.jpg">
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ActionGraph — Governed Java Agent Runtime">
-<meta name="twitter:description" content="类型化 GOAP Agent 运行时：确定性规划、多级人审、Saga 补偿、防篡改审计。">
+<meta name="twitter:description" content="类型化 GOAP Agent 运行时：schema 自动绑定、确定性规划、多级人审、Saga 补偿、防篡改审计。">
 <meta name="twitter:image" content="assets/actiongraph-hero.jpg">
 <link rel="canonical" href="./">
 <link rel="preload" as="image" href="assets/actiongraph-hero.jpg" fetchpriority="high">
@@ -1487,15 +1487,15 @@
       <img class="brand-logo" src="assets/actiongraph-logo.svg" alt="ActionGraph">
     </a>
     <nav class="nav-links" aria-label="主导航">
-      <a href="#why">定位</a>
-      <a href="#model">架构</a>
-      <a href="#quickstart">接入</a>
+      <a href="#why">价值定位</a>
+      <a href="#model">运行模型</a>
+      <a href="#quickstart">金路径</a>
       <a href="#videos">视频</a>
-      <a href="#capabilities">能力</a>
-      <a href="#modules">生态</a>
+      <a href="#capabilities">核心能力</a>
+      <a href="#modules">模块</a>
       <a href="#control-plane">控制面</a>
       <a href="#samples">案例</a>
-      <a href="#docs">资源</a>
+      <a href="#docs">文档</a>
     </nav>
     <div class="nav-actions">
       <a class="button" href="../README.zh-CN.md">
@@ -1528,57 +1528,61 @@
     <div class="hero-inner">
       <div class="hero-copy">
         <h1>ActionGraph</h1>
-        <p class="hero-subtitle">面向 Java 企业系统的类型化 GOAP Agent 运行时。</p>
-        <p class="hero-body">把自然语言目标转成安全、可审计、可补偿的业务 Action 执行链。LLM 负责理解目标，确定性规划器负责组合路径，业务系统拥有最终裁决权。</p>
+        <p class="hero-subtitle">把企业业务能力组织成可规划、可审批、可恢复的 Agent Action 图。</p>
+        <p class="hero-body">ActionGraph 让模型只负责理解目标，让 Java 业务系统定义可执行能力、参数契约和治理边界。两注解即可进入金路径，运行时负责 schema 绑定、确定性规划、人审挂起、补偿恢复与审计证据。</p>
         <div class="hero-actions">
           <a class="button primary" href="#quickstart">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
               <path d="M5 12h14"></path>
               <path d="M13 5l7 7-7 7"></path>
             </svg>
-            5 分钟看懂接入
+            进入金路径
           </a>
           <a class="button" href="#model">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
               <path d="M3 12h6l3-8 3 16 3-8h3"></path>
             </svg>
-            查看运行模型
+            理解运行模型
           </a>
         </div>
         <div class="hero-badges" aria-label="项目状态">
           <span>v0.2.0-SNAPSHOT</span>
           <span>Apache-2.0</span>
           <span>Java 21 运行时 · Java 8 控制面客户端</span>
-          <span>376 项自动化测试</span>
+          <span>423 项自动化测试基线</span>
         </div>
         <div class="hero-command" aria-label="代码示例">
           <div class="terminal">
             <div class="terminal-head" aria-hidden="true">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
             </div>
-<pre><code><span class="code-anno">@ActionGraphAction</span>(
-  id = <span class="code-string">"order.lookup"</span>,
-  preconditions =
-    <span class="code-string">"order-cancellation:ORDER_ID_PRESENT"</span>,
-  effects =
-    <span class="code-string">"order-cancellation:ORDER_LOADED"</span>
-)
-OrderRecord lookup(OrderId orderId) {
-  <span class="code-key">return</span> orderService.find(orderId);
+<pre><code><span class="code-anno">@ActionGraphGoal</span>(
+  type = <span class="code-string">"renewal.quote"</span>,
+  targetConditions = <span class="code-string">"renewal:APPROVAL_REQUESTED"</span>,
+  seedConditions = <span class="code-string">"renewal:CUSTOMER_ID_PRESENT"</span>,
+  schema = RenewalRequest.class)
+void renewalQuoteGoal() {}
+
+<span class="code-anno">@ActionGraphAction</span>(
+  id = <span class="code-string">"renewal.customer.load"</span>,
+  preconditions = <span class="code-string">"renewal:CUSTOMER_ID_PRESENT"</span>,
+  effects = <span class="code-string">"renewal:CUSTOMER_LOADED"</span>)
+Customer load(RenewalRequest request) {
+  <span class="code-key">return</span> customerService.load(request.customerId());
 }</code></pre>
           </div>
           <div class="hero-facts">
             <div class="fact">
+              <b>两注解进入正门</b>
+              <span>Goal schema 声明参数契约，Action 声明可执行能力。</span>
+            </div>
+            <div class="fact">
               <b>LLM 不生成 Plan</b>
-              <span>目标解释可由 LLM 完成，执行路径由符号规划器搜索。</span>
+              <span>自然语言可由模型解释，执行路径由符号规划器搜索。</span>
             </div>
             <div class="fact">
-              <b>业务 Action 白名单</b>
-              <span>只能执行应用显式暴露的类型化方法，不能绕过权限、审批和补偿边界。</span>
-            </div>
-            <div class="fact">
-              <b>审计与恢复内建</b>
-              <span>Trace、挂起快照、人审任务、Console read model 可切到 JDBC。</span>
+              <b>治理内建到运行中</b>
+              <span>审批、补偿、恢复、脱敏与 Trace 证据围绕同一个 runId 展开。</span>
             </div>
           </div>
         </div>
@@ -1592,8 +1596,8 @@ OrderRecord lookup(OrderId orderId) {
       <span>基于 Action precondition / effect 搜索路径，同样输入得到同样计划。</span>
     </div>
     <div class="proof">
-      <strong>Typed blackboard</strong>
-      <span>运行态数据按 Java 类型与 key 管理，减少字符串拼装式传参。</span>
+      <strong>Schema contract</strong>
+      <span>Goal schema 自动绑定到类型化 Blackboard，常规接入无需手写 Seeder。</span>
     </div>
     <div class="proof">
       <strong>Human review</strong>
@@ -1617,8 +1621,8 @@ OrderRecord lookup(OrderId orderId) {
         <span>并发冒烟吞吐（200 虚拟线程共享单 executor，内存仓储）</span>
       </div>
       <div class="stat-cell">
-        <b>376</b>
-        <span>自动化测试，覆盖并发竞争、跨重启恢复、补偿与防篡改</span>
+        <b>423</b>
+        <span>自动化测试基线，覆盖并发竞争、跨重启恢复、补偿与防篡改</span>
       </div>
       <div class="stat-cell">
         <b>10</b>
@@ -1639,13 +1643,13 @@ OrderRecord lookup(OrderId orderId) {
 <section class="section" id="why">
     <div class="wrap">
       <div class="section-head">
-        <h2>为企业 Agent 定义可执行、可治理的业务边界。</h2>
-        <p class="section-lead">ActionGraph 的设计目标是把“可控业务能力”变成 Agent 可以规划和执行的 Action 集合，同时把计划、审批、补偿、恢复和审计放在框架层统一处理。</p>
+        <h2>把 Agent 能做什么，定义成可审查的工程契约。</h2>
+        <p class="section-lead">ActionGraph 面向已有核心业务系统的团队：把订单、续约、理赔、转账、审批等能力封装成 Action 图，让 Agent 能办事，同时保留企业系统需要的边界、证据和控制权。</p>
       </div>
       <div class="split">
         <div class="prose">
-          <p>在企业系统里，让 LLM 直接调 API 或写 SQL 通常不可控、不可复现，也很难审计。只做问答机器人又无法把流程办完。每个业务系统各自接 AI，则会重复建设 prompt、审批、审计和回滚机制。</p>
-          <p><strong>ActionGraph 选择了一条更保守也更工程化的路线：</strong>业务系统只暴露可控 Action，规划器只看条件与效果，运行时每一步都经过权限、人审、runtime guard 和补偿边界。LLM 可以解释目标，但不能直接操作业务状态。</p>
+          <p>在企业系统里，让 LLM 直接调 API 或写 SQL 通常不可控、不可复现，也难以审计。只做问答机器人又无法把流程办完。每个业务系统各自接 AI，则会重复建设 prompt、审批、审计、回滚和运维标准。</p>
+          <p><strong>ActionGraph 选择工程化路线：</strong>应用只暴露经过审查的 Action，Goal schema 定义参数契约，规划器只看 condition/effect，运行时每一步都经过权限、人审、runtime guard 和补偿边界。LLM 可以解释目标，但不能直接操作业务状态。</p>
         </div>
         <div class="problem-list" aria-label="常见方案问题">
           <div class="problem">
@@ -1668,8 +1672,8 @@ OrderRecord lookup(OrderId orderId) {
   <section class="section alt" id="model">
     <div class="wrap">
       <div class="section-head full">
-        <h2>目标解释与业务执行之间，隔着一层确定性规划。</h2>
-        <p class="section-lead">运行时把目标解释、Blackboard 装配、确定性规划、逐步执行、人审挂起、恢复和补偿串成一个闭环。每一步执行后都会重新规划，因此运行时事实变化可以自动改道。</p>
+        <h2>从自然语言到业务副作用，运行链路保持可复现。</h2>
+        <p class="section-lead">运行时把目标解释、schema 自动绑定、确定性规划、逐步执行、人审/事件挂起、恢复和补偿串成一个闭环。每一步执行后都会重新规划，因此运行时事实变化可以自动改道。</p>
       </div>
       <div class="model-grid">
         <article class="model-step">
@@ -1679,8 +1683,8 @@ OrderRecord lookup(OrderId orderId) {
         </article>
         <article class="model-step">
           <div class="step-number">2</div>
-          <h3>装配上下文</h3>
-          <p>GoalBlackboardSeeder 把 customerId、orderId 等业务参数写入类型化 Blackboard。</p>
+          <h3>绑定 schema</h3>
+          <p>Goal schema record 自动接收 customerId、orderId 等参数并写入类型化 Blackboard；复杂装配再使用显式 Seeder。</p>
         </article>
         <article class="model-step">
           <div class="step-number">3</div>
@@ -1695,7 +1699,7 @@ OrderRecord lookup(OrderId orderId) {
         <article class="model-step">
           <div class="step-number">5</div>
           <h3>恢复与审计</h3>
-          <p>Trace、挂起快照、审批任务、补偿栈与 Console read model 形成可追踪证据链。</p>
+          <p>挂起快照、外部事件、补偿栈、Trace 哈希链与 Console read model 形成可追踪证据链。</p>
         </article>
       </div>
     </div>
@@ -1704,23 +1708,23 @@ OrderRecord lookup(OrderId orderId) {
   <section class="section" id="quickstart">
     <div class="wrap">
       <div class="section-head">
-        <h2>接入路径：写一个注解类，调用一个正门 Bean。</h2>
-        <p class="section-lead">金路径从主 starter、注解三件套和根门面 ActionGraph 开始。先让 start(...) 跑通，再按 L1-L4 逐步加入人审、自然语言、持久化和跨服务事件。</p>
+        <h2>接入路径：两注解定义能力，一个门面发起运行。</h2>
+        <p class="section-lead">金路径从主 starter、Goal schema、Action 注解和根门面 ActionGraph 开始。先让 start(...) 跑通，再按 L1-L4 逐步加入人审、自然语言、持久化和跨服务事件。</p>
       </div>
       <div class="setup-grid" aria-label="接入路径">
         <article class="setup-card">
           <span>1</span>
-          <b>声明运行时依赖</b>
-          <p>用 BOM 锁定版本，引入主 starter，默认自动扫描 Spring Bean 上的 Action、Goal 与 Seeder 注解。</p>
+          <b>引入运行时 starter</b>
+          <p>用 BOM 锁定版本，引入主 starter，默认自动扫描 Spring Bean 上的 Action 与 Goal 注解。</p>
         </article>
         <article class="setup-card">
           <span>2</span>
-          <b>写注解三件套</b>
-          <p>用 @ActionGraphAction、@ActionGraphGoal、@ActionGraphGoalSeeder 声明能力、目标和参数装配。</p>
+          <b>声明目标契约与能力</b>
+          <p>用 @ActionGraphGoal(schema=...) 声明参数契约，用 @ActionGraphAction 声明可执行业务能力。</p>
         </article>
         <article class="setup-card">
           <span>3</span>
-          <b>从正门启动</b>
+          <b>从根门面启动</b>
           <p>业务代码只注入 ActionGraph，调用 start、chat 或 resume；运营面 API 按需单独启用。</p>
         </article>
       </div>
@@ -1742,7 +1746,7 @@ OrderRecord lookup(OrderId orderId) {
         </div>
         <div class="code-panel">
           <div class="code-title">
-            <span>Hello Agent</span>
+            <span>Schema-first Goal</span>
             <button class="copy-btn" type="button" data-copy="adapter" aria-label="复制 Action 示例">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             </button>
@@ -1751,20 +1755,20 @@ OrderRecord lookup(OrderId orderId) {
 class HelloAgent {
   @ActionGraphGoal(type = "hello.finish",
       targetConditions = "hello:DONE",
-      seedConditions = "hello:INPUT_PRESENT")
-  void goal(@GoalParameter(name = "id", example = "A-1") String ignored) {}
-
-  @ActionGraphGoalSeeder(value = "hello.finish",
-      seedConditions = "hello:INPUT_PRESENT")
-  InputId seed(@FromGoalParam("id") String id) {
-    return new InputId(id);
-  }
+      seedConditions = "hello:INPUT_PRESENT",
+      schema = InputId.class)
+  void goal() {}
 
   @ActionGraphAction(id = "hello.finish",
       preconditions = "hello:INPUT_PRESENT",
       effects = "hello:DONE")
   void finish(InputId input) {}
 }
+
+record InputId(
+    @GoalParameter(name = "id", description = "业务输入编号", example = "A-1")
+    String value
+) {}
 
 RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code></pre>
         </div>
@@ -1795,6 +1799,12 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
                 <td><code>executor.max-steps</code><br><code>actions.auto-register-annotated</code></td>
                 <td>限制单次 run 的最大执行步数；可选择是否自动注册注解式 Action。</td>
                 <td>生产建议显式管理 Action 包扫描范围，避免测试或内部动作进入运行时。</td>
+              </tr>
+              <tr>
+                <td>Goal 与 Seeding</td>
+                <td><code>goals.auto-register-annotated</code><br><code>seeding.auto</code><br><code>seeders.auto-register-annotated</code></td>
+                <td>默认注册注解式 Goal，并按 schema 自动完成参数绑定与 seed conditions；显式 Seeder 仍可覆盖复杂装配。</td>
+                <td>金路径保持 <code>seeding.auto=true</code>；只有需要完全手工装配的服务才关闭自动绑定。</td>
               </tr>
               <tr>
                 <td>Runtime API</td>
@@ -1839,7 +1849,7 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
 
       <div class="callout">
         <strong>ActionGraph 正门保持窄。</strong>
-        <p>业务发起面只有 start、chat、resume。审批决策、事件投递、恢复扫描和 Console 查询属于运营面，继续使用对应组件和端点。</p>
+        <p>业务发起面只有 start、chat、resume。常规目标由 schema 自动绑定，显式 Seeder 只处理多对象写入、业务实体映射或自定义 seed conditions。审批决策、事件投递、恢复扫描和 Console 查询属于运营面。</p>
       </div>
     </div>
   </section>
@@ -1847,8 +1857,8 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
   <section class="section tint" id="videos">
     <div class="wrap">
       <div class="section-head">
-        <h2>两支视频，分别讲清价值和落地方式。</h2>
-        <p class="section-lead">第一支面向业务负责人，解释为什么 ActionGraph 值得推广；第二支面向技术团队，用真实代码演示从接入依赖到运行、审批、恢复和审计的完整过程。</p>
+        <h2>两支视频，分别讲清价值判断和技术落地。</h2>
+        <p class="section-lead">第一支面向业务负责人，用业务语言说明为什么 ActionGraph 值得推广；第二支面向技术团队，放慢节奏解释 Action 契约、配置域、运行效果、人审恢复和审计证据。</p>
       </div>
 
       <div class="video-grid" aria-label="ActionGraph 视频演示">
@@ -1876,22 +1886,22 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
 
         <article class="video-card">
           <div class="video-frame">
-            <video controls preload="metadata" playsinline poster="assets/actiongraph-coding-showcase-poster.png" aria-label="ActionGraph 真实代码接入动态演示视频">
-              <source src="assets/actiongraph-coding-showcase.mp4" type="video/mp4">
+            <video controls preload="metadata" playsinline poster="assets/actiongraph-technical-deep-dive-poster.png" aria-label="ActionGraph 技术深潜动态演示视频">
+              <source src="assets/actiongraph-technical-deep-dive.mp4" type="video/mp4">
               当前浏览器不支持 HTML5 视频播放，请直接打开视频文件。
             </video>
           </div>
           <div class="video-content">
             <span class="video-kicker blue">技术接入演示</span>
-            <h3>让技术团队看清：真实代码如何变成可治理运行。</h3>
-            <p>从 Gradle 依赖、Action 注解、Guard、Compensation、人审 Action、配置开关到运行看板，逐步展示接入过程和每一步带来的运行效果。</p>
+            <h3>让技术团队看清：代码契约如何映射到运行效果。</h3>
+            <p>围绕“大额转账预约”解释 Action 契约、schema 绑定、配置属性、人审状态、Trace 证据和额度策略；运行效果用中文状态面板展示。</p>
             <ul class="video-points">
-              <li>代码使用真实 ActionGraph API，不用伪包名和伪接口。</li>
-              <li>运行效果用中文状态看板、审批卡片和审计时间线展示。</li>
+              <li>真实代码片段逐步出现，并解释每个注解的运行语义。</li>
+              <li>配置属性按表格呈现，避免长篇 YAML 淹没重点。</li>
               <li>适合开发宣讲、架构评审和接入培训。</li>
             </ul>
             <div class="video-actions">
-              <a class="button primary" href="assets/actiongraph-coding-showcase.mp4">打开视频</a>
+              <a class="button primary" href="assets/actiongraph-technical-deep-dive.mp4">打开视频</a>
             </div>
           </div>
         </article>
@@ -1903,7 +1913,7 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
     <div class="wrap">
       <div class="section-head">
         <h2>运行时能力围绕一个原则：模型不拥有最终裁决权。</h2>
-        <p class="section-lead">框架让 Agent 能执行，但不把业务判断交给模型。规划、运行时校验、审批、补偿、持久化、审计与控制面都围绕“可控执行”设计。</p>
+        <p class="section-lead">框架让 Agent 能执行，但不把业务判断交给模型。schema 契约、规划、运行时校验、审批、补偿、持久化、审计与控制面都围绕“可控执行”设计。</p>
       </div>
       <div class="feature-grid">
         <article class="feature">
@@ -1913,8 +1923,8 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
         </article>
         <article class="feature">
           <div class="feature-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"></path><path d="M12 12l8-4.5"></path><path d="M12 12v9"></path><path d="M12 12L4 7.5"></path></svg></div>
-          <h3>类型化 Blackboard</h3>
-          <p>运行数据按 Java 类型与 BlackboardKey 管理，支持同类型多实例和注解参数绑定。</p>
+          <h3>Schema 自动绑定</h3>
+          <p>@ActionGraphGoal(schema=...) 自动把请求参数绑定为 record 并写入 Blackboard，复杂场景再显式扩展。</p>
         </article>
         <article class="feature">
           <div class="feature-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg></div>
@@ -1970,7 +1980,7 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
         <article class="module-card">
   <span class="module-tag runtime">spring</span>
   <h3>spring-boot-starter</h3>
-  <p>注解扫描、默认 Bean、按配置启用的 JDBC 仓储、治理、人审、Runtime/Catalog/Review/Console 端点。</p>
+  <p>注解扫描、schema 自动 seeding、默认 Bean、按配置启用的 JDBC 仓储、治理、人审、Runtime/Catalog/Review/Console 端点。</p>
         </article>
         <article class="module-card">
           <span class="module-tag java8">java8-client</span>
@@ -2165,7 +2175,7 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
     <div class="wrap">
       <div class="section-head">
         <h2>样例以业务形态组织，而不是功能清单。</h2>
-        <p class="section-lead">样例覆盖真实业务环节：续约报价、订单取消、理赔资料预审分别展示目标解释、Blackboard seeding、runtime guard、人审挂起恢复和审计报告。</p>
+        <p class="section-lead">样例覆盖真实业务环节：续约报价、订单取消、理赔资料预审分别展示目标解释、schema 绑定、runtime guard、人审挂起恢复和审计报告。</p>
       </div>
       <div class="sample-grid">
         <article class="sample">
@@ -2211,7 +2221,7 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
 
       <div class="journey-intro">
         <h3>场景主线</h3>
-        <p>用户提出“为客户 C001 预约 80 万元的大额转账”。运行时需要确认参数、装配 Blackboard、规划可达路径、处理余额接口重试、触发限额升级审批、挂起等待人审、恢复同一 run，并最终给出可验证的 Trace 证据。</p>
+        <p>用户提出“为客户 C001 预约 80 万元的大额转账”。运行时需要确认参数、绑定 schema、规划可达路径、处理余额接口重试、触发限额升级审批、挂起等待人审、恢复同一 run，并最终给出可验证的 Trace 证据。</p>
       </div>
 
       <div class="journey" aria-label="端到端导览">
@@ -2224,7 +2234,7 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
             <p>自然语言入口负责把请求映射到 GoalType、customerId、amount 等业务参数；缺参时返回澄清问题。计划仍由 GOAP planner 根据 Action 图搜索，LLM 不直接生成执行步骤。</p>
             <ul>
               <li><strong>输入：</strong>客户、金额、业务意图。</li>
-              <li><strong>产物：</strong>Goal + seed conditions + typed Blackboard entries。</li>
+              <li><strong>产物：</strong>Goal + schema record + seed conditions。</li>
             </ul>
           </div>
         </article>
@@ -2364,13 +2374,23 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
     <div class="wrap">
       <div class="section-head">
         <h2>文档入口按接入阶段组织。</h2>
-        <p class="section-lead">文档入口按接入阶段和运行职责组织，从快速开始、Runtime API、控制面、人审到 JDBC 持久化，直接对应开发、架构评审和生产运维所需的材料。</p>
+        <p class="section-lead">先走 Golden Path，再进入控制面、生产持久化、人审、事件和 SPI。每个入口都对应一个明确的接入阶段，避免开发者在第一天就被底层接口淹没。</p>
       </div>
       <div class="doc-grid">
         <a class="doc-link" href="quick-start.html">
           <h3>快速接入指南</h3>
-          <p>一步步完成依赖、Action、Goal、LLM 解释器、审批、持久化和上线清单。</p>
+          <p>按 L0-L4 完成依赖、Goal schema、Action、自然语言、人审、持久化和跨服务事件。</p>
           <span class="path">docs/quick-start.html</span>
+        </a>
+        <a class="doc-link" href="frameworkization/golden-path.md">
+          <h3>Golden Path</h3>
+          <p>明确应用代码优先使用的正门：Goal schema、Action 注解、Spring starter 和 ActionGraph 根门面。</p>
+          <span class="path">docs/frameworkization/golden-path.md</span>
+        </a>
+        <a class="doc-link" href="learning-path.md">
+          <h3>学习路径</h3>
+          <p>把 L0-L4、打包、SPI、运营和内部设计记录分层，帮助团队按阶段推广。</p>
+          <span class="path">docs/learning-path.md</span>
         </a>
         <a class="doc-link" href="api/">
           <h3>API Reference</h3>
@@ -2402,6 +2422,11 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
           <p>Trace、挂起快照、read model、Memory、人审任务和 Blackboard 类型白名单。</p>
           <span class="path">docs/frameworkization/jdbc-persistence.md</span>
         </a>
+        <a class="doc-link" href="frameworkization/extension-points.md">
+          <h3>Extension Points</h3>
+          <p>面向进阶场景：Contribution 打包、显式 Seeder、自定义转换器、图导出、LLM 与事件扩展。</p>
+          <span class="path">docs/frameworkization/extension-points.md</span>
+        </a>
       </div>
     </div>
   </section>
@@ -2414,12 +2439,13 @@ RunResult result = actionGraph.start("hello.finish", Map.of("id", "A-1"));</code
         <img src="assets/actiongraph-mark.svg" alt="" aria-hidden="true">
         <b>ActionGraph</b>
       </div>
-      <p>Typed GOAP runtime for governed business action execution in Java. Built for deterministic planning, human review, compensation, audit evidence, and legacy-friendly control-plane integration.</p>
+      <p>Typed GOAP runtime for governed business action execution in Java. Built for schema-first adoption, deterministic planning, human review, compensation, audit evidence, and legacy-friendly control-plane integration.</p>
     </div>
     <div>
       <b>Start</b>
       <a href="#quickstart">快速开始</a>
       <a href="quick-start.html">完整接入指南</a>
+      <a href="frameworkization/golden-path.md">Golden Path</a>
       <a href="../README.zh-CN.md">中文 README</a>
     </div>
     <div>

@@ -5,6 +5,7 @@ import com.actiongraph.api.Experimental;
 import com.actiongraph.exception.ActionGraphConfigurationException;
 import com.actiongraph.exception.ActionGraphInputException;
 import com.actiongraph.exception.ActionGraphIntegrationException;
+import com.actiongraph.interpretation.GoalDefinition;
 import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.interpretation.GoalType;
@@ -16,14 +17,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,10 +45,26 @@ public final class AnnotatedGoalSeederFactory {
     }
 
     public static List<GoalBlackboardSeeder> seeders(
+            Collection<GoalDefinition> goals,
+            Object... targets
+    ) {
+        return seeders(GoalValueConverterResolver.reflection(), goals, targets);
+    }
+
+    public static List<GoalBlackboardSeeder> seeders(
             GoalValueConverterResolver converterResolver,
             Object... targets
     ) {
+        return seeders(converterResolver, List.of(), targets);
+    }
+
+    public static List<GoalBlackboardSeeder> seeders(
+            GoalValueConverterResolver converterResolver,
+            Collection<GoalDefinition> goals,
+            Object... targets
+    ) {
         Objects.requireNonNull(converterResolver, "converterResolver");
+        Map<GoalType, Set<Condition>> inheritedSeedConditions = inheritedSeedConditions(goals);
         Map<GoalType, GoalBlackboardSeeder> seeders = new LinkedHashMap<>();
         if (targets == null) {
             return List.of();
@@ -70,7 +86,8 @@ public final class AnnotatedGoalSeederFactory {
                         invocationTarget,
                         method,
                         annotation,
-                        converterResolver
+                        converterResolver,
+                        inheritedSeedConditions
                 );
                 putUnique(seeders, seeder);
             }
@@ -115,11 +132,24 @@ public final class AnnotatedGoalSeederFactory {
         return methods;
     }
 
+    private static Map<GoalType, Set<Condition>> inheritedSeedConditions(Collection<GoalDefinition> goals) {
+        if (goals == null || goals.isEmpty()) {
+            return Map.of();
+        }
+        Map<GoalType, Set<Condition>> conditions = new LinkedHashMap<>();
+        for (GoalDefinition goal : goals) {
+            if (goal != null && !goal.seedConditions().isEmpty()) {
+                conditions.put(goal.type(), goal.seedConditions());
+            }
+        }
+        return Map.copyOf(conditions);
+    }
+
     private static final class AnnotatedMethodGoalSeeder implements GoalBlackboardSeeder {
         private final Object target;
         private final Method method;
         private final ActionGraphGoalSeeder metadata;
-        private final GoalValueConverterResolver converterResolver;
+        private final GoalParameterBinder binder;
         private final GoalType goalType;
         private final Set<Condition> seedConditions;
 
@@ -127,14 +157,19 @@ public final class AnnotatedGoalSeederFactory {
                 Object target,
                 Method method,
                 ActionGraphGoalSeeder metadata,
-                GoalValueConverterResolver converterResolver
+                GoalValueConverterResolver converterResolver,
+                Map<GoalType, Set<Condition>> inheritedSeedConditions
         ) {
             this.target = target;
             this.method = method;
             this.metadata = metadata;
-            this.converterResolver = converterResolver;
+            this.binder = new GoalParameterBinder(converterResolver);
             this.goalType = new GoalType(resolveGoalType(metadata));
-            this.seedConditions = conditions(metadata.seedConditions());
+            Set<Condition> declared = conditions(metadata.seedConditions());
+            this.seedConditions = declared.isEmpty()
+                    ? inheritedSeedConditions.getOrDefault(goalType, Set.of())
+                    : declared;
+            validateBindingParameters();
         }
 
         @Override
@@ -155,6 +190,14 @@ public final class AnnotatedGoalSeederFactory {
             seedConditions.forEach(blackboard::addCondition);
         }
 
+        private void validateBindingParameters() {
+            for (Parameter parameter : method.getParameters()) {
+                if (parameter.getAnnotation(BindGoalParams.class) != null) {
+                    binder.validateRecordSchema(parameter.getType());
+                }
+            }
+        }
+
         private Object[] resolveArguments(GoalParameters parameters, Blackboard blackboard) {
             Parameter[] methodParameters = method.getParameters();
             Object[] args = new Object[methodParameters.length];
@@ -172,6 +215,16 @@ public final class AnnotatedGoalSeederFactory {
             if (parameterType.equals(Blackboard.class)) {
                 return blackboard;
             }
+            BindGoalParams bindGoalParams = parameter.getAnnotation(BindGoalParams.class);
+            if (bindGoalParams != null) {
+                if (parameter.getAnnotation(FromGoalParam.class) != null
+                        || parameter.getAnnotation(BlackboardValue.class) != null) {
+                    throw new ActionGraphConfigurationException(
+                            "@BindGoalParams cannot be combined with @FromGoalParam or @BlackboardValue on "
+                                    + parameter);
+                }
+                return binder.bindRecord(parameterType, parameters, blackboard, bindGoalParams.atLeastOne());
+            }
             BlackboardValue blackboardValue = parameter.getAnnotation(BlackboardValue.class);
             if (blackboardValue != null && parameter.getAnnotation(FromGoalParam.class) == null) {
                 return blackboard.get(BlackboardKey.of(parameterType, blackboardValue.value()))
@@ -179,129 +232,7 @@ public final class AnnotatedGoalSeederFactory {
                                 "Missing blackboard value for " + parameterType.getName()
                                         + "#" + blackboardValue.value()));
             }
-            FromGoalParam goalParam = parameter.getAnnotation(FromGoalParam.class);
-            String name = goalParamName(parameter, goalParam);
-            boolean required = goalParam == null || goalParam.required();
-            Optional<String> raw = parameters.get(name)
-                    .map(String::trim)
-                    .filter(value -> !value.isBlank());
-            if (raw.isEmpty()) {
-                if (required || parameterType.isPrimitive()) {
-                    throw new ActionGraphInputException("Missing goal parameter: " + name);
-                }
-                return null;
-            }
-            GoalParameterBindingContext context =
-                    new GoalParameterBindingContext(name, parameterType, parameters, blackboard);
-            return convert(raw.get(), parameterType, goalParam, context);
-        }
-
-        private String goalParamName(Parameter parameter, FromGoalParam annotation) {
-            if (annotation != null) {
-                String name = firstNonBlank(annotation.name(), annotation.value(), "");
-                if (!name.isBlank()) {
-                    return name;
-                }
-            }
-            if (parameter.isNamePresent()) {
-                return parameter.getName();
-            }
-            throw new ActionGraphConfigurationException(
-                    "Cannot infer goal parameter name for " + parameter.getDeclaringExecutable()
-                            + ". Compile with -parameters or use @FromGoalParam(name=...).");
-        }
-
-        private Object convert(
-                String raw,
-                Class<?> parameterType,
-                FromGoalParam annotation,
-                GoalParameterBindingContext context
-        ) {
-            Class<? extends GoalValueConverter<?>> converterType =
-                    annotation == null ? GoalValueConverter.None.class : annotation.converter();
-            if (!converterType.equals(GoalValueConverter.None.class)) {
-                Object converted = converterResolver.resolve(converterType).convert(raw, context);
-                return castConverted(parameterType, converted, context.parameterName());
-            }
-            return builtInConvert(raw, parameterType, context.parameterName());
-        }
-
-        private Object builtInConvert(String raw, Class<?> targetType, String parameterName) {
-            Class<?> type = wrapperType(targetType);
-            try {
-                if (type.equals(String.class)) {
-                    return raw;
-                }
-                if (type.equals(Integer.class)) {
-                    return Integer.valueOf(raw);
-                }
-                if (type.equals(Long.class)) {
-                    return Long.valueOf(raw);
-                }
-                if (type.equals(BigDecimal.class)) {
-                    return new BigDecimal(raw);
-                }
-                if (type.equals(Double.class)) {
-                    return Double.valueOf(raw);
-                }
-                if (type.equals(Boolean.class)) {
-                    return parseBoolean(raw);
-                }
-                if (type.isEnum()) {
-                    return parseEnum(raw, type);
-                }
-            } catch (IllegalArgumentException ex) {
-                throw new ActionGraphInputException(
-                        "Cannot convert goal parameter " + parameterName + " value '" + raw
-                                + "' to " + type.getSimpleName(),
-                        ex
-                );
-            }
-            throw new ActionGraphConfigurationException(
-                    "No built-in goal parameter converter for " + targetType.getName()
-                            + "; use @FromGoalParam(converter=...)");
-        }
-
-        private Object parseEnum(String raw, Class<?> type) {
-            String value = raw.trim();
-            Object[] constants = type.getEnumConstants();
-            for (Object constant : constants) {
-                if (((Enum<?>) constant).name().equals(value)) {
-                    return constant;
-                }
-            }
-            for (Object constant : constants) {
-                if (((Enum<?>) constant).name().equalsIgnoreCase(value)) {
-                    return constant;
-                }
-            }
-            throw new IllegalArgumentException("Unsupported enum value: " + raw);
-        }
-
-        private Boolean parseBoolean(String raw) {
-            String normalized = raw.trim().toLowerCase(Locale.ROOT);
-            return switch (normalized) {
-                case "true", "yes", "y", "1", "是", "对" -> true;
-                case "false", "no", "n", "0", "否", "不" -> false;
-                default -> throw new IllegalArgumentException("Unsupported boolean value: " + raw);
-            };
-        }
-
-        private Object castConverted(Class<?> parameterType, Object converted, String parameterName) {
-            if (converted == null) {
-                if (parameterType.isPrimitive()) {
-                    throw new ActionGraphInputException(
-                            "Goal converter returned null for primitive parameter: " + parameterName);
-                }
-                return null;
-            }
-            Class<?> type = wrapperType(parameterType);
-            if (!type.isInstance(converted)) {
-                throw new ActionGraphConfigurationException(
-                        "Goal converter returned " + converted.getClass().getName()
-                                + " for parameter " + parameterName + ", expected " + type.getName());
-            }
-            return converted;
+            return binder.bindParameter(parameter, parameters, blackboard);
         }
 
         private Object invoke(Object[] args) {
@@ -378,44 +309,4 @@ public final class AnnotatedGoalSeederFactory {
         return Set.copyOf(conditions);
     }
 
-    private static String firstNonBlank(String first, String second, String fallback) {
-        if (first != null && !first.isBlank()) {
-            return first.trim();
-        }
-        if (second != null && !second.isBlank()) {
-            return second.trim();
-        }
-        return fallback;
-    }
-
-    private static Class<?> wrapperType(Class<?> type) {
-        if (!type.isPrimitive()) {
-            return type;
-        }
-        if (type.equals(Integer.TYPE)) {
-            return Integer.class;
-        }
-        if (type.equals(Long.TYPE)) {
-            return Long.class;
-        }
-        if (type.equals(Boolean.TYPE)) {
-            return Boolean.class;
-        }
-        if (type.equals(Double.TYPE)) {
-            return Double.class;
-        }
-        if (type.equals(Float.TYPE)) {
-            return Float.class;
-        }
-        if (type.equals(Short.TYPE)) {
-            return Short.class;
-        }
-        if (type.equals(Byte.TYPE)) {
-            return Byte.class;
-        }
-        if (type.equals(Character.TYPE)) {
-            return Character.class;
-        }
-        return type;
-    }
 }

@@ -22,6 +22,7 @@ import com.actiongraph.interpretation.GoalInterpreter;
 import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalFactory;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalSeederFactory;
+import com.actiongraph.interpretation.annotation.GoalValueConverterResolver;
 import com.actiongraph.llm.DeepSeekChatClient;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.OpenAiCompatibleChatClient;
@@ -360,11 +361,18 @@ public class ActionGraphAutoConfiguration {
             ActionGraphProperties properties
     ) {
         GoalBlackboardSeederRegistry registry = new GoalBlackboardSeederRegistry();
+        AnnotatedSpringBeanGoalSeederRegistrar annotatedSeederRegistrar =
+                new AnnotatedSpringBeanGoalSeederRegistrar(beanFactory, catalog);
+        GoalValueConverterResolver converterResolver = annotatedSeederRegistrar.converterResolver();
         seeders.orderedStream().forEach(seeder -> registerSeeder(registry, catalog, seeder));
         Map<GoalType, String> sources = new LinkedHashMap<>();
         for (ActionGraphContribution contribution : contributions.orderedStream().toList()) {
             List<GoalBlackboardSeeder> contributionSeeders = new java.util.ArrayList<>(contribution.seeders());
-            contributionSeeders.addAll(AnnotatedGoalSeederFactory.seeders(contribution.annotatedBeans().toArray()));
+            contributionSeeders.addAll(AnnotatedGoalSeederFactory.seeders(
+                    converterResolver,
+                    catalog.all(),
+                    contribution.annotatedBeans().toArray()
+            ));
             for (GoalBlackboardSeeder seeder : contributionSeeders) {
                 String previous = sources.putIfAbsent(seeder.goalType(), contribution.getClass().getName());
                 if (previous != null) {
@@ -376,11 +384,11 @@ public class ActionGraphAutoConfiguration {
             }
         }
         if (properties.getSeeders().isAutoRegisterAnnotated()) {
-            for (GoalBlackboardSeeder seeder : new AnnotatedSpringBeanGoalSeederRegistrar(beanFactory)
-                    .annotatedSeeders()) {
+            for (GoalBlackboardSeeder seeder : annotatedSeederRegistrar.annotatedSeeders()) {
                 registerSeeder(registry, catalog, seeder);
             }
         }
+        registry.registerDefaultSeeders(catalog, converterResolver, properties.getSeeding().isAuto());
         return registry;
     }
 
@@ -395,13 +403,15 @@ public class ActionGraphAutoConfiguration {
             GoalBlackboardSeederRegistry seeders,
             GoapExecutor executor,
             ActionRegistry registry,
-            ObjectProvider<GoalInterpreter> interpreter
+            ObjectProvider<GoalInterpreter> interpreter,
+            ActionGraphProperties properties
     ) {
         ActionGraph.Builder builder = ActionGraph.builder()
                 .goalCatalog(catalog)
                 .seeders(seeders)
                 .executor(executor)
-                .actionRegistry(registry);
+                .actionRegistry(registry)
+                .autoSeeding(properties.getSeeding().isAuto());
         GoalInterpreter goalInterpreter = interpreter.getIfAvailable();
         if (goalInterpreter != null) {
             builder.goalInterpreter(goalInterpreter);

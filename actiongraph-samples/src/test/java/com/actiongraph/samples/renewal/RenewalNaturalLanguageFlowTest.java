@@ -11,7 +11,6 @@ import com.actiongraph.samples.renewal.service.InMemoryContractService;
 import com.actiongraph.samples.renewal.service.InMemoryCustomerService;
 import com.actiongraph.samples.renewal.service.InMemoryQuoteService;
 import com.actiongraph.samples.renewal.service.InMemoryRenewalPolicyService;
-import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.llm.LlmResponse;
 import com.actiongraph.llm.LlmRequest;
 import com.actiongraph.policy.AutoApproveHumanReviewPolicy;
@@ -42,9 +41,6 @@ class RenewalNaturalLanguageFlowTest {
                 }
                 """);
         }));
-        GoalBlackboardSeederRegistry seeders = new GoalBlackboardSeederRegistry();
-        RenewalGoalAnnotations.seeders().forEach(seeders::register);
-
         List<Action> actions = RenewalActionFactory.actions(
                 new InMemoryCustomerService(),
                 new InMemoryContractService(),
@@ -56,7 +52,6 @@ class RenewalNaturalLanguageFlowTest {
         AtomicReference<InMemoryBlackboard> blackboard = new AtomicReference<>();
         ActionGraph actionGraph = ActionGraph.builder()
                 .goalCatalog(RenewalGoalCatalog.create())
-                .seeders(seeders)
                 .actionRegistry(registry)
                 .executor(GoapExecutor.builder()
                         .humanReviewPolicy(new AutoApproveHumanReviewPolicy())

@@ -2,9 +2,10 @@
 
 **Layer: Packaging / SPI**
 
-DX1 adds the first development-experience layer for teams that want to package
-business capability as reusable ActionGraph components instead of copying sample
-code into every service.
+This page collects the Packaging and SPI surfaces that sit outside the Golden
+Path. Use them when a business capability needs to be distributed as a reusable
+ActionGraph component, or when schema-first annotations are not enough for an
+advanced integration.
 
 All APIs in this document are marked `@Experimental` in `0.2.x`. They are
 available for pilots, documented, and tested, but they are intentionally outside
@@ -32,11 +33,6 @@ public final class RenewalContribution implements ActionGraphContribution {
     @Override
     public List<GoalDefinition> goals() {
         return RenewalGoalAnnotations.goals();
-    }
-
-    @Override
-    public List<GoalBlackboardSeeder> seeders() {
-        return RenewalGoalAnnotations.seeders();
     }
 }
 ```
@@ -121,32 +117,37 @@ actiongraph:
 
 ## 3. Annotated Goal Seeders
 
+Most goals do not need a seeder class. When an annotated goal declares
+`schema = MyGoal.class` and no explicit seeder exists for that goal type,
+ActionGraph automatically binds incoming goal parameters into the schema record,
+writes that schema record to the Blackboard, and applies the goal's declared
+seed conditions. This is the golden path.
+
 Seeder code is where most application boilerplate used to collect: reading
 `GoalParameters`, converting strings into domain types, resolving references,
 putting values into the Blackboard, and adding seed conditions. DX now supports
-annotated seeder methods for that binding layer.
+annotated seeder methods as an escape hatch for custom multi-value seeding.
 
 ```java
 @Component
 final class ProductSeeders {
-    @ActionGraphGoalSeeder(
-            value = "product.create",
-            seedConditions = "product:CREATE_REQUESTED"
-    )
-    Product seedCreate(
-            @FromGoalParam("name") String name,
-            @FromGoalParam("price") BigDecimal price,
-            @FromGoalParam("stock") int stock,
-            @FromGoalParam(value = "status", required = false, converter = ProductStatusConverter.class)
-            ProductStatus status
-    ) {
+    @ActionGraphGoalSeeder("product.create")
+    Product seedCreate(@BindGoalParams ProductDraft draft) {
         Product product = new Product();
-        product.setName(name);
-        product.setPrice(price);
-        product.setStock(stock);
-        product.setStatus(status == null ? ProductStatus.ON_SALE : status);
+        product.setName(draft.name());
+        product.setPrice(draft.price());
+        product.setStock(draft.stock());
+        product.setStatus(draft.status() == null ? ProductStatus.ON_SALE : draft.status());
         return product;
     }
+}
+
+record ProductDraft(
+        String name,
+        BigDecimal price,
+        int stock,
+        @GoalParameter(required = false) ProductStatus status
+) {
 }
 ```
 
@@ -162,19 +163,26 @@ List<GoalBlackboardSeeder> seeders =
 Built-in conversion covers `String`, `Integer`/`int`, `Long`/`long`,
 `BigDecimal`, `Double`/`double`, `Boolean`/`boolean`, and enums. Complex
 conversion stays in application code through `GoalValueConverter<T>`.
+When a conversion is tied to the target type rather than one parameter use, use
+`TypedGoalValueConverter<T>` and let the Spring starter discover it once.
 
 ```java
 @Component
-final class ProductReferenceToId implements GoalValueConverter<Long> {
+final class ProductReferenceConverter implements TypedGoalValueConverter<Product> {
     private final ProductService productService;
 
-    ProductReferenceToId(ProductService productService) {
+    ProductReferenceConverter(ProductService productService) {
         this.productService = productService;
     }
 
     @Override
-    public Long convert(String rawValue, GoalParameterBindingContext context) {
-        return productService.findByReference(rawValue).getId();
+    public Class<Product> targetType() {
+        return Product.class;
+    }
+
+    @Override
+    public Product convert(String rawValue, GoalParameterBindingContext context) {
+        return productService.findByReference(rawValue);
     }
 }
 ```
@@ -187,16 +195,18 @@ Spring, converters must expose a no-arg constructor or be supplied through a
 custom `GoalValueConverterResolver`.
 
 Simple seeder methods return one object and ActionGraph writes it to the
-Blackboard. Use `@BlackboardValue` on the method to write a keyed value:
+Blackboard. If a method's `@ActionGraphGoalSeeder` omits `seedConditions`, the
+Spring starter inherits them from the matching `@ActionGraphGoal` declaration.
+Goals with seed conditions and no required parameters receive a default no-op
+seeder that only adds those seed conditions.
+
+Use `@BlackboardValue` on the method to write a keyed value:
 
 ```java
-@ActionGraphGoalSeeder(value = "product.delete", seedConditions = "product:DELETE_REQUESTED")
+@ActionGraphGoalSeeder("product.delete")
 @BlackboardValue("productId")
-Long seedProductId(
-        @FromGoalParam(value = "productRef", converter = ProductReferenceToId.class)
-        Long productId
-) {
-    return productId;
+Long seedProductId(@FromGoalParam("productRef") Product product) {
+    return product.getId();
 }
 ```
 
@@ -212,10 +222,13 @@ return SeedResult.builder()
 
 Direct `GoalParameters` and `Blackboard` parameters are also supported as escape
 hatches. Auto-registration can be disabled for applications that assemble
-registries manually:
+registries manually. Automatic schema seeding can be disabled separately to
+return to pre-DX3 behavior:
 
 ```yaml
 actiongraph:
+  seeding:
+    auto: false
   seeders:
     auto-register-annotated: false
 ```
@@ -225,6 +238,21 @@ When both `@ActionGraphGoal.seedConditions` and
 the Spring starter validates at startup that the seeder-declared conditions cover
 the goal-declared seed conditions. A mismatch fails startup before any runtime
 request can enter the planner.
+
+For partial updates, bind a schema record and ask ActionGraph to reject empty
+patches. Required reference components are ignored for the "at least one"
+calculation when the record also has optional components.
+
+```java
+@ActionGraphGoalSeeder("product.update")
+Product seedUpdate(@BindGoalParams(atLeastOne = true) ProductUpdate update) {
+    Product product = update.productRef();
+    if (update.price() != null) {
+        product.setPrice(update.price());
+    }
+    return product;
+}
+```
 
 ## 4. Goal Validation
 
@@ -304,10 +332,10 @@ and startup diagnostics stay aligned.
 The model boundary remains `LlmClient`: models produce goals and parameters,
 never plans or executable actions.
 
-DX1 adds `AbstractHttpChatClient` and `OpenAiCompatibleChatClient` in the
-existing LLM module. The abstract base owns HTTP invocation, non-empty response
-validation, and `LlmClientException` mapping. The OpenAI-compatible client owns
-the common JSON body shape and response extraction from
+The existing LLM module provides `AbstractHttpChatClient` and
+`OpenAiCompatibleChatClient`. The abstract base owns HTTP invocation,
+non-empty response validation, and `LlmClientException` mapping. The
+OpenAI-compatible client owns the common JSON body shape and response extraction from
 `choices[0].message.content`.
 
 ```java
@@ -368,7 +396,7 @@ Important contract:
   failure handling, so its `compensate` method is invoked.
 - Compensation must tolerate both states: the forward operation may have
   completed, or it may never have happened.
-- Timed-out attempts are not retried in DX1 because safe retry after unknown
+- Timed-out attempts are not retried automatically because safe retry after unknown
   outcome requires provider-specific idempotency keys.
 
 Spring Boot can override policies without changing business code:
@@ -388,8 +416,8 @@ Runtime Trace adds two event types:
 - `ACTION_RETRIED`
 - `ACTION_TIMED_OUT`
 
-These events are experimental in `0.1.x` and should be treated as audit-preview
-signals until the retry/idempotency convention has been validated in pilots.
+These events are experimental and should be treated as audit-preview signals
+until the retry/idempotency convention has been validated in pilots.
 
 ## 8. Durability And Cross-Service Actions
 

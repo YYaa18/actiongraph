@@ -19,6 +19,8 @@ import com.actiongraph.interpretation.GoalType;
 import com.actiongraph.interpretation.MissingField;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalFactory;
 import com.actiongraph.interpretation.annotation.AnnotatedGoalSeederFactory;
+import com.actiongraph.interpretation.annotation.GoalValueConverterResolver;
+import com.actiongraph.interpretation.annotation.TypedGoalValueConverter;
 import com.actiongraph.runtime.Blackboard;
 import com.actiongraph.runtime.GoapExecutor;
 import com.actiongraph.runtime.InMemoryBlackboard;
@@ -26,10 +28,13 @@ import com.actiongraph.runtime.RunResult;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -56,6 +61,11 @@ public final class ActionGraph {
         this.registry = Objects.requireNonNull(builder.registry, "registry");
         this.interpreter = builder.interpreter;
         this.blackboardFactory = Objects.requireNonNull(builder.blackboardFactory, "blackboardFactory");
+        this.seeders.registerDefaultSeeders(
+                this.catalog,
+                builder.effectiveConverterResolver(),
+                builder.autoSeedingEnabled
+        );
     }
 
     public static Builder builder() {
@@ -235,6 +245,9 @@ public final class ActionGraph {
         private ActionRegistry registry = new DefaultActionRegistry();
         private @Nullable GoalInterpreter interpreter;
         private Supplier<? extends Blackboard> blackboardFactory = InMemoryBlackboard::new;
+        private GoalValueConverterResolver converterResolver = GoalValueConverterResolver.reflection();
+        private final List<TypedGoalValueConverter<?>> typedConverters = new ArrayList<>();
+        private boolean autoSeedingEnabled = true;
 
         private Builder() {
         }
@@ -294,14 +307,34 @@ public final class ActionGraph {
             return this;
         }
 
+        public Builder goalValueConverterResolver(GoalValueConverterResolver converterResolver) {
+            this.converterResolver = Objects.requireNonNull(converterResolver, "converterResolver");
+            return this;
+        }
+
+        public Builder addConverter(TypedGoalValueConverter<?> converter) {
+            this.typedConverters.add(Objects.requireNonNull(converter, "converter"));
+            return this;
+        }
+
+        public Builder autoSeeding(boolean enabled) {
+            this.autoSeedingEnabled = enabled;
+            return this;
+        }
+
         public Builder annotatedBeans(Object... targets) {
-            for (GoalDefinition definition : AnnotatedGoalFactory.definitions(targets)) {
+            List<GoalDefinition> definitions = AnnotatedGoalFactory.definitions(targets);
+            for (GoalDefinition definition : definitions) {
                 goal(definition);
             }
             for (Action action : AnnotatedActionFactory.actions(targets)) {
                 action(action);
             }
-            for (GoalBlackboardSeeder seeder : AnnotatedGoalSeederFactory.seeders(targets)) {
+            for (GoalBlackboardSeeder seeder : AnnotatedGoalSeederFactory.seeders(
+                    effectiveConverterResolver(),
+                    catalog.all(),
+                    targets
+            )) {
                 seeder(seeder);
             }
             return this;
@@ -309,6 +342,41 @@ public final class ActionGraph {
 
         public ActionGraph build() {
             return new ActionGraph(this);
+        }
+
+        private GoalValueConverterResolver effectiveConverterResolver() {
+            if (typedConverters.isEmpty()) {
+                return converterResolver;
+            }
+            return new GoalValueConverterResolver() {
+                @Override
+                public com.actiongraph.interpretation.annotation.GoalValueConverter<?> resolve(
+                        Class<? extends com.actiongraph.interpretation.annotation.GoalValueConverter<?>> converterType
+                ) {
+                    return converterResolver.resolve(converterType);
+                }
+
+                @Override
+                public Optional<com.actiongraph.interpretation.annotation.GoalValueConverter<?>> resolveForType(
+                        Class<?> targetType
+                ) {
+                    List<TypedGoalValueConverter<?>> matches = typedConverters.stream()
+                            .filter(converter -> targetType.equals(converter.targetType()))
+                            .toList();
+                    if (matches.size() > 1) {
+                        throw new ActionGraphConfigurationException(
+                                "Multiple typed goal value converters registered for " + targetType.getName()
+                                        + ": " + matches.stream()
+                                        .map(converter -> converter.getClass().getName())
+                                        .sorted()
+                                        .collect(Collectors.joining(", ")));
+                    }
+                    if (matches.size() == 1) {
+                        return Optional.of(matches.getFirst());
+                    }
+                    return converterResolver.resolveForType(targetType);
+                }
+            };
         }
     }
 }

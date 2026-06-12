@@ -26,4 +26,6 @@ public @interface GoalParameter {
     boolean required() default true;
 
     String example() default "";
+
+    Class<? extends GoalValueConverter<?>> converter() default GoalValueConverter.None.class;
 }

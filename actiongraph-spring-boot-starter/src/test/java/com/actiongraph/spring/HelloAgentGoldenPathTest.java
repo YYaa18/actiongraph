@@ -3,8 +3,6 @@ package com.actiongraph.spring;
 import com.actiongraph.ActionGraph;
 import com.actiongraph.action.annotation.ActionGraphAction;
 import com.actiongraph.interpretation.annotation.ActionGraphGoal;
-import com.actiongraph.interpretation.annotation.ActionGraphGoalSeeder;
-import com.actiongraph.interpretation.annotation.FromGoalParam;
 import com.actiongraph.interpretation.annotation.GoalParameter;
 import com.actiongraph.runtime.RunStatus;
 import org.junit.jupiter.api.Test;
@@ -29,13 +27,8 @@ class HelloAgentGoldenPathTest {
 
     static final class HelloAgent {
         @ActionGraphGoal(type = "hello.finish", targetConditions = "hello:DONE",
-                seedConditions = "hello:INPUT_PRESENT")
-        void goal(@GoalParameter(name = "id", description = "Input id", example = "A-1") String ignored) {
-        }
-
-        @ActionGraphGoalSeeder(value = "hello.finish", seedConditions = "hello:INPUT_PRESENT")
-        InputId seed(@FromGoalParam("id") String id) {
-            return new InputId(id);
+                seedConditions = "hello:INPUT_PRESENT", schema = InputId.class)
+        void goal() {
         }
 
         @ActionGraphAction(id = "hello.finish", preconditions = "hello:INPUT_PRESENT", effects = "hello:DONE")
@@ -43,6 +36,6 @@ class HelloAgentGoldenPathTest {
         }
     }
 
-    record InputId(String value) {
+    record InputId(@GoalParameter(name = "id", description = "Input id", example = "A-1") String value) {
     }
 }

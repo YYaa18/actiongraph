@@ -118,6 +118,30 @@ class ActionGraphTest {
         assertThat(suspendedRuns.findByRunId(suspended.runId())).isEmpty();
     }
 
+    @Test
+    void explicitSeederWinsOverAutomaticSchemaSeeder() {
+        ExplicitSeederWorkflow workflow = new ExplicitSeederWorkflow();
+        ActionGraph actionGraph = ActionGraph.builder()
+                .annotatedBeans(workflow)
+                .build();
+
+        actionGraph.start("hello.finish", Map.of("id", "A-4"));
+
+        assertThat(workflow.seen).isEqualTo("explicit-A-4");
+    }
+
+    @Test
+    void autoSeedingCanBeDisabledForCompatibility() {
+        ActionGraph actionGraph = ActionGraph.builder()
+                .annotatedBeans(new HelloWorkflow())
+                .autoSeeding(false)
+                .build();
+
+        assertThatThrownBy(() -> actionGraph.start("hello.finish", Map.of("id", "A-5")))
+                .isInstanceOf(ActionGraphConfigurationException.class)
+                .hasMessageContaining("No blackboard seeder registered");
+    }
+
     static class HelloWorkflow {
         final AtomicInteger executions = new AtomicInteger();
 
@@ -126,14 +150,10 @@ class ActionGraphTest {
                 name = "finish hello",
                 description = "Finish a hello workflow.",
                 targetConditions = "hello:DONE",
-                seedConditions = "hello:INPUT_PRESENT"
+                seedConditions = "hello:INPUT_PRESENT",
+                schema = InputId.class
         )
-        void goal(@GoalParameter(name = "id", description = "Input id", example = "A-1") String ignored) {
-        }
-
-        @ActionGraphGoalSeeder(value = "hello.finish", seedConditions = "hello:INPUT_PRESENT")
-        InputId seed(@FromGoalParam("id") String id) {
-            return new InputId(id);
+        void goal() {
         }
 
         @ActionGraphAction(
@@ -153,14 +173,10 @@ class ActionGraphTest {
                 name = "finish hello",
                 description = "Finish a hello workflow.",
                 targetConditions = "hello:DONE",
-                seedConditions = "hello:INPUT_PRESENT"
+                seedConditions = "hello:INPUT_PRESENT",
+                schema = InputId.class
         )
-        void goal(@GoalParameter(name = "id", description = "Input id", example = "A-1") String ignored) {
-        }
-
-        @ActionGraphGoalSeeder(value = "hello.finish", seedConditions = "hello:INPUT_PRESENT")
-        InputId seed(@FromGoalParam("id") String id) {
-            return new InputId(id);
+        void goal() {
         }
 
         @ActionGraphAction(
@@ -170,6 +186,36 @@ class ActionGraphTest {
                 requiresHumanReview = true
         )
         ActionResult finish(InputId input) {
+            return ActionResult.ok();
+        }
+    }
+
+    static final class ExplicitSeederWorkflow {
+        private String seen;
+
+        @ActionGraphGoal(
+                type = "hello.finish",
+                name = "finish hello",
+                description = "Finish a hello workflow.",
+                targetConditions = "hello:DONE",
+                seedConditions = "hello:INPUT_PRESENT",
+                schema = InputId.class
+        )
+        void goal() {
+        }
+
+        @ActionGraphGoalSeeder(value = "hello.finish", seedConditions = "hello:INPUT_PRESENT")
+        InputId seed(@FromGoalParam("id") String id) {
+            return new InputId("explicit-" + id);
+        }
+
+        @ActionGraphAction(
+                id = "hello.finish",
+                preconditions = "hello:INPUT_PRESENT",
+                effects = "hello:DONE"
+        )
+        ActionResult finish(InputId input) {
+            seen = input.value();
             return ActionResult.ok();
         }
     }
@@ -206,6 +252,6 @@ class ActionGraphTest {
         }
     }
 
-    record InputId(String value) {
+    record InputId(@GoalParameter(name = "id", description = "Input id", example = "A-1") String value) {
     }
 }

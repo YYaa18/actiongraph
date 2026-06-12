@@ -2,7 +2,6 @@ package com.actiongraph.samples.renewal;
 
 import com.actiongraph.action.Action;
 import com.actiongraph.contribution.ActionGraphContribution;
-import com.actiongraph.interpretation.GoalBlackboardSeeder;
 import com.actiongraph.interpretation.GoalDefinition;
 import com.actiongraph.samples.renewal.service.ApprovalService;
 import com.actiongraph.samples.renewal.service.ContractService;
@@ -50,8 +49,4 @@ public final class RenewalContribution implements ActionGraphContribution {
         return RenewalGoalAnnotations.goals();
     }
 
-    @Override
-    public List<GoalBlackboardSeeder> seeders() {
-        return RenewalGoalAnnotations.seeders();
-    }
 }
