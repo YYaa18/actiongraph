@@ -17,7 +17,8 @@ contribution can expose:
 - concrete `Action` instances;
 - `GoalDefinition` entries for `GoalCatalog`;
 - `GoalBlackboardSeeder` instances;
-- annotated POJOs that should be adapted through `AnnotatedActionFactory`.
+- annotated POJOs that should be adapted through `AnnotatedActionFactory`
+  and `AnnotatedGoalFactory`.
 
 ```java
 public final class RenewalContribution implements ActionGraphContribution {
@@ -46,7 +47,77 @@ in the error message.
 Non-Spring users can call the same methods directly and register the returned
 components by hand.
 
-## 2. Goal Validation
+## 2. Annotated Goal Metadata
+
+Goal metadata can be declared with `@ActionGraphGoal` instead of a configuration
+class that manually builds `GoalDefinition` objects. The annotation supplies the
+goal type, target conditions, seed conditions, and human-readable description;
+the schema is inferred from a record/class or from annotated method parameters.
+
+Spring Boot users only publish the declaration as a Bean. The starter registers
+it into `GoalCatalog` automatically.
+
+```java
+@Component
+final class OrderCancellationGoals {
+    @ActionGraphGoal(
+            type = "order.cancel",
+            description = "为指定订单发起取消申请并提交运营审批",
+            name = "requestOrderCancellation",
+            targetConditions = "order:OPS_APPROVAL_REQUESTED",
+            seedConditions = "order:ORDER_ID_PRESENT"
+    )
+    void requestCancellation(
+            @GoalParameter(name = "orderId", description = "要取消的订单编号", example = "O100")
+            String ignored
+    ) {
+        // Method body is never invoked; it is metadata for GoalCatalog.
+    }
+}
+```
+
+For teams that prefer schema-first declarations, annotate a record. Record
+components are read in declaration order, which also gives stable prompt output.
+
+```java
+@ActionGraphGoal(
+        type = "claim.precheck",
+        description = "对理赔案件做准入预审并输出处理建议",
+        targetConditions = "claim:PRECHECKED",
+        seedConditions = "claim:CLAIM_ID_PRESENT"
+)
+record ClaimPrecheckGoal(
+        @GoalParameter(description = "理赔案件号", example = "CLM-1001")
+        String claimId,
+        @GoalParameter(description = "渠道来源", required = false, example = "mobile")
+        String channel
+) {
+}
+```
+
+Non-Spring users can derive definitions directly:
+
+```java
+GoalCatalog catalog = new GoalCatalog();
+for (GoalDefinition goal : AnnotatedGoalFactory.definitions(ClaimPrecheckGoal.class)) {
+    catalog.register(goal);
+}
+```
+
+Method parameter names require either Java's `-parameters` compiler flag or an
+explicit `@GoalParameter(name = "...")`. Record schemas are recommended because
+they avoid compiler-flag drift and make the LLM-facing schema obvious in code.
+
+Spring auto-registration can be disabled when a service wants to assemble the
+catalog manually:
+
+```yaml
+actiongraph:
+  goals:
+    auto-register-annotated: false
+```
+
+## 3. Goal Validation
 
 `GoalDefinition` now supports `seedConditions`, the static facts a seeder is
 expected to place on the initial Blackboard. The planner still trusts runtime
@@ -93,7 +164,7 @@ Seeder drift can be tested explicitly:
 SeederConformance.assertSeedsDeclaredConditions(seeder, sampleParameters, goalDefinition);
 ```
 
-## 3. Graph Export
+## 4. Graph Export
 
 `ActionGraphExporter` renders the registered action graph for development
 review and security/architecture walkthroughs. Mermaid output can be pasted into
@@ -119,7 +190,7 @@ Graph semantics:
 The exporter reuses the same closure algorithm as validation, so the graph view
 and startup diagnostics stay aligned.
 
-## 4. LLM Provider Extension
+## 5. LLM Provider Extension
 
 The model boundary remains `LlmClient`: models produce goals and parameters,
 never plans or executable actions.
@@ -158,7 +229,7 @@ Plaintext `actiongraph.llm.api-key` is rejected during property binding. Store
 the actual key in an environment variable or enterprise secret manager and only
 put the variable name in application configuration.
 
-## 5. Retry And Timeout
+## 6. Retry And Timeout
 
 `Action.executionPolicy()` controls runtime retry and per-attempt timeout. The
 default is legacy behavior: one attempt, no backoff, no timeout.
@@ -211,7 +282,7 @@ Runtime Trace adds two event types:
 These events are experimental in `0.1.x` and should be treated as audit-preview
 signals until the retry/idempotency convention has been validated in pilots.
 
-## 6. Durability And Cross-Service Actions
+## 7. Durability And Cross-Service Actions
 
 MS1 adds optional step-level durability for services that orchestrate remote
 Actions. It is off by default:

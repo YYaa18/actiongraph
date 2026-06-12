@@ -265,36 +265,49 @@ dependencies {
 </div>
 
 <h2 id="step3"><span class="step-no">3</span>注册 Goal 与参数装配</h2>
-<p>Goal 声明「目标条件是什么、需要哪些参数」。注册进 <code>GoalCatalog</code> 后，LLM 的 prompt 会由框架<b>自动生成</b>，不需要手写。</p>
-<pre><code><span class="a">@Configuration</span>
-<span class="k">public class</span> OrderAgentGoalConfig {
+<p>Goal 声明「目标条件是什么、需要哪些参数」。直接用注解发布即可，Spring Starter 会自动推导 schema 并注册进 <code>GoalCatalog</code>，LLM prompt 也会由目录统一生成。</p>
+<pre><code><span class="a">@Component</span>
+<span class="k">final class</span> OrderCancellationGoals {
 
-    <span class="k">public static final</span> GoalType CANCEL_ORDER = <span class="k">new</span> GoalType(<span class="s">"requestOrderCancellation"</span>);
-
-    <span class="a">@Bean</span>
-    GoalCatalog goalCatalog() {
-        GoalCatalog catalog = <span class="k">new</span> GoalCatalog();
-        catalog.register(<span class="k">new</span> GoalDefinition(
-            CANCEL_ORDER,
-            <span class="s">"为指定订单发起取消申请并提交运营审批"</span>,
-            <span class="k">new</span> Goal(<span class="s">"requestOrderCancellation"</span>,
-                     Set.of(Condition.of(<span class="s">"order"</span>, <span class="s">"OPS_APPROVAL_REQUESTED"</span>))),
-            List.of(GoalParameterDefinition.required(
-                <span class="s">"orderId"</span>, <span class="s">"要取消的订单编号"</span>, <span class="s">"O100"</span>))
-        ));
-        <span class="k">return</span> catalog;
+    <span class="a">@ActionGraphGoal</span>(
+        type = <span class="s">"order.cancel"</span>,
+        description = <span class="s">"为指定订单发起取消申请并提交运营审批"</span>,
+        name = <span class="s">"requestOrderCancellation"</span>,
+        targetConditions = <span class="s">"order:OPS_APPROVAL_REQUESTED"</span>,
+        seedConditions = <span class="s">"order:ORDER_ID_PRESENT"</span>
+    )
+    <span class="k">void</span> requestCancellation(
+        <span class="a">@GoalParameter</span>(name = <span class="s">"orderId"</span>,
+                       description = <span class="s">"要取消的订单编号"</span>,
+                       example = <span class="s">"O100"</span>)
+        String ignored
+    ) {
+        <span class="c">// 方法体不会被调用；这里只声明 GoalCatalog 元数据</span>
+    }
+}</code></pre>
+<p>更推荐的写法是用 record 做 schema，参数顺序稳定，字段含义也更直观：</p>
+<pre><code><span class="a">@ActionGraphGoal</span>(
+    type = <span class="s">"order.cancel"</span>,
+    description = <span class="s">"为指定订单发起取消申请并提交运营审批"</span>,
+    targetConditions = <span class="s">"order:OPS_APPROVAL_REQUESTED"</span>,
+    seedConditions = <span class="s">"order:ORDER_ID_PRESENT"</span>
+)
+<span class="k">record</span> OrderCancellationGoal(
+    <span class="a">@GoalParameter</span>(description = <span class="s">"要取消的订单编号"</span>, example = <span class="s">"O100"</span>)
+    String orderId
+) {}</code></pre>
+<p>Seeder 仍然由业务实现，因为只有业务系统知道参数该怎样变成 Blackboard 初始状态；它可以是普通 Bean，不需要配置类。</p>
+<pre><code><span class="a">@Component</span>
+<span class="k">final class</span> OrderCancellationSeeder <span class="k">implements</span> GoalBlackboardSeeder {
+    <span class="a">@Override</span>
+    <span class="k">public</span> GoalType goalType() {
+        <span class="k">return new</span> GoalType(<span class="s">"order.cancel"</span>);
     }
 
-    <span class="c">// Seeder：把解释出的参数装配成 Blackboard 初始状态</span>
-    <span class="a">@Bean</span>
-    GoalBlackboardSeeder orderCancellationSeeder() {
-        <span class="k">return new</span> GoalBlackboardSeeder() {
-            <span class="a">@Override</span> <span class="k">public</span> GoalType goalType() { <span class="k">return</span> CANCEL_ORDER; }
-            <span class="a">@Override</span> <span class="k">public void</span> seed(GoalParameters params, Blackboard bb) {
-                bb.put(<span class="k">new</span> OrderId(params.get(<span class="s">"orderId"</span>).orElseThrow()));
-                bb.addCondition(Condition.of(<span class="s">"order"</span>, <span class="s">"ORDER_ID_PRESENT"</span>));
-            }
-        };
+    <span class="a">@Override</span>
+    <span class="k">public void</span> seed(GoalParameters params, Blackboard bb) {
+        bb.put(<span class="k">new</span> OrderId(params.get(<span class="s">"orderId"</span>).orElseThrow()));
+        bb.addCondition(Condition.of(<span class="s">"order:ORDER_ID_PRESENT"</span>));
     }
 }</code></pre>
 

@@ -670,6 +670,21 @@ CLASS public final record com.actiongraph.interpretation.MissingField
 CLASS public final class com.actiongraph.interpretation.MissingGoalParameterException
   CONSTRUCTOR public com.actiongraph.interpretation.MissingGoalParameterException(java.lang.String)
   METHOD public java.lang.String parameterName()
+CLASS public abstract annotation com.actiongraph.interpretation.annotation.ActionGraphGoal
+  METHOD public abstract java.lang.String description()
+  METHOD public abstract java.lang.String name()
+  METHOD public abstract java.lang.Class schema()
+  METHOD public abstract java.lang.String[] seedConditions()
+  METHOD public abstract java.lang.String[] targetConditions()
+  METHOD public abstract java.lang.String type()
+CLASS public final class com.actiongraph.interpretation.annotation.AnnotatedGoalFactory
+  METHOD public static java.util.List definitions(java.lang.Object[])
+CLASS public abstract annotation com.actiongraph.interpretation.annotation.GoalParameter
+  METHOD public abstract java.lang.String description()
+  METHOD public abstract java.lang.String example()
+  METHOD public abstract java.lang.String name()
+  METHOD public abstract boolean required()
+  METHOD public abstract java.lang.String value()
 CLASS public final class com.actiongraph.memory.InMemoryMemoryRepository
   CONSTRUCTOR public com.actiongraph.memory.InMemoryMemoryRepository()
   METHOD public void delete(java.lang.String)
@@ -1965,7 +1980,7 @@ CLASS public class com.actiongraph.spring.ActionGraphAutoConfiguration
   METHOD public com.actiongraph.runtime.GoapExecutor actionGraphExecutor(com.actiongraph.planning.Planner,com.actiongraph.policy.ExecutionPolicyGuard,com.actiongraph.policy.HumanReviewPolicy,com.actiongraph.trace.TraceRepository,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.policy.DataMaskingPolicy,com.actiongraph.policy.ReviewAttributeContributor,com.actiongraph.observability.ObservationSink,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.events.ExternalEventGateway actionGraphExternalEventGateway(com.actiongraph.runtime.GoapExecutor,com.actiongraph.runtime.SuspendedRunRepository,com.actiongraph.action.ActionRegistry,org.springframework.beans.factory.ObjectProvider)
   METHOD public com.actiongraph.interpretation.GoalBlackboardSeederRegistry actionGraphGoalBlackboardSeederRegistry(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider)
-  METHOD public com.actiongraph.interpretation.GoalCatalog actionGraphGoalCatalog(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider)
+  METHOD public com.actiongraph.interpretation.GoalCatalog actionGraphGoalCatalog(org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.ObjectProvider,org.springframework.beans.factory.config.ConfigurableListableBeanFactory,com.actiongraph.spring.ActionGraphProperties)
   METHOD public com.actiongraph.policy.HumanReviewPolicy actionGraphHumanReviewPolicy()
   METHOD public com.actiongraph.observability.ObservationSink actionGraphObservationSink()
   METHOD public com.actiongraph.llm.LlmClient actionGraphOpenAiCompatibleLlmClient(com.actiongraph.spring.ActionGraphProperties)
@@ -1985,6 +2000,7 @@ CLASS public class com.actiongraph.spring.ActionGraphProperties
   METHOD public com.actiongraph.spring.ActionGraphProperties$EventsProperties getEvents()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ExecutionProperties getExecution()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ExecutorProperties getExecutor()
+  METHOD public com.actiongraph.spring.ActionGraphProperties$GoalsProperties getGoals()
   METHOD public com.actiongraph.spring.ActionGraphProperties$LlmProperties getLlm()
   METHOD public com.actiongraph.spring.ActionGraphProperties$PlannerProperties getPlanner()
   METHOD public com.actiongraph.spring.ActionGraphProperties$ValidationProperties getValidation()
@@ -2038,6 +2054,10 @@ CLASS public static final class com.actiongraph.spring.ActionGraphProperties$Exe
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$ExecutorProperties()
   METHOD public int getMaxSteps()
   METHOD public void setMaxSteps(int)
+CLASS public static final class com.actiongraph.spring.ActionGraphProperties$GoalsProperties
+  CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$GoalsProperties()
+  METHOD public boolean isAutoRegisterAnnotated()
+  METHOD public void setAutoRegisterAnnotated(boolean)
 CLASS public static final class com.actiongraph.spring.ActionGraphProperties$LlmProperties
   CONSTRUCTOR public com.actiongraph.spring.ActionGraphProperties$LlmProperties()
   METHOD public java.lang.String getApiKeyEnv()

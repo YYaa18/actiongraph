@@ -18,6 +18,8 @@ import com.actiongraph.interpretation.GoalDefinition;
 import com.actiongraph.interpretation.GoalParameterDefinition;
 import com.actiongraph.interpretation.GoalParameters;
 import com.actiongraph.interpretation.GoalType;
+import com.actiongraph.interpretation.annotation.ActionGraphGoal;
+import com.actiongraph.interpretation.annotation.GoalParameter;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.OpenAiCompatibleChatClient;
 import com.actiongraph.observability.NoopObservationSink;
@@ -57,6 +59,7 @@ class ActionGraphAutoConfigurationTest {
     private static final Condition DONE = Condition.of("spring-test:DONE");
     private static final Condition DONE_TYPO = Condition.of("spring-test:DNOE");
     private static final GoalType TEST_GOAL_TYPE = new GoalType("spring-test.finish");
+    private static final GoalType ANNOTATED_GOAL_TYPE = new GoalType("spring-test.annotated-finish");
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(ActionGraphAutoConfiguration.class));
@@ -142,6 +145,36 @@ class ActionGraphAutoConfigurationTest {
                 .withPropertyValues("actiongraph.actions.auto-register-annotated=false")
                 .withBean(AnnotatedWorkflow.class)
                 .run(context -> assertThat(context.getBean(ActionRegistry.class).all()).isEmpty());
+    }
+
+    @Test
+    void autoRegistersAnnotatedGoalMetadataFromSpringBeans() {
+        contextRunner
+                .withBean(AnnotatedWorkflow.class)
+                .withBean(AnnotatedGoalDeclarations.class)
+                .run(context -> {
+                    GoalDefinition definition = context.getBean(GoalCatalog.class)
+                            .byType(ANNOTATED_GOAL_TYPE)
+                            .orElseThrow();
+
+                    assertThat(definition.description()).isEqualTo("Finish the annotated Spring workflow.");
+                    assertThat(definition.goal().targetConditions()).containsExactly(DONE);
+                    assertThat(definition.seedConditions()).containsExactly(INPUT_PRESENT);
+                    assertThat(definition.parameters()).singleElement().satisfies(parameter -> {
+                        assertThat(parameter.name()).isEqualTo("inputId");
+                        assertThat(parameter.description()).isEqualTo("Input identifier");
+                        assertThat(parameter.example()).contains("I-1");
+                    });
+                });
+    }
+
+    @Test
+    void canDisableAnnotatedGoalRegistration() {
+        contextRunner
+                .withPropertyValues("actiongraph.goals.auto-register-annotated=false")
+                .withBean(AnnotatedWorkflow.class)
+                .withBean(AnnotatedGoalDeclarations.class)
+                .run(context -> assertThat(context.getBean(GoalCatalog.class).byType(ANNOTATED_GOAL_TYPE)).isEmpty());
     }
 
     @Test
@@ -432,6 +465,18 @@ class ActionGraphAutoConfigurationTest {
         @ActionGraphGuard(actionId = "spring-test.finish")
         boolean deny(LoadedRecord loadedRecord) {
             return false;
+        }
+    }
+
+    static final class AnnotatedGoalDeclarations {
+        @ActionGraphGoal(
+                type = "spring-test.annotated-finish",
+                description = "Finish the annotated Spring workflow.",
+                name = "finishSpringWorkflow",
+                targetConditions = "spring-test:DONE",
+                seedConditions = "spring-test:INPUT_PRESENT"
+        )
+        void finish(@GoalParameter(name = "inputId", description = "Input identifier", example = "I-1") String ignored) {
         }
     }
 

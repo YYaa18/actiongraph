@@ -7,18 +7,30 @@ Domain code should not hand-write LLM goal interpretation prompts. A domain now 
 ## Domain Registration
 
 ```java
-GoalCatalog catalog = new GoalCatalog();
-catalog.register(new GoalDefinition(
-        new GoalType("requestOrderCancellation"),
-        "Request cancellation for an order.",
-        OrderCancellationGoals.requestOrderCancellation(),
-        List.of(GoalParameterDefinition.required(
-                "orderId",
-                "Order identifier. Use canonical IDs such as O100.",
-                "O100"
-        ))
-));
+@ActionGraphGoal(
+        type = "order.cancel",
+        description = "为指定订单发起取消申请并提交运营审批",
+        name = "requestOrderCancellation",
+        targetConditions = "order:OPS_APPROVAL_REQUESTED",
+        seedConditions = "order:ORDER_ID_PRESENT"
+)
+record OrderCancellationGoal(
+        @GoalParameter(description = "要取消的订单编号", example = "O100")
+        String orderId
+) {
+}
 ```
+
+Spring Boot registers annotated Goal metadata automatically. Non-Spring users can
+still build a catalog explicitly from annotations:
+
+```java
+GoalCatalog catalog = new GoalCatalog();
+AnnotatedGoalFactory.definitions(OrderCancellationGoal.class).forEach(catalog::register);
+```
+
+Manual `new GoalDefinition(...)` registration remains available for lower-level
+framework adapters, but application teams should prefer annotated schemas.
 
 ## LLM Wiring
 

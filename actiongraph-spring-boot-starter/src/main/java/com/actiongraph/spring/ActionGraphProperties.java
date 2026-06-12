@@ -19,6 +19,7 @@ public class ActionGraphProperties {
     private final PlannerProperties planner = new PlannerProperties();
     private final ExecutorProperties executor = new ExecutorProperties();
     private final ActionsProperties actions = new ActionsProperties();
+    private final GoalsProperties goals = new GoalsProperties();
     private final ValidationProperties validation = new ValidationProperties();
     private final ExecutionProperties execution = new ExecutionProperties();
     private final LlmProperties llm = new LlmProperties();
@@ -35,6 +36,14 @@ public class ActionGraphProperties {
 
     public ActionsProperties getActions() {
         return actions;
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Annotated goal auto-registration is experimental until DX pilots validate schema conventions."
+    )
+    public GoalsProperties getGoals() {
+        return goals;
     }
 
     @Experimental(
@@ -111,6 +120,22 @@ public class ActionGraphProperties {
     }
 
     public static final class ActionsProperties {
+        private boolean autoRegisterAnnotated = true;
+
+        public boolean isAutoRegisterAnnotated() {
+            return autoRegisterAnnotated;
+        }
+
+        public void setAutoRegisterAnnotated(boolean autoRegisterAnnotated) {
+            this.autoRegisterAnnotated = autoRegisterAnnotated;
+        }
+    }
+
+    @Experimental(
+            since = "0.2.0",
+            value = "Annotated goal auto-registration is experimental until DX pilots validate schema conventions."
+    )
+    public static final class GoalsProperties {
         private boolean autoRegisterAnnotated = true;
 
         public boolean isAutoRegisterAnnotated() {

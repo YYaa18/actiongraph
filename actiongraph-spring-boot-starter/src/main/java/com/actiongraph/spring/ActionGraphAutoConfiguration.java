@@ -18,6 +18,7 @@ import com.actiongraph.interpretation.GoalBlackboardSeederRegistry;
 import com.actiongraph.interpretation.GoalCatalog;
 import com.actiongraph.interpretation.GoalDefinition;
 import com.actiongraph.interpretation.GoalType;
+import com.actiongraph.interpretation.annotation.AnnotatedGoalFactory;
 import com.actiongraph.llm.DeepSeekChatClient;
 import com.actiongraph.llm.LlmClient;
 import com.actiongraph.llm.OpenAiCompatibleChatClient;
@@ -307,7 +308,9 @@ public class ActionGraphAutoConfiguration {
     )
     public GoalCatalog actionGraphGoalCatalog(
             ObjectProvider<GoalDefinition> goalDefinitions,
-            ObjectProvider<ActionGraphContribution> contributions
+            ObjectProvider<ActionGraphContribution> contributions,
+            ConfigurableListableBeanFactory beanFactory,
+            ActionGraphProperties properties
     ) {
         GoalCatalog catalog = new GoalCatalog();
         goalDefinitions.orderedStream().forEach(catalog::register);
@@ -319,6 +322,19 @@ public class ActionGraphAutoConfiguration {
                     throw new ActionGraphConfigurationException("Duplicate goal type " + goal.type().value()
                             + " from contributions " + previous + " and " + contribution.getClass().getName());
                 }
+                catalog.register(goal);
+            }
+            for (GoalDefinition goal : AnnotatedGoalFactory.definitions(contribution.annotatedBeans().toArray())) {
+                String previous = sources.putIfAbsent(goal.type(), contribution.getClass().getName());
+                if (previous != null) {
+                    throw new ActionGraphConfigurationException("Duplicate goal type " + goal.type().value()
+                            + " from contributions " + previous + " and " + contribution.getClass().getName());
+                }
+                catalog.register(goal);
+            }
+        }
+        if (properties.getGoals().isAutoRegisterAnnotated()) {
+            for (GoalDefinition goal : new AnnotatedSpringBeanGoalRegistrar(beanFactory).annotatedGoals()) {
                 catalog.register(goal);
             }
         }
